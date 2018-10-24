@@ -2,9 +2,6 @@
 #ifndef _MACPORTS_TIME_H_
 #define _MACPORTS_TIME_H_
 
-// Include the primary system time.h
-#include_next <time.h>
-
 // Implementation of clock_gettime for OSX10.11 and older.
 #if __APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 101200
 #include <sys/time.h>
@@ -50,5 +47,8 @@ clock_gettime( int /* clk_id */, struct timespec *ts )
 //   return ret;
 // }
 // #endif
+
+// Include the primary system time.h
+#include_next <time.h>
 
 #endif // _MACPORTS_TIME_H_
