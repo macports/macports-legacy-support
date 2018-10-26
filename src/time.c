@@ -7,11 +7,6 @@
 #include <mach/clock.h>
 #include <mach/mach.h>
 
-#ifndef CLOCK_REALTIME
-#define CLOCK_REALTIME  CALENDAR_CLOCK
-#define CLOCK_MONOTONIC SYSTEM_CLOCK
-#endif
-
 int clock_gettime( int clk_id, struct timespec *ts )
 { 
   clock_serv_t cclock;

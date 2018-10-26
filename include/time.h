@@ -9,6 +9,11 @@
 #define __MP_LEGACY_SUPPORT_GETTIME__ __APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 101200
 #if __MP_LEGACY_SUPPORT_GETTIME__
 
+#ifndef CLOCK_REALTIME
+#define CLOCK_REALTIME  1 // CALENDAR_CLOCK
+#define CLOCK_MONOTONIC 0 // SYSTEM_CLOCK
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
