@@ -10,6 +10,8 @@
 
 // strnlen
 #if __MP_LEGACY_SUPPORT_GETLINE__
+//#include <unistd.h> /* ssize_t */
+typedef long ssize_t;	
 #ifdef __cplusplus
 extern "C" {
 #endif

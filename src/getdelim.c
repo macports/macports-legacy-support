@@ -19,11 +19,13 @@
 
 /* Ported from glibc by Simon Josefsson. */
 
+// MP support header
+#include "MacportsLegacySupport.h"
+#if __MP_LEGACY_SUPPORT_GETLINE__
+
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
-
-#if __APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < MAC_OS_X_VERSION_10_7
 
 #include "getdelim.h"
 
