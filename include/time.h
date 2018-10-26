@@ -5,8 +5,10 @@
 // Include the primary system time.h
 #include_next <time.h>
 
+// MP support header
+#include "MacportsLegacySupport.h"
+
 // Legacy implementation of clock_gettime
-#define __MP_LEGACY_SUPPORT_GETTIME__ __APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 101200
 #if __MP_LEGACY_SUPPORT_GETTIME__
 
 #ifndef CLOCK_REALTIME

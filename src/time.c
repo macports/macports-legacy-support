@@ -1,7 +1,6 @@
 
-#include <time.h>
+#include "time.h"
 
-// Implementation of clock_gettime
 #if __MP_LEGACY_SUPPORT_GETTIME__
 
 #include <mach/clock.h>
@@ -26,10 +25,6 @@ int clock_gettime( int clk_id, struct timespec *ts )
 
 // // Implementation of clock_gettime for OSX10.11 and older.
 // #include <sys/time.h>
-// #ifndef CLOCK_REALTIME
-// #define CLOCK_REALTIME  0
-// #define CLOCK_MONOTONIC 0
-// #endif
 // static int
 // clock_gettime( int /* clk_id */, struct timespec *ts )
 // {
