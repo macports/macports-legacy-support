@@ -1,17 +1,19 @@
 
-#include "time.h"
+#include <time.h>
 
 // Implementation of clock_gettime
 #if __MP_LEGACY_SUPPORT_GETTIME__
+
 #include <mach/clock.h>
 #include <mach/mach.h>
+
 #ifndef CLOCK_REALTIME
 #define CLOCK_REALTIME  CALENDAR_CLOCK
 #define CLOCK_MONOTONIC SYSTEM_CLOCK
 #endif
-static int clock_gettime( int clk_id, struct timespec *ts )
-{
- 
+
+int clock_gettime( int clk_id, struct timespec *ts )
+{ 
   clock_serv_t cclock;
   mach_timespec_t mts;
   host_get_clock_service( mach_host_self(), clk_id, &cclock );
@@ -24,10 +26,10 @@ static int clock_gettime( int clk_id, struct timespec *ts )
   }
   return ret;
 }
+
 #endif
 
 // // Implementation of clock_gettime for OSX10.11 and older.
-// #if __APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 101200
 // #include <sys/time.h>
 // #ifndef CLOCK_REALTIME
 // #define CLOCK_REALTIME  0
@@ -45,5 +47,4 @@ static int clock_gettime( int clk_id, struct timespec *ts )
 //   }
 //   return rv;
 // }
-// #endif
 

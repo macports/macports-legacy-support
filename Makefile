@@ -22,20 +22,14 @@ MPLEGACYSUPPLIB  = lib$(MPLEGACYSUPPNAME).dylib
 INCDIR           = ${PWD}/include
 SRCDIR           = ${PWD}/src/
 
-CPPLIBOBJECTS   := $(patsubst %.cpp,%.o,$(wildcard $(SRCDIR)*.cpp))
-CLIBOBJECTS     := $(patsubst %.c,%.o,$(wildcard $(SRCDIR)*.c))
-
--include $(CPPLIBOBJECTS:.o=.d)
--include $(CLIBOBJECTS:.o=.d)
-
-%.o: %.cpp
-	${CXX} -c -I$(INCDIR) $(CXXFLAGS) -MP -MMD -MT $*.o -MT $*.d -MF $*.d -o $*.o $*.cpp
+LIBOBJECTS      := $(patsubst %.c,%.o,$(wildcard $(SRCDIR)*.c))
+-include $(LIBOBJECTS:.o=.d)
 
 %.o: %.c
-	${CC}  -c -I$(INCDIR) $(CFLAGS)   -MP -MMD -MT $*.o -MT $*.d -MF $*.d -o $*.o $*.c
+	${CC} -c -I$(INCDIR) $(CFLAGS) -MP -MMD -MT $*.o -MT $*.d -MF $*.d -o $*.o $*.c
 
-$(MPLEGACYSUPPLIB): $(CPPLIBOBJECTS) $(CLIBOBJECTS)
-	$(CXX) $(LDFLAGS) -dynamiclib $(CPPLIBOBJECTS) $(CLIBOBJECTS) -install_name $(PREFIX)/lib/$(MPLEGACYSUPPLIB) -current_version 1.0 -compatibility_version 1.0 -o $(MPLEGACYSUPPLIB)
+$(MPLEGACYSUPPLIB): $(LIBOBJECTS)
+	$(CC) $(LDFLAGS) -dynamiclib $(LIBOBJECTS) -install_name $(PREFIX)/lib/$(MPLEGACYSUPPLIB) -current_version 1.0 -compatibility_version 1.0 -o $(MPLEGACYSUPPLIB)
 
 all: $(MPLEGACYSUPPLIB)
 
