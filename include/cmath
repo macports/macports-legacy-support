@@ -1,0 +1,22 @@
+
+#ifndef _MACPORTS_CMATH_H_
+#define _MACPORTS_CMATH_H_
+
+// Include the primary system cmath
+#include_next <cmath>
+
+// MP support header
+#include "MacportsLegacySupport.h"
+
+// llround
+#if __MP_LEGACY_SUPPORT_LLROUND__
+#ifdef __cplusplus
+extern "C" {
+#endif
+  extern long long llround( double x );
+#ifdef __cplusplus
+}
+#endif
+#endif
+
+#endif // _MACPORTS_CMATH_H_

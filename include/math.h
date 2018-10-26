@@ -8,15 +8,6 @@
 // MP support header
 #include "MacportsLegacySupport.h"
 
-// memmem
-#if __MP_LEGACY_SUPPORT_LLROUND__
-#ifdef __cplusplus
-extern "C" {
-#endif
-  extern long long llround( double x );
-#ifdef __cplusplus
-}
-#endif
-#endif
+// nothing to add yet...
 
 #endif // _MACPORTS_MATH_H_
