@@ -18,6 +18,7 @@ FFLAGS   ?=         # Optimization flags for fortran.
 
 MPLEGACYSUPPNAME = MacportsLegacySupport
 MPLEGACYSUPPLIB  = lib$(MPLEGACYSUPPNAME).dylib
+INSTALLINCDIR    = $(PREFIX)/include/LegacySupport
 
 INCDIR           = ${PWD}/include
 SRCDIR           = ${PWD}/src/
@@ -34,9 +35,9 @@ $(MPLEGACYSUPPLIB): $(LIBOBJECTS)
 all: $(MPLEGACYSUPPLIB)
 
 install: all
-	@mkdir -p $(DESTDIR)$(PREFIX)/lib $(DESTDIR)$(PREFIX)/include
+	@mkdir -p $(DESTDIR)$(PREFIX)/lib $(DESTDIR)$(INSTALLINCDIR)
 	install -m 0755 $(MPLEGACYSUPPLIB)    $(DESTDIR)$(PREFIX)/lib
-	install -m 0755 $(wildcard include/*) $(DESTDIR)$(PREFIX)/include
+	install -m 0755 $(wildcard include/*) $(DESTDIR)$(INSTALLINCDIR)
 
 clean:
 	@rm -f $(SRCDIR)*.o $(SRCDIR)*.d $(MPLEGACYSUPPLIB)
