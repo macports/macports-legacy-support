@@ -8,14 +8,15 @@
 // MP support header
 #include "MacportsLegacySupport.h"
 
-// strnlen
+// getline
 #if __MP_LEGACY_SUPPORT_GETLINE__
 //#include <unistd.h> /* ssize_t */
 typedef long ssize_t;	
 #ifdef __cplusplus
 extern "C" {
 #endif
-  extern ssize_t getline(char **lineptr, size_t *n, FILE *stream);
+  extern ssize_t getdelim(char **lineptr, size_t *n, int delimiter, FILE *fp);
+  extern ssize_t getline (char **lineptr, size_t *n, FILE *stream);
 #ifdef __cplusplus
 }
 #endif
