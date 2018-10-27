@@ -13,13 +13,13 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-  //extern long long llround( double x );
-  extern long long int llrint ( double );
-  extern long long int llrintf ( float );
-  extern long long int llround ( double );
+  // Apparently present in library but header declarations are missing in 10.6
+  extern long long int llrint   ( double );
+  extern long long int llrintf  ( float );
+  extern long long int llround  ( double );
   extern long long int llroundf ( float );
-  extern long long int llrintl( long double );
-  extern long long int llroundl( long double );
+  extern long long int llrintl  ( long double );
+  extern long long int llroundl ( long double );
 #ifdef __cplusplus
 }
 #endif
