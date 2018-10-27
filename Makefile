@@ -35,11 +35,11 @@ $(MPLEGACYSUPPLIB): $(LIBOBJECTS)
 all: $(MPLEGACYSUPPLIB)
 
 install: all
-	@mkdir -p $(DESTDIR)$(PREFIX)/lib $(DESTDIR)$(INSTALLINCDIR)
-	install -m 0755 $(MPLEGACYSUPPLIB)      $(DESTDIR)$(PREFIX)/lib
-	install -m 0755 $(wildcard include/*.h) $(DESTDIR)$(INSTALLINCDIR)
-	install -m 0755 $(wildcard include/c*)  $(DESTDIR)$(INSTALLINCDIR)
-	install -m 0755 $(wildcard include/sys/*.h) $(DESTDIR)$(INSTALLINCDIR)/sys
+	@mkdir -p $(DESTDIR)$(PREFIX)/lib $(DESTDIR)$(INSTALLINCDIR) $(DESTDIR)$(INSTALLINCDIR)/sys
+	install    -m 0755 $(MPLEGACYSUPPLIB)      $(DESTDIR)$(PREFIX)/lib
+	install -m 0755 $(wildcard include/*.h)    $(DESTDIR)$(INSTALLINCDIR)
+	install -m 0755 $(wildcard include/c*)     $(DESTDIR)$(INSTALLINCDIR)
+	install -m 0755 $(wildcard include/sys/*)  $(DESTDIR)$(INSTALLINCDIR)/sys
 
 clean:
 	@rm -f $(SRCDIR)*.o $(SRCDIR)*.d $(MPLEGACYSUPPLIB)
