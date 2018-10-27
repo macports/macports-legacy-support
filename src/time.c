@@ -3,9 +3,35 @@
 
 #if __MP_LEGACY_SUPPORT_GETTIME__
 
+#include <sys/time.h>
+#include <mach/mach_time.h>
+
+int clock_gettime( int clk_id, struct timespec *ts )
+{
+  int ret = -1;
+  if      ( clk_id == CLOCK_REALTIME )
+  {
+    struct timeval tv;
+    ret = gettimeofday(&tv, NULL);
+    ts->tv_sec  = tv.tv_sec;
+    ts->tv_nsec = tv.tv_usec * 1000;
+  }
+  else if ( clk_id == CLOCK_MONOTONIC )
+  {
+    const uint64_t t = mach_absolute_time();
+    mach_timebase_info_data_t timebase;
+    mach_timebase_info(&timebase);
+    const uint64_t tdiff = t * timebase.numer / timebase.denom;
+    ts->tv_sec  = tdiff / 1000000000;
+    ts->tv_nsec = tdiff % 1000000000;
+    ret = 0;
+  }
+  return ret;
+}
+
+/*
 #include <mach/clock.h>
 #include <mach/mach.h>
-
 int clock_gettime( int clk_id, struct timespec *ts )
 { 
   clock_serv_t cclock;
@@ -20,21 +46,6 @@ int clock_gettime( int clk_id, struct timespec *ts )
   }
   return ret;
 }
+*/
 
 #endif
-
-// // Implementation of clock_gettime for OSX10.11 and older.
-// #include <sys/time.h>
-// static int
-// clock_gettime( int /* clk_id */, struct timespec *ts )
-// {
-//   struct timeval now;
-//   const int rv = gettimeofday(&now, NULL);
-//   if ( ts && !rv )
-//   {
-//     ts->tv_sec  = now.tv_sec;
-//     ts->tv_nsec = now.tv_usec * 1000;
-//   }
-//   return rv;
-// }
-
