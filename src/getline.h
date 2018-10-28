@@ -1,3 +1,4 @@
+
 /* getline.h --- Prototype for replacement getline function.
    Copyright (C) 2005 Free Software Foundation, Inc.
 

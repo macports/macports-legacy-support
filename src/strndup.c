@@ -1,3 +1,4 @@
+
 /* Copyright (C) 1996-2017 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
