@@ -9,7 +9,7 @@ the missing features and then forward include the original header.
 So using these headers instead of the originals should be transparent.
 
 Missing functions are compiled into a library that must also be linked
-into any builds using the wrapped headers. This is handled in macPorts
+into any builds using the wrapped headers. This is handled in [MacPorts](https://github.com/macports)
 via the legacysupport PortGroup.
 
 Wrapped headers area
