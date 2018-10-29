@@ -25,14 +25,14 @@
 int clock_gettime( int clk_id, struct timespec *ts )
 {
   int ret = -1;
-  if      ( clk_id == CLOCK_REALTIME )
+  if      ( CLOCK_REALTIME == clk_id )
   {
     struct timeval tv;
     ret = gettimeofday(&tv, NULL);
     ts->tv_sec  = tv.tv_sec;
     ts->tv_nsec = tv.tv_usec * 1000;
   }
-  else if ( clk_id == CLOCK_MONOTONIC )
+  else if ( CLOCK_MONOTONIC == clk_id )
   {
     const uint64_t t = mach_absolute_time();
     mach_timebase_info_data_t timebase;

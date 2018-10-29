@@ -28,8 +28,12 @@
 #if __MP_LEGACY_SUPPORT_GETTIME__
 
 #ifndef CLOCK_REALTIME
-#define CLOCK_REALTIME  1 // CALENDAR_CLOCK
-#define CLOCK_MONOTONIC 0 // SYSTEM_CLOCK
+// These values are choosen to match use in macOS10.12+
+#define CLOCK_REALTIME             0
+#define CLOCK_MONOTONIC            6
+// we do not implement these (yet).
+//#define CLOCK_MONOTONIC_RAW        4
+//#define CLOCK_MONOTONIC_RAW_APPROX 5
 #endif
 
 #ifdef __cplusplus
