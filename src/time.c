@@ -25,22 +25,42 @@
 int clock_gettime( int clk_id, struct timespec *ts )
 {
   int ret = -1;
-  if      ( CLOCK_REALTIME == clk_id )
+  if ( ts )
   {
-    struct timeval tv;
-    ret = gettimeofday(&tv, NULL);
-    ts->tv_sec  = tv.tv_sec;
-    ts->tv_nsec = tv.tv_usec * 1000;
+    if      ( CLOCK_REALTIME == clk_id )
+    {
+      struct timeval tv;
+      ret = gettimeofday(&tv, NULL);
+      ts->tv_sec  = tv.tv_sec;
+      ts->tv_nsec = tv.tv_usec * 1000;
+    }
+    else if ( CLOCK_MONOTONIC == clk_id )
+    {
+      const uint64_t t = mach_absolute_time();
+      mach_timebase_info_data_t timebase;
+      mach_timebase_info(&timebase);
+      const uint64_t tdiff = t * timebase.numer / timebase.denom;
+      ts->tv_sec  = tdiff / 1000000000;
+      ts->tv_nsec = tdiff % 1000000000;
+      ret = 0;
+    }
   }
-  else if ( CLOCK_MONOTONIC == clk_id )
+  return ret;
+}
+
+int clock_getres ( int clk_id, struct timespec *ts )
+{
+  int ret = -1;
+  if ( ts )
   {
-    const uint64_t t = mach_absolute_time();
-    mach_timebase_info_data_t timebase;
-    mach_timebase_info(&timebase);
-    const uint64_t tdiff = t * timebase.numer / timebase.denom;
-    ts->tv_sec  = tdiff / 1000000000;
-    ts->tv_nsec = tdiff % 1000000000;
-    ret = 0;
+    if ( CLOCK_REALTIME  == clk_id ||
+	 CLOCK_MONOTONIC == clk_id )
+    {
+      // return 1us precision
+      ts->tv_sec  = 0;
+      ts->tv_nsec = 1000;
+      ret         = 0;
+    }
   }
   return ret;
 }
