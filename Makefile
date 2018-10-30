@@ -43,7 +43,7 @@ LIBOBJECTS      := $(patsubst %.c,%.o,$(wildcard $(SRCDIR)*.c))
 -include $(LIBOBJECTS:.o=.d)
 
 %.o: %.c
-	${CC} -c -I$(INCDIR) $(CFLAGS) -MP -MMD -MT $*.o -MT $*.d -MF $*.d -o $*.o $*.c
+	$(CC) -c -I$(INCDIR) $(CFLAGS) -MP -MMD -MT $*.o -MT $*.d -MF $*.d -o $*.o $*.c
 
 $(MPLEGACYSUPPLIB): $(LIBOBJECTS)
 	$(CC) $(LDFLAGS) -dynamiclib $(LIBOBJECTS) -install_name $(PREFIX)/lib/$(MPLEGACYSUPPLIB) -current_version 1.0 -compatibility_version 1.0 -o $(MPLEGACYSUPPLIB)
@@ -57,5 +57,8 @@ install: all
 	install -m 0755 $(wildcard include/c*)     $(DESTDIR)$(INSTALLINCDIR)
 	install -m 0755 $(wildcard include/sys/*)  $(DESTDIR)$(INSTALLINCDIR)/sys
 
+test_time: $(install)
+	$(CXX) $(CFLAGS) -I$(DESTDIR)$(INSTALLINCDIR) -L$(DESTDIR)$(PREFIX)/lib -l$(MPLEGACYSUPPNAME) test/test_time.cpp -o test_time.exe
+
 clean:
-	@rm -f $(SRCDIR)*.o $(SRCDIR)*.d $(MPLEGACYSUPPLIB)
+	@rm -fv $(SRCDIR)*.o $(SRCDIR)*.d $(MPLEGACYSUPPLIB) test_time.exe
