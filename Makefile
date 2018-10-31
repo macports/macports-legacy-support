@@ -43,7 +43,10 @@ LIBOBJECTS      := $(patsubst %.c,%.o,$(wildcard $(SRCDIR)*.c))
 -include $(LIBOBJECTS:.o=.d)
 
 %.o: %.c
-	$(CC) -c -I$(INCDIR) $(CFLAGS) -MP -MMD -MT $*.o -MT $*.d -MF $*.d -o $*.o $*.c
+	$(CC) -c -I$(INCDIR) $(CFLAGS) -o $*.o $*.c
+
+# Causes issues with universal builds with some compilers.
+#	$(CC) -c -I$(INCDIR) $(CFLAGS) -MP -MMD -MT $*.o -MT $*.d -MF $*.d -o $*.o $*.c
 
 $(MPLEGACYSUPPLIB): $(LIBOBJECTS)
 	$(CC) $(LDFLAGS) -dynamiclib $(LIBOBJECTS) -install_name $(PREFIX)/lib/$(MPLEGACYSUPPLIB) -current_version 1.0 -compatibility_version 1.0 -o $(MPLEGACYSUPPLIB)
