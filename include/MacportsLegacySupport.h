@@ -20,27 +20,27 @@
 
 #include "AvailabilityMacros.h"
 
-// defines for when legacy support is required for various functions
+/* defines for when legacy support is required for various functions */
 
-// clock_gettime
+/* clock_gettime */
 #define __MP_LEGACY_SUPPORT_GETTIME__ __APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 101200
 
-// strnlen
+/* strnlen */
 #define __MP_LEGACY_SUPPORT_STRNLEN__ __APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1070
 
-// strndup
+/* strndup */
 #define __MP_LEGACY_SUPPORT_STRNDUP__ __APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1070
 
-// getline
+/* getline */
 #define __MP_LEGACY_SUPPORT_GETLINE__ __APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1070
 
-// memmem
+/* memmem */
 #define __MP_LEGACY_SUPPORT_MEMMEM__  __APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1070
 
-// wcsdup
+/* wcsdup */
 #define __MP_LEGACY_SUPPORT_WCSDUP__  __APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1070
 
-// llround
+/* llround */
 #define __MP_LEGACY_SUPPORT_LLROUND__  __APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1070
 
 #endif /* _MACPORTS_LEGACYSUPPORTDEFS_H_ */

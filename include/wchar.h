@@ -18,13 +18,13 @@
 #ifndef _MACPORTS_WCHAR_H_
 #define _MACPORTS_WCHAR_H_
 
-// Include the primary system wchar.h
+/* Include the primary system wchar.h */
 #include_next <wchar.h>
 
-// MP support header
+/* MP support header */
 #include "MacportsLegacySupport.h"
 
-// strnlen
+/* strnlen */
 #if __MP_LEGACY_SUPPORT_WCSDUP__
 #ifdef __cplusplus
 extern "C" {
@@ -35,4 +35,4 @@ extern "C" {
 #endif
 #endif
 
-#endif // _MACPORTS_WCHAR_H_
+#endif /* _MACPORTS_WCHAR_H_ */
