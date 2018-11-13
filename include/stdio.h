@@ -18,15 +18,15 @@
 #ifndef _MACPORTS_STDIO_H_
 #define _MACPORTS_STDIO_H_
 
-// Include the primary system time.h
+/* Include the primary system time.h */
 #include_next <stdio.h>
 
-// MP support header
+/* MP support header */
 #include "MacportsLegacySupport.h"
 
-// getline
+/* getline */
 #if __MP_LEGACY_SUPPORT_GETLINE__
-//#include <unistd.h> /* ssize_t */
+/* #include <unistd.h> */ /* ssize_t */
 typedef long ssize_t;	
 #ifdef __cplusplus
 extern "C" {
@@ -38,4 +38,4 @@ extern "C" {
 #endif
 #endif
 
-#endif // _MACPORTS_STDIO_H_
+#endif /* _MACPORTS_STDIO_H_ */

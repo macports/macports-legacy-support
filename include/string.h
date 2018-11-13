@@ -18,13 +18,13 @@
 #ifndef _MACPORTS_STRING_H_
 #define _MACPORTS_STRING_H_
 
-// Include the primary system string.h
+/* Include the primary system string.h */
 #include_next <string.h>
 
-// MP support header
+/* MP support header */
 #include "MacportsLegacySupport.h"
 
-// strnlen
+/* strnlen */
 #if __MP_LEGACY_SUPPORT_STRNLEN__
 #ifdef __cplusplus
 extern "C" {
@@ -35,7 +35,7 @@ extern "C" {
 #endif
 #endif
 
-// strndup
+/* strndup */
 #if __MP_LEGACY_SUPPORT_STRNDUP__
 #ifdef __cplusplus
 extern "C" {
@@ -46,7 +46,7 @@ extern "C" {
 #endif
 #endif
 
-// memmem
+/* memmem */
 #if __MP_LEGACY_SUPPORT_MEMMEM__
 #ifdef __cplusplus
 extern "C" {
@@ -58,4 +58,4 @@ extern "C" {
 #endif
 #endif
 
-#endif // _MACPORTS_STRING_H_
+#endif /* _MACPORTS_STRING_H_ */

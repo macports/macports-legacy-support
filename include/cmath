@@ -18,18 +18,18 @@
 #ifndef _MACPORTS_CMATH_H_
 #define _MACPORTS_CMATH_H_
 
-// Include the primary system cmath
+/* Include the primary system cmath */
 #include_next <cmath>
 
-// MP support header
+/* MP support header */
 #include "MacportsLegacySupport.h"
 
-// llround
+/* llround */
 #if __MP_LEGACY_SUPPORT_LLROUND__
 #ifdef __cplusplus
 extern "C" {
 #endif
-  // Apparently present in library but header declarations are missing in 10.6
+  /* Apparently present in library but header declarations are missing in 10.6 */
   extern long long int llrint   ( double );
   extern long long int llrintf  ( float );
   extern long long int llround  ( double );
@@ -41,4 +41,4 @@ extern "C" {
 #endif
 #endif
 
-#endif // _MACPORTS_CMATH_H_
+#endif /* _MACPORTS_CMATH_H_ */

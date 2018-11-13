@@ -18,22 +18,22 @@
 #ifndef _MACPORTS_TIME_H_
 #define _MACPORTS_TIME_H_
 
-// Include the primary system time.h
+/* Include the primary system time.h */
 #include_next <time.h>
 
-// MP support header
+/* MP support header */
 #include "MacportsLegacySupport.h"
 
-// Legacy implementation of clock_gettime
+/* Legacy implementation of clock_gettime */
 #if __MP_LEGACY_SUPPORT_GETTIME__
 
 #ifndef CLOCK_REALTIME
-// These values are choosen to match use in macOS10.12+
+/* These values are choosen to match use in macOS10.12+ */
 #define CLOCK_REALTIME             0
 #define CLOCK_MONOTONIC            6
-// we do not implement these (yet).
-//#define CLOCK_MONOTONIC_RAW        4
-//#define CLOCK_MONOTONIC_RAW_APPROX 5
+/* we do not implement these (yet). */
+/* #define CLOCK_MONOTONIC_RAW        4 */
+/* #define CLOCK_MONOTONIC_RAW_APPROX 5 */
 #endif
 
 #ifdef __cplusplus
@@ -47,6 +47,6 @@ extern int clock_getres ( int clk_id, struct timespec *ts );
 }
 #endif
 
-#endif // _MP_LEGACY_SUPPORT_GETTIME__
+#endif /* _MP_LEGACY_SUPPORT_GETTIME__ */
 
-#endif // _MACPORTS_TIME_H_
+#endif /* _MACPORTS_TIME_H_ */
