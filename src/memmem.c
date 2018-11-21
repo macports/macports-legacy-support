@@ -27,7 +27,7 @@
  * SUCH DAMAGE.
  */
 
-// MP support header
+/* MP support header */
 #include "MacportsLegacySupport.h"
 #if __MP_LEGACY_SUPPORT_MEMMEM__
 

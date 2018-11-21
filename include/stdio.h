@@ -1,6 +1,7 @@
 
 /*
  * Copyright (c) 2010 Chris Jones <jonesc@macports.org>
+ * Copyright (c) 2018 Ken Cunningham <kencu@macports.org>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -36,6 +37,6 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
-#endif
+#endif /*  __MP_LEGACY_SUPPORT_GETLINE__ */
 
 #endif /* _MACPORTS_STDIO_H_ */

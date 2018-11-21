@@ -16,31 +16,38 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef _MACPORTS_SYSFCNTL_H_
-#define _MACPORTS_SYSFCNTL_H_
+#ifndef _MACPORTS_SYSUNISTD_H_
+#define _MACPORTS_SYSUNISTD_H_
 
-/* Include the primary system fcntl.h */
-#include_next <sys/fcntl.h>
 
-/* replace missing O_CLOEXEC definition with 0, which works
- * but does not replace the full function of that flag
- * this is the commonly done fix in MacPorts (see gtk3, for example) 
- */
 
-#ifndef O_CLOEXEC
-#define O_CLOEXEC 0
-#endif
+/* Include the primary system unistd.h */
+#include_next <sys/unistd.h>
 
-/* openat */
+/* MP support header */
+#include "MacportsLegacySupport.h"
+
 #if __MP_LEGACY_SUPPORT_ATCALLS__
+typedef long ssize_t;	
 #ifdef __cplusplus
 extern "C" {
 #endif
-  extern int openat(int dirfd, const char *pathname, int flags, ...);
+  extern int getattrlistat(int dirfd, const char *pathname, struct attrlist *a,
+                                 void *buf, size_t size, unsigned long flags);
+
+  extern ssize_t readlinkat(int dirfd, const char *pathname, char *buf, size_t bufsiz);
+
+  extern int faccessat(int dirfd, const char *pathname, int mode, int flags);
+  extern int fchownat(int dirfd, const char *pathname, uid_t owner, gid_t group, int flags);
+  extern int linkat(int olddirfd, const char *oldpath, int newdirfd, const char *newpath, int flags);
+  extern int symlinkat(const char *oldpath, int newdirfd, const char *newpath);
+  extern int unlinkat(int dirfd, const char *pathname, int flags);
+  
 #ifdef __cplusplus
 }
 #endif
 #endif /* __MP_LEGACY_SUPPORT_ATCALLS__ */
 
 
-#endif /* _MACPORTS_SYSFCNTL_H_ */
+
+#endif /* _MACPORTS_SYSUNISTD_H_ */

@@ -16,31 +16,26 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef _MACPORTS_SYSFCNTL_H_
-#define _MACPORTS_SYSFCNTL_H_
+#ifndef _MACPORTS_SYSSTDIO_H_
+#define _MACPORTS_SYSSTDIO_H_
 
-/* Include the primary system fcntl.h */
-#include_next <sys/fcntl.h>
+/* Include the primary system sys/stdio.h */
+#include_next <sys/stdio.h>
 
-/* replace missing O_CLOEXEC definition with 0, which works
- * but does not replace the full function of that flag
- * this is the commonly done fix in MacPorts (see gtk3, for example) 
- */
+/* MP support header */
+#include "MacportsLegacySupport.h"
 
-#ifndef O_CLOEXEC
-#define O_CLOEXEC 0
-#endif
-
-/* openat */
+/* renameat */
 #if __MP_LEGACY_SUPPORT_ATCALLS__
+typedef long ssize_t;	
 #ifdef __cplusplus
 extern "C" {
 #endif
-  extern int openat(int dirfd, const char *pathname, int flags, ...);
+  extern int renameat(int olddirfd, const char *oldpath, int newdirfd, const char *newpath);
 #ifdef __cplusplus
 }
 #endif
 #endif /* __MP_LEGACY_SUPPORT_ATCALLS__ */
 
 
-#endif /* _MACPORTS_SYSFCNTL_H_ */
+#endif /* _MACPORTS_SYSSTDIO_H_ */
