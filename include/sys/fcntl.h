@@ -31,12 +31,31 @@
 #define O_CLOEXEC 0
 #endif
 
-/* openat */
+/* atcalls */
 #if __MP_LEGACY_SUPPORT_ATCALLS__
+
+#ifndef AT_FDCWD
+#define AT_FDCWD	-2
+#endif
+#ifndef AT_EACCESS
+#define AT_EACCESS		    0x0010	/* Use effective ids in access check */
+#endif
+#ifndef AT_SYMLINK_NOFOLLOW
+#define AT_SYMLINK_NOFOLLOW	0x0020	/* Act on the symlink itself not the target */
+#endif
+#ifndef AT_SYMLINK_FOLLOW
+#define AT_SYMLINK_FOLLOW	0x0040	/* Act on target of symlink */
+#endif
+#ifndef AT_REMOVEDIR
+#define AT_REMOVEDIR		0x0080	/* Path refers to directory */
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-  extern int openat(int dirfd, const char *pathname, int flags, ...);
+
+extern int openat(int dirfd, const char *pathname, int flags, ...);
+
 #ifdef __cplusplus
 }
 #endif

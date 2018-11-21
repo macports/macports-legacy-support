@@ -28,7 +28,13 @@
 #include "MacportsLegacySupport.h"
 
 #if __MP_LEGACY_SUPPORT_ATCALLS__
+
+/* typedefs to prevent loading many headers */
 typedef long ssize_t;	
+typedef unsigned long size_t;
+typedef __uint32_t	uid_t;
+typedef __uint32_t	gid_t;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
