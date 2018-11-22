@@ -95,24 +95,14 @@ int renameat(int olddirfd, const char *oldpath, int newdirfd, const char *newpat
 #include <sys/syscall.h>
 #include <fcntl.h>
 
-#ifndef SYS___pthread_chdir
-# define SYS___pthread_chdir 348
-#endif
-
 #ifndef SYS___pthread_fchdir
 # define SYS___pthread_fchdir 349
 #endif
-
-int __pthread_chdir(const char *path)
-{
-  return syscall(SYS___pthread_chdir, path);
-}
 
 int __pthread_fchdir(int dirfd)
 {
   return syscall(SYS___pthread_fchdir, dirfd);
 }
-
 
 
 #define PROTECT_ERRNO(what)  ({ int __err = (errno); what; errno = __err; })
