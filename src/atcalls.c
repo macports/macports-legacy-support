@@ -101,7 +101,13 @@ int renameat(int olddirfd, const char *oldpath, int newdirfd, const char *newpat
 
 int __pthread_fchdir(int dirfd)
 {
+#if __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ >= 1050
   return syscall(SYS___pthread_fchdir, dirfd);
+#else
+/* Tiger does not have kernel support for __pthread_fchdir, so we have to fall back to fchdir */
+/* unless we can come up with a per-thread compatible implementation that works on Tiger */
+  return syscall(SYS_fchdir, dirfd);
+#endif
 }
 
 
