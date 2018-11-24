@@ -19,5 +19,9 @@ Wrapped headers area
  - `string.h`    : Adds `strnlen`, `strndup` and `memmem` functions missing in OSX10.6 and older.
  - `time.h`      : Adds `clock_gettime` function missing in OSX10.11 and older.
  - `wchar.h`     : Adds `wcsdup` function missing in OSX10.6 and older.
- - `sys/fcntl.h` : Adds missing `O_CLOEXEC` definition as required.
+ - `sys/fcntl.h` : Adds missing `O_CLOEXEC`, `AT_FDCWD`, `AT_EACCESS`, `AT_SYMLINK_NOFOLLOW`, `AT_SYMLINK_FOLLOW`, and `AT_REMOVEDIR` definitions as required.
+ - `sys/fcntl.h` : Adds `openat` function missing in OSX10.9 and older.
  - `sys/mman.h`  : Adds missing `MAP_ANONYMOUS` definition as required.
+ - `sys/stdio.h` : Adds `renameat` function missing in OSX10.9 and older.
+ - `sys/stat.h`  : Adds `fchmodat`, `fstatat`, and `mkdirat` functions missing in OSX10.9 and older.
+ - `sys/unistd.h`: Adds `getattrlistat`, `readlinkat`, and `faccessat`, `fchownat`, `linkat`, `symlinkat`, and `unlinkat` functions missing in OSX10.9 and older.
