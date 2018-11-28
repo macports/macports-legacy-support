@@ -23,6 +23,14 @@
  * @APPLE_LICENSE_HEADER_END@
  */
 
+ /*
+  * NOTICE: This file was modified by Ken Cunningham in November 2018 to allow
+  * for use as a supporting file for MacPorts legacy support library. This notice
+  * is included in support of clause 2.2 (b) of the Apple Public License,
+  * Version 2.0.
+  */
+
+
 /* MP support header */
 #include "MacportsLegacySupport.h"
 #if __MP_LEGACY_SUPPORT_ATCALLS__
