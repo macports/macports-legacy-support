@@ -39,6 +39,16 @@ extern "C" {
 #endif
 #endif /* __MP_LEGACY_SUPPORT_ATCALLS__ */
 
+#if __MP_LEGACY_SUPPORT_LSMOD__
+#ifdef __cplusplus
+extern "C" {
+#endif
+  extern int	lchmod(const char *, mode_t);
+#ifdef __cplusplus
+}
+#endif
+#endif /* __MP_LEGACY_SUPPORT_LSMOD__ */
+
 
 
 #endif /* _MACPORTS_SYSSTAT_H_ */
