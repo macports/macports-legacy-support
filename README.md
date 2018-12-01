@@ -23,7 +23,7 @@ Wrapped headers are:
  - `sys/fcntl.h` : Adds `openat` function missing in OSX10.9 and older.
  - `sys/mman.h`  : Adds missing `MAP_ANONYMOUS` definition as required.
  - `sys/stdio.h` : Adds `renameat` function missing in OSX10.9 and older.
- - `sys/stat.h`  : Adds `fchmodat`, `fstatat`, and `mkdirat` functions missing in OSX10.9 and older.<BR>
+ - `sys/stat.h`  : Adds `fchmodat`, `fstatat`, and `mkdirat` functions missing in OSX10.9 and older.
                  : Adds "lchmod", missing in OSX10.4.
  - `sys/unistd.h`: Adds `getattrlistat`, `readlinkat`, `faccessat`, `fchownat`, `linkat`, `symlinkat`, and `unlinkat` functions missing in OSX10.9 and older.
  ```
