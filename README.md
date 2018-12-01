@@ -12,8 +12,8 @@ Missing functions are compiled into a library that must also be linked
 into any builds using the wrapped headers. This is handled in [MacPorts](https://github.com/macports)
 via the legacysupport PortGroup.
 
-Wrapped headers area
-
+Wrapped headers are:
+```
  - `cmath`       : Adds declaration of various `long long` methods missing in OSX10.6 and older.
  - `stdio.h`     : Adds `getline` and `getdelim` functions missing in OSX10.6 and older.
  - `string.h`    : Adds `strnlen`, `strndup` and `memmem` functions missing in OSX10.6 and older.
@@ -23,5 +23,7 @@ Wrapped headers area
  - `sys/fcntl.h` : Adds `openat` function missing in OSX10.9 and older.
  - `sys/mman.h`  : Adds missing `MAP_ANONYMOUS` definition as required.
  - `sys/stdio.h` : Adds `renameat` function missing in OSX10.9 and older.
- - `sys/stat.h`  : Adds `fchmodat`, `fstatat`, and `mkdirat` functions missing in OSX10.9 and older.
- - `sys/unistd.h`: Adds `getattrlistat`, `readlinkat`, and `faccessat`, `fchownat`, `linkat`, `symlinkat`, and `unlinkat` functions missing in OSX10.9 and older.
+ - `sys/stat.h`  : Adds `fchmodat`, `fstatat`, and `mkdirat` functions missing in OSX10.9 and older.<BR>
+                 : Adds "lchmod", missing in OSX10.4.
+ - `sys/unistd.h`: Adds `getattrlistat`, `readlinkat`, `faccessat`, `fchownat`, `linkat`, `symlinkat`, and `unlinkat` functions missing in OSX10.9 and older.
+ ```
