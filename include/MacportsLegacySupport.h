@@ -1,6 +1,7 @@
 
 /*
  * Copyright (c) 2010 Chris Jones <jonesc@macports.org>
+ * Copyright (c) 2018 Ken Cunningham <kencu@macports.org>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -47,5 +48,8 @@
 
 /* lsmod */
 #define __MP_LEGACY_SUPPORT_LSMOD__  __APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1050
+
+/* posix_memalign */
+#define __MP_LEGACY_SUPPORT_POSIX_MEMALIGN__  __APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1060
 
 #endif /* _MACPORTS_LEGACYSUPPORTDEFS_H_ */
