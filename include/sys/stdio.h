@@ -27,7 +27,21 @@
 
 /* renameat */
 #if __MP_LEGACY_SUPPORT_ATCALLS__
-typedef long ssize_t;	
+
+/*
+ * [XSI] The ssize_t and size_t types shall be defined as described
+ * in <sys/types.h>.
+ */
+#ifndef _SIZE_T
+#define _SIZE_T
+typedef __darwin_size_t		size_t;
+#endif
+
+#ifndef	_SSIZE_T
+#define	_SSIZE_T
+typedef	__darwin_ssize_t	ssize_t;
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif

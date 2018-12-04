@@ -29,11 +29,29 @@
 
 #if __MP_LEGACY_SUPPORT_ATCALLS__
 
-/* typedefs to prevent loading many headers */
-typedef long ssize_t;	
-typedef unsigned long size_t;
-typedef __uint32_t	uid_t;
-typedef __uint32_t	gid_t;
+/*
+ * [XSI] The ssize_t and size_t types shall be defined as described
+ * in <sys/types.h>.
+ */
+#ifndef _SIZE_T
+#define _SIZE_T
+typedef __darwin_size_t		size_t;
+#endif
+
+#ifndef	_SSIZE_T
+#define	_SSIZE_T
+typedef	__darwin_ssize_t	ssize_t;
+#endif
+
+#ifndef _UID_T
+#define _UID_T
+typedef __darwin_uid_t		uid_t;	/* user id 	*/
+#endif
+
+#ifndef _GID_T
+#define _GID_T
+typedef __darwin_gid_t		gid_t;
+#endif
 
 #ifdef __cplusplus
 extern "C" {
