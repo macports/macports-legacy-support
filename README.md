@@ -13,7 +13,7 @@ into any builds using the wrapped headers. This is handled in [MacPorts](https:/
 via the legacysupport PortGroup.
 
 Wrapped headers are:
-```
+
  - cmath         : Adds declaration of various `long long` methods missing in OSX10.6 and older.
  - stdio.h       : Adds `getline` and `getdelim` functions missing in OSX10.6 and older.
  - stdlib.h      : Adds `posix_memalign` functional replacement, missing in OSX10.5 and older.
@@ -29,4 +29,4 @@ Wrapped headers are:
                  : Adds "lchmod", missing in OSX10.4.
  - sys/unistd.h  : Adds `getattrlistat`, `readlinkat`, `faccessat`, `fchownat`, `linkat`, `symlinkat`, 
                  : and `unlinkat` functions missing in OSX10.9 and older.
- ```
+ 
