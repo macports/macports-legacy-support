@@ -24,7 +24,7 @@
 /* MP support header */
 #include "MacportsLegacySupport.h"
 
-/* strnlen */
+/* wcsdup */
 #if __MP_LEGACY_SUPPORT_WCSDUP__
 #ifdef __cplusplus
 extern "C" {
