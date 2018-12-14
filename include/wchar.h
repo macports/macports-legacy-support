@@ -19,20 +19,28 @@
 #define _MACPORTS_WCHAR_H_
 
 /* Include the primary system wchar.h */
+/* This includes definition of __restrict */
 #include_next <wchar.h>
 
 /* MP support header */
 #include "MacportsLegacySupport.h"
 
-/* wcsdup */
-#if __MP_LEGACY_SUPPORT_WCSDUP__
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/* wcsdup */
+#if __MP_LEGACY_SUPPORT_WCSDUP__
   extern wchar_t * wcsdup(const wchar_t *s);
+#endif
+
+/* wcpcpy */
+#if __MP_LEGACY_SUPPORT_WCPCPY__
+  extern wchar_t * wcpcpy(wchar_t *__restrict dest, const wchar_t *__restrict src);
+#endif
+
 #ifdef __cplusplus
 }
-#endif
 #endif
 
 #endif /* _MACPORTS_WCHAR_H_ */
