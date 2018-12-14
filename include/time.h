@@ -36,12 +36,19 @@
 /* #define CLOCK_MONOTONIC_RAW_APPROX 5 */
 #endif
 
+/*
+ * Define a type for the above CLOCK_* values; many OSs use 'enum' for
+ * the values & then typedef the enum to 'clockid_t'; use 'int' for
+ * easy compatibility.
+ */
+typedef int clockid_t;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-extern int clock_gettime( int clk_id, struct timespec *ts );
-extern int clock_getres ( int clk_id, struct timespec *ts );
+extern int clock_gettime( clockid_t clk_id, struct timespec *ts );
+extern int clock_getres ( clockid_t clk_id, struct timespec *ts );
   
 #ifdef __cplusplus
 }

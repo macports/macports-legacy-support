@@ -22,7 +22,7 @@
 #include <sys/time.h>
 #include <mach/mach_time.h>
 
-int clock_gettime( int clk_id, struct timespec *ts )
+int clock_gettime( clockid_t clk_id, struct timespec *ts )
 {
   int ret = -1;
   if ( ts )
@@ -48,7 +48,7 @@ int clock_gettime( int clk_id, struct timespec *ts )
   return ret;
 }
 
-int clock_getres ( int clk_id, struct timespec *ts )
+int clock_getres ( clockid_t clk_id, struct timespec *ts )
 {
   int ret = -1;
   if ( ts )
