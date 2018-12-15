@@ -1,6 +1,5 @@
-
-
-# Copyright (c) 2010 Chris Jones <jonesc@macports.org>
+# GNU Makefile for MacportsLegacySupport
+# Copyright (c) 2018 Christian Cornelssen
 #
 # Permission to use, copy, modify, and distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -14,54 +13,89 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-PREFIX  ?= /usr/local
-DESTDIR ?= 
+DESTDIR         ?= 
+PREFIX          ?= /usr/local
+INCSUBDIR        = LegacySupport
+PKGINCDIR        = $(PREFIX)/include/$(INCSUBDIR)
+LIBDIR           = $(PREFIX)/lib
+SOEXT            = .dylib
+LIBNAME          = MacportsLegacySupport
+LIBFILE          = lib$(LIBNAME)$(SOEXT)
+LIBPATH          = $(LIBDIR)/$(LIBFILE)
+BUILDLIBDIR      = lib
+BUILDLIBPATH     = $(BUILDLIBDIR)/$(LIBFILE)
+BUILDLIBFLAGS    = -dynamiclib -headerpad_max_install_names \
+                   -install_name @executable_path/../$(BUILDLIBPATH) \
+                   -current_version 1.0 -compatibility_version 1.0
+POSTINSTALL      = install_name_tool
+POSTINSTALLFLAGS = -id $(LIBPATH)
 
-CC       ?= cc      # The C compiler.
-CFLAGS   ?= -Os     # C compilation options which relate to
-                    # optimization or debugging (usually
-                    # just -g or -O).  Usually this wouldn't
-                    # include -I options to specify the
-                    # include directories, because then you
-                    # couldn't override it on the command line
-                    # easily as in the above example.
-CXX      ?= c++     # The C++ compiler.  (Sometimes "CPP" instead
-                    # of CXX.)
-CXXFLAGS ?= -Os     # C++ compilation options related to 
-                    # optimization or debugging (-O or -g).
-F77      ?= f77     # The fortran compiler.
-FFLAGS   ?=         # Optimization flags for fortran.
+ARCHFLAGS       ?=
+CC              ?= cc $(ARCHFLAGS)
+CFLAGS          ?= -Os -Wall
+CXX             ?= c++ $(ARCHFLAGS)
+CXXFLAGS        ?= -Os -Wall
+LDFLAGS         ?=
 
-MPLEGACYSUPPNAME = MacportsLegacySupport
-MPLEGACYSUPPLIB  = lib$(MPLEGACYSUPPNAME).dylib
-INSTALLINCDIR    = $(PREFIX)/include/LegacySupport
+MKINSTALLDIRS    = install -d -m 755
+INSTALL_PROGRAM  = install -c -m 755
+INSTALL_DATA     = install -c -m 644
+RM               = rm -f
+RMDIR            = sh -c 'for d; do test ! -d "$d" || rmdir -p "$d"; done' rmdir
 
-INCDIR           = ${PWD}/include
-SRCDIR           = ${PWD}/src/
+SRCDIR           = src
+SRCINCDIR        = include
+ALLHEADERS      := $(wildcard $(SRCINCDIR)/*.h $(SRCINCDIR)/*/*.h $(SRCDIR)/*.h)
+LIBOBJECTS      := $(patsubst %.c,%.o,$(wildcard $(SRCDIR)/*.c))
 
-LIBOBJECTS      := $(patsubst %.c,%.o,$(wildcard $(SRCDIR)*.c))
--include $(LIBOBJECTS:.o=.d)
+TESTDIR          = test
+TESTNAMEPREFIX   = $(TESTDIR)/test_
+TESTRUNPREFIX    = run_
+TESTLIBS         = -L$(BUILDLIBDIR) -l$(LIBNAME)
+TESTSRCS_C      := $(wildcard $(TESTNAMEPREFIX)*.c)
+TESTSRCS_CPP    := $(wildcard $(TESTNAMEPREFIX)*.cpp)
+TESTPRGS_C      := $(patsubst %.c,%,$(TESTSRCS_C))
+TESTPRGS_CPP    := $(patsubst %.cpp,%,$(TESTSRCS_CPP))
+TESTPRGS         = $(TESTPRGS_C) $(TESTPRGS_CPP)
+TESTRUNS        := $(patsubst $(TESTNAMEPREFIX)%,$(TESTRUNPREFIX)%,$(TESTPRGS))
 
-%.o: %.c
-	$(CC) -c -I$(INCDIR) $(CFLAGS) -o $*.o $*.c
+all: $(BUILDLIBPATH)
 
-# Causes issues with universal builds with some compilers.
-#	$(CC) -c -I$(INCDIR) $(CFLAGS) -MP -MMD -MT $*.o -MT $*.d -MF $*.d -o $*.o $*.c
+# Generously marking all header files as potential dependencies
+$(LIBOBJECTS): %.o: %.c $(ALLHEADERS)
+	$(CC) -c -I$(SRCINCDIR) $(CFLAGS) $< -o $@
 
-$(MPLEGACYSUPPLIB): $(LIBOBJECTS)
-	$(CC) $(LDFLAGS) -dynamiclib $(LIBOBJECTS) -install_name $(PREFIX)/lib/$(MPLEGACYSUPPLIB) -current_version 1.0 -compatibility_version 1.0 -o $(MPLEGACYSUPPLIB)
+$(BUILDLIBPATH): $(LIBOBJECTS)
+	$(MKINSTALLDIRS) $(BUILDLIBDIR)
+	$(CC) $(BUILDLIBFLAGS) $(LDFLAGS) $^ -o $@
 
-all: $(MPLEGACYSUPPLIB)
+install: install-headers install-lib
 
-install: all
-	@mkdir -p $(DESTDIR)$(PREFIX)/lib $(DESTDIR)$(INSTALLINCDIR) $(DESTDIR)$(INSTALLINCDIR)/sys
-	install    -m 0755 $(MPLEGACYSUPPLIB)      $(DESTDIR)$(PREFIX)/lib
-	install -m 0755 $(wildcard include/*.h)    $(DESTDIR)$(INSTALLINCDIR)
-	install -m 0755 $(wildcard include/c*)     $(DESTDIR)$(INSTALLINCDIR)
-	install -m 0755 $(wildcard include/sys/*)  $(DESTDIR)$(INSTALLINCDIR)/sys
+install-headers:
+	$(MKINSTALLDIRS) $(DESTDIR)$(PKGINCDIR)/sys
+	$(MKINSTALLDIRS) $(DESTDIR)$(PKGINCDIR)/xlocale
+	$(INSTALL_DATA) $(wildcard include/*.h include/c*) $(DESTDIR)$(PKGINCDIR)
+	$(INSTALL_DATA) $(wildcard include/sys/*)     $(DESTDIR)$(PKGINCDIR)/sys
+	$(INSTALL_DATA) $(wildcard include/xlocale/*) $(DESTDIR)$(PKGINCDIR)/xlocale
 
-test_time: $(install)
-	$(CXX) $(CFLAGS) -I$(DESTDIR)$(INSTALLINCDIR) -L$(DESTDIR)$(PREFIX)/lib -l$(MPLEGACYSUPPNAME) test/test_time.cpp -o test_time.exe
+install-lib: $(BUILDLIBPATH)
+	$(MKINSTALLDIRS) $(DESTDIR)$(LIBDIR)
+	$(INSTALL_PROGRAM) $(BUILDLIBPATH) $(DESTDIR)$(LIBDIR)
+	$(POSTINSTALL) $(POSTINSTALLFLAGS) $(DESTDIR)$(LIBPATH)
+
+test check: $(TESTRUNS)
+
+$(TESTRUNS): $(TESTRUNPREFIX)%: $(TESTNAMEPREFIX)%
+	$<
+
+$(TESTPRGS_C): %: %.c $(BUILDLIBPATH)
+	$(CC) -I$(SRCINCDIR) $(CFLAGS) $< $(TESTLIBS) -o $@
+
+$(TESTPRGS_CPP): %: %.cpp $(BUILDLIBPATH)
+	$(CXX) -I$(SRCINCDIR) $(CXXFLAGS) $< $(TESTLIBS) -o $@
 
 clean:
-	@rm -fv $(SRCDIR)*.o $(SRCDIR)*.d $(MPLEGACYSUPPLIB) test_time.exe
+	$(RM) $(SRCDIR)/*.o $(SRCDIR)/*.d $(BUILDLIBPATH) $(TESTPRGS)
+	@$(RMDIR) $(BUILDLIBDIR)
+
+.PHONY: all clean install install-headers install-lib test check $(TESTRUNS)
