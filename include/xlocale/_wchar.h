@@ -1,6 +1,6 @@
 
 /*
- * Copyright (c) 2010 Chris Jones <jonesc@macports.org>
+ * Copyright (c) 2018 Christian Cornelssen
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -15,43 +15,25 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef _MACPORTS_WCHAR_H_
-#define _MACPORTS_WCHAR_H_
+#ifndef _MACPORTS_XLOCALE__WCHAR_H_
+#define _MACPORTS_XLOCALE__WCHAR_H_
 
-/* Include the primary system wchar.h */
-#include_next <wchar.h>
+/* Include the primary system xlocale/_wchar.h */
+#include_next <xlocale/_wchar.h>
 
 /* MP support header */
 #include "MacportsLegacySupport.h"
 
+/* wcsncasecmp_l, wcscasecmp_l */
+#if __MP_LEGACY_SUPPORT_WCSCASECMP__
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-/* wcsdup */
-#if __MP_LEGACY_SUPPORT_WCSDUP__
-  extern wchar_t * wcsdup(const wchar_t *s);
-#endif
-
-/* wcsnlen */
-#if __MP_LEGACY_SUPPORT_WCSNLEN__
-  extern size_t wcsnlen(const wchar_t *, size_t);
-#endif
-
-/* wcpcpy, wcpncpy */
-#if __MP_LEGACY_SUPPORT_WCPCPY__
-  extern wchar_t * wcpcpy(wchar_t *__restrict d, const wchar_t *__restrict s);
-  extern wchar_t *wcpncpy(wchar_t *__restrict d, const wchar_t *__restrict s, size_t n);
-#endif
-
-/* wcsncasecmp, wcscasecmp */
-#if __MP_LEGACY_SUPPORT_WCSCASECMP__
-  extern int  wcscasecmp(const wchar_t *l, const wchar_t *r);
-  extern int wcsncasecmp(const wchar_t *l, const wchar_t *r, size_t n);
-#endif
-
+  extern int wcscasecmp_l(const wchar_t *l, const wchar_t *r, locale_t locale);
+  extern int wcsncasecmp_l(const wchar_t *l, const wchar_t *r, size_t n, locale_t locale);
 #ifdef __cplusplus
 }
 #endif
+#endif
 
-#endif /* _MACPORTS_WCHAR_H_ */
+#endif /* _MACPORTS_XLOCALE__WCHAR_H_ */
