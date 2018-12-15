@@ -1,5 +1,5 @@
 # GNU Makefile for MacportsLegacySupport
-# Copyright (c) 2018 Christian Cornelssen
+# Copyright (c) 2010 Chris Jones <jonesc@macports.org>
 #
 # Permission to use, copy, modify, and distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
