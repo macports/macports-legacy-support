@@ -51,9 +51,12 @@ LIBOBJECTS      := $(patsubst %.c,%.o,$(wildcard $(SRCDIR)/*.c))
 TESTDIR          = test
 TESTNAMEPREFIX   = $(TESTDIR)/test_
 TESTRUNPREFIX    = run_
-TESTLIBS         = -L$(BUILDLIBDIR) -l$(LIBNAME)
+TESTLDFLAGS      = -L$(BUILDLIBDIR) $(LDFLAGS)
+TESTLIBS         = -l$(LIBNAME)
 TESTSRCS_C      := $(wildcard $(TESTNAMEPREFIX)*.c)
 TESTSRCS_CPP    := $(wildcard $(TESTNAMEPREFIX)*.cpp)
+TESTOBJS_C      := $(patsubst %.c,%.o,$(TESTSRCS_C))
+TESTOBJS_CPP    := $(patsubst %.cpp,%.o,$(TESTSRCS_CPP))
 TESTPRGS_C      := $(patsubst %.c,%,$(TESTSRCS_C))
 TESTPRGS_CPP    := $(patsubst %.cpp,%,$(TESTSRCS_CPP))
 TESTPRGS         = $(TESTPRGS_C) $(TESTPRGS_CPP)
@@ -62,12 +65,24 @@ TESTRUNS        := $(patsubst $(TESTNAMEPREFIX)%,$(TESTRUNPREFIX)%,$(TESTPRGS))
 all: $(BUILDLIBPATH)
 
 # Generously marking all header files as potential dependencies
-$(LIBOBJECTS): %.o: %.c $(ALLHEADERS)
+$(LIBOBJECTS) $(TESTOBJS_C): %.o: %.c $(ALLHEADERS)
 	$(CC) -c -I$(SRCINCDIR) $(CFLAGS) $< -o $@
+
+$(TESTOBJS_CPP): %.o: %.cpp $(ALLHEADERS)
+	$(CXX) -c -I$(SRCINCDIR) $(CXXFLAGS) $< -o $@
 
 $(BUILDLIBPATH): $(LIBOBJECTS)
 	$(MKINSTALLDIRS) $(BUILDLIBDIR)
 	$(CC) $(BUILDLIBFLAGS) $(LDFLAGS) $^ -o $@
+
+$(TESTPRGS_C): %: %.o $(BUILDLIBPATH)
+	$(CC) $(TESTLDFLAGS) $< $(TESTLIBS) -o $@
+
+$(TESTPRGS_CPP): %: %.o $(BUILDLIBPATH)
+	$(CXX) $(TESTLDFLAGS) $< $(TESTLIBS) -o $@
+
+$(TESTRUNS): $(TESTRUNPREFIX)%: $(TESTNAMEPREFIX)%
+	$<
 
 install: install-headers install-lib
 
@@ -85,17 +100,9 @@ install-lib: $(BUILDLIBPATH)
 
 test check: $(TESTRUNS)
 
-$(TESTRUNS): $(TESTRUNPREFIX)%: $(TESTNAMEPREFIX)%
-	$<
-
-$(TESTPRGS_C): %: %.c $(BUILDLIBPATH)
-	$(CC) -I$(SRCINCDIR) $(CFLAGS) $< $(TESTLIBS) -o $@
-
-$(TESTPRGS_CPP): %: %.cpp $(BUILDLIBPATH)
-	$(CXX) -I$(SRCINCDIR) $(CXXFLAGS) $< $(TESTLIBS) -o $@
-
 clean:
-	$(RM) $(SRCDIR)/*.o $(SRCDIR)/*.d $(BUILDLIBPATH) $(TESTPRGS)
+	$(RM) $(foreach D,$(SRCDIR) $(TESTDIR),$D/*.o $D/*.d)
+	$(RM) $(BUILDLIBPATH) $(TESTPRGS)
 	@$(RMDIR) $(BUILDLIBDIR)
 
 .PHONY: all clean install install-headers install-lib test check $(TESTRUNS)
