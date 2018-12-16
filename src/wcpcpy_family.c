@@ -30,7 +30,7 @@ wchar_t *wcpncpy(wchar_t *__restrict d, const wchar_t *__restrict s, size_t n)
 
 wchar_t *wcpcpy(wchar_t *__restrict d, const wchar_t *__restrict s)
 {
-    while (*d = *s) ++d, ++s;
+    while ((*d = *s)) ++d, ++s;
     return d;
 }
 
