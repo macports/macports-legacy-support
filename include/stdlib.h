@@ -19,11 +19,45 @@
 #ifndef _MACPORTS_STDLIB_H_
 #define _MACPORTS_STDLIB_H_
 
+/* MP support header */
+#include "MacportsLegacySupport.h"
+
+
+/* realpath wrap */
+#if __MP_LEGACY_SUPPORT_REALPATH_WRAP__
+/* we need a way to isolate ourselves from our header wrapping while building */
+#ifndef __BUILDING_MP_LEGACY_SUPPORT_REALPATH_WRAP__
+
+/* we are going to move the old realpath definition out of the way */
+#undef realpath
+#define realpath realpath_macports_original
+
+#endif /*__BUILDING_MP_LEGACY_SUPPORT_REALPATH_WRAP__ */
+#endif /*__MP_LEGACY_SUPPORT_REALPATH_WRAP__*/
+
+
 /* Include the primary system stdlib.h */
 #include_next <stdlib.h>
 
-/* MP support header */
-#include "MacportsLegacySupport.h"
+
+/* realpath wrap */
+#if __MP_LEGACY_SUPPORT_REALPATH_WRAP__
+#ifndef __BUILDING_MP_LEGACY_SUPPORT_REALPATH_WRAP__
+
+/* and now define realpath as our new wrapped function */
+#undef realpath
+#define realpath macports_legacy_realpath
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+  extern char * macports_legacy_realpath(const char *, void *);
+#ifdef __cplusplus
+}
+#endif
+#endif /*__BUILDING_MP_LEGACY_SUPPORT_REALPATH_WRAP__ */
+#endif /*__MP_LEGACY_SUPPORT_REALPATH_WRAP__*/
+
 
 /* posix_memalign */
 #if __MP_LEGACY_SUPPORT_POSIX_MEMALIGN__
