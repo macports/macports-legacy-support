@@ -29,15 +29,6 @@
 
 #include <unistd.h>
 
-#ifndef _SC_NPROCESSORS_CONF
-#define _SC_NPROCESSORS_CONF 57
-#endif
-
-#ifndef _SC_NPROCESSORS_ONLN
-#define _SC_NPROCESSORS_ONLN 58
-#endif
-
-
 /* emulate two commonly used but missing selectors from sysconf() on 10.4 */
 
 long macports_legacy_sysconf(int name){

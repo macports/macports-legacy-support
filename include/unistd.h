@@ -3,13 +3,13 @@
 
 
 #if __MP_LEGACY_SUPPORT_SYSCONF_WRAP__
-#ifndef __BUILDING_MP_LEGACY_SUPPORT_SYSCONF_WRAP__
 
+#ifndef __BUILDING_MP_LEGACY_SUPPORT_SYSCONF_WRAP__
 /* redefine the original sysconf */
 #undef sysconf
 #define sysconf sysconf_orig
-
 #endif /* __BUILDING_MP_LEGACY_SUPPORT_SYSCONF_WRAP__ */
+
 #endif /*__MP_LEGACY_SUPPORT_SYSCONF_WRAP__*/
 
 
@@ -19,11 +19,12 @@
 
 
 #if __MP_LEGACY_SUPPORT_SYSCONF_WRAP__
-#ifndef __BUILDING_MP_LEGACY_SUPPORT_SYSCONF_WRAP__
 
+#ifndef __BUILDING_MP_LEGACY_SUPPORT_SYSCONF_WRAP__
 /* and now define sysconf as our new wrapped function */
 #undef sysconf
 #define sysconf macports_legacy_sysconf
+#endif /* __BUILDING_MP_LEGACY_SUPPORT_SYSCONF_WRAP__ */
 
 #ifndef _SC_NPROCESSORS_CONF
 #define _SC_NPROCESSORS_CONF 57
@@ -41,5 +42,4 @@ extern long macports_legacy_sysconf(int);
 }
 #endif
 
-#endif /* __BUILDING_MP_LEGACY_SUPPORT_SYSCONF_WRAP__ */
 #endif /*__MP_LEGACY_SUPPORT_SYSCONF_WRAP__*/
