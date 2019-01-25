@@ -51,7 +51,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-  extern char * macports_legacy_realpath(const char *, void *);
+  extern char * macports_legacy_realpath(const char * __restrict, char * __restrict);
 #ifdef __cplusplus
 }
 #endif

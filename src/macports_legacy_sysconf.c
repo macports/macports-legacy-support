@@ -45,13 +45,14 @@ long macports_legacy_sysconf(int name){
     if ( name == _SC_NPROCESSORS_ONLN ) {
 
         int nm[2];
+        int ret;
         size_t len = 4;
         uint32_t count;
 
         nm[0] = CTL_HW; nm[1] = HW_AVAILCPU;
-        sysctl(nm, 2, &count, &len, NULL, 0);
+        ret = sysctl(nm, 2, &count, &len, NULL, 0);
 
-        if (count < 1) {
+        if (ret < 0 || count < 1) {
             /* try again with _SC_NPROCESSORS_CONF */
             return macports_legacy_sysconf(_SC_NPROCESSORS_CONF);
         } else {
@@ -62,14 +63,15 @@ long macports_legacy_sysconf(int name){
     if ( name == _SC_NPROCESSORS_CONF ) {
 
         int nm[2];
+        int ret;
         size_t len = 4;
         uint32_t count;
 
         nm[0] = CTL_HW; nm[1] = HW_NCPU;
-        sysctl(nm, 2, &count, &len, NULL, 0);
+        ret = sysctl(nm, 2, &count, &len, NULL, 0);
 
         /* there has to be at least 1 processor */
-        if (count < 1) { count = 1; }
+        if (ret < 0 || count < 1) { count = 1; }
         return (long)count;
     }
 

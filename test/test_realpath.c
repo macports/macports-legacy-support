@@ -1,5 +1,6 @@
+
 /*
- * Copyright (c) 2019 Ken Cunningham <kencu@macports.org>
+ * Copyright (c) 2019 Christian Cornelssen
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -14,30 +15,14 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-/* MP support header */
-#include "MacportsLegacySupport.h"
-
-/* realpath wrap */
-#if __MP_LEGACY_SUPPORT_REALPATH_WRAP__
-
-/* we need this blocker so as to not get caught in our own wrap */
-#define __BUILDING_MP_LEGACY_SUPPORT_REALPATH_WRAP__
-
-#include <limits.h>
 #include <stdlib.h>
+#include <stdio.h>
 
-char *
-macports_legacy_realpath(const char * __restrict stringsearch, char * __restrict buffer)
-{
-    if (buffer == NULL) {
-        char *myrealpathbuf = malloc(PATH_MAX);
-        if (myrealpathbuf != NULL) {
-            return(realpath(stringsearch, myrealpathbuf));
-        } else {
-            return(NULL);
-        }
-    } else {
-        return(realpath(stringsearch, buffer));
-    }
+int main() {
+    const char *p = realpath(".", NULL);	/* bus error up to 10.5 */
+    if (!p) return 1;
+    printf("%s\n", p);
+    free((void*)p);
+    return 0;
 }
-#endif /*__MP_LEGACY_SUPPORT_REALPATH_WRAP__*/
+
