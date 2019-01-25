@@ -20,11 +20,12 @@
 #include <assert.h>
 
 int main() {
-	long nconf = sysconf(_SC_NPROCESSORS_CONF);
-	long nonln = sysconf(_SC_NPROCESSORS_ONLN);
-	printf("nconf = %ld; nonln = %ld\n", nconf, nonln);
-	assert(nconf > 0);
-	assert(nonln > 0);
+    long nconf = sysconf(_SC_NPROCESSORS_CONF);
+    long nonln = sysconf(_SC_NPROCESSORS_ONLN);
+
+    printf("nconf = %ld; nonln = %ld\n", nconf, nonln);
+    assert(nconf > 0);
+    assert(nonln > 0);
 
     return 0;
 
