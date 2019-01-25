@@ -45,7 +45,11 @@ RMDIR            = sh -c 'for d; do test ! -d "$$d" || rmdir -p "$$d"; done' rmd
 
 SRCDIR           = src
 SRCINCDIR        = include
-ALLHEADERS      := $(wildcard $(SRCINCDIR)/*.h $(SRCINCDIR)/*/*.h $(SRCDIR)/*.h)
+# Use VAR := $(shell CMD) instead of VAR != CMD to support old make versions
+FIND_LIBHEADERS := find $(SRCINCDIR) -type f \( -name '*.h' -o \
+                                             \( -name 'c*' ! -name '*.*' \) \)
+LIBHEADERS      := $(shell $(FIND_LIBHEADERS))
+ALLHEADERS      := $(LIBHEADERS) $(wildcard $(SRCDIR)/*.h)
 LIBOBJECTS      := $(patsubst %.c,%.o,$(wildcard $(SRCDIR)/*.c))
 
 TESTDIR          = test
@@ -87,11 +91,11 @@ $(TESTRUNS): $(TESTRUNPREFIX)%: $(TESTNAMEPREFIX)%
 install: install-headers install-lib
 
 install-headers:
-	$(MKINSTALLDIRS) $(DESTDIR)$(PKGINCDIR)/sys
-	$(MKINSTALLDIRS) $(DESTDIR)$(PKGINCDIR)/xlocale
-	$(INSTALL_DATA) $(wildcard include/*.h include/c*) $(DESTDIR)$(PKGINCDIR)
-	$(INSTALL_DATA) $(wildcard include/sys/*)     $(DESTDIR)$(PKGINCDIR)/sys
-	$(INSTALL_DATA) $(wildcard include/xlocale/*) $(DESTDIR)$(PKGINCDIR)/xlocale
+	$(MKINSTALLDIRS) $(patsubst $(SRCINCDIR)/%,$(DESTDIR)$(PKGINCDIR)/%,\
+	                            $(sort $(dir $(LIBHEADERS))))
+	for h in $(patsubst $(SRCINCDIR)/%,%,$(LIBHEADERS)); do \
+	  $(INSTALL_DATA) $(SRCINCDIR)/"$$h" $(DESTDIR)$(PKGINCDIR)/"$$h"; \
+	done
 
 install-lib: $(BUILDLIBPATH)
 	$(MKINSTALLDIRS) $(DESTDIR)$(LIBDIR)
