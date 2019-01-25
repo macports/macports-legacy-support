@@ -41,7 +41,7 @@ MKINSTALLDIRS    = install -d -m 755
 INSTALL_PROGRAM  = install -c -m 755
 INSTALL_DATA     = install -c -m 644
 RM               = rm -f
-RMDIR            = sh -c 'for d; do test ! -d "$d" || rmdir -p "$d"; done' rmdir
+RMDIR            = sh -c 'for d; do test ! -d "$$d" || rmdir -p "$$d"; done' rmdir
 
 SRCDIR           = src
 SRCINCDIR        = include
