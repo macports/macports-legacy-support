@@ -16,7 +16,9 @@ Wrapped headers are:
 
  - cmath         : Adds declaration of various `long long` methods missing in OSX10.6 and older.
  - stdio.h       : Adds `getline` and `getdelim` functions missing in OSX10.6 and older.
- - stdlib.h      : Adds `posix_memalign` functional replacement, missing in OSX10.5 and older.
+ - stdlib.h      : Adds `posix_memalign` functional replacement,
+                   and wraps `realpath` to accept a NULL buffer argument,
+                   both for OSX10.5 and older.
  - string.h      : Adds `strnlen`, `strndup` and `memmem` functions missing in OSX10.6 and older.
  - time.h        : Adds `clock_gettime` function missing in OSX10.11 and older.
  - wchar.h       : Adds functions `wcsdup`, `wcsnlen`, `wcpcpy`, `wcpncpy`,
@@ -31,5 +33,7 @@ Wrapped headers are:
  - sys/stat.h    : Adds `fchmodat`, `fstatat`, and `mkdirat` functions missing in OSX10.9 and older.
                  : Adds "lchmod", missing in OSX10.4.
  - sys/unistd.h  : Adds `getattrlistat`, `readlinkat`, `faccessat`, `fchownat`, `linkat`, `symlinkat`, 
-                 : and `unlinkat` functions missing in OSX10.9 and older.
+                 and `unlinkat` functions missing in OSX10.9 and older.
+                 Also wraps `sysconf` on OSX10.4 to support `_SC_NPROCESSORS_CONF`
+                 and `_SC_NPROCESSORS_ONLN`.
  
