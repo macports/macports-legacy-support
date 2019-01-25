@@ -27,7 +27,7 @@
 #include <stdlib.h>
 
 char *
-macports_legacy_realpath(const char *stringsearch, void *buffer)
+macports_legacy_realpath(const char * __restrict stringsearch, char * __restrict buffer)
 {
     if (buffer == NULL) {
         char *myrealpathbuf = malloc(PATH_MAX);
