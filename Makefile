@@ -18,24 +18,33 @@ PREFIX          ?= /usr/local
 INCSUBDIR        = LegacySupport
 PKGINCDIR        = $(PREFIX)/include/$(INCSUBDIR)
 LIBDIR           = $(PREFIX)/lib
+AREXT            = .a
 SOEXT            = .dylib
 LIBNAME          = MacportsLegacySupport
-LIBFILE          = lib$(LIBNAME)$(SOEXT)
-LIBPATH          = $(LIBDIR)/$(LIBFILE)
-BUILDLIBDIR      = lib
-BUILDLIBPATH     = $(BUILDLIBDIR)/$(LIBFILE)
-BUILDLIBFLAGS    = -dynamiclib -headerpad_max_install_names \
-                   -install_name @executable_path/../$(BUILDLIBPATH) \
+DLIBFILE         = lib$(LIBNAME)$(SOEXT)
+SLIBFILE         = lib$(LIBNAME)$(AREXT)
+DLIBPATH         = $(LIBDIR)/$(DLIBFILE)
+SLIBPATH         = $(LIBDIR)/$(SLIBFILE)
+BUILDDLIBDIR     = lib
+BUILDSLIBDIR     = lib
+BUILDDLIBPATH    = $(BUILDDLIBDIR)/$(DLIBFILE)
+BUILDSLIBPATH    = $(BUILDSLIBDIR)/$(SLIBFILE)
+BUILDDLIBFLAGS   = -dynamiclib -headerpad_max_install_names \
+                   -install_name @executable_path/../$(BUILDDLIBPATH) \
                    -current_version 1.0 -compatibility_version 1.0
+BUILDSLIBFLAGS   = -qs
 POSTINSTALL      = install_name_tool
-POSTINSTALLFLAGS = -id $(LIBPATH)
+POSTINSTALLFLAGS = -id $(DLIBPATH)
 
 ARCHFLAGS       ?=
 CC              ?= cc $(ARCHFLAGS)
 CFLAGS          ?= -Os -Wall
+DLIBCFLAGS      ?= -fPIC
+SLIBCFLAGS      ?=
 CXX             ?= c++ $(ARCHFLAGS)
 CXXFLAGS        ?= -Os -Wall
 LDFLAGS         ?=
+AR              ?= ar
 
 MKINSTALLDIRS    = install -d -m 755
 INSTALL_PROGRAM  = install -c -m 755
@@ -50,12 +59,16 @@ FIND_LIBHEADERS := find $(SRCINCDIR) -type f \( -name '*.h' -o \
                                              \( -name 'c*' ! -name '*.*' \) \)
 LIBHEADERS      := $(shell $(FIND_LIBHEADERS))
 ALLHEADERS      := $(LIBHEADERS) $(wildcard $(SRCDIR)/*.h)
-LIBOBJECTS      := $(patsubst %.c,%.o,$(wildcard $(SRCDIR)/*.c))
+LIBSRCS         := $(wildcard $(SRCDIR)/*.c)
+DLIBOBJEXT       = .dl.o
+SLIBOBJEXT       = .o
+DLIBOBJS        := $(patsubst %.c,%$(DLIBOBJEXT),$(LIBSRCS))
+SLIBOBJS        := $(patsubst %.c,%$(SLIBOBJEXT),$(LIBSRCS))
 
 TESTDIR          = test
 TESTNAMEPREFIX   = $(TESTDIR)/test_
 TESTRUNPREFIX    = run_
-TESTLDFLAGS      = -L$(BUILDLIBDIR) $(LDFLAGS)
+TESTLDFLAGS      = -L$(BUILDDLIBDIR) $(LDFLAGS)
 TESTLIBS         = -l$(LIBNAME)
 TESTSRCS_C      := $(wildcard $(TESTNAMEPREFIX)*.c)
 TESTSRCS_CPP    := $(wildcard $(TESTNAMEPREFIX)*.cpp)
@@ -66,23 +79,36 @@ TESTPRGS_CPP    := $(patsubst %.cpp,%,$(TESTSRCS_CPP))
 TESTPRGS         = $(TESTPRGS_C) $(TESTPRGS_CPP)
 TESTRUNS        := $(patsubst $(TESTNAMEPREFIX)%,$(TESTRUNPREFIX)%,$(TESTPRGS))
 
-all: $(BUILDLIBPATH)
+all: dlib slib
+dlib: $(BUILDDLIBPATH)
+slib: $(BUILDSLIBPATH)
 
 # Generously marking all header files as potential dependencies
-$(LIBOBJECTS) $(TESTOBJS_C): %.o: %.c $(ALLHEADERS)
+$(DLIBOBJS): %$(DLIBOBJEXT): %.c $(ALLHEADERS)
+	$(CC) -c -I$(SRCINCDIR) $(CFLAGS) $(DLIBCFLAGS) $< -o $@
+
+$(SLIBOBJS): %$(SLIBOBJEXT): %.c $(ALLHEADERS)
+	$(CC) -c -I$(SRCINCDIR) $(CFLAGS) $(SLIBCFLAGS) $< -o $@
+
+$(TESTOBJS_C): %.o: %.c $(ALLHEADERS)
 	$(CC) -c -I$(SRCINCDIR) $(CFLAGS) $< -o $@
 
 $(TESTOBJS_CPP): %.o: %.cpp $(ALLHEADERS)
 	$(CXX) -c -I$(SRCINCDIR) $(CXXFLAGS) $< -o $@
 
-$(BUILDLIBPATH): $(LIBOBJECTS)
-	$(MKINSTALLDIRS) $(BUILDLIBDIR)
-	$(CC) $(BUILDLIBFLAGS) $(LDFLAGS) $^ -o $@
+$(BUILDDLIBPATH): $(DLIBOBJS)
+	$(MKINSTALLDIRS) $(BUILDDLIBDIR)
+	$(CC) $(BUILDDLIBFLAGS) $(LDFLAGS) $^ -o $@
 
-$(TESTPRGS_C): %: %.o $(BUILDLIBPATH)
+$(BUILDSLIBPATH): $(SLIBOBJS)
+	$(MKINSTALLDIRS) $(BUILDSLIBDIR)
+	$(RM) $@
+	$(AR) $(BUILDSLIBFLAGS) $@ $^
+
+$(TESTPRGS_C): %: %.o $(BUILDDLIBPATH)
 	$(CC) $(TESTLDFLAGS) $< $(TESTLIBS) -o $@
 
-$(TESTPRGS_CPP): %: %.o $(BUILDLIBPATH)
+$(TESTPRGS_CPP): %: %.o $(BUILDDLIBPATH)
 	$(CXX) $(TESTLDFLAGS) $< $(TESTLIBS) -o $@
 
 $(TESTRUNS): $(TESTRUNPREFIX)%: $(TESTNAMEPREFIX)%
@@ -97,16 +123,23 @@ install-headers:
 	  $(INSTALL_DATA) $(SRCINCDIR)/"$$h" $(DESTDIR)$(PKGINCDIR)/"$$h"; \
 	done
 
-install-lib: $(BUILDLIBPATH)
+install-lib: install-dlib install-slib
+
+install-dlib: $(BUILDDLIBPATH)
 	$(MKINSTALLDIRS) $(DESTDIR)$(LIBDIR)
-	$(INSTALL_PROGRAM) $(BUILDLIBPATH) $(DESTDIR)$(LIBDIR)
-	$(POSTINSTALL) $(POSTINSTALLFLAGS) $(DESTDIR)$(LIBPATH)
+	$(INSTALL_PROGRAM) $(BUILDDLIBPATH) $(DESTDIR)$(LIBDIR)
+	$(POSTINSTALL) $(POSTINSTALLFLAGS) $(DESTDIR)$(DLIBPATH)
+
+install-slib: $(BUILDSLIBPATH)
+	$(MKINSTALLDIRS) $(DESTDIR)$(LIBDIR)
+	$(INSTALL_DATA) $(BUILDSLIBPATH) $(DESTDIR)$(LIBDIR)
 
 test check: $(TESTRUNS)
 
 clean:
 	$(RM) $(foreach D,$(SRCDIR) $(TESTDIR),$D/*.o $D/*.d)
-	$(RM) $(BUILDLIBPATH) $(TESTPRGS)
-	@$(RMDIR) $(BUILDLIBDIR)
+	$(RM) $(BUILDDLIBPATH) $(BUILDSLIBPATH) $(TESTPRGS)
+	@$(RMDIR) $(BUILDDLIBDIR) $(BUILDSLIBDIR)
 
-.PHONY: all clean install install-headers install-lib test check $(TESTRUNS)
+.PHONY: all dlib slib clean check test $(TESTRUNS)
+.PHONY: install install-headers install-lib install-dlib install-slib
