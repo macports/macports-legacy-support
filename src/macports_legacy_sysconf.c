@@ -21,7 +21,7 @@
 #if __MP_LEGACY_SUPPORT_SYSCONF_WRAP__
 
 /* we need this blocker so as to not get caught in our own wrap */
-#define __BUILDING_MP_LEGACY_SUPPORT_SYSCONF_WRAP__
+#define __DISABLE_MP_LEGACY_SUPPORT_SYSCONF_WRAP__
 
 
 #include <sys/types.h>

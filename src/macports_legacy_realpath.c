@@ -21,7 +21,7 @@
 #if __MP_LEGACY_SUPPORT_REALPATH_WRAP__
 
 /* we need this blocker so as to not get caught in our own wrap */
-#define __BUILDING_MP_LEGACY_SUPPORT_REALPATH_WRAP__
+#define __DISABLE_MP_LEGACY_SUPPORT_REALPATH_WRAP__
 
 #include <limits.h>
 #include <stdlib.h>
