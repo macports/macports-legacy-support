@@ -25,14 +25,11 @@
 
 /* realpath wrap */
 #if __MP_LEGACY_SUPPORT_REALPATH_WRAP__
-/* we need a way to isolate ourselves from our header wrapping while building */
-#ifndef __BUILDING_MP_LEGACY_SUPPORT_REALPATH_WRAP__
 
 /* we are going to move the old realpath definition out of the way */
 #undef realpath
 #define realpath realpath_macports_original
 
-#endif /*__BUILDING_MP_LEGACY_SUPPORT_REALPATH_WRAP__ */
 #endif /*__MP_LEGACY_SUPPORT_REALPATH_WRAP__*/
 
 
@@ -42,7 +39,6 @@
 
 /* realpath wrap */
 #if __MP_LEGACY_SUPPORT_REALPATH_WRAP__
-#ifndef __BUILDING_MP_LEGACY_SUPPORT_REALPATH_WRAP__
 
 /* and now define realpath as our new wrapped function */
 #undef realpath
@@ -55,7 +51,7 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
-#endif /*__BUILDING_MP_LEGACY_SUPPORT_REALPATH_WRAP__ */
+
 #endif /*__MP_LEGACY_SUPPORT_REALPATH_WRAP__*/
 
 
