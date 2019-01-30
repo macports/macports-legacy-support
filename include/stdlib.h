@@ -27,8 +27,8 @@
 #if __MP_LEGACY_SUPPORT_REALPATH_WRAP__
 
 /* we are going to move the old realpath definition out of the way */
-#undef realpath
-#define realpath realpath_macports_original
+#undef realpath(a,b)
+#define realpath(a,b) realpath_macports_original(a,b)
 
 #endif /*__MP_LEGACY_SUPPORT_REALPATH_WRAP__*/
 
@@ -41,8 +41,8 @@
 #if __MP_LEGACY_SUPPORT_REALPATH_WRAP__
 
 /* and now define realpath as our new wrapped function */
-#undef realpath
-#define realpath macports_legacy_realpath
+#undef realpath(a,b)
+#define realpath(a,b) macports_legacy_realpath(a,b)
 
 #ifdef __cplusplus
 extern "C" {

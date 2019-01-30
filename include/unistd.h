@@ -5,8 +5,8 @@
 #if __MP_LEGACY_SUPPORT_SYSCONF_WRAP__
 
 /* redefine the original sysconf */
-#undef sysconf
-#define sysconf sysconf_orig
+#undef sysconf(a)
+#define sysconf(a) sysconf_orig(a)
 
 #endif /*__MP_LEGACY_SUPPORT_SYSCONF_WRAP__*/
 
@@ -19,8 +19,8 @@
 #if __MP_LEGACY_SUPPORT_SYSCONF_WRAP__
 
 /* and now define sysconf as our new wrapped function */
-#undef sysconf
-#define sysconf macports_legacy_sysconf
+#undef sysconf(a)
+#define sysconf(a) macports_legacy_sysconf(a)
 
 #ifndef _SC_NPROCESSORS_CONF
 #define _SC_NPROCESSORS_CONF 57
