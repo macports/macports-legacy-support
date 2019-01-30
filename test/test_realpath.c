@@ -22,6 +22,7 @@ int main() {
     const char *p = realpath(".", NULL);	/* bus error up to 10.5 */
     if (!p) return 1;
     printf("%s\n", p);
+    printf("realpath supports NULL pointer\n");
     free((void*)p);
     return 0;
 }
