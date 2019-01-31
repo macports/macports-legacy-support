@@ -81,7 +81,11 @@ extern "C" {
 /* arc4random */
 #if __MP_LEGACY_SUPPORT_ARC4RANDOM__
 
-#include <stdint.h>            /* uint32_t uint16_t */
+#ifndef _SIZE_T
+#define _SIZE_T
+typedef __darwin_size_t		size_t;
+#endif
+typedef unsigned int          uint32_t;
 
 /*
  * Generate and return a uniformly random 32-bit quantity with an
