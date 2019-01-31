@@ -18,7 +18,8 @@ Wrapped headers are:
  - stdio.h       : Adds `getline` and `getdelim` functions missing in OSX10.6 and older.
  - stdlib.h      : Adds `posix_memalign` functional replacement,
                    and wraps `realpath` to accept a NULL buffer argument,
-                   both for OSX10.5 and older.
+                   both for OSX10.5 and older. Adds `arc4random_uniform` and `arc4random_buf` missing
+                   on OSX10.6 and older.
  - string.h      : Adds `strnlen`, `strndup` and `memmem` functions missing in OSX10.6 and older.
  - time.h        : Adds `clock_gettime` function missing in OSX10.11 and older.
  - wchar.h       : Adds functions `wcsdup`, `wcsnlen`, `wcpcpy`, `wcpncpy`,
