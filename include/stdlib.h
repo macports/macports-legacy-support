@@ -85,7 +85,10 @@ extern "C" {
 #define _SIZE_T
 typedef __darwin_size_t		size_t;
 #endif
-typedef unsigned int          uint32_t;
+#ifndef _UINT32_T
+#define _UINT32_T
+typedef unsigned int         uint32_t;
+#endif
 
 /*
  * Generate and return a uniformly random 32-bit quantity with an
