@@ -22,7 +22,6 @@
 /* MP support header */
 #include "MacportsLegacySupport.h"
 
-
 /* realpath wrap */
 #if __MP_LEGACY_SUPPORT_REALPATH_WRAP__
 
@@ -32,10 +31,8 @@
 
 #endif /*__MP_LEGACY_SUPPORT_REALPATH_WRAP__*/
 
-
 /* Include the primary system stdlib.h */
 #include_next <stdlib.h>
-
 
 /* realpath wrap */
 #if __MP_LEGACY_SUPPORT_REALPATH_WRAP__
@@ -53,7 +50,6 @@ extern "C" {
 #endif
 
 #endif /*__MP_LEGACY_SUPPORT_REALPATH_WRAP__*/
-
 
 /* posix_memalign */
 #if __MP_LEGACY_SUPPORT_POSIX_MEMALIGN__
@@ -81,5 +77,35 @@ extern "C" {
 #endif
 
 #endif /*  __MP_LEGACY_SUPPORT_POSIX_MEMALIGN__ */
+
+/* arc4random */
+#if __MP_LEGACY_SUPPORT_ARC4RANDOM__
+
+#include <stdint.h>            /* uint32_t uint16_t */
+
+/*
+ * Generate and return a uniformly random 32-bit quantity with an
+ * upper bound of 'upper_bound'
+ */
+#ifdef __cplusplus
+extern "C" {
+#endif
+  extern uint32_t arc4random_uniform( uint32_t upper_bound );
+#ifdef __cplusplus
+}
+#endif
+
+/*
+ * Generate 'n' random bytes and put them in 'buf'.
+ */
+#ifdef __cplusplus
+extern "C" {
+#endif
+  extern void arc4random_buf( void* buf, size_t n );
+#ifdef __cplusplus
+}
+#endif
+
+#endif /*  __MP_LEGACY_SUPPORT_ARC4RANDOM__ */
 
 #endif /* _MACPORTS_STDLIB_H_ */
