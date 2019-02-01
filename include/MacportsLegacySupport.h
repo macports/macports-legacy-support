@@ -60,21 +60,17 @@
 #define __MP_LEGACY_SUPPORT_POSIX_MEMALIGN__  (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1060)
 
 /*  realpath() wrap */
-#if                                           (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1060      \
-                                                         && !defined (__DISABLE_MP_LEGACY_SUPPORT_REALPATH_WRAP__)    \
-                                                         && !defined (__DISABLE_ALL_MACPORTS_FUNCTION_WRAPPING__) )
-# define __MP_LEGACY_SUPPORT_REALPATH_WRAP__
-#endif
+#define __MP_LEGACY_SUPPORT_REALPATH_WRAP__   (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1060      \
+                                                         && !defined(__DISABLE_MP_LEGACY_SUPPORT_REALPATH_WRAP__)    \
+                                                         && !defined(__DISABLE_ALL_MACPORTS_FUNCTION_WRAPPING__) )
 
 /* lsmod */
 #define __MP_LEGACY_SUPPORT_LSMOD__           (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1050)
 
 /*  sysconf() wrap */
-#if                                           (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1050      \
-                                                         && !defined (__DISABLE_MP_LEGACY_SUPPORT_SYSCONF_WRAP__ )    \
-                                                         && !defined (__DISABLE_ALL_MACPORTS_FUNCTION_WRAPPING__) )
-# define __MP_LEGACY_SUPPORT_SYSCONF_WRAP__
-#endif
+#define __MP_LEGACY_SUPPORT_SYSCONF_WRAP__    (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1050      \
+                                                         && !defined(__DISABLE_MP_LEGACY_SUPPORT_SYSCONF_WRAP__)      \
+                                                         && !defined(__DISABLE_ALL_MACPORTS_FUNCTION_WRAPPING__) )
 
 /* arc4random */
 #define __MP_LEGACY_SUPPORT_ARC4RANDOM__      (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1070)
