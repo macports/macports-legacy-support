@@ -43,7 +43,12 @@ static inline uint64_t sys_cpu_timestamp(void)
 
 #else
 
-#error "I don't know how to get CPU cycle counter for this machine!"
+#include <mach/mach.h>
+#include <mach/mach_time.h>
+static inline uint64_t sys_cpu_timestamp(void)
+{
+    return(mach_absolute_time());
+}
 
 #endif /* x86, x86_64 */
 
