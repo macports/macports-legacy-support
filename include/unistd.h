@@ -2,13 +2,13 @@
 #include "MacportsLegacySupport.h"
 
 
-#if __MP_LEGACY_SUPPORT_SYSCONF_WRAP__
+#if __ENABLE_MP_LEGACY_SUPPORT_SYSCONF_WRAP__
 
 /* redefine the original sysconf */
 #undef sysconf
 #define sysconf(a) sysconf_orig(a)
 
-#endif /*__MP_LEGACY_SUPPORT_SYSCONF_WRAP__*/
+#endif /*__ENABLE_MP_LEGACY_SUPPORT_SYSCONF_WRAP__*/
 
 
 
@@ -16,26 +16,18 @@
 
 
 
-#if __MP_LEGACY_SUPPORT_SYSCONF_WRAP__
+#if __ENABLE_MP_LEGACY_SUPPORT_SYSCONF_WRAP__
 
 /* and now define sysconf as our new wrapped function */
 #undef sysconf
-#define sysconf(a) macports_legacy_sysconf(a)
-
-#ifndef _SC_NPROCESSORS_CONF
-#define _SC_NPROCESSORS_CONF 57
-#endif
-
-#ifndef _SC_NPROCESSORS_ONLN
-#define _SC_NPROCESSORS_ONLN 58
-#endif
+#include "MacportsLegacyWrappers/sysconf_support.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-extern long macports_legacy_sysconf(int);
+extern long sysconf(int) __MP_LEGACY_WRAPPER_ALIAS(sysconf);
 #ifdef __cplusplus
 }
 #endif
 
-#endif /*__MP_LEGACY_SUPPORT_SYSCONF_WRAP__*/
+#endif /* __ENABLE_MP_LEGACY_SUPPORT_SYSCONF_WRAP__ */

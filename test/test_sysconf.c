@@ -15,17 +15,53 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+/*
+ * Deliberately declaring some potentially redefined names
+ * before including the associated header file, to test robustness.
+ */
+
+/* Wrapper should work not only with calls, but with references as well */
+typedef long (*itol_t)(int);
+
+/* Renaming different objects should not affect functionality */
+typedef struct { long sysconf; } scv_t;
+typedef struct { itol_t sysconf; } scf_t;
+
 #include <unistd.h>
 #include <stdio.h>
 #include <assert.h>
 
 int main() {
-	long nconf = sysconf(_SC_NPROCESSORS_CONF);
-	long nonln = sysconf(_SC_NPROCESSORS_ONLN);
-	printf("nconf = %ld; nonln = %ld\n", nconf, nonln);
-	assert(nconf > 0);
-	assert(nonln > 0);
+    /* Test with direct function call */
+    long nconf = sysconf(_SC_NPROCESSORS_CONF);
+    long nonln = sysconf(_SC_NPROCESSORS_ONLN);
+    printf("nconf = %ld; nonln = %ld\n", nconf, nonln);
+    assert (nconf > 0);
+    assert (nonln > 0);
+    printf("sysconf(_SC_NPROCESSORS_XXXX) supported.\n");
 
+    /* Test with name (reference) only */
+    {
+        itol_t f = sysconf;
+        assert (f(_SC_NPROCESSORS_CONF) == nconf);
+        assert (f(_SC_NPROCESSORS_ONLN) == nonln);
+        printf("f = sysconf, f(_SC_NPROCESSORS_XXXX) supported.\n");
+    }
+
+    /* Test with function macro disabler */
+    assert ((sysconf)(_SC_NPROCESSORS_CONF) == nconf);
+    assert ((sysconf)(_SC_NPROCESSORS_ONLN) == nonln);
+    printf("(sysconf)(_SC_NPROCESSORS_XXXX) supported.\n");
+
+    /* Test with same-named fields */
+    {
+        scf_t scf = { sysconf };
+        scv_t scv;
+        scv.sysconf = scf.sysconf(_SC_NPROCESSORS_CONF);
+        assert (scv.sysconf == nconf);
+        scv.sysconf = scf.sysconf(_SC_NPROCESSORS_ONLN);
+        assert (scv.sysconf == nonln);
+        printf("scv.sysconf = scf.sysconf(_SC_NPROCESSORS_XXXX) supported.\n");
+    }
     return 0;
-
 }

@@ -1,3 +1,4 @@
+
 /*
  * Copyright (c) 2019 Ken Cunningham <kencu@macports.org>
  *
@@ -14,31 +15,13 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-/* MP support header */
-#include "MacportsLegacySupport.h"
+/* sysconf macros supported by the macports wrapper */
 
-/* realpath wrap */
-#if __MP_LEGACY_SUPPORT_REALPATH_WRAP__
+#ifndef _SC_NPROCESSORS_CONF
+#define _SC_NPROCESSORS_CONF 57
+#endif
 
-/* we need this blocker so as to not get caught in our own wrap */
-#undef __DISABLE_MP_LEGACY_SUPPORT_REALPATH_WRAP__
-#define __DISABLE_MP_LEGACY_SUPPORT_REALPATH_WRAP__ 1
+#ifndef _SC_NPROCESSORS_ONLN
+#define _SC_NPROCESSORS_ONLN 58
+#endif
 
-#include <limits.h>
-#include <stdlib.h>
-
-char *
-__MP_LEGACY_WRAPPER(realpath)(const char * __restrict stringsearch, char * __restrict buffer)
-{
-    if (buffer == NULL) {
-        char *myrealpathbuf = malloc(PATH_MAX);
-        if (myrealpathbuf != NULL) {
-            return(realpath(stringsearch, myrealpathbuf));
-        } else {
-            return(NULL);
-        }
-    } else {
-        return(realpath(stringsearch, buffer));
-    }
-}
-#endif /*__MP_LEGACY_SUPPORT_REALPATH_WRAP__*/
