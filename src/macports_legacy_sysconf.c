@@ -21,8 +21,8 @@
 #if __MP_LEGACY_SUPPORT_SYSCONF_WRAP__
 
 /* we need this blocker so as to not get caught in our own wrap */
-#undef  __MP_LEGACY_SUPPORT_SYSCONF_WRAP__
-#define __DISABLE_MP_LEGACY_SUPPORT_SYSCONF_WRAP__
+#undef __DISABLE_MP_LEGACY_SUPPORT_SYSCONF_WRAP__
+#define __DISABLE_MP_LEGACY_SUPPORT_SYSCONF_WRAP__ 1
 
 
 #include <sys/types.h>
@@ -30,18 +30,11 @@
 
 #include <unistd.h>
 
-#ifndef _SC_NPROCESSORS_CONF
-#define _SC_NPROCESSORS_CONF 57
-#endif
-
-#ifndef _SC_NPROCESSORS_ONLN
-#define _SC_NPROCESSORS_ONLN 58
-#endif
-
-
 /* emulate two commonly used but missing selectors from sysconf() on 10.4 */
 
-long macports_legacy_sysconf(int name){
+#include <MacportsLegacyWrappers/sysconf_support.h>
+
+long __MP_LEGACY_WRAPPER(sysconf)(int name){
 
     if ( name == _SC_NPROCESSORS_ONLN ) {
 
@@ -55,7 +48,7 @@ long macports_legacy_sysconf(int name){
 
         if (ret < 0 || count < 1) {
             /* try again with _SC_NPROCESSORS_CONF */
-            return macports_legacy_sysconf(_SC_NPROCESSORS_CONF);
+            return __MP_LEGACY_WRAPPER(sysconf)(_SC_NPROCESSORS_CONF);
         } else {
             return (long)count;
         }

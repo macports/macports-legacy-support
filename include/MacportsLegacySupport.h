@@ -20,6 +20,7 @@
 #define _MACPORTS_LEGACYSUPPORTDEFS_H_
 
 #include "AvailabilityMacros.h"
+#include "MacportsLegacyWrappers/wrapper_macros.h"
 
 /* defines for when legacy support is required for various functions */
 
@@ -59,26 +60,20 @@
 /* posix_memalign */
 #define __MP_LEGACY_SUPPORT_POSIX_MEMALIGN__  (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1060)
 
-/*  realpath() wrap */
-#if (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1060  \
-               && !defined(__DISABLE_MP_LEGACY_SUPPORT_REALPATH_WRAP__) \
-               && !defined(__DISABLE_ALL_MACPORTS_FUNCTION_WRAPPING__)  )
-# define __MP_LEGACY_SUPPORT_REALPATH_WRAP__ 1
-#else
-# define __MP_LEGACY_SUPPORT_REALPATH_WRAP__ 0
-#endif
+/*  realpath() wrap availability */
+#define __MP_LEGACY_SUPPORT_REALPATH_WRAP__   (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1060)
+
+/*  realpath() wrap status */
+#define __ENABLE_MP_LEGACY_SUPPORT_REALPATH_WRAP__  (!__DISABLE_MP_LEGACY_SUPPORT_FUNCTION_WRAPPING__  && !__DISABLE_MP_LEGACY_SUPPORT_REALPATH_WRAP__ && __MP_LEGACY_SUPPORT_REALPATH_WRAP__)
 
 /* lsmod */
 #define __MP_LEGACY_SUPPORT_LSMOD__           (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1050)
 
-/*  sysconf() wrap */
-#if (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1050 \
-               && !defined(__DISABLE_MP_LEGACY_SUPPORT_SYSCONF_WRAP__) \
-               && !defined(__DISABLE_ALL_MACPORTS_FUNCTION_WRAPPING__) )
-# define __MP_LEGACY_SUPPORT_SYSCONF_WRAP__ 1
-#else
-# define __MP_LEGACY_SUPPORT_SYSCONF_WRAP__ 0
-#endif
+/*  sysconf() wrap availability */
+#define __MP_LEGACY_SUPPORT_SYSCONF_WRAP__    (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1050)
+
+/*  sysconf() wrap status */
+#define __ENABLE_MP_LEGACY_SUPPORT_SYSCONF_WRAP__  (!__DISABLE_MP_LEGACY_SUPPORT_FUNCTION_WRAPPING__  && !__DISABLE_MP_LEGACY_SUPPORT_SYSCONF_WRAP__ && __MP_LEGACY_SUPPORT_SYSCONF_WRAP__)
  
 /* arc4random */
 #define __MP_LEGACY_SUPPORT_ARC4RANDOM__      (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1070)
