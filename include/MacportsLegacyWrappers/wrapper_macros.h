@@ -18,7 +18,7 @@
 #ifndef _MACPORTS_LEGACYSUPPORTWRAP_H_
 #define _MACPORTS_LEGACYSUPPORTWRAP_H_
 
-/* We need support for asm */
+/* We need support for __asm */
 #if !__GNUC__ && !__clang__
 #undef __DISABLE_MP_LEGACY_SUPPORT_FUNCTION_WRAPPING__
 #define __DISABLE_MP_LEGACY_SUPPORT_FUNCTION_WRAPPING__ 1
@@ -26,11 +26,12 @@
 
 #if !__DISABLE_MP_LEGACY_SUPPORT_FUNCTION_WRAPPING__
 /* Could include Darwin's <sys/cdefs.h> and use __STRING, __CONCAT */
-/* But for wrappers we require asm, thus GCC/Clang, thus ANSI C, anyway */
+/* But for wrappers we require __asm, thus GCC/Clang, thus ANSI C, anyway */
 
 /* Wrapper support macros */
+/* Use __asm instead of asm, as the latter is not recognized with e.g. -ansi */
 #define __MP_LEGACY_WRAPPER(sym) macports_legacy_##sym
-#define __MP_LEGACY_WRAPPER_ALIAS(sym) asm("_macports_legacy_" #sym)
+#define __MP_LEGACY_WRAPPER_ALIAS(sym) __asm("_macports_legacy_" #sym)
 
 #endif /* !__DISABLE_MP_LEGACY_SUPPORT_FUNCTION_WRAPPING__ */
 #endif /* _MACPORTS_LEGACYSUPPORTWRAP_H_ */
