@@ -1,5 +1,6 @@
 # GNU Makefile for MacportsLegacySupport
 # Copyright (c) 2010 Chris Jones <jonesc@macports.org>
+# Copyright (c) 2019 Michael Dickens <michaelld@macports.org>
 #
 # Permission to use, copy, modify, and distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -111,6 +112,28 @@ $(TESTPRGS_C): %: %.o $(BUILDDLIBPATH)
 $(TESTPRGS_CPP): %: %.o $(BUILDDLIBPATH)
 	$(CXX) $(TESTLDFLAGS) $< $(TESTLIBS) -o $@
 
+# Special clause for testing the cmath fix: Just need to verify that
+# building succeeds or fails, not that the executable runs or what it
+# produces.  Note that for some reason all Clang compilers tested
+# (Apple and MP) successfully compile and link this code regardless of
+# the c++ standard chosen, which seems to be a build issue since the
+# functions being tested were not introduced until c++11. GCC
+# correctly fails the compile and link using c++03 or older, but
+# succeeds using c++11 -- as desired.
+test_cmath: test/test_cmath.cc $(ALLHEADERS)
+	$(info 1: testing compiler '$(CXX)' for non-legacy cmath using c++03; the build should fail, regardless of the compiler or OS)
+	$(info 1: $(CXX) $(CXXFLAGS) -std=c++03 $< -o test/$@_cxx03)
+	@-$(CXX) -I$(SRCINCDIR) $(CXXFLAGS) -std=c++03 $< -o test/$@_cxx03 &> /dev/null && echo "1: c++03 no legacy cmath build success (test failed)!" || echo "1: c++03 no legacy cmath build failure (test succeeded)!"
+	$(info 2: testing compiler '$(CXX)' for non-legacy cmath using c++03; the build should fail, regardless of the compiler or OS)
+	$(info 2: $(CXX) -I$(SRCINCDIR) $(CXXFLAGS) -std=c++03 $< -o test/$@_cxx03)
+	@-$(CXX) -I$(SRCINCDIR) $(CXXFLAGS) -std=c++03 $< -o test/$@_cxx03 &> /dev/null && echo "2: c++03 legacy cmath build success (test failed)!" || echo "2: c++03 legacy cmath build failure (test succeeded)!"
+	$(info 3: testing compiler '$(CXX)' for non-legacy cmath using c++11; if the compiler supports this standard, then the build should succeed regardless of OS)
+	$(info 3: $(CXX) $(CXXFLAGS) -std=c++11 $< -o test/$@_cxx11)
+	@-$(CXX) $(CXXFLAGS) -std=c++11 $< -o test/$@_cxx11 &> /dev/null && echo "3: c++11 no legacy cmath build success (test failed)!" || echo "3: c++11 no legacy cmath build failure (test succeeded)!"
+	$(info 4: testing compiler '$(CXX)' for legacy cmath using c++11; if the compiler supports this standard, then the build should succeed regardless of OS)
+	$(info 4: $(CXX) -I$(SRCINCDIR) $(CXXFLAGS) -std=c++11 $< -o test/$@_cxx11)
+	@-$(CXX) -I$(SRCINCDIR) $(CXXFLAGS) -std=c++11 $< -o test/$@_cxx11 &> /dev/null && echo "4: c++11 legacy cmath build success (test succeeded)!" || echo "4: c++11 legacy cmath build failure (test failed)!"
+
 $(TESTRUNS): $(TESTRUNPREFIX)%: $(TESTNAMEPREFIX)%
 	$<
 
@@ -134,12 +157,12 @@ install-slib: $(BUILDSLIBPATH)
 	$(MKINSTALLDIRS) $(DESTDIR)$(LIBDIR)
 	$(INSTALL_DATA) $(BUILDSLIBPATH) $(DESTDIR)$(LIBDIR)
 
-test check: $(TESTRUNS)
+test check: $(TESTRUNS) test_cmath
 
 clean:
 	$(RM) $(foreach D,$(SRCDIR) $(TESTDIR),$D/*.o $D/*.d)
-	$(RM) $(BUILDDLIBPATH) $(BUILDSLIBPATH) $(TESTPRGS)
+	$(RM) $(BUILDDLIBPATH) $(BUILDSLIBPATH) $(TESTPRGS) test/test_cmath_*
 	@$(RMDIR) $(BUILDDLIBDIR) $(BUILDSLIBDIR)
 
-.PHONY: all dlib slib clean check test $(TESTRUNS)
+.PHONY: all dlib slib clean check test $(TESTRUNS) test_cmath
 .PHONY: install install-headers install-lib install-dlib install-slib
