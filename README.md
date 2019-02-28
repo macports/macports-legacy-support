@@ -14,7 +14,8 @@ via the legacysupport PortGroup.
 
 Wrapped headers are:
 
- - cmath         : Adds declaration of various `long long` methods missing in OSX10.6 and older.
+ - cmath         : Adds the same functions as those provided by the herein math.h, in namespace std:: .
+ - math.h         : Adds declaration of various `long long` methods  missing in OSX10.6 and older, GCC 8 and older.
  - pthread.h     : Adds PTHREAD_RWLOCK_INITIALIZER for OSX10.4
  - stdio.h       : Adds `getline` and `getdelim` functions missing in OSX10.6 and older.
  - stdlib.h      : Adds `posix_memalign` functional replacement,

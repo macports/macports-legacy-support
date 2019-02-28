@@ -2,6 +2,7 @@
 /*
  * Copyright (c) 2010 Chris Jones <jonesc@macports.org>
  * Copyright (c) 2018 Ken Cunningham <kencu@macports.org>
+ * Copyright (c) 2019 Michael Dickens <michaelld@macports.org>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -81,5 +82,13 @@
 /* pthread_rwlock_initializer */
 #define __MP_LEGACY_SUPPORT_PTHREAD_RWLOCK__  (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1050)
 
+/* c++11 <cmath> PPC 10.[45] and Intel 10.[4-6], GNU g++ 4.6 through 8. */
+#if (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1070 \
+               && defined(__GNUC__) && (__GNUC__ <= 8)                 \
+               && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ >= 6))))
+#define __MP_LEGACY_SUPPORT_CXX11_CMATH__ 1
+#else
+#define __MP_LEGACY_SUPPORT_CXX11_CMATH__ 0
+#endif
 
 #endif /* _MACPORTS_LEGACYSUPPORTDEFS_H_ */
