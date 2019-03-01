@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2010 Chris Jones <jonesc@macports.org>
  * Copyright (c) 2019 Michael Dickens <michaelld@macports.org>
@@ -52,13 +51,6 @@ extern long long int llroundl ( long double );
 
 __END_DECLS
 
-#endif /* __MP_LEGACY_SUPPORT_LLROUND__ */
-
-/*
- * Include the next math.h, which might be from the primary system or
- * it might be within GCC's c or c++ (yup!) headers
- */
-
 /*
  * If the GCC <math.h> header exists, then tell it: (1) to include the
  * next <math.h>, which should be from the system; and (2) to not use
@@ -67,38 +59,38 @@ __END_DECLS
  * wants <cmath>, they should #include that specific header.
  */
 
-/* store prior values for _GLIBCXX_MATH_H and _GLIBCXX_INCLUDE_NEXT_C_HEADERS */
-
-#ifdef L_GLIBCXX_MATH_H
 #undef L_GLIBCXX_MATH_H
-#endif
-#ifdef _GLIBCXX_MATH_H
-#define L_GLIBCXX_MATH_H _GLIBCXX_MATH_H
-#endif
+#ifndef _GLIBCXX_MATH_H
+#define L_GLIBCXX_MATH_H 1
 #define _GLIBCXX_MATH_H 1
+#endif
 
-#ifdef L_GLIBCXX_INCLUDE_NEXT_C_HEADERS
 #undef L_GLIBCXX_INCLUDE_NEXT_C_HEADERS
-#endif
-#ifdef _GLIBCXX_INCLUDE_NEXT_C_HEADERS
-#define L_GLIBCXX_INCLUDE_NEXT_C_HEADERS _GLIBCXX_INCLUDE_NEXT_C_HEADERS
-#endif
+#ifndef _GLIBCXX_INCLUDE_NEXT_C_HEADERS
+#define L_GLIBCXX_INCLUDE_NEXT_C_HEADERS 1
 #define _GLIBCXX_INCLUDE_NEXT_C_HEADERS 1
+#endif
+
+#endif /* __MP_LEGACY_SUPPORT_LLROUND__ */
+
+/*
+ * Include the next math.h, which might be from the primary system or
+ * it might be within GCC's c or c++ (yup!) headers
+ */
 
 #include_next <math.h>
 
-/* restore prior values for _GLIBCXX_MATH_H and _GLIBCXX_INCLUDE_NEXT_C_HEADERS */
+#if __MP_LEGACY_SUPPORT_LLROUND__
 
-#undef _GLIBCXX_MATH_H
 #ifdef L_GLIBCXX_MATH_H
-#define _GLIBCXX_MATH_H L_GLIBCXX_MATH_H
 #undef L_GLIBCXX_MATH_H
+#undef _GLIBCXX_MATH_H
 #endif
 
-#undef _GLIBCXX_INCLUDE_NEXT_C_HEADERS
 #ifdef L_GLIBCXX_INCLUDE_NEXT_C_HEADERS
-#define _GLIBCXX_INCLUDE_NEXT_C_HEADERS L_GLIBCXX_INCLUDE_NEXT_C_HEADERS
 #undef L_GLIBCXX_INCLUDE_NEXT_C_HEADERS
+#undef _GLIBCXX_INCLUDE_NEXT_C_HEADERS
 #endif
 
+#endif /* __MP_LEGACY_SUPPORT_LLROUND__ */
 #endif /* _MACPORTS_MATH_H_ */
