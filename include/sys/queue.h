@@ -19,11 +19,11 @@
 #ifndef _MACPORTS_SYS_QUEUE_H_
 #define _MACPORTS_SYS_QUEUE_H_
 
-/* Include the primary system sys/queue.h */
-#include_next <sys/queue.h>
-
 /* MP support header */
 #include "MacportsLegacySupport.h"
+
+/* Include the primary system sys/queue.h */
+#include_next <sys/queue.h>
 
 #if __MP_LEGACY_SUPPORT_STAILQ_FOREACH__
 /* STAILQ_FOREACH is not defined on Tiger */

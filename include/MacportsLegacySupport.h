@@ -20,7 +20,7 @@
 #ifndef _MACPORTS_LEGACYSUPPORTDEFS_H_
 #define _MACPORTS_LEGACYSUPPORTDEFS_H_
 
-#include "AvailabilityMacros.h"
+// Not needed -- #include "AvailabilityMacros.h"
 #include "MacportsLegacyWrappers/wrapper_macros.h"
 
 /* defines for when legacy support is required for various functions */
@@ -58,32 +58,33 @@
 /* llround */
 #define __MP_LEGACY_SUPPORT_LLROUND__         (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1070)
 
-/* posix_memalign */
-#define __MP_LEGACY_SUPPORT_POSIX_MEMALIGN__  (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1060)
-
-/*  realpath() wrap availability */
-#define __MP_LEGACY_SUPPORT_REALPATH_WRAP__   (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1060)
-
-/*  realpath() wrap status */
-#define __ENABLE_MP_LEGACY_SUPPORT_REALPATH_WRAP__  (!__DISABLE_MP_LEGACY_SUPPORT_FUNCTION_WRAPPING__  && !__DISABLE_MP_LEGACY_SUPPORT_REALPATH_WRAP__ && __MP_LEGACY_SUPPORT_REALPATH_WRAP__)
-
-/* lsmod */
-#define __MP_LEGACY_SUPPORT_LSMOD__           (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1050)
-
-/*  sysconf() wrap availability */
-#define __MP_LEGACY_SUPPORT_SYSCONF_WRAP__    (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1050)
-
-/*  sysconf() wrap status */
-#define __ENABLE_MP_LEGACY_SUPPORT_SYSCONF_WRAP__  (!__DISABLE_MP_LEGACY_SUPPORT_FUNCTION_WRAPPING__  && !__DISABLE_MP_LEGACY_SUPPORT_SYSCONF_WRAP__ && __MP_LEGACY_SUPPORT_SYSCONF_WRAP__)
- 
 /* arc4random */
 #define __MP_LEGACY_SUPPORT_ARC4RANDOM__      (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1070)
 
-/* pthread_rwlock_initializer */
+/* posix_memalign does not exist on < 1060 */
+#define __MP_LEGACY_SUPPORT_POSIX_MEMALIGN__  (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1060)
+
+/*  realpath() on < 1060 does not support modern NULL buffer usage */
+#define __MP_LEGACY_SUPPORT_REALPATH_WRAP__   (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1060)
+
+/*  realpath() wrap has bail-out macros in case we want to disable only function wrapping */
+#define __ENABLE_MP_LEGACY_SUPPORT_REALPATH_WRAP__  (!__DISABLE_MP_LEGACY_SUPPORT_FUNCTION_WRAPPING__  && !__DISABLE_MP_LEGACY_SUPPORT_REALPATH_WRAP__ && __MP_LEGACY_SUPPORT_REALPATH_WRAP__)
+
+/* lsmod does not exist on Tiger */
+#define __MP_LEGACY_SUPPORT_LSMOD__           (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1050)
+
+/*  sysconf() is missing functions on Tiger */
+#define __MP_LEGACY_SUPPORT_SYSCONF_WRAP__    (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1050)
+
+/*  sysconf() wrap has bail-out macros in case we want to disable only function wrapping */
+#define __ENABLE_MP_LEGACY_SUPPORT_SYSCONF_WRAP__  (!__DISABLE_MP_LEGACY_SUPPORT_FUNCTION_WRAPPING__  && !__DISABLE_MP_LEGACY_SUPPORT_SYSCONF_WRAP__ && __MP_LEGACY_SUPPORT_SYSCONF_WRAP__)
+ 
+/* pthread_rwlock_initializer is not defined on Tiger */
 #define __MP_LEGACY_SUPPORT_PTHREAD_RWLOCK__  (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1050)
 
 /* STAILQ_FOREACH is not defined on Tiger*/
 #define __MP_LEGACY_SUPPORT_STAILQ_FOREACH__  (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1050)
+
 
 /* c++11 <cmath> PPC 10.[45] and Intel 10.[4-6], GNU g++ 4.6 through 8. */
 #if (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1070 \

@@ -19,11 +19,11 @@
 #ifndef _MACPORTS_SYSUNISTD_H_
 #define _MACPORTS_SYSUNISTD_H_
 
-/* Include the primary system unistd.h */
-#include_next <sys/unistd.h>
-
 /* MP support header */
 #include "MacportsLegacySupport.h"
+
+/* Include the primary system unistd.h */
+#include_next <sys/unistd.h>
 
 #if __MP_LEGACY_SUPPORT_ATCALLS__
 

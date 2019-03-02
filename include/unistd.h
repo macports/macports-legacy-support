@@ -30,11 +30,7 @@
 
 #endif /*__ENABLE_MP_LEGACY_SUPPORT_SYSCONF_WRAP__*/
 
-
-
 #include_next <unistd.h>
-
-
 
 #if __ENABLE_MP_LEGACY_SUPPORT_SYSCONF_WRAP__
 

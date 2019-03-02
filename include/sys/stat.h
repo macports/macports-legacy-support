@@ -19,11 +19,11 @@
 #ifndef _MACPORTS_SYSSTAT_H_
 #define _MACPORTS_SYSSTAT_H_
 
-/* Include the primary system stat.h */
-#include_next <sys/stat.h>
-
 /* MP support header */
 #include "MacportsLegacySupport.h"
+
+/* Include the primary system stat.h */
+#include_next <sys/stat.h>
 
 #if __MP_LEGACY_SUPPORT_ATCALLS__
 #ifdef __cplusplus

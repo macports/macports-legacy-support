@@ -19,11 +19,11 @@
 #ifndef _MACPORTS_SYSSTDIO_H_
 #define _MACPORTS_SYSSTDIO_H_
 
-/* Include the primary system sys/stdio.h */
-#include_next <sys/stdio.h>
-
 /* MP support header */
 #include "MacportsLegacySupport.h"
+
+/* Include the primary system sys/stdio.h */
+#include_next <sys/stdio.h>
 
 /* renameat */
 #if __MP_LEGACY_SUPPORT_ATCALLS__

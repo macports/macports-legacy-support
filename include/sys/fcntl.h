@@ -19,15 +19,16 @@
 #ifndef _MACPORTS_SYSFCNTL_H_
 #define _MACPORTS_SYSFCNTL_H_
 
-/* Include the primary system fcntl.h */
-#include_next <sys/fcntl.h>
-
 /* MP support header */
 #include "MacportsLegacySupport.h"
+
+/* Include the primary system fcntl.h */
+#include_next <sys/fcntl.h>
 
 /* replace missing O_CLOEXEC definition with 0, which works
  * but does not replace the full function of that flag
  * this is the commonly done fix in MacPorts (see gtk3, for example) 
+ * FIXME - this could use a proper fix, if possible
  */
 
 #ifndef O_CLOEXEC
@@ -38,7 +39,7 @@
 #if __MP_LEGACY_SUPPORT_ATCALLS__
 
 #ifndef AT_FDCWD
-#define AT_FDCWD	-2
+#define AT_FDCWD	        -2
 #endif
 #ifndef AT_EACCESS
 #define AT_EACCESS		    0x0010	/* Use effective ids in access check */
