@@ -18,14 +18,11 @@
 #ifndef _MACPORTS_PTHREAD_IMPL_H_
 #define _MACPORTS_PTHREAD_IMPL_H_
 
-
-
-/* Include the primary system pthread_impl.h */
-#include_next <pthread_impl.h>
-
 /* MP support header */
 #include "MacportsLegacySupport.h"
 
+/* Include the primary system pthread_impl.h */
+#include_next <pthread_impl.h>
 
 #if __MP_LEGACY_SUPPORT_PTHREAD_RWLOCK__ 
 /* PTHREAD_RWLOCK_INITIALIZER is not defined on Tiger */

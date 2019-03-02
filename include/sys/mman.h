@@ -21,6 +21,9 @@
 /* Include the primary system sys/mman.h */
 #include_next <sys/mman.h>
 
+/* MP support header */
+#include "MacportsLegacySupport.h"
+
 /* MAP_ANONYMOUS only exists on 10.11+ */
 /* Prior to that it was called MAP_ANON */
 #ifndef MAP_ANONYMOUS

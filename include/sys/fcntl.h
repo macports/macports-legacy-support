@@ -22,6 +22,9 @@
 /* Include the primary system fcntl.h */
 #include_next <sys/fcntl.h>
 
+/* MP support header */
+#include "MacportsLegacySupport.h"
+
 /* replace missing O_CLOEXEC definition with 0, which works
  * but does not replace the full function of that flag
  * this is the commonly done fix in MacPorts (see gtk3, for example) 

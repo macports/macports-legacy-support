@@ -18,11 +18,11 @@
 #ifndef _MACPORTS_STRING_H_
 #define _MACPORTS_STRING_H_
 
-/* Include the primary system string.h */
-#include_next <string.h>
-
 /* MP support header */
 #include "MacportsLegacySupport.h"
+
+/* Include the primary system string.h */
+#include_next <string.h>
 
 /* strnlen */
 #if __MP_LEGACY_SUPPORT_STRNLEN__

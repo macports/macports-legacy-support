@@ -19,8 +19,6 @@
 #ifndef _MACPORTS_SYSUNISTD_H_
 #define _MACPORTS_SYSUNISTD_H_
 
-
-
 /* Include the primary system unistd.h */
 #include_next <sys/unistd.h>
 

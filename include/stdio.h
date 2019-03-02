@@ -19,11 +19,11 @@
 #ifndef _MACPORTS_STDIO_H_
 #define _MACPORTS_STDIO_H_
 
-/* Include the primary system time.h */
-#include_next <stdio.h>
-
 /* MP support header */
 #include "MacportsLegacySupport.h"
+
+/* Include the primary system time.h */
+#include_next <stdio.h>
 
 /* getline */
 #if __MP_LEGACY_SUPPORT_GETLINE__

@@ -19,8 +19,6 @@
 #ifndef _MACPORTS_SYSSTAT_H_
 #define _MACPORTS_SYSSTAT_H_
 
-
-
 /* Include the primary system stat.h */
 #include_next <sys/stat.h>
 

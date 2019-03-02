@@ -18,11 +18,11 @@
 #ifndef _MACPORTS_TIME_H_
 #define _MACPORTS_TIME_H_
 
-/* Include the primary system time.h */
-#include_next <time.h>
-
 /* MP support header */
 #include "MacportsLegacySupport.h"
+
+/* Include the primary system time.h */
+#include_next <time.h>
 
 /* Legacy implementation of clock_gettime */
 #if __MP_LEGACY_SUPPORT_GETTIME__
