@@ -53,7 +53,7 @@ strndup (const char *old, size_t sz)
 {
   size_t len = strnlen (old, sz);
   char *t    = malloc(len + 1);
-  
+
   if (t != NULL) {
     memcpy (t, old, len);
     t[len] = '\0';

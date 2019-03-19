@@ -28,7 +28,7 @@ inline void res( CLOCKID clk_id )
 
 int main()
 {
-  
+
   int c(0);
   res(CLOCK_REALTIME);
   while ( ++c < 10 )

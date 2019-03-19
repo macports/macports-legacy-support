@@ -24,7 +24,7 @@
 /* Include the primary system pthread.h */
 #include_next <pthread.h>
 
-#if __MP_LEGACY_SUPPORT_PTHREAD_RWLOCK__ 
+#if __MP_LEGACY_SUPPORT_PTHREAD_RWLOCK__
 /* PTHREAD_RWLOCK_INITIALIZER is not defined on Tiger */
 #ifndef PTHREAD_RWLOCK_INITIALIZER
 #define PTHREAD_RWLOCK_INITIALIZER {_PTHREAD_RWLOCK_SIG_init, {0}}

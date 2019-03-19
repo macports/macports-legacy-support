@@ -54,7 +54,7 @@ int clock_getres ( clockid_t clk_id, struct timespec *ts )
   if ( ts )
   {
     if ( CLOCK_REALTIME  == clk_id ||
-	 CLOCK_MONOTONIC == clk_id )
+         CLOCK_MONOTONIC == clk_id )
     {
       // return 1us precision
       ts->tv_sec  = 0;
@@ -69,7 +69,7 @@ int clock_getres ( clockid_t clk_id, struct timespec *ts )
 #include <mach/clock.h>
 #include <mach/mach.h>
 int clock_gettime( int clk_id, struct timespec *ts )
-{ 
+{
   clock_serv_t cclock;
   mach_timespec_t mts;
   host_get_clock_service( mach_host_self(), clk_id, &cclock );
