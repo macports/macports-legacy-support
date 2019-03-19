@@ -31,6 +31,9 @@ extern "C" {
 #endif
   extern int fchmodat(int dirfd, const char *pathname, mode_t mode, int flags);
   extern int fstatat(int dirfd, const char *pathname, struct stat *buf, int flags);
+#if !__DARWIN_ONLY_64_BIT_INO_T
+  extern int fstatat64(int dirfd, const char *pathname, struct stat64 *buf, int flags);
+#endif
   extern int mkdirat(int dirfd, const char *pathname, mode_t mode);
 #ifdef __cplusplus
 }
