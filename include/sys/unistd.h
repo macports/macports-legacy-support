@@ -43,7 +43,7 @@ typedef	__darwin_ssize_t	ssize_t;
 
 #ifndef _UID_T
 #define _UID_T
-typedef __darwin_uid_t		uid_t;	/* user id 	*/
+typedef __darwin_uid_t		uid_t;	/* user id */
 #endif
 
 #ifndef _GID_T
@@ -64,7 +64,7 @@ extern "C" {
   extern int linkat(int olddirfd, const char *oldpath, int newdirfd, const char *newpath, int flags);
   extern int symlinkat(const char *oldpath, int newdirfd, const char *newpath);
   extern int unlinkat(int dirfd, const char *pathname, int flags);
-  
+
 #ifdef __cplusplus
 }
 #endif

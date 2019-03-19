@@ -97,21 +97,21 @@ int
 main()
 {
   int i;
-  
+
   int fd = open("/dev/urandom", O_RDONLY);
 
   int args[]  = { 16, 32, 64, 256, 512 };
   int nargs = 5;
-  
+
   printf("size,      arc4rand,\tsysrand,\tspeed-up\n");
   for (i = 0; i < nargs; ++i) {
     int z = args[i];
     if (z <= 0) continue;
     bench(fd, z, NITER);
   }
-  
+
   close(fd);
-  
+
   return 0;
 }
 

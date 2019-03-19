@@ -27,7 +27,7 @@
 
 /* replace missing O_CLOEXEC definition with 0, which works
  * but does not replace the full function of that flag
- * this is the commonly done fix in MacPorts (see gtk3, for example) 
+ * this is the commonly done fix in MacPorts (see gtk3, for example)
  * FIXME - this could use a proper fix, if possible
  */
 
@@ -39,10 +39,10 @@
 #if __MP_LEGACY_SUPPORT_ATCALLS__
 
 #ifndef AT_FDCWD
-#define AT_FDCWD	        -2
+#define AT_FDCWD		-2
 #endif
 #ifndef AT_EACCESS
-#define AT_EACCESS		    0x0010	/* Use effective ids in access check */
+#define AT_EACCESS		0x0010	/* Use effective ids in access check */
 #endif
 #ifndef AT_SYMLINK_NOFOLLOW
 #define AT_SYMLINK_NOFOLLOW	0x0020	/* Act on the symlink itself not the target */

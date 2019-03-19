@@ -51,7 +51,7 @@ strnlen (const char *s, size_t len)
     size_t i;
 
     for(i = 0; i < len && s[i]; i++)
-	;
+        ;
     return i;
 }
 

@@ -48,7 +48,7 @@ DIR *fdopendir(int dirfd) {
     DIR *dir;
     struct stat st;
     int oldCWD = -1;
-  
+
     if (fstat(dirfd, &st) < 0)
         return 0;
 
@@ -76,7 +76,7 @@ DIR *fdopendir(int dirfd) {
         return 0;
     }
 
-    if (oldCWD != -1) 
+    if (oldCWD != -1)
         PROTECT_ERRNO(close(oldCWD));
 
     return dir;

@@ -34,6 +34,6 @@ main (void)
     pthread_rwlock_unlock(&myLock);
     pthread_rwlock_destroy(&myLock);
     printf("Success testing pthread_rwlock_init\n\n");
-    
+
     return 0;
 }
