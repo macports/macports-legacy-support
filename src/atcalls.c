@@ -87,6 +87,9 @@ int unlinkat(int dirfd, const char *pathname, int flags);
 
 int fchmodat(int dirfd, const char *pathname, mode_t mode, int flags);
 int fstatat(int dirfd, const char *pathname, struct stat *buf, int flags);
+#if !__DARWIN_ONLY_64_BIT_INO_T
+int fstatat64(int dirfd, const char *pathname, struct stat64 *buf, int flags);
+#endif
 int mkdirat(int dirfd, const char *pathname, mode_t mode);
 
 /* #include <sys/fcntl.h> */
@@ -236,6 +239,18 @@ int fstatat(int dirfd, const char *pathname, struct stat *buf, int flags)
         return ATCALL(dirfd, pathname, stat(pathname, buf));
     }
 }
+
+#if !__DARWIN_ONLY_64_BIT_INO_T
+int fstatat64(int dirfd, const char *pathname, struct stat64 *buf, int flags)
+{
+    ERR_ON(EINVAL, flags & ~AT_SYMLINK_NOFOLLOW);
+    if (flags & AT_SYMLINK_NOFOLLOW) {
+        return ATCALL(dirfd, pathname, lstat64(pathname, buf));
+    } else {
+        return ATCALL(dirfd, pathname, stat64(pathname, buf));
+    }
+}
+#endif
 
 int getattrlistat(int dirfd, const char *pathname, struct attrlist *a,
                                  void *buf, size_t size, unsigned long flags)
