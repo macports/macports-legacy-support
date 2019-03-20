@@ -23,10 +23,9 @@
 
 #if __MP_LEGACY_SUPPORT_LLROUND__
 
-/* For definition of __*_DECLS */
-#include <sys/cdefs.h>
-
-__BEGIN_DECLS
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*
  * These functions are present in the system math library but their
@@ -49,7 +48,9 @@ extern long long int llroundf ( float );
 extern long long int llroundl ( long double );
 #endif
 
-__END_DECLS
+#ifdef __cplusplus
+}
+#endif
 
 /*
  * If the GCC <math.h> header exists, then tell it: (1) to include the
