@@ -100,7 +100,7 @@ Wrapped headers are:
   </tr>
   <tr>
     <td rowspan="2"><code>sys/stat.h</code></td>
-    <td>Adds <code>fchmodat</code>, <code>fstatat</code>, <code>fstatat64</code> (if required),
+    <td>Adds <code>fchmodat</code>, <code>fstatat</code>, <code>fstatat64</code> (if required, and on 10.5+),
         and <code>mkdirat</code> functions</td>
     <td>OSX10.9</td>
   </tr>

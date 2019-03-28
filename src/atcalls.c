@@ -44,6 +44,7 @@
 #include <sys/mount.h>
 #include <sys/ucred.h>
 #include <sys/shm.h>
+#include <sys/unistd.h>
 
 #include <assert.h>
 #include <dlfcn.h>
@@ -55,51 +56,6 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <string.h>
-
-
-/*
- * Descriptor value for the current working directory
- */
-#define AT_FDCWD	-2
-
-/*
- * Flags for the at functions
- */
-#define AT_EACCESS		    0x0010	/* Use effective ids in access check */
-#define AT_SYMLINK_NOFOLLOW	0x0020	/* Act on the symlink itself not the target */
-#define AT_SYMLINK_FOLLOW	0x0040	/* Act on target of symlink */
-#define AT_REMOVEDIR		0x0080	/* Path refers to directory */
-
-
-/* <sys/unistd.h> */
-int getattrlistat(int dirfd, const char *pathname, struct attrlist *a,
-                  void *buf, size_t size, unsigned long flags);
-
-ssize_t readlinkat(int dirfd, const char *pathname, char *buf, size_t bufsiz);
-
-int faccessat(int dirfd, const char *pathname, int mode, int flags);
-int fchownat(int dirfd, const char *pathname, uid_t owner, gid_t group, int flags);
-int linkat(int olddirfd, const char *oldpath, int newdirfd, const char *newpath, int flags);
-int symlinkat(const char *oldpath, int newdirfd, const char *newpath);
-int unlinkat(int dirfd, const char *pathname, int flags);
-
-/* #include <sys/stat.h> */
-
-int fchmodat(int dirfd, const char *pathname, mode_t mode, int flags);
-int fstatat(int dirfd, const char *pathname, struct stat *buf, int flags);
-#if !__DARWIN_ONLY_64_BIT_INO_T
-int fstatat64(int dirfd, const char *pathname, struct stat64 *buf, int flags);
-#endif
-int mkdirat(int dirfd, const char *pathname, mode_t mode);
-
-/* #include <sys/fcntl.h> */
-
-int openat(int dirfd, const char *pathname, int flags, ...);
-
-/* #include <sys/stdio.h> */
-
-int renameat(int olddirfd, const char *oldpath, int newdirfd, const char *newpath);
-
 
 
 /* this is some apple internal magic */
@@ -240,7 +196,10 @@ int fstatat(int dirfd, const char *pathname, struct stat *buf, int flags)
     }
 }
 
-#if !__DARWIN_ONLY_64_BIT_INO_T
+/* 64bit inode types appeared only on 10.5, and currently can't be replaced on Tiger */
+/* due to lack of kernel support for the underlying syscalls */
+
+#if !__DARWIN_ONLY_64_BIT_INO_T && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ >= 1050
 int fstatat64(int dirfd, const char *pathname, struct stat64 *buf, int flags)
 {
     ERR_ON(EINVAL, flags & ~AT_SYMLINK_NOFOLLOW);

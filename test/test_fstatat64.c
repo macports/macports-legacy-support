@@ -24,8 +24,11 @@
 #include <errno.h>
 #include <fcntl.h>
 
+#define FEEDBACK 1
+
+
 int main (int argc, char **argv) {
-#if !__DARWIN_ONLY_64_BIT_INO_T
+#if !__DARWIN_ONLY_64_BIT_INO_T && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ >= 1050
   int saved_errno = errno;
 
   /* Caveat: dirname() and basename() my modify their arguments, so create copies. */
@@ -251,7 +254,7 @@ int main (int argc, char **argv) {
     return (EXIT_FAILURE);
   }
 #else
-  printf ("fstatat64() is not supported on your platform, this test will do nothing.\n");
+  printf ("\n\nfstatat64() is not supported on your platform, this test will do nothing.\n\n");
 #endif
 
   return (EXIT_SUCCESS);

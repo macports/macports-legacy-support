@@ -52,4 +52,31 @@ extern "C" {
 #endif
 #endif /*  __MP_LEGACY_SUPPORT_GETLINE__ */
 
+/* renameat */
+#if __MP_LEGACY_SUPPORT_ATCALLS__
+
+/*
+ * [XSI] The ssize_t and size_t types shall be defined as described
+ * in <sys/types.h>.
+ */
+#ifndef _SIZE_T
+#define _SIZE_T
+typedef __darwin_size_t		size_t;
+#endif
+
+#ifndef	_SSIZE_T
+#define	_SSIZE_T
+typedef	__darwin_ssize_t	ssize_t;
+#endif
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+  extern int renameat(int olddirfd, const char *oldpath, int newdirfd, const char *newpath);
+#ifdef __cplusplus
+}
+#endif
+#endif /* __MP_LEGACY_SUPPORT_ATCALLS__ */
+
+
 #endif /* _MACPORTS_STDIO_H_ */
