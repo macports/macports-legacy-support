@@ -31,5 +31,4 @@
 #endif
 #endif /* __MP_LEGACY_SUPPORT_PTHREAD_RWLOCK__  */
 
-
 #endif /* _MACPORTS_PTHREAD_IMPL_H_ */

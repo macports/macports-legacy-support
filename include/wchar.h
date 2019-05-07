@@ -24,9 +24,7 @@
 /* Include the primary system wchar.h */
 #include_next <wchar.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+__MP__BEGIN_DECLS
 
 /* wcsdup */
 #if __MP_LEGACY_SUPPORT_WCSDUP__
@@ -50,8 +48,6 @@ extern "C" {
   extern int wcsncasecmp(const wchar_t *l, const wchar_t *r, size_t n);
 #endif
 
-#ifdef __cplusplus
-}
-#endif
+__MP__END_DECLS
 
 #endif /* _MACPORTS_WCHAR_H_ */

@@ -26,14 +26,10 @@
 
 /* wcsncasecmp_l, wcscasecmp_l */
 #if __MP_LEGACY_SUPPORT_WCSCASECMP__
-#ifdef __cplusplus
-extern "C" {
-#endif
-  extern int wcscasecmp_l(const wchar_t *l, const wchar_t *r, locale_t locale);
-  extern int wcsncasecmp_l(const wchar_t *l, const wchar_t *r, size_t n, locale_t locale);
-#ifdef __cplusplus
-}
-#endif
+__MP__BEGIN_DECLS
+extern int wcscasecmp_l(const wchar_t *l, const wchar_t *r, locale_t locale);
+extern int wcsncasecmp_l(const wchar_t *l, const wchar_t *r, size_t n, locale_t locale);
+__MP__END_DECLS
 #endif
 
 #endif /* _MACPORTS_XLOCALE__WCHAR_H_ */

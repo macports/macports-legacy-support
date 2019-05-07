@@ -26,36 +26,24 @@
 
 /* strnlen */
 #if __MP_LEGACY_SUPPORT_STRNLEN__
-#ifdef __cplusplus
-extern "C" {
-#endif
-  extern size_t strnlen(const char *s, size_t maxlen);
-#ifdef __cplusplus
-}
-#endif
+__MP__BEGIN_DECLS
+extern size_t strnlen(const char *s, size_t maxlen);
+__MP__END_DECLS
 #endif
 
 /* strndup */
 #if __MP_LEGACY_SUPPORT_STRNDUP__
-#ifdef __cplusplus
-extern "C" {
-#endif
-  extern char *strndup(const char *s, size_t n);
-#ifdef __cplusplus
-}
-#endif
+__MP__BEGIN_DECLS
+extern char *strndup(const char *s, size_t n);
+__MP__END_DECLS
 #endif
 
 /* memmem */
 #if __MP_LEGACY_SUPPORT_MEMMEM__
-#ifdef __cplusplus
-extern "C" {
-#endif
-  extern void *
-  memmem(const void *l, size_t l_len, const void *s, size_t s_len);
-#ifdef __cplusplus
-}
-#endif
+__MP__BEGIN_DECLS
+extern void *
+memmem(const void *l, size_t l_len, const void *s, size_t s_len);
+__MP__END_DECLS
 #endif
 
 #endif /* _MACPORTS_STRING_H_ */

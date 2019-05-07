@@ -42,14 +42,11 @@ typedef __darwin_size_t		size_t;
 typedef	__darwin_ssize_t	ssize_t;
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-  extern ssize_t getdelim(char **lineptr, size_t *n, int delimiter, FILE *fp);
-  extern ssize_t getline (char **lineptr, size_t *n, FILE *stream);
-#ifdef __cplusplus
-}
-#endif
+__MP__BEGIN_DECLS
+extern ssize_t getdelim(char **lineptr, size_t *n, int delimiter, FILE *fp);
+extern ssize_t getline (char **lineptr, size_t *n, FILE *stream);
+__MP__END_DECLS
+
 #endif /*  __MP_LEGACY_SUPPORT_GETLINE__ */
 
 /* renameat */
@@ -69,14 +66,10 @@ typedef __darwin_size_t		size_t;
 typedef	__darwin_ssize_t	ssize_t;
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-  extern int renameat(int olddirfd, const char *oldpath, int newdirfd, const char *newpath);
-#ifdef __cplusplus
-}
-#endif
-#endif /* __MP_LEGACY_SUPPORT_ATCALLS__ */
+__MP__BEGIN_DECLS
+extern int renameat(int olddirfd, const char *oldpath, int newdirfd, const char *newpath);
+__MP__END_DECLS
 
+#endif /* __MP_LEGACY_SUPPORT_ATCALLS__ */
 
 #endif /* _MACPORTS_STDIO_H_ */
