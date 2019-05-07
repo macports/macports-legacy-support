@@ -26,14 +26,9 @@
 
 /* fdopendir */
 #if __MP_LEGACY_SUPPORT_FDOPENDIR__
-#ifdef __cplusplus
-extern "C" {
+__MP__BEGIN_DECLS
+extern DIR *fdopendir(int fd);
+__MP__END_DECLS
 #endif
-  extern DIR *fdopendir(int fd);
-#ifdef __cplusplus
-}
-#endif
-#endif
-
 
 #endif /* _MACPORTS_DIRENT_H_ */

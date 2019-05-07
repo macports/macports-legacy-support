@@ -54,16 +54,12 @@
 #define AT_REMOVEDIR		0x0080	/* Path refers to directory */
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+__MP__BEGIN_DECLS
 
 extern int openat(int dirfd, const char *pathname, int flags, ...);
 
-#ifdef __cplusplus
-}
-#endif
-#endif /* __MP_LEGACY_SUPPORT_ATCALLS__ */
+__MP__END_DECLS
 
+#endif /* __MP_LEGACY_SUPPORT_ATCALLS__ */
 
 #endif /* _MACPORTS_SYSFCNTL_H_ */

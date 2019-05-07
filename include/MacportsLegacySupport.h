@@ -20,8 +20,17 @@
 #ifndef _MACPORTS_LEGACYSUPPORTDEFS_H_
 #define _MACPORTS_LEGACYSUPPORTDEFS_H_
 
-// Not needed -- #include "AvailabilityMacros.h"
+/* Not needed -- #include "AvailabilityMacros.h" */
 #include "MacportsLegacyWrappers/wrapper_macros.h"
+
+/* C++ extern definitions */
+#if defined(__cplusplus)
+#define	__MP__BEGIN_DECLS extern "C" {
+#define	__MP__END_DECLS	  }
+#else
+#define	__MP__BEGIN_DECLS
+#define	__MP__END_DECLS
+#endif
 
 /* defines for when legacy support is required for various functions */
 
@@ -71,7 +80,9 @@
 #define __MP_LEGACY_SUPPORT_REALPATH_WRAP__   (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1060)
 
 /*  realpath() wrap has bail-out macros in case we want to disable only function wrapping */
-#define __ENABLE_MP_LEGACY_SUPPORT_REALPATH_WRAP__  (!__DISABLE_MP_LEGACY_SUPPORT_FUNCTION_WRAPPING__  && !__DISABLE_MP_LEGACY_SUPPORT_REALPATH_WRAP__ && __MP_LEGACY_SUPPORT_REALPATH_WRAP__)
+#define __ENABLE_MP_LEGACY_SUPPORT_REALPATH_WRAP__  (!__DISABLE_MP_LEGACY_SUPPORT_FUNCTION_WRAPPING__  && \
+						     !__DISABLE_MP_LEGACY_SUPPORT_REALPATH_WRAP__      && \
+						     __MP_LEGACY_SUPPORT_REALPATH_WRAP__)
 
 /* lsmod does not exist on Tiger */
 #define __MP_LEGACY_SUPPORT_LSMOD__           (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1050)
@@ -80,7 +91,9 @@
 #define __MP_LEGACY_SUPPORT_SYSCONF_WRAP__    (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1050)
 
 /*  sysconf() wrap has bail-out macros in case we want to disable only function wrapping */
-#define __ENABLE_MP_LEGACY_SUPPORT_SYSCONF_WRAP__  (!__DISABLE_MP_LEGACY_SUPPORT_FUNCTION_WRAPPING__  && !__DISABLE_MP_LEGACY_SUPPORT_SYSCONF_WRAP__ && __MP_LEGACY_SUPPORT_SYSCONF_WRAP__)
+#define __ENABLE_MP_LEGACY_SUPPORT_SYSCONF_WRAP__  (!__DISABLE_MP_LEGACY_SUPPORT_FUNCTION_WRAPPING__  && \
+						    !__DISABLE_MP_LEGACY_SUPPORT_SYSCONF_WRAP__       && \
+						    __MP_LEGACY_SUPPORT_SYSCONF_WRAP__)
 
 /* pthread_rwlock_initializer is not defined on Tiger */
 #define __MP_LEGACY_SUPPORT_PTHREAD_RWLOCK__  (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1050)

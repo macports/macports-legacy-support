@@ -21,7 +21,6 @@
 /* MP support header */
 #include "MacportsLegacySupport.h"
 
-
 #if __ENABLE_MP_LEGACY_SUPPORT_SYSCONF_WRAP__
 
 /* redefine the original sysconf */
@@ -38,13 +37,9 @@
 #undef sysconf
 #include "MacportsLegacyWrappers/sysconf_support.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+__MP__BEGIN_DECLS
 extern long sysconf(int) __MP_LEGACY_WRAPPER_ALIAS(sysconf);
-#ifdef __cplusplus
-}
-#endif
+__MP__END_DECLS
 
 #endif /* __ENABLE_MP_LEGACY_SUPPORT_SYSCONF_WRAP__ */
 

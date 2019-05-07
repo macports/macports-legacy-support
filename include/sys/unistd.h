@@ -51,25 +51,19 @@ typedef __darwin_uid_t		uid_t;	/* user id */
 typedef __darwin_gid_t		gid_t;
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-  extern int getattrlistat(int dirfd, const char *pathname, struct attrlist *a,
-                                 void *buf, size_t size, unsigned long flags);
+__MP__BEGIN_DECLS
 
-  extern ssize_t readlinkat(int dirfd, const char *pathname, char *buf, size_t bufsiz);
+extern int getattrlistat(int dirfd, const char *pathname, struct attrlist *a,
+			 void *buf, size_t size, unsigned long flags);
+extern ssize_t readlinkat(int dirfd, const char *pathname, char *buf, size_t bufsiz);
+extern int faccessat(int dirfd, const char *pathname, int mode, int flags);
+extern int fchownat(int dirfd, const char *pathname, uid_t owner, gid_t group, int flags);
+extern int linkat(int olddirfd, const char *oldpath, int newdirfd, const char *newpath, int flags);
+extern int symlinkat(const char *oldpath, int newdirfd, const char *newpath);
+extern int unlinkat(int dirfd, const char *pathname, int flags);
 
-  extern int faccessat(int dirfd, const char *pathname, int mode, int flags);
-  extern int fchownat(int dirfd, const char *pathname, uid_t owner, gid_t group, int flags);
-  extern int linkat(int olddirfd, const char *oldpath, int newdirfd, const char *newpath, int flags);
-  extern int symlinkat(const char *oldpath, int newdirfd, const char *newpath);
-  extern int unlinkat(int dirfd, const char *pathname, int flags);
+__MP__END_DECLS
 
-#ifdef __cplusplus
-}
-#endif
 #endif /* __MP_LEGACY_SUPPORT_ATCALLS__ */
-
-
 
 #endif /* _MACPORTS_SYSUNISTD_H_ */

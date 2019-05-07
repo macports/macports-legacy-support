@@ -34,16 +34,12 @@
 #define CLOCK_MONOTONIC 6
 typedef int clockid_t;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+__MP__BEGIN_DECLS
 
 extern int clock_gettime( clockid_t clk_id, struct timespec *ts );
 extern int clock_getres ( clockid_t clk_id, struct timespec *ts );
 
-#ifdef __cplusplus
-}
-#endif
+__MP__END_DECLS
 
 #endif /* !defined(CLOCK_REALTIME) && !defined(CLOCK_MONOTONIC) */
 

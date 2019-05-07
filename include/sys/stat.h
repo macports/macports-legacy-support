@@ -26,11 +26,11 @@
 #include_next <sys/stat.h>
 
 #if __MP_LEGACY_SUPPORT_ATCALLS__
-#ifdef __cplusplus
-extern "C" {
-#endif
-  extern int fchmodat(int dirfd, const char *pathname, mode_t mode, int flags);
-  extern int fstatat(int dirfd, const char *pathname, struct stat *buf, int flags);
+
+__MP__BEGIN_DECLS
+
+extern int fchmodat(int dirfd, const char *pathname, mode_t mode, int flags);
+extern int fstatat(int dirfd, const char *pathname, struct stat *buf, int flags);
 
 /* 64bit inode types appeared only on 10.5, and currently can't be replaced on Tiger */
 /* due to lack of kernel support for the underlying syscalls */
@@ -38,22 +38,20 @@ extern "C" {
   extern int fstatat64(int dirfd, const char *pathname, struct stat64 *buf, int flags);
 #endif
 
-  extern int mkdirat(int dirfd, const char *pathname, mode_t mode);
-#ifdef __cplusplus
-}
-#endif
+extern int mkdirat(int dirfd, const char *pathname, mode_t mode);
+
+__MP__END_DECLS
+
 #endif /* __MP_LEGACY_SUPPORT_ATCALLS__ */
 
 #if __MP_LEGACY_SUPPORT_LSMOD__
-#ifdef __cplusplus
-extern "C" {
-#endif
-  extern int	lchmod(const char *, mode_t);
-#ifdef __cplusplus
-}
-#endif
+
+__MP__BEGIN_DECLS
+
+extern int lchmod(const char *, mode_t);
+
+__MP__END_DECLS
+
 #endif /* __MP_LEGACY_SUPPORT_LSMOD__ */
-
-
 
 #endif /* _MACPORTS_SYSSTAT_H_ */

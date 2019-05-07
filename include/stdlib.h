@@ -40,14 +40,10 @@
 /* and now define realpath as our new wrapped function */
 #undef realpath
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-  extern char *realpath(const char * __restrict, char * __restrict)
-               __MP_LEGACY_WRAPPER_ALIAS(realpath);
-#ifdef __cplusplus
-}
-#endif
+__MP__BEGIN_DECLS
+extern char *realpath(const char * __restrict, char * __restrict)
+__MP_LEGACY_WRAPPER_ALIAS(realpath);
+__MP__END_DECLS
 
 #endif /*__ENABLE_MP_LEGACY_SUPPORT_REALPATH_WRAP__*/
 
@@ -68,13 +64,9 @@ typedef __darwin_size_t		size_t;
 typedef	__darwin_ssize_t	ssize_t;
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-  extern int posix_memalign(void **memptr, size_t alignment, size_t size);
-#ifdef __cplusplus
-}
-#endif
+__MP__BEGIN_DECLS
+extern int posix_memalign(void **memptr, size_t alignment, size_t size);
+__MP__END_DECLS
 
 #endif /*  __MP_LEGACY_SUPPORT_POSIX_MEMALIGN__ */
 
@@ -94,24 +86,16 @@ typedef unsigned int         uint32_t;
  * Generate and return a uniformly random 32-bit quantity with an
  * upper bound of 'upper_bound'
  */
-#ifdef __cplusplus
-extern "C" {
-#endif
-  extern uint32_t arc4random_uniform( uint32_t upper_bound );
-#ifdef __cplusplus
-}
-#endif
+__MP__BEGIN_DECLS
+extern uint32_t arc4random_uniform( uint32_t upper_bound );
+__MP__END_DECLS
 
 /*
  * Generate 'n' random bytes and put them in 'buf'.
  */
-#ifdef __cplusplus
-extern "C" {
-#endif
-  extern void arc4random_buf( void* buf, size_t n );
-#ifdef __cplusplus
-}
-#endif
+__MP__BEGIN_DECLS
+extern void arc4random_buf( void* buf, size_t n );
+__MP__END_DECLS
 
 #endif /*  __MP_LEGACY_SUPPORT_ARC4RANDOM__ */
 

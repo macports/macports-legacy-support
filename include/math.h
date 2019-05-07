@@ -23,9 +23,7 @@
 
 #if __MP_LEGACY_SUPPORT_LLROUND__
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+__MP__BEGIN_DECLS
 
 /*
  * These functions are present in the system math library but their
@@ -37,7 +35,8 @@ extern "C" {
  * this is the same condition that defines the function prototypes in
  * the system <math.h>.
  */
-#if ( defined (__STDC_VERSION__) && __STDC_VERSION__ >= 199901L ) || ! defined( __STRICT_ANSI__ )  || ! defined( __GNUC__ )
+#if ( ( defined (__STDC_VERSION__) && __STDC_VERSION__ >= 199901L ) ||	\
+      ! defined( __STRICT_ANSI__ )  || ! defined( __GNUC__ ) )
 #else
 extern long long int llrint   ( double );
 extern long long int llrintf  ( float );
@@ -48,9 +47,7 @@ extern long long int llroundf ( float );
 extern long long int llroundl ( long double );
 #endif
 
-#ifdef __cplusplus
-}
-#endif
+__MP__END_DECLS
 
 /*
  * If the GCC <math.h> header exists, then tell it: (1) to include the
@@ -94,4 +91,5 @@ extern long long int llroundl ( long double );
 #endif
 
 #endif /* __MP_LEGACY_SUPPORT_LLROUND__ */
+
 #endif /* _MACPORTS_MATH_H_ */
