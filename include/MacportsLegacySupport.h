@@ -76,6 +76,9 @@
 /* posix_memalign does not exist on < 1060 */
 #define __MP_LEGACY_SUPPORT_POSIX_MEMALIGN__  (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1060)
 
+/* AI_NUMERICSERV does not exist on < 1060 */
+#define __MP_LEGACY_SUPPORT_AI_NUMERICSERV__  (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1060)
+
 /*  realpath() on < 1060 does not support modern NULL buffer usage */
 #define __MP_LEGACY_SUPPORT_REALPATH_WRAP__   (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1060)
 
