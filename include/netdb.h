@@ -21,7 +21,7 @@
 /* MP support header */
 #include "MacportsLegacySupport.h"
 
-/* Include the primary system pthread.h */
+/* Include the primary system netdb.h */
 #include_next <netdb.h>
 
 #if __MP_LEGACY_SUPPORT_AI_NUMERICSERV__
