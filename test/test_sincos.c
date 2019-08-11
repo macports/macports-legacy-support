@@ -25,10 +25,10 @@ int main() {
     __sincosf( xf, &sf, &cf );
     printf( "__sincosf(%f) = %f %f\n", xf, sf, cf );
     
-    double xd, fd, cd;
+    double xd, sd, cd;
     xd = 0.9;
-    __sincos( xd, &fd, &cd );
-    printf( "__sincos(%f) = %f %f\n", xf, sf, cf );
+    __sincos( xd, &sd, &cd );
+    printf( "__sincos(%f) = %f %f\n", xd, sd, cd );
  
     return 0;
 }
