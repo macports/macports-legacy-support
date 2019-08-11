@@ -71,6 +71,24 @@ __MP__END_DECLS
 
 #endif /* __MP_LEGACY_SUPPORT_LLROUND__ */
 
+#if __MP_LEGACY_SUPPORT_COSSIN__
+
+/* Following is borrowed from math.h on macOS 10.9+ */
+
+/*  __sincos and __sincosf were introduced in OSX 10.9 and iOS 7.0.  When
+    targeting an older system, we simply split them up into discrete calls
+    to sin( ) and cos( ).  */
+void __sincosf(float __x, float *__sinp, float *__cosp) {
+  *__sinp = sinf(__x);
+  *__cosp = cosf(__x);
+}
+void __sincos(double __x, double *__sinp, double *__cosp) {
+  *__sinp = sin(__x);
+  *__cosp = cos(__x);
+}
+
+#endif /* __MP_LEGACY_SUPPORT_COSSIN__ */
+
 /*
  * Include the next math.h, which might be from the primary system or
  * it might be within GCC's c or c++ (yup!) headers
