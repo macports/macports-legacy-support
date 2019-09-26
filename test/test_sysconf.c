@@ -32,13 +32,20 @@ typedef struct { itol_t sysconf; } scf_t;
 #include <assert.h>
 
 int main() {
+    printf("***sysconf wrapper tests started\n\n");
     /* Test with direct function call */
     long nconf = sysconf(_SC_NPROCESSORS_CONF);
     long nonln = sysconf(_SC_NPROCESSORS_ONLN);
-    printf("nconf = %ld; nonln = %ld\n", nconf, nonln);
+    long nphyspages = sysconf(_SC_PHYS_PAGES);
+    printf("nconf = %ld; nonln = %ld;\n", nconf, nonln);
     assert (nconf > 0);
     assert (nonln > 0);
     printf("sysconf(_SC_NPROCESSORS_XXXX) supported.\n");
+
+    printf("nphyspages = %ld\n", nphyspages);
+    assert (nphyspages > 0);
+    printf("sysconf(_SC_PHYS_PAGES) supported.\n\n");
+    printf("Total system memory = %f GB\n", ((double)sysconf(_SC_PHYS_PAGES)) * ((double)sysconf(_SC_PAGESIZE)/(1024*1024*1024)));
 
     /* Test with name (reference) only */
     {
@@ -46,12 +53,18 @@ int main() {
         assert (f(_SC_NPROCESSORS_CONF) == nconf);
         assert (f(_SC_NPROCESSORS_ONLN) == nonln);
         printf("f = sysconf, f(_SC_NPROCESSORS_XXXX) supported.\n");
+
+        assert (f(_SC_PHYS_PAGES) == nphyspages);
+        printf("f = sysconf, f(_SC_PHYS_PAGES) supported.\n\n");
     }
 
     /* Test with function macro disabler */
     assert ((sysconf)(_SC_NPROCESSORS_CONF) == nconf);
     assert ((sysconf)(_SC_NPROCESSORS_ONLN) == nonln);
     printf("(sysconf)(_SC_NPROCESSORS_XXXX) supported.\n");
+
+    assert ((sysconf)(_SC_PHYS_PAGES) == nphyspages);
+    printf("(sysconf)(_SC_PHYS_PAGES) supported.\n\n");
 
     /* Test with same-named fields */
     {
@@ -61,7 +74,12 @@ int main() {
         assert (scv.sysconf == nconf);
         scv.sysconf = scf.sysconf(_SC_NPROCESSORS_ONLN);
         assert (scv.sysconf == nonln);
+        scv.sysconf = scf.sysconf(_SC_PHYS_PAGES);
+        assert (scv.sysconf == nphyspages);
         printf("scv.sysconf = scf.sysconf(_SC_NPROCESSORS_XXXX) supported.\n");
+        printf("scv.sysconf = scf.sysconf(_SC_PHYS_PAGES) supported.\n");
     }
+
+    printf("***sysconf wrapper tests completed\n\n");
     return 0;
 }

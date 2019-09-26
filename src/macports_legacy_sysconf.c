@@ -36,6 +36,7 @@
 
 long __MP_LEGACY_WRAPPER(sysconf)(int name){
 
+#if __NEED__SC_NPROCESSORS_ONLN__
     if ( name == _SC_NPROCESSORS_ONLN ) {
 
         int nm[2];
@@ -53,7 +54,9 @@ long __MP_LEGACY_WRAPPER(sysconf)(int name){
             return (long)count;
         }
     }
+#endif
 
+#if __NEED__SC_NPROCESSORS_CONF__
     if ( name == _SC_NPROCESSORS_CONF ) {
 
         int nm[2];
@@ -68,6 +71,22 @@ long __MP_LEGACY_WRAPPER(sysconf)(int name){
         if (ret < 0 || count < 1) { count = 1; }
         return (long)count;
     }
+#endif
+
+#if __NEED_SC_PHYS_PAGES__
+    if ( name == _SC_PHYS_PAGES ) {
+
+        /* the number of pages is the total memory / pagesize */
+        uint64_t mem_size;
+        size_t len = sizeof(mem_size);
+        int pagesize = getpagesize();
+
+        sysctlbyname("hw.memsize", &mem_size, &len, NULL, 0);
+
+        return (long)(mem_size/pagesize);
+
+    }
+#endif
 
     /* for any other values of "name", call the real sysconf() */
       return (long)sysconf(name);

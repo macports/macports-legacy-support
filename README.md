@@ -114,7 +114,7 @@ Wrapped headers are:
     <td>OSX10.4</td>
   </tr>
   <tr>
-    <td rowspan="2"><code>sys/unistd.h</code></td>
+    <td rowspan="3"><code>sys/unistd.h</code></td>
     <td>Adds <code>getattrlistat</code>, <code>readlinkat</code>, <code>faccessat</code>,
         <code>fchownat</code>, <code>linkat</code>, <code>symlinkat</code>,
         and <code>unlinkat</code> functions</td>
@@ -124,5 +124,9 @@ Wrapped headers are:
     <td>Wraps <code>sysconf</code> to support <code>_SC_NPROCESSORS_CONF</code> and
         <code>_SC_NPROCESSORS_ONLN</code></td>
     <td>OSX10.4</td>
+  </tr>
+  <tr>
+    <td>Wraps <code>sysconf</code> to support <code>_SC_PHYS_PAGES</code></td>
+    <td>OSX10.10</td>
   </tr>
 </table>
