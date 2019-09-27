@@ -96,7 +96,7 @@ Wrapped headers are:
   <tr>
     <td><code>sys/mman.h</code></td>
     <td>Adds missing <code>MAP_ANONYMOUS</code> definition</td>
-    <td>as required (?)</td>
+    <td>OSX10.10</td>
   </tr>
   <tr>
     <td><code>sys/stdio.h</code></td>
