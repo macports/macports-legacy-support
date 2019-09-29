@@ -96,6 +96,11 @@ Wrapped headers are:
     <td>OSX10.9</td>
   </tr>
   <tr>
+    <td><code>sys/fsgetpath.h</code></td>
+    <td>Adds missing <code>fsgetpath</code> function</td>
+    <td>OSX10.12</td>
+  </tr>
+  <tr>
     <td><code>sys/mman.h</code></td>
     <td>Adds missing <code>MAP_ANONYMOUS</code> definition</td>
     <td>OSX10.10</td>

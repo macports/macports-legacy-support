@@ -34,6 +34,9 @@
 
 /* defines for when legacy support is required for various functions */
 
+/* fsgetpath */
+#define __MP_LEGACY_SUPPORT_FSGETPATH__       (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 101300)
+
 /* clock_gettime */
 #define __MP_LEGACY_SUPPORT_GETTIME__         (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 101200)
 
