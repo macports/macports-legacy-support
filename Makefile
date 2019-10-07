@@ -44,6 +44,7 @@ DLIBCFLAGS      ?= -fPIC
 SLIBCFLAGS      ?=
 CXX             ?= c++ $(ARCHFLAGS)
 CXXFLAGS        ?= -Os -Wall
+LD              ?= ld
 LDFLAGS         ?=
 AR              ?= ar
 
