@@ -31,7 +31,7 @@
 # define SYS___pthread_fchdir 349
 #endif
 
-int best_fchdir(int dirfd)
+static int best_fchdir(int dirfd)
 {
 #if __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ >= 1050
   return syscall(SYS___pthread_fchdir, dirfd);
