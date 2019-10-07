@@ -70,11 +70,14 @@ FIND_LIBHEADERS := find $(SRCINCDIR) -type f \( -name '*.h' -o \
                                              \( -name 'c*' ! -name '*.*' \) \)
 LIBHEADERS      := $(shell $(FIND_LIBHEADERS))
 ALLHEADERS      := $(LIBHEADERS) $(wildcard $(SRCDIR)/*.h)
-LIBSRCS         := $(wildcard $(SRCDIR)/*.c)
+MULTISRCS       := $(SRCDIR)/fdopendir.c
+LIBSRCS         := $(filter-out $(MULTISRCS),$(wildcard $(SRCDIR)/*.c))
 DLIBOBJEXT       = .dl.o
 SLIBOBJEXT       = .o
 DLIBOBJS        := $(patsubst %.c,%$(DLIBOBJEXT),$(LIBSRCS))
+MULTIDLIBOBJS   := $(patsubst %.c,%$(DLIBOBJEXT),$(MULTISRCS))
 SLIBOBJS        := $(patsubst %.c,%$(SLIBOBJEXT),$(LIBSRCS))
+MULTISLIBOBJS   := $(patsubst %.c,%$(SLIBOBJEXT),$(MULTISRCS))
 
 TESTDIR          = test
 TESTNAMEPREFIX   = $(TESTDIR)/test_
@@ -192,6 +195,28 @@ all: dlib slib
 dlib: $(BUILDDLIBPATH)
 slib: $(BUILDSLIBPATH)
 
+# Special rules for special implementations.
+# For instance, functions using struct stat need to be implemented multiple
+# times with different stat structs - a 32-bit-inode based one and a 64-bit-
+# inode-based one.
+$(MULTIDLIBOBJS): %$(DLIBOBJEXT): %.c $(ALLHEADERS)
+	# Generate possibly multi-architecture object files ...
+	$(CC) -c -I$(SRCINCDIR) $(CFLAGS) $(DLIBCFLAGS) -D__DARWIN_UNIX03=0 -D__DARWIN_64_BIT_INO_T=0 -D__DARWIN_ONLY_64_BIT_INO_T=0 $< -o $@.inode32
+	$(CC) -c -I$(SRCINCDIR) $(CFLAGS) $(DLIBCFLAGS) -D__DARWIN_UNIX03=1 -D__DARWIN_ONLY_UNIX_CONFORMANCE=0 -D__DARWIN_64_BIT_INO_T=0 -D__DARWIN_ONLY_64_BIT_INO_T=0 $< -o $@.inode32unix2003
+	$(CC) -c -I$(SRCINCDIR) $(CFLAGS) $(DLIBCFLAGS) -D__DARWIN_UNIX03=1 -D__DARWIN_ONLY_UNIX_CONFORMANCE=1 -D__DARWIN_64_BIT_INO_T=1 -D__DARWIN_ONLY_64_BIT_INO_T=0 $< -o $@.inode64
+	$(CC) -c -I$(SRCINCDIR) $(CFLAGS) $(DLIBCFLAGS) -D__DARWIN_UNIX03=1 -D__DARWIN_ONLY_UNIX_CONFORMANCE=0 -D__DARWIN_64_BIT_INO_T=1 -D__DARWIN_ONLY_64_BIT_INO_T=0 $< -o $@.inode64unix2003
+	# ... and split them up, because ld can only generate single-architecture files ...
+	$(call splitandfilterandmergemultiarch,$@,$(LIPO),$(RM),$(CP),$(LD),$(GREP),$(PLATFORM),$(FORCE_ARCH))
+
+$(MULTISLIBOBJS): %$(SLIBOBJEXT): %.c $(ALLHEADERS)
+	# Generate possibly multi-architecture object files ...
+	$(CC) -c -I$(SRCINCDIR) $(CFLAGS) $(SLIBCFLAGS) -D__DARWIN_UNIX03=0 -D__DARWIN_64_BIT_INO_T=0 -D__DARWIN_ONLY_64_BIT_INO_T=0 $< -o $@.inode32
+	$(CC) -c -I$(SRCINCDIR) $(CFLAGS) $(SLIBCFLAGS) -D__DARWIN_UNIX03=1 -D__DARWIN_ONLY_UNIX_CONFORMANCE=0 -D__DARWIN_64_BIT_INO_T=0 -D__DARWIN_ONLY_64_BIT_INO_T=0 $< -o $@.inode32unix2003
+	$(CC) -c -I$(SRCINCDIR) $(CFLAGS) $(SLIBCFLAGS) -D__DARWIN_UNIX03=1 -D__DARWIN_ONLY_UNIX_CONFORMANCE=1 -D__DARWIN_64_BIT_INO_T=1 -D__DARWIN_ONLY_64_BIT_INO_T=0 $< -o $@.inode64
+	$(CC) -c -I$(SRCINCDIR) $(CFLAGS) $(SLIBCFLAGS) -D__DARWIN_UNIX03=1 -D__DARWIN_ONLY_UNIX_CONFORMANCE=0 -D__DARWIN_64_BIT_INO_T=1 -D__DARWIN_ONLY_64_BIT_INO_T=0 $< -o $@.inode64unix2003
+	# ... and split them up, because ld can only generate single-architecture files ...
+	$(call splitandfilterandmergemultiarch,$@,$(LIPO),$(RM),$(CP),$(LD),$(GREP),$(PLATFORM),$(FORCE_ARCH))
+
 # Generously marking all header files as potential dependencies
 $(DLIBOBJS): %$(DLIBOBJEXT): %.c $(ALLHEADERS)
 	$(CC) -c -I$(SRCINCDIR) $(CFLAGS) $(DLIBCFLAGS) $< -o $@
@@ -205,11 +230,11 @@ $(TESTOBJS_C): %.o: %.c $(ALLHEADERS)
 $(TESTOBJS_CPP): %.o: %.cpp $(ALLHEADERS)
 	$(CXX) -c -I$(SRCINCDIR) $(CXXFLAGS) $< -o $@
 
-$(BUILDDLIBPATH): $(DLIBOBJS)
+$(BUILDDLIBPATH): $(DLIBOBJS) $(MULTIDLIBOBJS)
 	$(MKINSTALLDIRS) $(BUILDDLIBDIR)
 	$(CC) $(BUILDDLIBFLAGS) $(LDFLAGS) $^ -o $@
 
-$(BUILDSLIBPATH): $(SLIBOBJS)
+$(BUILDSLIBPATH): $(SLIBOBJS) $(MULTISLIBOBJS)
 	$(MKINSTALLDIRS) $(BUILDSLIBDIR)
 	$(RM) $@
 	$(AR) $(BUILDSLIBFLAGS) $@ $^
