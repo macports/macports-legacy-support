@@ -38,6 +38,7 @@ POSTINSTALL      = install_name_tool
 POSTINSTALLFLAGS = -id $(DLIBPATH)
 
 ARCHFLAGS       ?=
+LIPO            ?= lipo
 CC              ?= cc $(ARCHFLAGS)
 CFLAGS          ?= -Os -Wall
 DLIBCFLAGS      ?= -fPIC
