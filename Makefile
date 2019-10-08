@@ -48,6 +48,7 @@ CXXFLAGS        ?= -Os -Wall
 LD              ?= ld
 LDFLAGS         ?=
 AR              ?= ar
+UNAME           ?= /usr/bin/uname
 
 MKINSTALLDIRS    = install -d -m 755
 INSTALL_PROGRAM  = install -c -m 755
