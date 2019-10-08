@@ -48,8 +48,10 @@ CXXFLAGS        ?= -Os -Wall
 LD              ?= ld
 LDFLAGS         ?=
 AR              ?= ar
+
 UNAME           ?= /usr/bin/uname
 SED             ?= /usr/bin/sed
+GREP            ?= /usr/bin/grep
 
 MKINSTALLDIRS    = install -d -m 755
 INSTALL_PROGRAM  = install -c -m 755
