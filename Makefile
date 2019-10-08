@@ -52,6 +52,7 @@ AR              ?= ar
 UNAME           ?= /usr/bin/uname
 SED             ?= /usr/bin/sed
 GREP            ?= /usr/bin/grep
+CP              ?= /bin/cp
 
 MKINSTALLDIRS    = install -d -m 755
 INSTALL_PROGRAM  = install -c -m 755
