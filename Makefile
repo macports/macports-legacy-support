@@ -60,6 +60,8 @@ INSTALL_DATA     = install -c -m 644
 RM               = rm -f
 RMDIR            = sh -c 'for d; do test ! -d "$$d" || rmdir -p "$$d"; done' rmdir
 
+PLATFORM        ?= $(shell $(UNAME) -r | $(SED) -ne 's/\([0-9][0-9]*\)\..*/\1/p')
+
 SRCDIR           = src
 SRCINCDIR        = include
 # Use VAR := $(shell CMD) instead of VAR != CMD to support old make versions
