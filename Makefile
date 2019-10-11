@@ -37,6 +37,7 @@ BUILDSLIBFLAGS   = -qs
 POSTINSTALL      = install_name_tool
 POSTINSTALLFLAGS = -id $(DLIBPATH)
 
+FORCE_ARCH      ?=
 ARCHFLAGS       ?=
 LIPO            ?= lipo
 CC              ?= cc $(ARCHFLAGS)
