@@ -71,5 +71,7 @@ foreach arg ( $argv )
     endif
     if ( ! $?found ) then
 #MACPORTS_EDIT echo no $arg in $path
+# exit 1 just like any modern which implementation
+        exit 1
     endif
 end
