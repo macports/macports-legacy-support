@@ -293,7 +293,7 @@ install-slib: $(BUILDSLIBPATH)
 test check: $(TESTRUNS) test_cmath
 
 clean:
-	$(RM) $(foreach D,$(SRCDIR) $(TESTDIR),$D/*.o $D/*.d)
+	$(RM) $(foreach D,$(SRCDIR) $(TESTDIR),$D/*.o $D/*.o.* $D/*.d)
 	$(RM) $(BUILDDLIBPATH) $(BUILDSLIBPATH) $(TESTPRGS) test/test_cmath_*
 	@$(RMDIR) $(BUILDDLIBDIR) $(BUILDSLIBDIR)
 
