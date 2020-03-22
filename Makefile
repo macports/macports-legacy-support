@@ -70,8 +70,14 @@ FIND_LIBHEADERS := find $(SRCINCDIR) -type f \( -name '*.h' -o \
                                              \( -name 'c*' ! -name '*.*' \) \)
 LIBHEADERS      := $(shell $(FIND_LIBHEADERS))
 ALLHEADERS      := $(LIBHEADERS) $(wildcard $(SRCDIR)/*.h)
-MULTISRCS       := $(SRCDIR)/fdopendir.c
-LIBSRCS         := $(filter-out $(MULTISRCS),$(wildcard $(SRCDIR)/*.c))
+
+# disable this until it works properly
+# MULTISRCS       := $(SRCDIR)/fdopendir.c
+# LIBSRCS         := $(filter-out $(MULTISRCS),$(wildcard $(SRCDIR)/*.c))
+# revert to previous
+LIBSRCS         := $(wildcard $(SRCDIR)/*.c)
+
+
 DLIBOBJEXT       = .dl.o
 SLIBOBJEXT       = .o
 DLIBOBJS        := $(patsubst %.c,%$(DLIBOBJEXT),$(LIBSRCS))
@@ -230,11 +236,17 @@ $(TESTOBJS_C): %.o: %.c $(ALLHEADERS)
 $(TESTOBJS_CPP): %.o: %.cpp $(ALLHEADERS)
 	$(CXX) -c -I$(SRCINCDIR) $(CXXFLAGS) $< -o $@
 
-$(BUILDDLIBPATH): $(DLIBOBJS) $(MULTIDLIBOBJS)
+# disable this until it works properly
+# $(BUILDDLIBPATH): $(DLIBOBJS) $(MULTIDLIBOBJS)
+# and revert to previous
+$(BUILDDLIBPATH): $(DLIBOBJS)
 	$(MKINSTALLDIRS) $(BUILDDLIBDIR)
 	$(CC) $(BUILDDLIBFLAGS) $(LDFLAGS) $^ -o $@
 
-$(BUILDSLIBPATH): $(SLIBOBJS) $(MULTISLIBOBJS)
+# disable this until it works properly
+# $(BUILDSLIBPATH): $(SLIBOBJS) $(MULTISLIBOBJS)
+# and revert to previous
+$(BUILDSLIBPATH): $(SLIBOBJS)
 	$(MKINSTALLDIRS) $(BUILDSLIBDIR)
 	$(RM) $@
 	$(AR) $(BUILDSLIBFLAGS) $@ $^
