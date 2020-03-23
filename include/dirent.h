@@ -27,13 +27,14 @@
 /* fdopendir */
 #if __MP_LEGACY_SUPPORT_FDOPENDIR__
 
-/* Tiger does not have this definition at all, so we'll define it to nothing */
+__MP__BEGIN_DECLS
+
 #ifndef __DARWIN_ALIAS_I
-#define __DARWIN_ALIAS_I(sym)
+extern DIR *fdopendir(int fd) __DARWIN_ALIAS(fdopendir);
+#else
+extern DIR *fdopendir(int fd) __DARWIN_ALIAS_I(fdopendir);
 #endif
 
-__MP__BEGIN_DECLS
-extern DIR *fdopendir(int fd) __DARWIN_ALIAS_I(fdopendir);
 __MP__END_DECLS
 #endif
 
