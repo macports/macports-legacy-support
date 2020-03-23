@@ -167,7 +167,7 @@ define splitandfilterandmergemultiarch
 					$${ld} -r "$${output}.inode32.$${arch}" "$${output}.inode64.$${arch}" -o "$${output}.$${arch}"; \
 				fi; \
 				;; \
-			('i386'|'ppc') \
+			('i386'|'ppc'|'ppc7400') \
 				if [ '9' -gt "$${platform}" ]; then \
 					$${ld} -r "$${output}.inode32.$${arch}" "$${output}.inode32unix2003.$${arch}" -o "$${output}.$${arch}"; \
 				else \
