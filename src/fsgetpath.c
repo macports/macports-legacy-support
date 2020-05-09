@@ -23,6 +23,8 @@
 
 
 #if 1
+/* SYS_fsgetpath is only available on 10.6 and up */
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1060
 /* implement using a syscall available macOS 10.6 to 10.12 */
 /* this should be thoroughly vetted as a syscall, but is private API */
 #include <unistd.h>
@@ -33,7 +35,7 @@ ssize_t fsgetpath(char * buf, size_t buflen, fsid_t * fsid, uint64_t obj_id) {
     return (ssize_t)syscall(SYS_fsgetpath, buf, (size_t)buflen, fsid, (uint64_t)obj_id);
 }
 #endif
-
+#endif
 
 #if 0
 /* implement with a compatability function that presently compiles on 10.6 and over */
