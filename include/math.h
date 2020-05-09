@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 Chris Jones <jonesc@macports.org>
+ * Copyright (c) 2018 Chris Jones <jonesc@macports.org>
  * Copyright (c) 2019 Michael Dickens <michaelld@macports.org>
  *
  * Permission to use, copy, modify, and distribute this software for any

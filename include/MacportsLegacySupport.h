@@ -1,6 +1,6 @@
 
 /*
- * Copyright (c) 2010 Chris Jones <jonesc@macports.org>
+ * Copyright (c) 2018 Chris Jones <jonesc@macports.org>
  * Copyright (c) 2018 Ken Cunningham <kencu@macports.org>
  * Copyright (c) 2019 Michael Dickens <michaelld@macports.org>
  *
