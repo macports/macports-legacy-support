@@ -211,8 +211,8 @@ int fstatat64(int dirfd, const char *pathname, struct stat64 *buf, int flags)
 }
 #endif
 
-int getattrlistat(int dirfd, const char *pathname, struct attrlist *a,
-                                 void *buf, size_t size, unsigned long flags)
+int getattrlistat(int dirfd, const char *pathname, void *a,
+                  void *buf, size_t size, unsigned long flags)
 {
 #ifdef __LP64__
     /* This is fricken stupid */
