@@ -70,7 +70,7 @@ Wrapped headers are:
   <tr>
     <td><code>strings.h</code></td>
     <td>Adds <code>ffsl</code>(OSX10.4) and <code>ffsll</code>(macOS10.8) functions</td>
-    <td>OSX10.6(8)</td>
+    <td>OSX10.4(8)</td>
   </tr>
   <tr>
     <td><code>time.h</code></td>
