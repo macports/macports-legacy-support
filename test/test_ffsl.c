@@ -22,14 +22,14 @@ int main() {
 
   printf( "testing ffsl :-\n" );
   for ( int i = 0; i <= 32; ++i ) {
-    const long int test = ( i>0 ? 1UL << i-1 : 0);
+    const long int test = ( i>0 ? 1UL << (i-1) : 0);
     const int j = ffsl(test);
     printf( "  Set bit %i - Found bit %i\n", i, j );
   }
 
   printf( "testing ffsll :-\n" );
   for ( int i = 0; i <= 64; ++i ) {
-    const long long int test = ( i>0 ? 1UL << i-1 : 0 );
+    const long long int test = ( i>0 ? 1UL << (i-1) : 0 );
     const int j = ffsll(test);
     printf( "  Set bit %i - Found bit %i\n", i, j );
   }
