@@ -116,7 +116,13 @@
 #define __MP_LEGACY_SUPPORT_CXX11_CMATH__ 0
 #endif
 
-/* STAILQ_FOREACH is not defined on Tiger*/
+/* cossin */
 #define __MP_LEGACY_SUPPORT_COSSIN__  (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1090)
+
+/* ffsll */
+#define __MP_LEGACY_SUPPORT_FFSLL__           (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1090)
+
+/* ffsl */
+#define __MP_LEGACY_SUPPORT_FFSL__            (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1050)
 
 #endif /* _MACPORTS_LEGACYSUPPORTDEFS_H_ */
