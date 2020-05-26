@@ -1,6 +1,6 @@
 
 /*
- * Copyright (c) 2019 Chris Jones
+ * Copyright (c) 2020 Chris Jones
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
