@@ -1,5 +1,7 @@
 
 /*-
+ * SPDX-License-Identifier: BSD-3-Clause
+ *
  * Copyright (c) 1990, 1993
  *	The Regents of the University of California.  All rights reserved.
  *
@@ -31,6 +33,19 @@
 // MP support header
 #include "MacportsLegacySupport.h"
 
+#if __MP_LEGACY_SUPPORT_FFSL__
+int ffsl(long mask)
+{
+  int bit = 0;
+  if (mask != 0) {
+    for (bit = 1; !(mask & 1); bit++) {
+      mask = (unsigned long)mask >> 1;
+    }
+  }
+  return (bit);
+}
+#endif
+
 #if __MP_LEGACY_SUPPORT_FFSLL__
 int ffsll(long long mask)
 {
@@ -44,13 +59,39 @@ int ffsll(long long mask)
 }
 #endif
 
-#if __MP_LEGACY_SUPPORT_FFSL__
-int ffsl(long mask)
+#if __MP_LEGACY_SUPPORT_FLS__
+int fls(int mask)
 {
   int bit = 0;
   if (mask != 0) {
-    for (bit = 1; !(mask & 1); bit++) {
+    for (bit = 1; mask != 1; bit++) {
+      mask = (unsigned int)mask >> 1;
+    }
+  }
+  return (bit);
+}
+#endif
+
+#if __MP_LEGACY_SUPPORT_FLSL__
+int flsl(long mask)
+{
+  int bit = 0;
+  if (mask != 0) {
+    for (bit = 1; mask != 1; bit++) {
       mask = (unsigned long)mask >> 1;
+    }
+  }
+  return (bit);
+}
+#endif
+
+#if __MP_LEGACY_SUPPORT_FLSLL__
+int flsll(long long mask)
+{
+  int bit = 0;
+  if (mask != 0) {
+    for (bit = 1; mask != 1; bit++) {
+      mask = (unsigned long long)mask >> 1;
     }
   }
   return (bit);

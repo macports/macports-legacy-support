@@ -22,30 +22,30 @@ int main() {
 
   const int offset = 4;
 
-  printf( "testing ffsl :-\n" );
+  printf( "testing fls :-\n" );
   for ( int i = 0; i <= 8*sizeof(int)-offset; i+=offset ) {
     const int ii = i+offset;
-    long int test = ( i>0  ? 1UL << (i-1)  : 0 );
-    test |=         ( ii>0 ? 1UL << (ii-1) : 0 );
-    const int j = ffs(test);
+    int test = ( i>0  ? 1UL << (i-1)  : 0 );
+    test |=    ( ii>0 ? 1UL << (ii-1) : 0 );
+    const int j = fls(test);
     printf( "  Set bits %i,%i - Found bit %i\n", i, ii, j );
   }
 
-  printf( "testing ffsl :-\n" );
+  printf( "testing flsl :-\n" );
   for ( int i = 0; i <= 8*sizeof(long int)-offset; i+=offset ) {
     const int ii = i+offset;
     long int test = ( i>0  ? 1UL << (i-1)  : 0 );
     test |=         ( ii>0 ? 1UL << (ii-1) : 0 );
-    const int j = ffsl(test);
+    const int j = flsl(test);
     printf( "  Set bits %i,%i - Found bit %i\n", i, ii, j );
   }
 
-  printf( "testing ffsll :-\n" );
+  printf( "testing flsll :-\n" );
   for ( int i = 0; i <= 8*sizeof(long long int)-offset; i+=offset ) {
     const int ii = i+offset;
     long long int test = ( i>0  ? 1UL << (i-1)  : 0 );
     test |=              ( ii>0 ? 1UL << (ii-1) : 0 );
-    const int j = ffsll(test);
+    const int j = flsll(test);
     printf( "  Set bits %i,%i - Found bit %i\n", i, ii, j );
   }
   
