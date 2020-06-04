@@ -1,19 +1,15 @@
 # MacPorts Support for Legacy OSX Versions
 
-## Features
+Installs wrapper headers and a library of functions that add common
+functions missing in various older OSX releases to bring them 
+approximately up to current expected standards.
 
-Installs a number of wrapper headers around system headers that add
-functionality missing in various older OSX releases.
+To use this library within [MacPorts](https://github.com/macports)
+add the `legacysupport` PortGroup to the Portfile. This will add the
+required include paths and libraries to allow the library to do it's 
+magic with most build systems.
 
-Installed headers use the `include_next` pre-processor feature to add
-the missing features and then forward include the original header.
-So using these headers instead of the originals should be transparent.
-
-Missing functions are compiled into a library that must also be linked
-into any builds using the wrapped headers. This is handled in
-[MacPorts](https://github.com/macports) via the `legacysupport` PortGroup.
-
-Wrapped headers are:
+Wrapped headers and replaced functions are:
 
 <table>
   <tr>
@@ -143,55 +139,4 @@ Wrapped headers are:
   </tr>
 </table>
 
-## Building
-
-This project does currently *not* use a configuration phase.
-
-Instead, configuration is supposed to take place by overriding the main
-`Makefile`'s variables, either via environment variables, command line
-parameters to the `make` call itself or modification of the main `Makefile`.
-
-`GNU make` is a hard build dependency.
-
-Most variables contain paths to various tools. Unless explicitly stated
-otherwise, both system (BSD-derived) and `GNU coreutils` variants should work,
-with a preference for the native system tools.
-
-### Special variables
-
-#### `PLATFORM`
-
-Major Darwin (not [Mac] OS X/macOS!) version to target against.
-
-This is typically detected automatically, but can also be overridden manually
-to test builds for other OS versions.
-
-Some symbols must be built multiple times. Each variant will use a different
-data layout and have a special postfix appended to it. The data layouts
-supported and needed depend upon the architecture and (target) OS version.
-
-#### `FORCE_ARCH`
-
-Exactly one single architecture to build for.
-
-Older versions of `lipo` do not support the `-archs` flag, so automatic
-architecture detection via binary/object file inspection will *not* be possible
-on older platforms.
-
-In order to avoid an additional dependency, and, arguably more importantly, a
-circular dependency with the `cctools` port providing newer `lipo` versions
-within `MacPorts`, this variable was introduced. It disables the automatic
-architecture detection feature and instead hardcodes the contained value as the
-target architecture.
-
-Within `MacPorts`, we use it in universal (multi-architecture) builds with one
-pass per architecture. Eventually, the `MacPorts` system/`muniversal` PortGroup
-will merge the resulting binaries into one fat/universal binary automatically.
-
-**This variable takes one single value only. It is not a list.**
-
-If your `lipo` binary is new enough and supports the `-archs` flag, you will
-*not* need to use this variable. Instead, directly build the software
-universally in one pass via the usual `-arch` compiler flags. The
-autodetection, split and merge features will then handle the different
-architectures automatically.
+For information on building this library outside MacPorts, see BUILDING.txt.
