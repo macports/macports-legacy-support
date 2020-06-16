@@ -81,6 +81,11 @@ Wrapped headers and replaced functions are:
     <td>OSX10.6</td>
   </tr>
   <tr>
+    <td><code>net/if.h</code></td>
+    <td>Adds include <code>sys/socket.h</code>, expected on current macOS systems</td>
+    <td>OSX10.8</td>
+  </tr>
+  <tr>
     <td><code>xlocale/_wchar.h</code></td>
     <td>Adds <code>wcscasecmp_l</code>, <code>wcsncasecmp_l</code> functions</td>
     <td>OSX10.6</td>

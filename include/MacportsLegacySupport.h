@@ -46,6 +46,12 @@
 /* fdopendir */
 #define __MP_LEGACY_SUPPORT_FDOPENDIR__       (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 101000)
 
+
+/* this header is automatically included by <net/if.h> on systems 10.9 and up.
+   It is therefore expected to be included by most current software. */
+/* <net/if.h> include <sys/socket.h> */
+#define __MP_LEGACY_SUPPORT_NETIF_SOCKET_FIX__  (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1090)
+
 /* strnlen */
 #define __MP_LEGACY_SUPPORT_STRNLEN__         (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1070)
 
