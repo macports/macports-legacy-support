@@ -38,8 +38,19 @@
 
 #       which : tells you which program you get
 #
+
+# this program has been modified by kencu@macports.org to adhere to current
+# which implementation details.
+
+# There is no longer any returned message if the the requested application is not found.
+# There is an exit code of "0" if all of the requested applications were found,
+# and an exit code of "1" if some of the requested applications were not found.
+# This matches current "which" behaviour on macOS systems.
+
+
 set prompt = "% "
 set noglob
+unset onenotfound
 foreach arg ( $argv )
     set alius = `alias $arg`
     switch ( $#alius )
@@ -70,8 +81,10 @@ foreach arg ( $argv )
         end
     endif
     if ( ! $?found ) then
-#MACPORTS_EDIT echo no $arg in $path
-# exit 1 just like any modern which implementation
-        exit 1
+        set onenotfound
     endif
 end
+
+if ( $?onenotfound ) then
+    exit 1
+endif
