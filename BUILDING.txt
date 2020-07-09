@@ -6,15 +6,13 @@ Usual Makefile project. This project does not require a configure phase.
 
 # `PLATFORM`
 
-Darwin version to target against. Detected automatically, 
-but can also be overridden manually to test builds for other OS versions.
-
-The Darwin version is equal to the macOS version +4, eg macOS 10.12 is darwin 16.
-This is for historical reasons, based on Darwin's evolution.
+Darwin version to target against. Detected automatically, but can also 
+be overridden manually to test builds for other OS versions.
+(This is not the macOS version.)
 
 # `FORCE_ARCH`
 
-Architecture to build for. Accepts a single value only, not a list.
+Architecture to build for. Accepts a single value, not a list.
 
 If your `lipo` binary is new enough and supports the `-archs` flag, you will
 not need to use this variable. Instead, directly build the software
