@@ -30,6 +30,13 @@ int best_fchdir(int dirfd);
 
 #define PROTECT_ERRNO(what)  ({ int __err = (errno); what; errno = __err; })
 
+/*
+ * Implementation behavior largely follows these man page descriptions:
+ *
+ * https://www.freebsd.org/cgi/man.cgi?query=fdopendir&sektion=3
+ * https://linux.die.net/man/3/fdopendir
+ */
+
 DIR *fdopendir(int dirfd) {
     DIR *dir;
     struct stat st;
@@ -43,8 +50,12 @@ DIR *fdopendir(int dirfd) {
         return 0;
     }
 
-    if (dirfd == AT_FDCWD)
-        return opendir (".");
+    if (dirfd == AT_FDCWD) {
+        dir = opendir (".");
+        /* dirfd can be closed only upon success */
+        if (dir) PROTECT_ERRNO(close(dirfd));
+        return dir;
+    }
 
     oldCWD = open(".", O_RDONLY);
     if (oldCWD == -1)
@@ -58,12 +69,16 @@ DIR *fdopendir(int dirfd) {
     dir = opendir (".");
 
     if (best_fchdir(oldCWD) < 0) {
+        if (dir) PROTECT_ERRNO(closedir(dir));
         if (oldCWD != -1) PROTECT_ERRNO(close(oldCWD));
         return 0;
     }
 
     if (oldCWD != -1)
         PROTECT_ERRNO(close(oldCWD));
+
+    /* dirfd can be closed only upon success */
+    if (dir && dirfd != -1) PROTECT_ERRNO(close(dirfd));
 
     return dir;
 }
