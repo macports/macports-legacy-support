@@ -1,7 +1,7 @@
 
 /*
  * Copyright (c) 2018 Chris Jones <jonesc@macports.org>
- * Copyright (c) 2018 Ken Cunningham <kencu@macports.org>
+ * Copyright (c) 2020 Ken Cunningham <kencu@macports.org>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -24,6 +24,9 @@
 
 /* Include the primary system unistd.h */
 #include_next <sys/unistd.h>
+
+/* For types such as uint32_t. */
+#include <stdint.h>
 
 #if __MP_LEGACY_SUPPORT_ATCALLS__
 
@@ -65,5 +68,13 @@ extern int unlinkat(int dirfd, const char *pathname, int flags);
 __MP__END_DECLS
 
 #endif /* __MP_LEGACY_SUPPORT_ATCALLS__ */
+
+
+#if __MP_LEGACY_SUPPORT_SETATTRLISTAT__
+
+extern int setattrlistat(int dirfd, const char *pathname, void *a,
+			 void *buf, size_t size, uint32_t flags);
+
+#endif /* __MP_LEGACY_SUPPORT_SETATTRLISTAT__ */
 
 #endif /* _MACPORTS_SYSUNISTD_H_ */
