@@ -1,7 +1,7 @@
 
 /*
  * Copyright (c) 2018 Chris Jones <jonesc@macports.org>
- * Copyright (c) 2018 Ken Cunningham <kencu@macports.org>
+ * Copyright (c) 2020 Ken Cunningham <kencu@macports.org>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -24,6 +24,26 @@
 
 /* Include the primary system stat.h */
 #include_next <sys/stat.h>
+
+#if __MP_LEGACY_SUPPORT_UTIMENSAT__
+
+#if !defined(UTIME_NOW)
+#define UTIME_NOW -1
+#endif
+
+#if !defined(UTIME_OMIT)
+#define UTIME_OMIT -2
+#endif
+
+__MP__BEGIN_DECLS
+
+extern int futimens(int fd, const struct timespec _times_in[2]);
+extern int utimensat(int fd, const char *path, const struct timespec _times_in[2], int flags);
+
+__MP__END_DECLS
+
+#endif /* __MP_LEGACY_SUPPORT_UTIMENSAT__ */
+
 
 #if __MP_LEGACY_SUPPORT_ATCALLS__
 
