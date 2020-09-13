@@ -40,10 +40,99 @@
 #include <string.h>
 #include <unistd.h>
 
+/*
+ * darwintest seems to be private.
+ * No source code could be located for it.
+ *
+ * However, there seems to be a different but compatible implementation in
+ * xnu-6153.141.1/osfmk/tests/ktest.{c,h}.
+ *
+ * http://web.archive.org/web/20210201212906/https://opensource.apple.com/source/xnu/xnu-6153.141.1/osfmk/tests/ktest.h.auto.html
+ *
+ * Usually, darwintests would provide a dynamic library called darwintest_utils which
+ * includes... who knows what exactly.
+ *
+ * ktest seems to be more complicated and tightly integrated.
+ *
+ * Long story short: we won't even try to reimplement the full darwintest suite here.
+ * We can, however, take some of the ktest definitions as inspirations for what the
+ * macros we actually use are supposed to do.
+ */
+/*
 #include <darwintest.h>
 #include <darwintest_utils.h>
+*/
 
 #define FILENAME "utimensat"
+
+#define T_LOG(...)			\
+	do {				\
+		printf("Testing: ");	\
+		printf(__VA_ARGS__);	\
+		printf("\n");		\
+	} while (0)
+
+/*
+ * Yes, we know that b can't be NULL when we use it, but some compilers (most notably older GCC,
+ * but also more recent versions like 8) wrongly assume that it could be, triggering a bug and
+ * superfluous warning.
+ *
+ * Work around that locally.
+ */
+#define T_ASSERT_POSIX_ZERO(a,b)				\
+	do {							\
+		if ((a) != 0) {					\
+			printf("assert zero failed");		\
+			if (b != NULL) {			\
+				printf(": %s", (b) ? (b) : "");	\
+			}					\
+			printf("\n");				\
+			return 1;				\
+		}						\
+	} while (0)
+
+#define T_ASSERT_POSIX_SUCCESS(a,b)				\
+	do {							\
+		if ((a) < 0) {					\
+			printf("assert success failed");	\
+			if ((b) != NULL) {			\
+				printf(": %s", (b) ? (b) : "");	\
+			}					\
+			printf("\n");				\
+			return 1;				\
+		}						\
+	} while (0)
+
+#define T_ASSERT_GE(a,b,c)							\
+	do {									\
+		if (!((a) >= (b))) {						\
+			printf("assert GE failed {%ld, %ld}", (a), (b));	\
+			if ((c) != NULL) {					\
+				printf(": %s", (c) ? (c) : "");			\
+			}							\
+			printf("\n");						\
+			return 1;						\
+		}								\
+	} while (0)
+
+#define T_ASSERT_EQ(a,b,c)							\
+	do {									\
+		if (!((a) == (b))) {						\
+			printf("assert EQ failed {%ld, %ld}", (a), (b));	\
+			if ((c) != NULL) {					\
+				printf(": %s", (c) ? (c) : "");			\
+			}							\
+			printf("\n");						\
+			return 1;						\
+		}								\
+	} while (0)
+
+#define T_DECL(a,b) int main(void)
+#define T_SETUPBEGIN
+#define T_SETUPEND
+#define T_SKIP
+#define T_QUIET
+#define dt_tmpdir tmpdir
 
 static const struct timespec tptr[][2] = {
 	{ { 0x12345678, 987654321 }, { 0x15263748, 123456789 }, },
@@ -63,14 +152,14 @@ static const struct timespec tptr[][2] = {
 T_DECL(utimensat, "Try various versions of utimensat")
 {
 	T_SETUPBEGIN;
-	T_ASSERT_POSIX_ZERO(chdir(dt_tmpdir()), NULL);
+/*	T_ASSERT_POSIX_ZERO(chdir(dt_tmpdir()), NULL);
 	// Skip the test if the current working directory is not on APFS.
 	struct statfs sfs = { 0 };
 	T_QUIET; T_ASSERT_POSIX_SUCCESS(statfs(".", &sfs), NULL);
 	if (memcmp(&sfs.f_fstypename[0], "apfs", strlen("apfs")) != 0) {
 		T_SKIP("utimensat is APFS-only, but working directory is non-APFS");
 	}
-	T_SETUPEND;
+*/	T_SETUPEND;
 
 	struct stat pre_st, post_st;
 	int fd;
@@ -86,28 +175,28 @@ T_DECL(utimensat, "Try various versions of utimensat")
 		struct timespec now;
 		clock_gettime(CLOCK_REALTIME, &now);
 
-		T_ASSERT_POSIX_ZERO(stat(FILENAME, &pre_st), NULL);
-		T_ASSERT_POSIX_ZERO(utimensat(AT_FDCWD, FILENAME, tptr[i], 0), NULL);
-		T_ASSERT_POSIX_ZERO(stat(FILENAME, &post_st), NULL);
+		T_ASSERT_POSIX_ZERO(stat(FILENAME, &pre_st), "first stat failed");
+		T_ASSERT_POSIX_ZERO(utimensat(AT_FDCWD, FILENAME, tptr[i], 0), "utimensat failed");
+		T_ASSERT_POSIX_ZERO(stat(FILENAME, &post_st), "second stat failed");
 
 		if (tptr[i][0].tv_nsec == UTIME_NOW) {
-			T_ASSERT_GE(post_st.st_atimespec.tv_sec, now.tv_sec, NULL);
+			T_ASSERT_GE(post_st.st_atimespec.tv_sec, now.tv_sec, "post stat vs. now seconds (utimensat Atime nanoseconds UTIME_NOW)");
 		} else if (tptr[i][0].tv_nsec == UTIME_OMIT) {
-			T_ASSERT_EQ(post_st.st_atimespec.tv_sec, pre_st.st_atimespec.tv_sec, NULL);
-			T_ASSERT_EQ(post_st.st_atimespec.tv_nsec, pre_st.st_atimespec.tv_nsec, NULL);
+			T_ASSERT_EQ(post_st.st_atimespec.tv_sec, pre_st.st_atimespec.tv_sec, "post stat vs. pre stat seconds (utimensat Atime nanoseconds UTIME_OMIT)");
+			T_ASSERT_EQ(post_st.st_atimespec.tv_nsec, pre_st.st_atimespec.tv_nsec, "post stat vs. pre stat nanoseconds (utimensat Atime nanoseconds UTIME_OMIT)");
 		} else {
-			T_ASSERT_EQ(post_st.st_atimespec.tv_sec, tptr[i][0].tv_sec, NULL);
-			T_ASSERT_EQ(post_st.st_atimespec.tv_nsec, tptr[i][0].tv_nsec, NULL);
+			T_ASSERT_EQ(post_st.st_atimespec.tv_sec, tptr[i][0].tv_sec, "post stat vs. utimensat Atime seconds (utimensat Atime explicit)");
+			T_ASSERT_EQ(post_st.st_atimespec.tv_nsec, tptr[i][0].tv_nsec, "post stat vs. utimensat Atime nanoseconds (utimensat Atime explicit)");
 		}
 
 		if (tptr[i][1].tv_nsec == UTIME_NOW) {
-			T_ASSERT_GE(post_st.st_mtimespec.tv_sec, now.tv_sec, NULL);
+			T_ASSERT_GE(post_st.st_mtimespec.tv_sec, now.tv_sec, "post stat vs. now seconds (utimensat Mtime nanoseconds UTIME_NOW)");
 		} else if (tptr[i][1].tv_nsec == UTIME_OMIT) {
-			T_ASSERT_EQ(post_st.st_mtimespec.tv_sec, pre_st.st_mtimespec.tv_sec, NULL);
-			T_ASSERT_EQ(post_st.st_mtimespec.tv_nsec, pre_st.st_mtimespec.tv_nsec, NULL);
+			T_ASSERT_EQ(post_st.st_mtimespec.tv_sec, pre_st.st_mtimespec.tv_sec, "post stat vs. pre stat seconds (utimensat Mtime nanseconds UTIME_OMIT)");
+			T_ASSERT_EQ(post_st.st_mtimespec.tv_nsec, pre_st.st_mtimespec.tv_nsec, "post stat vs. pre stat nanoseconds (utimensat Mtime nanoseconds UTIME_OMIT)");
 		} else {
-			T_ASSERT_EQ(post_st.st_mtimespec.tv_sec, tptr[i][1].tv_sec, NULL);
-			T_ASSERT_EQ(post_st.st_mtimespec.tv_nsec, tptr[i][1].tv_nsec, NULL);
+			T_ASSERT_EQ(post_st.st_mtimespec.tv_sec, tptr[i][1].tv_sec, "post stat vs. utimensat Mtime seconds (utimensat Mtime explicit)");
+			T_ASSERT_EQ(post_st.st_mtimespec.tv_nsec, tptr[i][1].tv_nsec, "post stat vs. utimensat Mtime nanoseconds (utimensat Mtime explicit)");
 		}
 	}
 }
