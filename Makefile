@@ -227,7 +227,7 @@ $(SLIBOBJS): %$(SLIBOBJEXT): %.c $(ALLHEADERS)
 	$(CC) -c -I$(SRCINCDIR) $(CFLAGS) $(SLIBCFLAGS) $< -o $@
 
 $(TESTOBJS_C): %.o: %.c $(ALLHEADERS)
-	$(CC) -c -I$(SRCINCDIR) $(CFLAGS) $< -o $@
+	$(CC) -c -std=c99 -I$(SRCINCDIR) $(CFLAGS) $< -o $@
 
 $(TESTOBJS_CPP): %.o: %.cpp $(ALLHEADERS)
 	$(CXX) -c -I$(SRCINCDIR) $(CXXFLAGS) $< -o $@
