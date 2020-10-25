@@ -127,6 +127,11 @@ Wrapped headers and replaced functions are:
     <td>OSX10.4</td>
   </tr>
   <tr>
+    <td><code>sys/time.h</code></td>
+    <td>Adds <code>lutimes</code> function</td>
+    <td>OSX10.4</td>
+  </tr>
+  <tr>
     <td rowspan="3"><code>sys/unistd.h</code></td>
     <td>Adds <code>getattrlistat</code>, <code>readlinkat</code>, <code>faccessat</code>,
         <code>fchownat</code>, <code>linkat</code>, <code>symlinkat</code>,
