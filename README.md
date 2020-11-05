@@ -91,6 +91,11 @@ Wrapped headers and replaced functions are:
     <td>OSX10.6</td>
   </tr>
   <tr>
+    <td><code>sys/aio.h</code></td>
+    <td>Adjusts includes and defines to match SDK 10.5+</td>
+    <td>OSX10.4</td>
+  </tr>
+  <tr>
     <td rowspan="2"><code>sys/fcntl.h</code></td>
     <td>Adds missing <code>O_CLOEXEC</code>, <code>AT_FDCWD</code>, <code>AT_EACCESS</code>,
         <code>AT_SYMLINK_NOFOLLOW</code>, <code>AT_SYMLINK_FOLLOW</code>, and
