@@ -24,7 +24,7 @@
 #define __DISABLE_MP_LEGACY_SUPPORT_FUNCTION_WRAPPING__ 1
 #endif
 
-#if !__DISABLE_MP_LEGACY_SUPPORT_FUNCTION_WRAPPING__
+#if !defined (__DISABLE_MP_LEGACY_SUPPORT_FUNCTION_WRAPPING__) || !__DISABLE_MP_LEGACY_SUPPORT_FUNCTION_WRAPPING__
 /* Could include Darwin's <sys/cdefs.h> and use __STRING, __CONCAT */
 /* But for wrappers we require __asm, thus GCC/Clang, thus ANSI C, anyway */
 
