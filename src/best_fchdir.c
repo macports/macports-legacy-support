@@ -17,14 +17,12 @@
 
 /* MP support header */
 #include "MacportsLegacySupport.h"
-#if __MP_LEGACY_SUPPORT_FDOPENDIR__
+#if __MP_LEGACY_SUPPORT_NEED_BEST_FCHDIR__
+
+#include "common-priv.h"
 
 #include <unistd.h>
 #include <sys/syscall.h>
-
-#ifndef SYS___pthread_fchdir
-# define SYS___pthread_fchdir 349
-#endif
 
 int best_fchdir(int dirfd)
 {
@@ -37,4 +35,4 @@ int best_fchdir(int dirfd)
 #endif
 }
 
-#endif /* __MP_LEGACY_SUPPORT_FDOPENDIR__ */
+#endif /* __MP_LEGACY_SUPPORT_NEED_BEST_FCHDIR__ */
