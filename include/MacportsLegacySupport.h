@@ -144,4 +144,10 @@
 #define __MP_LEGACY_SUPPORT_FLSLL__   (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1090)
 
 
+/* Compound macros, bundling functionality needed by multiple single features. */
+#define __MP_LEGACY_SUPPORT_NEED_ATCALL_MACROS__  (__MP_LEGACY_SUPPORT_ATCALLS__)
+
+#define __MP_LEGACY_SUPPORT_NEED_BEST_FCHDIR__    (__MP_LEGACY_SUPPORT_FDOPENDIR__ || __MP_LEGACY_SUPPORT_ATCALLS__)
+
+
 #endif /* _MACPORTS_LEGACYSUPPORTDEFS_H_ */

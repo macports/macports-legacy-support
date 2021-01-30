@@ -35,6 +35,7 @@
 #include "MacportsLegacySupport.h"
 #if __MP_LEGACY_SUPPORT_ATCALLS__
 
+#include "common-priv.h"
 
 #include <sys/attr.h>
 #include <sys/errno.h>
@@ -62,48 +63,6 @@
 #include <sys/syscall.h>
 #include <fcntl.h>
 
-#ifndef SYS___pthread_fchdir
-# define SYS___pthread_fchdir 349
-#endif
-
-int __pthread_fchdir(int dirfd)
-{
-#if __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ >= 1050
-  return syscall(SYS___pthread_fchdir, dirfd);
-#else
-/* Tiger does not have kernel support for __pthread_fchdir, so we have to fall back to fchdir */
-/* unless we can come up with a per-thread compatible implementation that works on Tiger */
-  return syscall(SYS_fchdir, dirfd);
-#endif
-}
-
-
-#define PROTECT_ERRNO(what)  ({ int __err = (errno); what; errno = __err; })
-#define ERR_ON(code, what)   if (what) { errno = (code); return -1; }
-
-#define _ATCALL(fd, p, onerr, what)                             \
-    ({  typeof(what) __result;                                  \
-        int oldCWD = -1;                                        \
-        if (fd != AT_FDCWD && p[0] != '/') {                    \
-            oldCWD = open(".", O_RDONLY);                       \
-            if (__pthread_fchdir(-1) < 0 && oldCWD != -1) {     \
-                close(oldCWD); oldCWD = -1;                     \
-            }                                                   \
-            if (__pthread_fchdir(fd) < 0) {                     \
-                PROTECT_ERRNO(__pthread_fchdir(oldCWD));        \
-                if (oldCWD != -1) PROTECT_ERRNO(close(oldCWD)); \
-                return onerr;                                   \
-            }                                                   \
-        }                                                       \
-        __result = (what);                                      \
-        if (fd != AT_FDCWD && p[0] != '/') {                    \
-            PROTECT_ERRNO(__pthread_fchdir(oldCWD));            \
-            if (oldCWD != -1) PROTECT_ERRNO(close(oldCWD));     \
-        }                                                       \
-        __result;                                               \
-    })
-
-#define ATCALL(fd, p, what)  _ATCALL(fd, p, -1, what)
 
 // buf is a pointer to a buffer of PATH_MAX or larger size
 static int

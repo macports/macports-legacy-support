@@ -20,15 +20,14 @@
 #include "MacportsLegacySupport.h"
 #if __MP_LEGACY_SUPPORT_FDOPENDIR__
 
+#include "common-priv.h"
+
 #include <dirent.h>
 #include <sys/errno.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <fcntl.h>
 
-int best_fchdir(int dirfd);
-
-#define PROTECT_ERRNO(what)  ({ int __err = (errno); what; errno = __err; })
 
 /*
  * Implementation behavior largely follows these man page descriptions:
