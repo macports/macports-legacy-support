@@ -22,14 +22,15 @@
  */
 
  /*
-  * NOTICE: This file was modified by Ken Cunningham in September 2020 to allow
-  * for use as a supporting file for MacPorts legacy support library. This notice
-  * is included in support of clause 2.2 (b) of the Apple Public License,
-  * Version 2.0.
+  * NOTICE: This file was modified by Ken Cunningham in September 2020 and Mihai
+  * Moldovan in February 2021 to allow for use as a supporting file for MacPorts legacy
+  * support library. This notice is included in support of clause 2.2 (b) of the Apple
+  * Public License, Version 2.0.
   */
 
 #include <sys/cdefs.h>
 #include <sys/param.h>
+#include <sys/mount.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <errno.h>
@@ -39,6 +40,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdbool.h>
 
 /*
  * darwintest seems to be private.
@@ -62,6 +64,7 @@
 #include <darwintest.h>
 #include <darwintest_utils.h>
 */
+
 
 #define FILENAME "utimensat"
 
@@ -127,12 +130,22 @@
 		}								\
 	} while (0)
 
+#define T_SKIP(msg)						\
+	do {							\
+		printf("Test skipped");				\
+		if ((msg)) {					\
+			printf(": %s", (msg) ? (msg) : "");	\
+		}						\
+		printf("\n");					\
+		return EXIT_SUCCESS;				\
+	} while (0)
+
 #define T_DECL(a,b) int main(void)
 #define T_SETUPBEGIN
 #define T_SETUPEND
-#define T_SKIP
 #define T_QUIET
 #define dt_tmpdir tmpdir
+
 
 static const struct timespec tptr[][2] = {
 	{ { 0x12345678, 987654321 }, { 0x15263748, 123456789 }, },
@@ -149,23 +162,31 @@ static const struct timespec tptr[][2] = {
 	{ { 0, UTIME_OMIT }, { 0, UTIME_NOW }, },
 };
 
+
 T_DECL(utimensat, "Try various versions of utimensat")
 {
 	T_SETUPBEGIN;
-/*	T_ASSERT_POSIX_ZERO(chdir(dt_tmpdir()), NULL);
+	/* T_ASSERT_POSIX_ZERO(chdir(dt_tmpdir()), NULL); */
 	// Skip the test if the current working directory is not on APFS.
 	struct statfs sfs = { 0 };
+	bool apfs = true;
 	T_QUIET; T_ASSERT_POSIX_SUCCESS(statfs(".", &sfs), NULL);
 	if (memcmp(&sfs.f_fstypename[0], "apfs", strlen("apfs")) != 0) {
-		T_SKIP("utimensat is APFS-only, but working directory is non-APFS");
+		apfs = false;
+		/* T_SKIP("utimensat is APFS-only, but working directory is non-APFS"); */
 	}
-*/	T_SETUPEND;
+	T_SETUPEND;
 
-	struct stat pre_st, post_st;
+	struct stat pre_st, post_st, utimes_st;
 	int fd;
 
 	T_ASSERT_POSIX_SUCCESS((fd = open(FILENAME, O_CREAT|O_RDWR, 0644)), NULL);
 	T_ASSERT_POSIX_ZERO(close(fd), NULL);
+
+	if (!(apfs)) {
+		T_ASSERT_POSIX_SUCCESS((fd = open(FILENAME "-utimes", O_CREAT|O_RDWR, 0644)), NULL);
+		T_ASSERT_POSIX_ZERO(close(fd), NULL);
+	}
 
 	for (size_t i = 0; i < sizeof(tptr)/sizeof(tptr[0]); i++) {
 		T_LOG("=== {%ld, %ld} {%ld, %ld} ===",
@@ -173,11 +194,40 @@ T_DECL(utimensat, "Try various versions of utimensat")
 				tptr[i][1].tv_sec, tptr[i][1].tv_nsec);
 
 		struct timespec now;
+		struct timeval utimes_tv[2] = { { 0 } };
+
+		/* Convert current entry to microseconds-based structure. */
+		TIMESPEC_TO_TIMEVAL(utimes_tv, tptr[i]);
+		TIMESPEC_TO_TIMEVAL((utimes_tv + 1), (tptr[i] + 1));
+
 		clock_gettime(CLOCK_REALTIME, &now);
 
 		T_ASSERT_POSIX_ZERO(stat(FILENAME, &pre_st), "first stat failed");
 		T_ASSERT_POSIX_ZERO(utimensat(AT_FDCWD, FILENAME, tptr[i], 0), "utimensat failed");
 		T_ASSERT_POSIX_ZERO(stat(FILENAME, &post_st), "second stat failed");
+
+		if (!(apfs)) {
+			/*
+			 * Handle UTIME_NOW and UTIME_OMIT... uh... "correctly".
+			 * By "correctly", we really mean to copy the file and then call
+			 * utimes() on it.
+			 *
+			 * The issue is that utimes() cannot generally handle the
+			 * UTIME_NOW/UTIME_OMIT macros (at least on older systems),
+			 * so we'll have to operate on a copy of the original file.
+			 *
+			 * Avoid copyfile(), though, since it is not available on older
+			 * systems. Instead, copy the timestamps directly via utimes().
+			 */
+			struct timeval utimes_tv_copy[2] = { { 0 } };
+			TIMESPEC_TO_TIMEVAL(utimes_tv_copy, &(pre_st.st_atimespec));
+			TIMESPEC_TO_TIMEVAL((utimes_tv_copy + 1), &(pre_st.st_mtimespec));
+			T_ASSERT_POSIX_ZERO(utimes(FILENAME "-utimes", utimes_tv_copy), "copying original timestamps via utimes failed");
+
+			/* Then, set the actual times. */
+			T_ASSERT_POSIX_ZERO(utimes(FILENAME "-utimes", utimes_tv), "utimes failed");
+			T_ASSERT_POSIX_ZERO(stat(FILENAME "-utimes", &utimes_st), "utimes stat failed");
+		}
 
 		if (tptr[i][0].tv_nsec == UTIME_NOW) {
 			T_ASSERT_GE(post_st.st_atimespec.tv_sec, now.tv_sec, "post stat vs. now seconds (utimensat Atime nanoseconds UTIME_NOW)");
@@ -185,8 +235,22 @@ T_DECL(utimensat, "Try various versions of utimensat")
 			T_ASSERT_EQ(post_st.st_atimespec.tv_sec, pre_st.st_atimespec.tv_sec, "post stat vs. pre stat seconds (utimensat Atime nanoseconds UTIME_OMIT)");
 			T_ASSERT_EQ(post_st.st_atimespec.tv_nsec, pre_st.st_atimespec.tv_nsec, "post stat vs. pre stat nanoseconds (utimensat Atime nanoseconds UTIME_OMIT)");
 		} else {
+			/* Seconds must always match. */
 			T_ASSERT_EQ(post_st.st_atimespec.tv_sec, tptr[i][0].tv_sec, "post stat vs. utimensat Atime seconds (utimensat Atime explicit)");
-			T_ASSERT_EQ(post_st.st_atimespec.tv_nsec, tptr[i][0].tv_nsec, "post stat vs. utimensat Atime nanoseconds (utimensat Atime explicit)");
+
+			/* Nanoseconds, on the other hand... may not. */
+			if (apfs) {
+				/* But must on APFS. */
+				T_ASSERT_EQ(post_st.st_atimespec.tv_nsec, tptr[i][0].tv_nsec, "post stat vs. utimensat Atime nanoseconds (utimensat Atime explicit)");
+			}
+			else {
+				/*
+				 * On other file systems, we just make sure the
+				 * nanoseconds are within microseconds range compared to
+				 * the utimes() call.
+				 */
+				T_ASSERT_EQ((post_st.st_atimespec.tv_nsec / 1000), (utimes_st.st_atimespec.tv_nsec / 1000), "post stat vs. utimes Atime nanoseconds (utimensat Atime explicit)");
+			}
 		}
 
 		if (tptr[i][1].tv_nsec == UTIME_NOW) {
@@ -195,8 +259,15 @@ T_DECL(utimensat, "Try various versions of utimensat")
 			T_ASSERT_EQ(post_st.st_mtimespec.tv_sec, pre_st.st_mtimespec.tv_sec, "post stat vs. pre stat seconds (utimensat Mtime nanseconds UTIME_OMIT)");
 			T_ASSERT_EQ(post_st.st_mtimespec.tv_nsec, pre_st.st_mtimespec.tv_nsec, "post stat vs. pre stat nanoseconds (utimensat Mtime nanoseconds UTIME_OMIT)");
 		} else {
+			/* Same here, but for mtime. */
 			T_ASSERT_EQ(post_st.st_mtimespec.tv_sec, tptr[i][1].tv_sec, "post stat vs. utimensat Mtime seconds (utimensat Mtime explicit)");
-			T_ASSERT_EQ(post_st.st_mtimespec.tv_nsec, tptr[i][1].tv_nsec, "post stat vs. utimensat Mtime nanoseconds (utimensat Mtime explicit)");
+
+			if (apfs) {
+				T_ASSERT_EQ(post_st.st_mtimespec.tv_nsec, tptr[i][1].tv_nsec, "post stat vs. utimensat Mtime nanoseconds (utimensat Mtime explicit)");
+			}
+			else {
+				T_ASSERT_EQ((post_st.st_mtimespec.tv_nsec / 1000), (utimes_st.st_mtimespec.tv_nsec / 1000), "post stat vs. utimes Mtime nanoseconds (utimensat Mtime explicit)");
+			}
 		}
 	}
 }
