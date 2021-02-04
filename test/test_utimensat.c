@@ -147,6 +147,11 @@
 #define dt_tmpdir tmpdir
 
 
+struct bug_for_bug {
+  size_t pos;
+  bool enable;
+};
+
 static const struct timespec tptr[][2] = {
 	{ { 0x12345678, 987654321 }, { 0x15263748, 123456789 }, },
 
@@ -179,6 +184,7 @@ T_DECL(utimensat, "Try various versions of utimensat")
 
 	struct stat pre_st, post_st, utimes_st;
 	int fd;
+	const struct bug_for_bug mtime_omit = { 5, (!(apfs)) };
 
 	T_ASSERT_POSIX_SUCCESS((fd = open(FILENAME, O_CREAT|O_RDWR, 0644)), NULL);
 	T_ASSERT_POSIX_ZERO(close(fd), NULL);
@@ -236,7 +242,21 @@ T_DECL(utimensat, "Try various versions of utimensat")
 			T_ASSERT_EQ(post_st.st_atimespec.tv_nsec, pre_st.st_atimespec.tv_nsec, "post stat vs. pre stat nanoseconds (utimensat Atime nanoseconds UTIME_OMIT)");
 		} else {
 			/* Seconds must always match. */
-			T_ASSERT_EQ(post_st.st_atimespec.tv_sec, tptr[i][0].tv_sec, "post stat vs. utimensat Atime seconds (utimensat Atime explicit)");
+			if ((mtime_omit.enable) && (mtime_omit.pos == i)) {
+				/*
+				 * Unless we're on non-APFS and the mtime is set to
+				 * UTIME_OMIT, which triggers a bug in Apple's
+				 * implementation (even natively on 10.13 and higher),
+				 * which leads to the atime not being updated as well.
+				 */
+				T_ASSERT_EQ(pre_st.st_atimespec.tv_sec, post_st.st_atimespec.tv_sec, "pre stat vs. post stat Atime seconds (utimensat Atime explicit) - "
+												     "if this test fails on 10.14 or higher, it means that Apple fixed "
+												     "its buggy implementation on non-APFS file systems. Please report "
+												     "this to the legacy-support project");
+			}
+			else {
+				T_ASSERT_EQ(post_st.st_atimespec.tv_sec, tptr[i][0].tv_sec, "post stat vs. utimensat Atime seconds (utimensat Atime explicit)");
+			}
 
 			/* Nanoseconds, on the other hand... may not. */
 			if (apfs) {
