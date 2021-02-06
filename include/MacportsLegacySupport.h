@@ -101,6 +101,9 @@
 						     (!defined (__DISABLE_MP_LEGACY_SUPPORT_REALPATH_WRAP__) || !__DISABLE_MP_LEGACY_SUPPORT_REALPATH_WRAP__)          && \
 						     __MP_LEGACY_SUPPORT_REALPATH_WRAP__)
 
+/* setattrlistat */
+#define __MP_LEGACY_SUPPORT_FSETATTRLIST__    (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1060)
+
 /* lsmod does not exist on Tiger */
 #define __MP_LEGACY_SUPPORT_LSMOD__           (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1050)
 
