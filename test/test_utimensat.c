@@ -41,6 +41,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdbool.h>
+#include <stdlib.h>
 
 /*
  * darwintest seems to be private.
@@ -90,7 +91,7 @@
 				printf(": %s", (b) ? (b) : "");	\
 			}					\
 			printf("\n");				\
-			return 1;				\
+			goto err;				\
 		}						\
 	} while (0)
 
@@ -102,7 +103,7 @@
 				printf(": %s", (b) ? (b) : "");	\
 			}					\
 			printf("\n");				\
-			return 1;				\
+			goto err;				\
 		}						\
 	} while (0)
 
@@ -114,7 +115,7 @@
 				printf(": %s", (c) ? (c) : "");			\
 			}							\
 			printf("\n");						\
-			return 1;						\
+			goto err;						\
 		}								\
 	} while (0)
 
@@ -126,7 +127,7 @@
 				printf(": %s", (c) ? (c) : "");			\
 			}							\
 			printf("\n");						\
-			return 1;						\
+			goto err;						\
 		}								\
 	} while (0)
 
@@ -137,7 +138,7 @@
 			printf(": %s", (msg) ? (msg) : "");	\
 		}						\
 		printf("\n");					\
-		return EXIT_SUCCESS;				\
+		goto out;					\
 	} while (0)
 
 #define T_DECL(a,b) int main(void)
@@ -183,7 +184,7 @@ T_DECL(utimensat, "Try various versions of utimensat")
 	T_SETUPEND;
 
 	struct stat pre_st, post_st, utimes_st;
-	int fd;
+	int fd, ret = EXIT_SUCCESS;
 	const struct bug_for_bug mtime_omit = { 5, (!(apfs)) };
 
 	T_ASSERT_POSIX_SUCCESS((fd = open(FILENAME, O_CREAT|O_RDWR, 0644)), NULL);
@@ -290,4 +291,12 @@ T_DECL(utimensat, "Try various versions of utimensat")
 			}
 		}
 	}
+
+out:
+	unlink(FILENAME);
+	unlink(FILENAME "-utimes");
+	return ret;
+err:
+	ret = EXIT_FAILURE;
+	goto out;
 }
