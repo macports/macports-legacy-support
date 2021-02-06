@@ -37,6 +37,7 @@
 
 #include "common-priv.h"
 
+#include <sys/attr.h>
 #include <assert.h>
 #include <stdint.h>
 
@@ -44,7 +45,32 @@
 int setattrlistat(int dirfd, const char *pathname, void *a,
                   void *buf, size_t size, uint32_t flags)
 {
-    return ATCALL(dirfd, pathname, setattrlist(pathname, a, buf, size, flags));
+    int cont = 1,
+        ret = 0;
+
+#if __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1080
+    /*
+     * Older systems don't correctly check if no attributes are to be set, which usually
+     * means a buffer size of zero and return an error since they malloc a block of
+     * memory with size zero, leading to ENOMEM.
+     *
+     * Emulate the fix from 10.8 for those.
+     */
+    const struct attrlist *al = a;
+    if (al->commonattr == 0 &&
+        (al->volattr & ~ATTR_VOL_INFO) == 0 &&
+        al->dirattr == 0 &&
+        al->fileattr == 0 &&
+        al->forkattr == 0) {
+        cont = 0;
+    }
+#endif
+
+    if (cont) {
+        ret = ATCALL(dirfd, pathname, setattrlist(pathname, a, buf, size, flags));
+    }
+
+    return ret;
 }
 
 #endif  /* __MP_LEGACY_SUPPORT_SETATTRLISTAT__ */
