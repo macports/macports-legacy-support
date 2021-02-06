@@ -92,9 +92,19 @@
 #define __MP_LEGACY_SUPPORT_REALPATH_WRAP__   (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1060)
 
 /*  realpath() wrap has bail-out macros in case we want to disable only function wrapping */
-#define __ENABLE_MP_LEGACY_SUPPORT_REALPATH_WRAP__  ((!defined (__DISABLE_MP_LEGACY_SUPPORT_FUNCTION_WRAPPING__) || !__DISABLE_MP_LEGACY_SUPPORT_FUNCTION_WRAPPING__)  && \
-						     (!defined (__DISABLE_MP_LEGACY_SUPPORT_REALPATH_WRAP__) || !__DISABLE_MP_LEGACY_SUPPORT_REALPATH_WRAP__)          && \
-						     __MP_LEGACY_SUPPORT_REALPATH_WRAP__)
+#if ((!defined (__DISABLE_MP_LEGACY_SUPPORT_FUNCTION_WRAPPING__) || !__DISABLE_MP_LEGACY_SUPPORT_FUNCTION_WRAPPING__)  && \
+     (!defined (__DISABLE_MP_LEGACY_SUPPORT_REALPATH_WRAP__) || !__DISABLE_MP_LEGACY_SUPPORT_REALPATH_WRAP__)          && \
+     __MP_LEGACY_SUPPORT_REALPATH_WRAP__)
+/*
+ * Do NOT try to "optimize" this by replacing the if preprocessor construct with a
+ * single macro definition.
+ *
+ * This invokes undefined behavior ([cpp.cond]p4/§6.10.1.4) and leads to ugly warnings.
+ */
+#define __ENABLE_MP_LEGACY_SUPPORT_REALPATH_WRAP__  1
+#else
+#define __ENABLE_MP_LEGACY_SUPPORT_REALPATH_WRAP__  0
+#endif
 
 /* lsmod does not exist on Tiger */
 #define __MP_LEGACY_SUPPORT_LSMOD__           (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1050)
@@ -109,9 +119,14 @@
 #define __MP_LEGACY_SUPPORT_SYSCONF_WRAP__    (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 101100)
 
 /*  sysconf() wrap has bail-out macros in case we want to disable only function wrapping */
-#define __ENABLE_MP_LEGACY_SUPPORT_SYSCONF_WRAP__  ((!defined (__DISABLE_MP_LEGACY_SUPPORT_FUNCTION_WRAPPING__) || !__DISABLE_MP_LEGACY_SUPPORT_FUNCTION_WRAPPING__)  && \
-						    (!defined (__DISABLE_MP_LEGACY_SUPPORT_SYSCONF_WRAP__) || !__DISABLE_MP_LEGACY_SUPPORT_SYSCONF_WRAP__)            && \
-						    __MP_LEGACY_SUPPORT_SYSCONF_WRAP__)
+#if ((!defined (__DISABLE_MP_LEGACY_SUPPORT_FUNCTION_WRAPPING__) || !__DISABLE_MP_LEGACY_SUPPORT_FUNCTION_WRAPPING__)  && \
+     (!defined (__DISABLE_MP_LEGACY_SUPPORT_SYSCONF_WRAP__) || !__DISABLE_MP_LEGACY_SUPPORT_SYSCONF_WRAP__)            && \
+     __MP_LEGACY_SUPPORT_SYSCONF_WRAP__)
+/* Likewise, do NOT try to condense this into one single macro definition. */
+#define __ENABLE_MP_LEGACY_SUPPORT_SYSCONF_WRAP__  1
+#else
+#define __ENABLE_MP_LEGACY_SUPPORT_SYSCONF_WRAP__  0
+#endif
 
 /* pthread_rwlock_initializer is not defined on Tiger */
 #define __MP_LEGACY_SUPPORT_PTHREAD_RWLOCK__  (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1050)

@@ -14,15 +14,20 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+/*
+ * We need this blocker so as to not get caught in our own wrap.
+ *
+ * Importantly, do this BEFORE including our feature header, since it can only be
+ * included once and subsequent changes won't have an effect.
+ */
+#undef __DISABLE_MP_LEGACY_SUPPORT_REALPATH_WRAP__
+#define __DISABLE_MP_LEGACY_SUPPORT_REALPATH_WRAP__ 1
+
 /* MP support header */
 #include "MacportsLegacySupport.h"
 
 /* realpath wrap */
 #if __MP_LEGACY_SUPPORT_REALPATH_WRAP__
-
-/* we need this blocker so as to not get caught in our own wrap */
-#undef __DISABLE_MP_LEGACY_SUPPORT_REALPATH_WRAP__
-#define __DISABLE_MP_LEGACY_SUPPORT_REALPATH_WRAP__ 1
 
 #include <limits.h>
 #include <stdlib.h>
