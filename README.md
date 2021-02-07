@@ -144,11 +144,6 @@ Wrapped headers and replaced functions are:
     <td>OSX10.9</td>
   </tr>
   <tr>
-    <td>Wraps <code>gliDispatch.h</code> to prevent including 
-        <code>glext.h</code> and match behaviour of newer systems.</td>
-    <td>OSX10.6</td>
-  </tr>
-  <tr>
     <td>Wraps <code>sysconf</code> to support <code>_SC_NPROCESSORS_CONF</code> and
         <code>_SC_NPROCESSORS_ONLN</code></td>
     <td>OSX10.4</td>
