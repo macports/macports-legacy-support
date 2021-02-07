@@ -15,10 +15,10 @@
  */
 
 
-/* in SDKs < 10.7 this Apple header does not include glext.h
- * including it causes redefinition errors that are hard to
- * overcome in ports, eg mesa so we block the loading of
- * glext.h here for consistent behaviour with newer systems
+/* in SDKs > 10.6 this Apple header does not include glext.h.
+ * Including it causes redefinition errors that are hard to
+ * overcome in ports, eg mesa, so we block the loading of
+ * glext.h here on older systems for consistent behaviour with newer systems
  * 
  * Note: this header has no specific blocker as it may be called
  * multiple times and should have the same effect each time
