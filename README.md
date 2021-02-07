@@ -152,6 +152,12 @@ Wrapped headers and replaced functions are:
     <td>Wraps <code>sysconf</code> to support <code>_SC_PHYS_PAGES</code></td>
     <td>OSX10.10</td>
   </tr>
+  <tr>
+    <td><code>OpenGL/gliDispatch.h</code></td>
+    <td>Wraps <code>gliDispatch.h</code> to prevent including 
+        <code>glext.h</code> and thereby match behaviour of newer systems.</td>
+    <td>OSX10.6</td>
+  </tr>
 </table>
 
 For information on building this library outside MacPorts, see BUILDING.txt.
