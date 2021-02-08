@@ -185,7 +185,32 @@ T_DECL(utimensat, "Try various versions of utimensat")
 
 	struct stat pre_st, post_st, utimes_st;
 	int fd, ret = EXIT_SUCCESS;
-	const struct bug_for_bug mtime_omit = { 5, (!(apfs)) };
+	struct bug_for_bug mtime_omit = {
+					  5,
+#if __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1060
+	/*
+	 * Older OS X versions do not seem to exhibit this bug.
+	 *
+	 * I've looked through the XNU kernel code and tried to diff the relevant
+	 * sections, including the HFS part, from 10.5 and 10.6 without success.
+	 *
+	 * I cannot explain what is triggering it and why it's only triggered on HFS+
+	 * for OS X >= 10.6.
+	 *
+	 * My personal speculation is that this is an effect of some sort of caching or
+	 * the fact that atimes are only updated lazily. Though, if explicitly requested
+	 * by user-space and set to a custom time, this laziness shouldn't play a role.
+	 *
+	 * We'll take the shortcut here and disable the bug-for-bug compatibility for
+	 * older systems. We could, alternatively, emulate the buggy behavior in
+	 * utimensat (or the setattrlistat emulation), but that wouldn't sound smart.
+	 */
+					  false
+#else
+					  (!(apfs))
+#endif
+	};
+
 
 	T_ASSERT_POSIX_SUCCESS((fd = open(FILENAME, O_CREAT|O_RDWR, 0644)), NULL);
 	T_ASSERT_POSIX_ZERO(close(fd), NULL);
