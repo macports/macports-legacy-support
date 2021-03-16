@@ -187,7 +187,7 @@ T_DECL(utimensat, "Try various versions of utimensat")
 	int fd, ret = EXIT_SUCCESS;
 	struct bug_for_bug mtime_omit = {
 					  5,
-#if __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1060
+#if __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1050
 	/*
 	 * Older OS X versions do not seem to exhibit this bug.
 	 *
