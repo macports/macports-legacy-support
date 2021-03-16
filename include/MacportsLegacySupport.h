@@ -37,6 +37,12 @@
 /* fsgetpath */
 #define __MP_LEGACY_SUPPORT_FSGETPATH__       (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 101300)
 
+/* **setattrlistat */
+#define __MP_LEGACY_SUPPORT_SETATTRLISTAT__   (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 101300)
+
+/* ** utimensat, futimens, UTIME_NOW, UTIME_OMIT */
+#define __MP_LEGACY_SUPPORT_UTIMENSAT__       (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 101300)
+
 /* clock_gettime */
 #define __MP_LEGACY_SUPPORT_GETTIME__         (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 101200)
 
@@ -45,7 +51,6 @@
 
 /* fdopendir */
 #define __MP_LEGACY_SUPPORT_FDOPENDIR__       (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 101000)
-
 
 /* this header is automatically included by <net/if.h> on systems 10.9 and up.
    It is therefore expected to be included by most current software. */
@@ -96,6 +101,9 @@
 						     !__DISABLE_MP_LEGACY_SUPPORT_REALPATH_WRAP__      && \
 						     __MP_LEGACY_SUPPORT_REALPATH_WRAP__)
 
+/* setattrlistat */
+#define __MP_LEGACY_SUPPORT_FSETATTRLIST__    (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1060)
+
 /* lsmod does not exist on Tiger */
 #define __MP_LEGACY_SUPPORT_LSMOD__           (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1050)
 
@@ -145,9 +153,9 @@
 
 
 /* Compound macros, bundling functionality needed by multiple single features. */
-#define __MP_LEGACY_SUPPORT_NEED_ATCALL_MACROS__  (__MP_LEGACY_SUPPORT_ATCALLS__)
+#define __MP_LEGACY_SUPPORT_NEED_ATCALL_MACROS__  (__MP_LEGACY_SUPPORT_ATCALLS__ || __MP_LEGACY_SUPPORT_SETATTRLISTAT__)
 
-#define __MP_LEGACY_SUPPORT_NEED_BEST_FCHDIR__    (__MP_LEGACY_SUPPORT_FDOPENDIR__ || __MP_LEGACY_SUPPORT_ATCALLS__)
+#define __MP_LEGACY_SUPPORT_NEED_BEST_FCHDIR__    (__MP_LEGACY_SUPPORT_FDOPENDIR__ || __MP_LEGACY_SUPPORT_ATCALLS__ || __MP_LEGACY_SUPPORT_SETATTRLISTAT__)
 
 
 #endif /* _MACPORTS_LEGACYSUPPORTDEFS_H_ */
