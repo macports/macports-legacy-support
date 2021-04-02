@@ -158,6 +158,11 @@ Wrapped headers and replaced functions are:
         <code>glext.h</code> and thereby match behaviour of newer systems.</td>
     <td>OSX10.6</td>
   </tr>
+  <tr>
+    <td><code>TargetConditionals.h</code></td>
+    <td>Adds definition for <code>TARGET_OS_SIMULATOR</code> if needed.</td>
+    <td>OSX10.10</td>
+  </tr>
 </table>
 
 For information on building this library outside MacPorts, see BUILDING.txt.
