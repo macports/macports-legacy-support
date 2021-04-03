@@ -24,3 +24,7 @@
 #ifndef TARGET_OS_SIMULATOR
 #  define TARGET_OS_SIMULATOR         0
 #endif
+
+#ifndef TARGET_OS_OSX
+#  define TARGET_OS_OSX               1
+#endif
