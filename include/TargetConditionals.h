@@ -28,3 +28,11 @@
 #ifndef TARGET_OS_OSX
 #  define TARGET_OS_OSX               1
 #endif
+
+/* If not set, will never be true */
+#ifndef TARGET_CPU_ARM
+#  define TARGET_CPU_ARM              0
+#endif
+#ifndef TARGET_CPU_ARM64
+#  define TARGET_CPU_ARM64            0
+#endif
