@@ -22,20 +22,33 @@ LIBDIR           = $(PREFIX)/lib
 AREXT            = .a
 SOEXT            = .dylib
 LIBNAME          = MacportsLegacySupport
+SYSLIBNAME       = MacportsLegacySystem.B
 DLIBFILE         = lib$(LIBNAME)$(SOEXT)
 SLIBFILE         = lib$(LIBNAME)$(AREXT)
+SYSLIBFILE       = lib$(SYSLIBNAME)$(SOEXT)
 DLIBPATH         = $(LIBDIR)/$(DLIBFILE)
 SLIBPATH         = $(LIBDIR)/$(SLIBFILE)
+SYSLIBPATH       = $(LIBDIR)/$(SYSLIBFILE)
 BUILDDLIBDIR     = lib
 BUILDSLIBDIR     = lib
 BUILDDLIBPATH    = $(BUILDDLIBDIR)/$(DLIBFILE)
 BUILDSLIBPATH    = $(BUILDSLIBDIR)/$(SLIBFILE)
+BUILDSYSLIBPATH  = $(BUILDDLIBDIR)/$(SYSLIBFILE)
+SOCURVERSION    ?= 1.0
+SOCOMPATVERSION ?= 1.0
 BUILDDLIBFLAGS   = -dynamiclib -headerpad_max_install_names \
                    -install_name @executable_path/../$(BUILDDLIBPATH) \
-                   -current_version 1.0 -compatibility_version 1.0
+                   -current_version $(SOCURVERSION) \
+                   -compatibility_version $(SOCOMPATVERSION)
+BUILDSYSLIBFLAGS = -dynamiclib -headerpad_max_install_names \
+                   -install_name @executable_path/../$(BUILDSYSLIBPATH) \
+                   -current_version $(SOCURVERSION) \
+                   -compatibility_version $(SOCOMPATVERSION)
+SYSREEXPORTFLAG  = -Wl,-reexport_library /usr/lib/libSystem.B.dylib
 BUILDSLIBFLAGS   = -qs
 POSTINSTALL      = install_name_tool
-POSTINSTALLFLAGS = -id $(DLIBPATH)
+
+MAX_DARWIN_REEXPORT ?= 19
 
 FORCE_ARCH      ?=
 ARCHFLAGS       ?=
@@ -193,9 +206,10 @@ define splitandfilterandmergemultiarch
 	fi
 endef
 
-all: dlib slib
+all: dlib slib syslib
 dlib: $(BUILDDLIBPATH)
 slib: $(BUILDSLIBPATH)
+syslib: $(BUILDSYSLIBPATH)
 
 # Special rules for special implementations.
 # For instance, functions using struct stat need to be implemented multiple
@@ -235,6 +249,13 @@ $(TESTOBJS_CPP): %.o: %.cpp $(ALLHEADERS)
 $(BUILDDLIBPATH): $(DLIBOBJS) $(MULTIDLIBOBJS)
 	$(MKINSTALLDIRS) $(BUILDDLIBDIR)
 	$(CC) $(BUILDDLIBFLAGS) $(LDFLAGS) $^ -o $@
+
+# Wrapped libSystem relies on reexport which does not work on Darwin20+
+$(BUILDSYSLIBPATH): $(DLIBOBJS) $(MULTIDLIBOBJS)
+ifeq ($(shell test $(PLATFORM) -le $(MAX_DARWIN_REEXPORT); echo $$?),0)
+	$(MKINSTALLDIRS) $(BUILDDLIBDIR)
+	$(CC) $(BUILDSYSLIBFLAGS) $(LDFLAGS) $(SYSREEXPORTFLAG) $^ -o $@
+endif
 
 $(BUILDSLIBPATH): $(SLIBOBJS) $(MULTISLIBOBJS)
 	$(MKINSTALLDIRS) $(BUILDSLIBDIR)
@@ -281,12 +302,19 @@ install-headers:
 	  $(INSTALL_DATA) $(SRCINCDIR)/"$$h" $(DESTDIR)$(PKGINCDIR)/"$$h"; \
 	done
 
-install-lib: install-dlib install-slib
+install-lib: install-dlib install-slib install-syslib
 
 install-dlib: $(BUILDDLIBPATH)
 	$(MKINSTALLDIRS) $(DESTDIR)$(LIBDIR)
 	$(INSTALL_PROGRAM) $(BUILDDLIBPATH) $(DESTDIR)$(LIBDIR)
-	$(POSTINSTALL) $(POSTINSTALLFLAGS) $(DESTDIR)$(DLIBPATH)
+	$(POSTINSTALL) -id $(DLIBPATH) $(DESTDIR)$(DLIBPATH)
+
+install-syslib: $(BUILDSYSLIBPATH)
+ifeq ($(shell test $(PLATFORM) -le $(MAX_DARWIN_REEXPORT); echo $$?),0)
+	$(MKINSTALLDIRS) $(DESTDIR)$(LIBDIR)
+	$(INSTALL_PROGRAM) $(BUILDSYSLIBPATH) $(DESTDIR)$(LIBDIR)
+	$(POSTINSTALL) -id $(SYSLIBPATH) $(DESTDIR)$(SYSLIBPATH)
+endif
 
 install-slib: $(BUILDSLIBPATH)
 	$(MKINSTALLDIRS) $(DESTDIR)$(LIBDIR)
@@ -296,7 +324,7 @@ test check: $(TESTRUNS) test_cmath
 
 clean:
 	$(RM) $(foreach D,$(SRCDIR) $(TESTDIR),$D/*.o $D/*.o.* $D/*.d)
-	$(RM) $(BUILDDLIBPATH) $(BUILDSLIBPATH) $(TESTPRGS) test/test_cmath_*
+	$(RM) $(BUILDDLIBPATH) $(BUILDSLIBPATH) $(BUILDSYSLIBPATH) $(TESTPRGS) test/test_cmath_*
 	@$(RMDIR) $(BUILDDLIBDIR) $(BUILDSLIBDIR)
 
 .PHONY: all dlib slib clean check test $(TESTRUNS) test_cmath

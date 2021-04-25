@@ -1,8 +1,14 @@
 # MacPorts Support for Legacy OSX Versions
 
-Installs wrapper headers and a library of functions that add common
+Installs wrapper headers and library functions that add common
 functions missing in various older OSX releases to bring them 
 approximately up to current expected standards.
+
+Three different libraries are provided
+
+ - libMacportsLegacySupport.a      - A static library with the missing functions for the given OS.
+ - libMacportsLegacySupport.dylib  - A dynamic library with the missing functions for the given OS.
+ - libMacportsLegacySystem.B.dylib - Similar to libMacportsLegacySupport.dylib but in addition re-exports the symbols from libSystem.B.dylib.
 
 To use this library within [MacPorts](https://github.com/macports)
 add the `legacysupport` PortGroup to the Portfile. This will add the
