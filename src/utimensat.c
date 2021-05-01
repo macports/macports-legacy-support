@@ -28,6 +28,10 @@
   * Version 2.0.
   */
 
+// MP support header
+#include "MacportsLegacySupport.h"
+#if  __MP_LEGACY_SUPPORT_UTIMENSAT__
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/attr.h>
@@ -142,3 +146,5 @@ utimensat(int fd, const char *path, const struct timespec _times_in[2], int flag
 
 	return setattrlistat(fd, path, &a, &times_out, attrbuf_size, flags_out);
 }
+
+#endif  /*  __MP_LEGACY_SUPPORT_UTIMENSAT__ */
