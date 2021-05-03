@@ -209,7 +209,7 @@ endef
 all: dlib slib syslib
 dlib: $(BUILDDLIBPATH)
 slib: $(BUILDSLIBPATH)
-syslib: $(BUILDSYSLIBPATH)
+syslib: dlib $(BUILDSYSLIBPATH)
 
 # Special rules for special implementations.
 # For instance, functions using struct stat need to be implemented multiple
@@ -251,7 +251,7 @@ $(BUILDDLIBPATH): $(DLIBOBJS) $(MULTIDLIBOBJS)
 	$(CC) $(BUILDDLIBFLAGS) $(LDFLAGS) $^ -o $@
 
 # Wrapped libSystem relies on reexport which does not work on Darwin20+
-$(BUILDSYSLIBPATH): $(BUILDDLIBPATH) $(DLIBOBJS) $(MULTIDLIBOBJS)
+$(BUILDSYSLIBPATH): $(DLIBOBJS) $(MULTIDLIBOBJS)
 ifeq ($(shell test $(PLATFORM) -le $(MAX_DARWIN_REEXPORT); echo $$?),0)
 	$(MKINSTALLDIRS) $(BUILDDLIBDIR)
 	$(CC) $(BUILDSYSLIBFLAGS) $(LDFLAGS) $(SYSREEXPORTFLAG) $^ -o $@
