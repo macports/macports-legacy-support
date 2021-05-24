@@ -72,8 +72,22 @@ __MP__END_DECLS
 
 #if __MP_LEGACY_SUPPORT_SETATTRLISTAT__
 
+/*
+ * [XSI] The ssize_t and size_t types shall be defined as described
+ * in <sys/types.h>.
+ */
+#ifndef _SIZE_T
+#define _SIZE_T
+typedef __darwin_size_t		size_t;
+#endif
+
+
+__MP__BEGIN_DECLS
+
 extern int setattrlistat(int dirfd, const char *pathname, void *a,
 			 void *buf, size_t size, uint32_t flags);
+
+__MP__END_DECLS
 
 #endif /* __MP_LEGACY_SUPPORT_SETATTRLISTAT__ */
 
