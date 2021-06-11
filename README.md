@@ -167,7 +167,8 @@ Wrapped headers and replaced functions are:
   <tr>
     <td><code>TargetConditionals.h</code></td>
     <td>Adds definitions for <code>TARGET_CPU_ARM</code>, <code>TARGET_CPU_ARM64</code>,
-        <code>TARGET_OS_SIMULATOR</code> and <code>TARGET_OS_OSX</code> if needed.</td>
+        <code>TARGET_OS_SIMULATOR</code>, <code>TARGET_OS_IOS</code>, <code>TARGET_OS_TV</code>,
+        <code>TARGET_OS_WATCH</code> and <code>TARGET_OS_OSX</code> if needed.</td>
     <td>OSX10.10</td>
   </tr>
 </table>

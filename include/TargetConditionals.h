@@ -21,15 +21,23 @@
 
 #include_next <TargetConditionals.h>
 
-#ifndef TARGET_OS_SIMULATOR
-#  define TARGET_OS_SIMULATOR         0
-#endif
-
 #ifndef TARGET_OS_OSX
 #  define TARGET_OS_OSX               1
 #endif
-
-/* If not set, will never be true */
+/* We never support these OSes */
+#ifndef TARGET_OS_SIMULATOR
+#  define TARGET_OS_SIMULATOR         0
+#endif
+#ifndef TARGET_OS_IOS
+#  define TARGET_OS_IOS               0
+#endif
+#ifndef TARGET_OS_TV
+#  define TARGET_OS_TV                0
+#endif
+#ifndef TARGET_OS_WATCH
+#  define TARGET_OS_WATCH             0
+#endif
+/* If not defined, OS will never support ARM */
 #ifndef TARGET_CPU_ARM
 #  define TARGET_CPU_ARM              0
 #endif
