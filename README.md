@@ -114,7 +114,7 @@ Wrapped headers and replaced functions are:
   </tr>
   <tr>
     <td><code>sys/fsgetpath.h</code></td>
-    <td>Adds missing <code>fsgetpath</code> function</td>
+    <td>Adds missing <code>utimensat</code>, <code>fsgetpath</code> and <code>setattrlistat</code> functions</td>
     <td>OSX10.12</td>
   </tr>
   <tr>
