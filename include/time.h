@@ -27,30 +27,18 @@
 /* The following functions are implemented by Tiger, but the declarations are
  * missing if _ANSI_SOURCE or _POSIX_C_SOURCE are defined, which occurs when
  * _XOPEN_SOURCE is set. */
-#if __MP_LEGACY_SUPPORT_MISSING_TIGER_TIME_FUNCTIONS__
-
-#if defined(_ANSI_SOURCE)
-extern char *tzname[];
-#endif /* defined(_ANSI_SOURCE) */
+#if __MP_LEGACY_SUPPORT_TIME_THREAD_SAFE_FUNCTIONS__
 
 __MP__BEGIN_DECLS
-#if defined(_ANSI_SOURCE)
-void tzset(void);
-#endif /* defined(_ANSI_SOURCE) */
 #if defined(_ANSI_SOURCE) || defined(_POSIX_C_SOURCE)
 char *asctime_r(const struct tm *, char *);
 char *ctime_r(const time_t *, char *);
 struct tm *gmtime_r(const time_t *, struct tm *);
 struct tm *localtime_r(const time_t *, struct tm *);
-time_t posix2time(time_t);
-void tzsetwall(void);
-time_t time2posix(time_t);
-time_t timelocal(struct tm * const);
-time_t timegm(struct tm * const);
 #endif /* defined(_ANSI_SOURCE) || defined(_POSIX_C_SOURCE) */
 __MP__END_DECLS
 
-#endif /* __MP_LEGACY_SUPPORT_MISSING_TIGER_TIME_FUNCTIONS__ */
+#endif /* __MP_LEGACY_SUPPORT_TIME_THREAD_SAFE_FUNCTIONS__ */
 
 /* Legacy implementation of clock_gettime */
 #if __MP_LEGACY_SUPPORT_GETTIME__
