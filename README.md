@@ -76,8 +76,8 @@ Wrapped headers and replaced functions are:
   </tr>
   <tr>
     <td><code>time.h</code></td>
-    <td>Adds <code>clock_gettime</code> function</td>
-    <td>OSX10.11</td>
+    <td>Adds <code>clock_gettime</code> function (macOS10.11). Adds <code>gmtime_r</code>, <code>localtime_r</code>, and other function declarations that are normally hidden in the presence of <code>_ANSI_SOURCE</code>, <code>_POSIX_C_SOURCE</code>, or <code>_XOPEN_SOURCE</code> (OSX10.4)</td>
+    <td>OSX10.4(11)</td>
   </tr>
   <tr>
     <td><code>wchar.h</code></td>
