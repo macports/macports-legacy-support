@@ -43,6 +43,9 @@
 /* ** utimensat, futimens, UTIME_NOW, UTIME_OMIT */
 #define __MP_LEGACY_SUPPORT_UTIMENSAT__       (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 101300)
 
+/* getentropy */
+#define __MP_LEGACY_SUPPORT_GETENTROPY__      (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 101200)
+
 /* clock_gettime */
 #define __MP_LEGACY_SUPPORT_GETTIME__         (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 101200)
 

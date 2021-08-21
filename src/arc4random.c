@@ -20,7 +20,7 @@
 
 // MP support header
 #include "MacportsLegacySupport.h"
-#if __MP_LEGACY_SUPPORT_ARC4RANDOM__
+#if __MP_LEGACY_SUPPORT_ARC4RANDOM__ || __MP_LEGACY_SUPPORT_GETENTROPY__
 
 /*
  * ChaCha based random number generator from OpenBSD.
@@ -66,7 +66,7 @@ typedef struct rand_state rand_state;
 
 
 /* kernel entropy */
-extern int _getentropy(void* buf, size_t n);
+extern int _getentropy(void* buf, size_t n) __DARWIN_ALIAS(getentropy);
 
 #define KEYSTREAM_ONLY
 
@@ -600,4 +600,4 @@ _getentropy(void* buf, size_t n)
 }
 
 
-#endif /* __MP_LEGACY_SUPPORT_ARC4RANDOM__ */
+#endif /* __MP_LEGACY_SUPPORT_ARC4RANDOM__ || __MP_LEGACY_SUPPORT_GETENTROPY__ */
