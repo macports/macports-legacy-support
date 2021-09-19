@@ -1,4 +1,7 @@
-#!/bin/csh
+#!/usr/bin/env LS_COLORS="" /bin/csh
+#
+# The above shebang line fixes intermittent errors like:
+# csh: Unknown colorls variable `rs'.
 #
 # DO NOT USE "csh -f"
 #
