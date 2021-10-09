@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2019 Ken Cunningham kencu@macports.org
+ * Copyright (c) 2019
  *
  *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND

@@ -22,7 +22,7 @@
  */
 
  /*
-  * NOTICE: This file was modified by Ken Cunningham in September 2020 to allow
+  * NOTICE: This file was modified in September 2020 to allow
   * for use as a supporting file for MacPorts legacy support library. This notice
   * is included in support of clause 2.2 (b) of the Apple Public License,
   * Version 2.0.

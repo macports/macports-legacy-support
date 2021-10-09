@@ -1,6 +1,5 @@
 /*
  * Copyright (c) 2019 Chris Jones <jonesc@macports.org>
- * Copyright (c) 2019 Ken Cunningham <kencu@macports.org>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above

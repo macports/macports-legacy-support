@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Ken Cunningham <kencu@macports.org>
+ * Copyright (c) 2019
  * from an example posted in Apple Developer Support
  * https://forums.developer.apple.com/thread/103162
  *

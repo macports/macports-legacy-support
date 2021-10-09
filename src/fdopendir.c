@@ -1,6 +1,6 @@
 
 /*-
- * Copyright (c) 2019 Ken Cunningham kencu@macports.org
+ * Copyright (c) 2019
  *
  *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
@@ -81,7 +81,7 @@ DIR *fdopendir(int dirfd) {
      * FIXME -- this recently added bit makes the fdopendir tests fail on Tiger.
      * check the whole commit where it was added to make sure it is
      * doing the proper thing on all systems. Probably need more extensive tests
-     * to execise the whole system more aggressively. -- kencu@macports.org
+     * to execise the whole system more aggressively.
      */
 
 #if __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ >= 1050

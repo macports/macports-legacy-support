@@ -42,7 +42,7 @@
 #       which : tells you which program you get
 #
 
-# this program has been modified by kencu@macports.org to adhere to current
+# this program has been modified to adhere to current
 # which implementation details.
 
 # There is no longer any returned message if the the requested application is not found.
