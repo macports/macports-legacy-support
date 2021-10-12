@@ -37,11 +37,11 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/time.h>
+#include <sys/random.h>
 #include <assert.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <stdarg.h>
-#include <errno.h>
 
 
 #define ARC4R_KEYSZ     32
@@ -63,10 +63,6 @@ struct rand_state
     u_char          rs_buf[ARC4R_RSBUFSZ];  /* keystream blocks */
 };
 typedef struct rand_state rand_state;
-
-
-/* kernel entropy */
-extern int _getentropy(void* buf, size_t n);
 
 #define KEYSTREAM_ONLY
 
@@ -329,7 +325,7 @@ _rs_stir(rand_state* st)
     u8 rnd[ARC4R_KEYSZ + ARC4R_IVSZ];
 
 
-    int r = _getentropy(rnd, sizeof rnd);
+    int r = getentropy(rnd, sizeof rnd);
     assert(r == 0);
 
     _rs_rekey(st, rnd, sizeof(rnd));
@@ -429,7 +425,7 @@ _screate()
      * systems.
      */
     uint8_t buf[8];
-    _getentropy(buf, sizeof buf);
+    getentropy(buf, sizeof buf);
 }
 
 
@@ -503,7 +499,6 @@ arc4random_buf(void* b, size_t n)
 
 
 
-
 /*
  * Calculate a uniformly distributed random number less than upper_bound
  * avoiding "modulo bias".
@@ -539,64 +534,6 @@ arc4random_uniform(uint32_t upper_bound)
     }
 
     return r % upper_bound;
-}
-
-void
-_error(int doexit, int err, const char* fmt, ...)
-{
-    va_list ap;
-
-    fflush(stdout);
-    fflush(stderr);
-    va_start(ap, fmt);
-    vfprintf(stderr, fmt, ap);
-    va_end(ap);
-
-    if (err > 0)
-        fprintf(stderr, "\n  %s (Errno %d)\n", strerror(err), err);
-
-    if (doexit) {
-        fflush(stderr);
-        exit(1);
-    }
-}
-
-
-
-static int
-_randopen(const char* name)
-{
-    int fd = open(name, O_RDONLY);
-    if (fd < 0)
-        _error(1, errno, "Cannot open system random number dev %s", name);
-
-
-    return fd;
-}
-
-
-int
-_getentropy(void* buf, size_t n)
-{
-    static int fd = -1;
-    uint8_t* b    = (uint8_t*)buf;
-
-    if (fd < 0)
-        fd = _randopen("/dev/urandom");
-
-    while (n > 0)
-    {
-        ssize_t m = (read)(fd, b, n);
-
-        if (m < 0) {
-            if (errno == EINTR) continue;
-            _error(1, errno, "Fatal read error while reading rand dev");
-        }
-        b += m;
-        n -= m;
-    }
-
-    return 0;
 }
 
 
