@@ -86,6 +86,9 @@
 /* arc4random */
 #define __MP_LEGACY_SUPPORT_ARC4RANDOM__      (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1070)
 
+/* getentropy */
+#define __MP_LEGACY_SUPPORT_GETENTROPY__      (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 101200)
+
 /* posix_memalign does not exist on < 1060 */
 #define __MP_LEGACY_SUPPORT_POSIX_MEMALIGN__  (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1060)
 
