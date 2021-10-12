@@ -138,6 +138,11 @@ Wrapped headers and replaced functions are:
     <td>OSX10.4</td>
   </tr>
   <tr>
+    <td><code>sys/random.h</code></td>
+    <td>Adds <code>getentropy</code> function</td>
+    <td>OSX10.11</td>
+  </tr>
+  <tr>
     <td><code>sys/time.h</code></td>
     <td>Adds <code>lutimes</code> function</td>
     <td>OSX10.4</td>
