@@ -62,6 +62,9 @@
 /* strndup */
 #define __MP_LEGACY_SUPPORT_STRNDUP__         (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1070)
 
+/* dprintf */
+#define __MP_LEGACY_SUPPORT_DPRINTF__         (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1070)
+
 /* getline */
 #define __MP_LEGACY_SUPPORT_GETLINE__         (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1070)
 

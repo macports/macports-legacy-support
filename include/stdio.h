@@ -25,6 +25,15 @@
 /* Include the primary system time.h */
 #include_next <stdio.h>
 
+/* dprintf */
+#if __MP_LEGACY_SUPPORT_DPRINTF__
+
+__MP__BEGIN_DECLS
+extern int dprintf(int fd, const char * __restrict format, ...);
+__MP__END_DECLS
+
+#endif /* __MP_LEGACY_SUPPORT_DPRINTF__ */
+
 /* getline */
 #if __MP_LEGACY_SUPPORT_GETLINE__
 
