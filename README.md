@@ -51,7 +51,7 @@ Wrapped headers and replaced functions are:
   </tr>
   <tr>
     <td><code>stdio.h</code></td>
-    <td>Adds <code>getline</code> and <code>getdelim</code> functions</td>
+    <td>Adds <code>dprintf</code>, <code>getline</code>, and <code>getdelim</code> functions</td>
     <td>OSX10.6</td>
   </tr>
   <tr>
