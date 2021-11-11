@@ -112,6 +112,9 @@
 /* localtime_r, gmtime_r, etc only declared on Tiger when _ANSI_SOURCE and _POSIX_C_SOURCE are undefined */
 #define __MP_LEGACY_SUPPORT_TIME_THREAD_SAFE_FUNCTIONS__     (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1050)
 
+/* flock(2) requires _POSIX_C_SOURCE to be undefined on Tiger. Allow overriding with _DARWIN_C_SOURCE, same as Leopard. */
+#define __MP_LEGACY_SUPPORT_FLOCK__           (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1050)
+
 /* lsmod does not exist on Tiger */
 #define __MP_LEGACY_SUPPORT_LSMOD__           (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1050)
 

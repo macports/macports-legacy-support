@@ -61,4 +61,22 @@ __MP__END_DECLS
 
 #endif /* __MP_LEGACY_SUPPORT_ATCALLS__ */
 
+/* flock(2) */
+#if __MP_LEGACY_SUPPORT_FLOCK__
+
+/* Mimic Leopard behavior; flock already defined in main fcntl.h if _POSIX_C_SOURCE was undef */
+#if defined(_POSIX_C_SOURCE) && defined(_DARWIN_C_SOURCE)
+/* lock operations for flock(2) */
+#define LOCK_SH     0x01        /* shared file lock */
+#define LOCK_EX     0x02        /* exclusive file lock */
+#define LOCK_NB     0x04        /* don't block when locking */
+#define LOCK_UN     0x08        /* unlock file */
+
+__MP__BEGIN_DECLS
+int flock(int, int);
+__MP__END_DECLS
+#endif /* _POSIX_C_SOURCE && _DARWIN_C_SOURCE */
+
+#endif /* __MP_LEGACY_SUPPORT_FLOCK__ */
+
 #endif /* _MACPORTS_SYSFCNTL_H_ */

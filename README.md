@@ -105,7 +105,10 @@ Wrapped headers and replaced functions are:
     <td rowspan="2"><code>sys/fcntl.h</code></td>
     <td>Adds missing <code>O_CLOEXEC</code>, <code>AT_FDCWD</code>, <code>AT_EACCESS</code>,
         <code>AT_SYMLINK_NOFOLLOW</code>, <code>AT_SYMLINK_FOLLOW</code>, and
-        <code>AT_REMOVEDIR</code> definitions</td>
+        <code>AT_REMOVEDIR</code> definitions.
+        On 10.4, expose <code>flock(2)</code>, <code>LOCK_SH</code>, <code>LOCK_EX</code>,
+        <code>LOCK_NB</code>, and <code>LOCK_UN</code> whenever <code>_DARWIN_C_SOURCE</code>
+        is defined (matches 10.5 SDK).</td>
     <td>as required (?)</td>
   </tr>
   <tr>
