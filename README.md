@@ -75,6 +75,11 @@ Wrapped headers and replaced functions are:
     <td>OSX10.4(8)</td>
   </tr>
   <tr>
+    <td><code>signal.h</code></td>
+    <td>Adds <code>sys_signame</code> and <code>sys_siglist</code> via <code>_DARWIN_C_SOURCE</code></td>
+    <td>OSX10.4</td>
+  </tr>
+  <tr>
     <td><code>time.h</code></td>
     <td>Adds <code>clock_gettime</code> function (macOS10.11). Declares <code>asctime_r</code>, <code>ctime_r</code>, <code>gmtime_r</code>, and <code>localtime_r</code> functions that are otherwise hidden in the presence of <code>_ANSI_SOURCE</code>, <code>_POSIX_C_SOURCE</code>, or <code>_XOPEN_SOURCE</code> (OSX10.4)</td>
     <td>OSX10.4(11)</td>
@@ -121,6 +126,11 @@ Wrapped headers and replaced functions are:
     <td><code>sys/mman.h</code></td>
     <td>Adds missing <code>MAP_ANONYMOUS</code> definition</td>
     <td>OSX10.10</td>
+  </tr>
+  <tr>
+    <td><code>sys/signal.h</code></td>
+    <td>Expose <code>NSIG</code>, <code>SIGIO</code>, <code>SIGWINCH</code>, and <code>SIGINFO</code> via <code>_DARWIN_C_SOURCE</code> (to match SDK 10.5+)</td>
+    <td>OSX10.4</td>
   </tr>
   <tr>
     <td><code>sys/stdio.h</code></td>
