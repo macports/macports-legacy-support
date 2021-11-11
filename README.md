@@ -148,6 +148,11 @@ Wrapped headers and replaced functions are:
     <td>OSX10.4</td>
   </tr>
   <tr>
+    <td><code>sys/types.h</code></td>
+    <td>Adds definitions for <code>u_char</code>, <code>u_short</code>, <code>u_int</code>, <code>u_long</code>, <code>ushort</code>, and <code>uint</code> types that can be exposed via <code>_DARWIN_C_SOURCE</code></td>
+    <td>OSX10.4</td>
+  </tr>
+  <tr>
     <td rowspan="3"><code>sys/unistd.h</code></td>
     <td>Adds <code>getattrlistat</code>, <code>readlinkat</code>, <code>faccessat</code>,
         <code>fchownat</code>, <code>linkat</code>, <code>symlinkat</code>,
