@@ -143,6 +143,11 @@ Wrapped headers and replaced functions are:
     <td>OSX10.11</td>
   </tr>
   <tr>
+    <td><code>sys/termios.h</code></td>
+    <td>Match 10.5+ behavior with respect to <code>_DARWIN_C_SOURCE</code></td>
+    <td>OSX10.4</td>
+  </tr>
+  <tr>
     <td><code>sys/time.h</code></td>
     <td>Adds <code>lutimes</code> function</td>
     <td>OSX10.4</td>
