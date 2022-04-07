@@ -30,6 +30,11 @@ Wrapped headers and replaced functions are:
     <td>see <code>math.h</code></td>
   </tr>
   <tr>
+    <td><code>copyfile.h</code></td>
+    <td>Wraps <code>copyfile_state_get</code> to support <code>COPYFILE_STATE_COPIED</code></td>
+    <td>OSX10.5</td>
+  </tr>
+  <tr>
     <td><code>dirent.h</code></td>
     <td>Adds <code>fdopendir</code> function</td>
     <td>OSX10.9</td>
