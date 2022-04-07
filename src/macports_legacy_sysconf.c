@@ -20,21 +20,19 @@
 /* sysconf wrap, 10.4 */
 #if __MP_LEGACY_SUPPORT_SYSCONF_WRAP__
 
-/* we need this blocker so as to not get caught in our own wrap */
-#undef __DISABLE_MP_LEGACY_SUPPORT_SYSCONF_WRAP__
-#define __DISABLE_MP_LEGACY_SUPPORT_SYSCONF_WRAP__ 1
-
-
 #include <sys/types.h>
 #include <sys/sysctl.h>
 
 #include <unistd.h>
+#include <dlfcn.h>
+#include <stdlib.h>
 
 /* emulate several commonly used but missing selectors from sysconf() on various OS versions */
 
 #include <MacportsLegacyWrappers/sysconf_support.h>
 
-long __MP_LEGACY_WRAPPER(sysconf)(int name){
+long sysconf(int name) {
+    long (*real_sysconf)(int);
 
 #if __MP_LEGACY_SUPPORT_SYSCONF_WRAP_NEED_SC_NPROCESSORS_ONLN__
     if ( name == _SC_NPROCESSORS_ONLN ) {
@@ -89,8 +87,14 @@ long __MP_LEGACY_WRAPPER(sysconf)(int name){
 #endif
 
     /* for any other values of "name", call the real sysconf() */
-      return (long)sysconf(name);
+    real_sysconf = dlsym(RTLD_NEXT, "sysconf");
+    if (real_sysconf == NULL) {
+        exit(EXIT_FAILURE);
+    }
+    return real_sysconf(name);
 }
 
+/* compatibility function so code does not have to be recompiled */
+long macports_legacy_sysconf(int name) { return sysconf(name); }
 
 #endif /*__MP_LEGACY_SUPPORT_SYSCONF_WRAP__*/
