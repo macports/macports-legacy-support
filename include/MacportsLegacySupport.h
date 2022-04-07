@@ -163,4 +163,7 @@
 /* for now, just forward call to CFPropertyListCreateWithStream */
 #define __MP_LEGACY_SUPPORT_CoreFoundation__  (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1060)
 
+/* copyfile and its associated functions have gained functionality over the years */
+#define __MP_LEGACY_SUPPORT_COPYFILE_WRAP__ (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1060)
+
 #endif /* _MACPORTS_LEGACYSUPPORTDEFS_H_ */
