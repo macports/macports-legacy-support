@@ -173,6 +173,11 @@ Wrapped headers and replaced functions are:
     <td>OSX10.10</td>
   </tr>
   <tr>
+    <td><code>uuid/uuid.h</code></td>
+    <td>Adds typedef of <code>uuid_string_t</code></td>
+    <td>OSX10.5</td>
+  </tr>
+  <tr>
     <td><code>OpenGL/gliDispatch.h</code></td>
     <td>Wraps <code>gliDispatch.h</code> to prevent including
         <code>glext.h</code> and thereby match behaviour of newer systems.</td>
