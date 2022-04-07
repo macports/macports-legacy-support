@@ -33,11 +33,9 @@ __MP__BEGIN_DECLS
 
 /*
  * this is the same condition that defines the function prototypes in
- * the system <math.h>.
+ * the GCC <math.h>.
  */
-#if ( ( defined (__STDC_VERSION__) && __STDC_VERSION__ >= 199901L ) ||	\
-      ! defined( __STRICT_ANSI__ )  || ! defined( __GNUC__ ) )
-#else
+#if !(__DARWIN_NO_LONG_LONG)
 extern long long int llrint   ( double );
 extern long long int llrintf  ( float );
 extern long long int llrintl  ( long double );
