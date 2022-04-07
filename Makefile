@@ -85,7 +85,8 @@ LIBHEADERS      := $(shell $(FIND_LIBHEADERS))
 ALLHEADERS      := $(LIBHEADERS) $(wildcard $(SRCDIR)/*.h)
 
 MULTISRCS       := $(SRCDIR)/fdopendir.c
-LIBSRCS         := $(filter-out $(MULTISRCS),$(wildcard $(SRCDIR)/*.c))
+ADDSRCS         := $(SRCDIR)/add_symbols.c
+LIBSRCS         := $(filter-out $(MULTISRCS) $(ADDSRCS),$(wildcard $(SRCDIR)/*.c))
 
 DLIBOBJEXT       = .dl.o
 SLIBOBJEXT       = .o
@@ -93,6 +94,7 @@ DLIBOBJS        := $(patsubst %.c,%$(DLIBOBJEXT),$(LIBSRCS))
 MULTIDLIBOBJS   := $(patsubst %.c,%$(DLIBOBJEXT),$(MULTISRCS))
 SLIBOBJS        := $(patsubst %.c,%$(SLIBOBJEXT),$(LIBSRCS))
 MULTISLIBOBJS   := $(patsubst %.c,%$(SLIBOBJEXT),$(MULTISRCS))
+ADDOBJS         := $(patsubst %.c,%$(SLIBOBJEXT),$(ADDSRCS))
 
 TESTDIR          = test
 TESTNAMEPREFIX   = $(TESTDIR)/test_
@@ -240,6 +242,9 @@ $(DLIBOBJS): %$(DLIBOBJEXT): %.c $(ALLHEADERS)
 $(SLIBOBJS): %$(SLIBOBJEXT): %.c $(ALLHEADERS)
 	$(CC) -c -I$(SRCINCDIR) $(CFLAGS) $(SLIBCFLAGS) $< -o $@
 
+$(ADDOBJS): %$(SLIBOBJEXT): %.c $(ALLHEADERS)
+	$(CC) -c -I$(SRCINCDIR) $(CFLAGS) $(SLIBCFLAGS) $< -o $@
+
 $(TESTOBJS_C): %.o: %.c $(ALLHEADERS)
 	$(CC) -c -std=c99 -I$(SRCINCDIR) $(CFLAGS) $< -o $@
 
@@ -251,7 +256,7 @@ $(BUILDDLIBPATH): $(DLIBOBJS) $(MULTIDLIBOBJS)
 	$(CC) $(BUILDDLIBFLAGS) $(LDFLAGS) $^ -o $@
 
 # Wrapped libSystem relies on reexport which does not work on Darwin20+
-$(BUILDSYSLIBPATH): $(DLIBOBJS) $(MULTIDLIBOBJS)
+$(BUILDSYSLIBPATH): $(DLIBOBJS) $(MULTIDLIBOBJS) $(ADDOBJS)
 ifeq ($(shell test $(PLATFORM) -le $(MAX_DARWIN_REEXPORT); echo $$?),0)
 	$(MKINSTALLDIRS) $(BUILDDLIBDIR)
 	$(CC) $(BUILDSYSLIBFLAGS) $(LDFLAGS) $(SYSREEXPORTFLAG) $^ -o $@
