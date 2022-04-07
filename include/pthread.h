@@ -31,4 +31,13 @@
 #endif
 #endif /* __MP_LEGACY_SUPPORT_PTHREAD_RWLOCK__  */
 
+
+__MP__BEGIN_DECLS
+
+#if __MP_LEGACY_SUPPORT_PTHREAD_SETNAME_NP__
+int pthread_setname_np(const char *);
+#endif /* __MP_LEGACY_SUPPORT_PTHREAD_SETNAME_NP__ */
+
+__MP__END_DECLS
+
 #endif /* _MACPORTS_PTHREAD_H_ */
