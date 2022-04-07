@@ -20,25 +20,35 @@
 /* realpath wrap */
 #if __MP_LEGACY_SUPPORT_REALPATH_WRAP__
 
-/* we need this blocker so as to not get caught in our own wrap */
-#undef __DISABLE_MP_LEGACY_SUPPORT_REALPATH_WRAP__
-#define __DISABLE_MP_LEGACY_SUPPORT_REALPATH_WRAP__ 1
-
 #include <limits.h>
 #include <stdlib.h>
+#include <dlfcn.h>
 
-char *
-__MP_LEGACY_WRAPPER(realpath)(const char * __restrict stringsearch, char * __restrict buffer)
+char *realpath(const char __restrict *stringsearch, char __restrict *buffer)
 {
+    char *(*real_realpath)(const char __restrict *, char __restrict *);
+#if (__DARWIN_UNIX03 && !defined(_POSIX_C_SOURCE)) || defined(_DARWIN_C_SOURCE) || defined(_DARWIN_BETTER_REALPATH)
+    real_realpath = dlsym(RTLD_NEXT, "realpath$DARWIN_EXTSN");
+# else
+    real_realpath = dlsym(RTLD_NEXT, "realpath");
+#endif
+    if (real_realpath == NULL) {
+	exit(EXIT_FAILURE);
+    }
+
     if (buffer == NULL) {
         char *myrealpathbuf = malloc(PATH_MAX);
         if (myrealpathbuf != NULL) {
-            return(realpath(stringsearch, myrealpathbuf));
+            return(real_realpath(stringsearch, myrealpathbuf));
         } else {
             return(NULL);
         }
     } else {
-        return(realpath(stringsearch, buffer));
+        return(real_realpath(stringsearch, buffer));
     }
 }
+
+/* compatibility function so code does not have to be recompiled */
+char *macports_legacy_realpath(const char __restrict *stringsearch, char __restrict *buffer) { return realpath(stringsearch, buffer); }
+
 #endif /*__MP_LEGACY_SUPPORT_REALPATH_WRAP__*/
