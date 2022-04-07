@@ -45,9 +45,13 @@ Wrapped headers and replaced functions are:
     <td>OSX10.5</td>
   </tr>
  <tr>
-    <td><code>pthread.h</code></td>
+    <td rowspan="2"><code>pthread.h</code></td>
     <td>Adds <code>PTHREAD_RWLOCK_INITIALIZER</code></td>
     <td>OSX10.4</td>
+  </tr>
+ <tr>
+    <td>Adds <code>pthread_setname_np</code> function</td>
+    <td>OSX10.5</td>
   </tr>
   <tr>
     <td><code>stdio.h</code></td>
