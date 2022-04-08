@@ -1,7 +1,7 @@
 # MacPorts Support for Legacy OSX Versions
 
 Installs wrapper headers and library functions that add common
-functions missing in various older OSX releases to bring them 
+functions missing in various older OSX releases to bring them
 approximately up to current expected standards.
 
 Three different libraries are provided
@@ -12,7 +12,7 @@ Three different libraries are provided
 
 To use this library within [MacPorts](https://github.com/macports)
 add the `legacysupport` PortGroup to the Portfile. This will add the
-required include paths and libraries to allow the library to do it's 
+required include paths and libraries to allow the library to do it's
 magic with most build systems.
 
 Wrapped headers and replaced functions are:
@@ -170,7 +170,7 @@ Wrapped headers and replaced functions are:
   </tr>
   <tr>
     <td><code>OpenGL/gliDispatch.h</code></td>
-    <td>Wraps <code>gliDispatch.h</code> to prevent including 
+    <td>Wraps <code>gliDispatch.h</code> to prevent including
         <code>glext.h</code> and thereby match behaviour of newer systems.</td>
     <td>OSX10.6</td>
   </tr>
