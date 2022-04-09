@@ -29,3 +29,13 @@ extern const char pthread_setname_np_tmp5 __asm("$ld$add$os10.5$_pthread_setname
 /* extern const char copyfile_state_get_tmp4 __asm("$ld$add$os10.4$_copyfile_state_get"); __attribute__((visibility("default"))) const char copyfile_state_get_tmp4 = 0; */
 extern const char copyfile_state_get_tmp5 __asm("$ld$add$os10.5$_copyfile_state_get"); __attribute__((visibility("default"))) const char copyfile_state_get_tmp5 = 0;
 #endif
+
+#if !(__MP_LEGACY_SUPPORT_ATEXIT_WRAP__)
+extern const char _tlv_atexit_tmp4 __asm("$ld$add$os10.4$__tlv_atexit"); __attribute__((visibility("default"))) const char _tlv_atexit_tmp4 = 0;
+extern const char _tlv_atexit_tmp5 __asm("$ld$add$os10.5$__tlv_atexit"); __attribute__((visibility("default"))) const char _tlv_atexit_tmp5 = 0;
+extern const char _tlv_atexit_tmp6 __asm("$ld$add$os10.6$__tlv_atexit"); __attribute__((visibility("default"))) const char _tlv_atexit_tmp6 = 0;
+
+extern const char __cxa_thread_atexit_tmp4 __asm("$ld$add$os10.4$___cxa_thread_atexit"); __attribute__((visibility("default"))) const char __cxa_thread_atexit_tmp4 = 0;
+extern const char __cxa_thread_atexit_tmp5 __asm("$ld$add$os10.5$___cxa_thread_atexit"); __attribute__((visibility("default"))) const char __cxa_thread_atexit_tmp5 = 0;
+extern const char __cxa_thread_atexit_tmp6 __asm("$ld$add$os10.6$___cxa_thread_atexit"); __attribute__((visibility("default"))) const char __cxa_thread_atexit_tmp6 = 0;
+#endif

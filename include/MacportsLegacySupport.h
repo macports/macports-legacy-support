@@ -166,4 +166,7 @@
 /* copyfile and its associated functions have gained functionality over the years */
 #define __MP_LEGACY_SUPPORT_COPYFILE_WRAP__ (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1060)
 
+/* _tlv_atexit and __cxa_thread_atexit */
+#define __MP_LEGACY_SUPPORT_ATEXIT_WRAP__  (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1070)
+
 #endif /* _MACPORTS_LEGACYSUPPORTDEFS_H_ */
