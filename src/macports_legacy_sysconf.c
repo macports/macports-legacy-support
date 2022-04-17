@@ -45,7 +45,7 @@ long sysconf(int name) {
 
         if (ret < 0 || count < 1) {
             /* try again with _SC_NPROCESSORS_CONF */
-            return __MP_LEGACY_WRAPPER(sysconf)(_SC_NPROCESSORS_CONF);
+            return sysconf(_SC_NPROCESSORS_CONF);
         } else {
             return (long)count;
         }
