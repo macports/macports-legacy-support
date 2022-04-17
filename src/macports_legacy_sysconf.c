@@ -29,8 +29,6 @@
 
 /* emulate several commonly used but missing selectors from sysconf() on various OS versions */
 
-#include <MacportsLegacyWrappers/sysconf_support.h>
-
 long sysconf(int name) {
     long (*real_sysconf)(int);
 
