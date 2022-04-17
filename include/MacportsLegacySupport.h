@@ -20,7 +20,6 @@
 #define _MACPORTS_LEGACYSUPPORTDEFS_H_
 
 /* Not needed -- #include "AvailabilityMacros.h" */
-#include "MacportsLegacyWrappers/wrapper_macros.h"
 
 /* C++ extern definitions */
 #if defined(__cplusplus)
