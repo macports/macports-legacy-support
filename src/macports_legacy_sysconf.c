@@ -17,7 +17,7 @@
 /* MP support header */
 #include "MacportsLegacySupport.h"
 
-/* sysconf wrap, 10.4 */
+/* sysconf wrap */
 #if __MP_LEGACY_SUPPORT_SYSCONF_WRAP__
 
 #include <sys/types.h>
