@@ -70,6 +70,9 @@ int copyfile_state_set(copyfile_state_t s, uint32_t flag, const void * src);
 #define COPYFILE_STATE_DST_FD		3
 #define COPYFILE_STATE_DST_FILENAME	4
 #define COPYFILE_STATE_QUARANTINE	5
+#define COPYFILE_STATE_STATUS_CB	6
+#define COPYFILE_STATE_STATUS_CTX	7
+#define COPYFILE_STATE_COPIED		8
 
 #define	COPYFILE_DISABLE_VAR	"COPYFILE_DISABLE"
 
