@@ -37,6 +37,9 @@
 #ifndef TARGET_OS_WATCH
 #  define TARGET_OS_WATCH             0
 #endif
+#ifndef TARGET_OS_DRIVERKIT
+#  define TARGET_OS_DRIVERKIT         0
+#endif
 /* If not defined, OS will never support ARM */
 #ifndef TARGET_CPU_ARM
 #  define TARGET_CPU_ARM              0
