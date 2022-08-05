@@ -96,6 +96,11 @@ Wrapped headers and replaced functions are:
     <td>OSX10.6</td>
   </tr>
   <tr>
+    <td><code>mach/machine.h</code></td>
+    <td>Adds missing machine definitions</td>
+    <td>OSX10.13</td>
+  </tr>
+  <tr>
     <td><code>net/if.h</code></td>
     <td>Adds include <code>sys/socket.h</code>, expected on current macOS systems</td>
     <td>OSX10.8</td>
