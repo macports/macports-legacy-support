@@ -188,6 +188,11 @@ Wrapped headers and replaced functions are:
     <td>OSX10.5</td>
   </tr>
   <tr>
+    <td><code>CoreAudio/CoreAudio.h</code></td>
+    <td>Wraps <code>kAudioObjectPropertyElementMain</code> to <code>kAudioObjectPropertyElementMaster</code> & <code>kAudioHardwareServiceDeviceProperty_VirtualMainBalance</code> to <code>kAudioHardwareServiceDeviceProperty_VirtualMasterBalance</code></td>
+    <td>OSX12</td>
+  </tr>
+  <tr>
     <td><code>CoreFoundation/CoreFoundation.h</code></td>
     <td>Adds <code>CFPropertyListCreateWithStream</code> function</td>
     <td>OSX10.5</td>
