@@ -188,6 +188,11 @@ Wrapped headers and replaced functions are:
     <td>OSX10.5</td>
   </tr>
   <tr>
+    <td><code>AudioToolbox/AudioToolbox.h</code></td>
+    <td>Wraps <code>kAudioHardwareServiceDeviceProperty_VirtualMainVolume</code> to <code>kAudioHardwareServiceDeviceProperty_VirtualMasterVolume</code></td>
+    <td>OSX12</td>
+  </tr>
+  <tr>
     <td><code>CoreAudio/CoreAudio.h</code></td>
     <td>Wraps <code>kAudioObjectPropertyElementMain</code> to <code>kAudioObjectPropertyElementMaster</code> & <code>kAudioHardwareServiceDeviceProperty_VirtualMainBalance</code> to <code>kAudioHardwareServiceDeviceProperty_VirtualMasterBalance</code></td>
     <td>OSX12</td>
