@@ -61,4 +61,19 @@ __MP__END_DECLS
 
 #endif /* _MP_LEGACY_SUPPORT_GETTIME__ */
 
+/* Legacy implementation of timespec */
+#if __MP_LEGACY_SUPPORT_TIMESPEC_GET__
+
+#ifndef TIME_UTC
+#define TIME_UTC	1	/* time elapsed since epoch */
+#endif
+
+__MP__BEGIN_DECLS
+
+extern int timespec_get(struct timespec *ts, int base);
+
+__MP__END_DECLS
+
+#endif /* __MP_LEGACY_SUPPORT_TIMESPEC_GET__ */
+
 #endif /* _MACPORTS_TIME_H_ */

@@ -85,3 +85,21 @@ int clock_gettime( int clk_id, struct timespec *ts )
 */
 
 #endif
+
+#if __MP_LEGACY_SUPPORT_TIMESPEC_GET__
+
+int timespec_get(struct timespec *ts, int base)
+{
+  switch (base) {
+    case TIME_UTC:
+      if (clock_gettime(CLOCK_REALTIME, ts) == -1)
+        return 0;
+
+      return base;
+
+    default:
+      return 0;
+  }
+}
+
+#endif
