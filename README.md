@@ -85,8 +85,8 @@ Wrapped headers and replaced functions are:
   </tr>
   <tr>
     <td><code>time.h</code></td>
-    <td>Adds <code>clock_gettime</code> function (macOS10.11). Declares <code>asctime_r</code>, <code>ctime_r</code>, <code>gmtime_r</code>, and <code>localtime_r</code> functions that are otherwise hidden in the presence of <code>_ANSI_SOURCE</code>, <code>_POSIX_C_SOURCE</code>, or <code>_XOPEN_SOURCE</code> (OSX10.4)</td>
-    <td>OSX10.4(11)</td>
+    <td>Adds functions <code>clock_gettime</code>(macOS10.11) and <code>timespec_get</code>(macOS10.14). Defines <code>TIME_UTC</code> (macOS10.14). Declares <code>asctime_r</code>, <code>ctime_r</code>, <code>gmtime_r</code>, and <code>localtime_r</code> functions that are otherwise hidden in the presence of <code>_ANSI_SOURCE</code>, <code>_POSIX_C_SOURCE</code>, or <code>_XOPEN_SOURCE</code> (OSX10.4)</td>
+    <td>OSX10.4(11,14)</td>
   </tr>
   <tr>
     <td><code>wchar.h</code></td>
