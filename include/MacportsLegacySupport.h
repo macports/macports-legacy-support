@@ -127,10 +127,11 @@
 /* STAILQ_FOREACH is not defined on Tiger*/
 #define __MP_LEGACY_SUPPORT_STAILQ_FOREACH__  (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1050)
 
-/* c++11 <cmath> PPC 10.[45] and Intel 10.[4-6], GNU g++ 4.6 through 8. */
-#if (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1070 \
-               && defined(__GNUC__) && (__GNUC__ <= 8)                 \
-               && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ >= 6))))
+/* c++11 <cmath> before 10.7, GNU g++ 4.6 through 8 or clang with libstc++. */
+#if (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1070                \
+               && (( defined(__GNUC__) && (__GNUC__ <= 8)                             \
+                   && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ >= 6)))) \
+                || (defined(__clang__) && defined(__GLIBCXX__))))
 #define __MP_LEGACY_SUPPORT_CXX11_CMATH__ 1
 #else
 #define __MP_LEGACY_SUPPORT_CXX11_CMATH__ 0
