@@ -24,6 +24,11 @@ Wrapped headers and replaced functions are:
     <th>Max Version Needing Feature</th>
   </tr>
   <tr>
+    <td><code>assert.h</code></td>
+    <td>Adds C11 <code>static_assert</code> definition</td>
+    <td>OSX10.10</td>
+  </tr>
+  <tr>
     <td><code>cmath</code></td>
     <td>Adds the same functions as those provided by the herein <code>math.h</code>,
         in namespace <code>std::</code>.</td>
