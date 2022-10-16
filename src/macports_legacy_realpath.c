@@ -24,9 +24,9 @@
 #include <stdlib.h>
 #include <dlfcn.h>
 
-char *realpath(const char __restrict *stringsearch, char __restrict *buffer)
+char *realpath(const char * __restrict stringsearch, char * __restrict buffer)
 {
-    char *(*real_realpath)(const char __restrict *, char __restrict *);
+    char *(*real_realpath)(const char * __restrict, char * __restrict);
 #if (__DARWIN_UNIX03 && !defined(_POSIX_C_SOURCE)) || defined(_DARWIN_C_SOURCE) || defined(_DARWIN_BETTER_REALPATH)
     real_realpath = dlsym(RTLD_NEXT, "realpath$DARWIN_EXTSN");
 # else
@@ -49,6 +49,6 @@ char *realpath(const char __restrict *stringsearch, char __restrict *buffer)
 }
 
 /* compatibility function so code does not have to be recompiled */
-char *macports_legacy_realpath(const char __restrict *stringsearch, char __restrict *buffer) { return realpath(stringsearch, buffer); }
+char *macports_legacy_realpath(const char * __restrict stringsearch, char * __restrict buffer) { return realpath(stringsearch, buffer); }
 
 #endif /*__MP_LEGACY_SUPPORT_REALPATH_WRAP__*/
