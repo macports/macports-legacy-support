@@ -31,7 +31,7 @@ int clock_gettime( clockid_t clk_id, struct timespec *ts )
   int ret = -1;
   if ( ts )
   {
-    if      ( CLOCK_REALTIME == clk_id )
+    if ( CLOCK_REALTIME == clk_id )
     {
       struct timeval tv;
       ret = gettimeofday(&tv, NULL);
@@ -40,10 +40,12 @@ int clock_gettime( clockid_t clk_id, struct timespec *ts )
     }
     else if ( CLOCK_MONOTONIC == clk_id || CLOCK_MONOTONIC_RAW == clk_id )
     {
-      const uint64_t clock = mach_absolute_time();
-      mach_timebase_info_data_t timebase;
-      mach_timebase_info(&timebase);
-      uint64_t tdiff = clock * timebase.numer / timebase.denom;
+      const uint64_t t = mach_absolute_time();
+      static mach_timebase_info_data_t timebase;
+      if (timebase.numer == 0 || timebase.denom == 0) {
+        mach_timebase_info(&timebase);
+      }
+      const uint64_t tdiff = t * timebase.numer / timebase.denom;
       if ( CLOCK_MONOTONIC == clk_id ) {
         tdiff = THOUSAND * ( tdiff / THOUSAND );
       }
