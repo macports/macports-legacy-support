@@ -171,4 +171,7 @@
 /* _tlv_atexit and __cxa_thread_atexit */
 #define __MP_LEGACY_SUPPORT_ATEXIT_WRAP__  (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1070)
 
+/* os_unfair_lock structure and its associated functions */
+#define __MP_LEGACY_SUPPORT_OS_UNFAIR_LOCK__  (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 101200)
+
 #endif /* _MACPORTS_LEGACYSUPPORTDEFS_H_ */
