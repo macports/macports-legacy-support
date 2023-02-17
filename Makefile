@@ -63,7 +63,7 @@ LD              ?= ld
 LDFLAGS         ?=
 AR              ?= ar
 
-UNAME           ?= /usr/bin/uname
+UNAME           ?= uname
 SED             ?= /usr/bin/sed
 GREP            ?= /usr/bin/grep
 CP              ?= /bin/cp
