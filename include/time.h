@@ -44,10 +44,11 @@ __MP__END_DECLS
 #if __MP_LEGACY_SUPPORT_GETTIME__
 
 /* One define types and methods if not already defined. */
-#if !defined(CLOCK_REALTIME) && !defined(CLOCK_MONOTONIC)
+#if !defined(CLOCK_REALTIME) && !defined(CLOCK_MONOTONIC) && !defined(CLOCK_MONOTONIC_RAW)
 
-#define CLOCK_REALTIME  0
-#define CLOCK_MONOTONIC 6
+#define CLOCK_REALTIME      0
+#define CLOCK_MONOTONIC     6
+#define CLOCK_MONOTONIC_RAW 4
 typedef int clockid_t;
 
 __MP__BEGIN_DECLS

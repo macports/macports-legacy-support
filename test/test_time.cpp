@@ -28,20 +28,29 @@ inline void res( CLOCKID clk_id )
 
 int main()
 {
-
-  int c(0);
-  res(CLOCK_REALTIME);
-  while ( ++c < 10 )
   {
-    std::cout << "CLOCK_REALTIME  " << time(CLOCK_REALTIME) << std::endl;
+    int c =0;
+    res(CLOCK_REALTIME);
+    while ( ++c < 10 )
+    {
+      std::cout << "CLOCK_REALTIME ("<< CLOCK_REALTIME << ")      " << time(CLOCK_REALTIME) << std::endl;
+    }
   }
-  c = 0;
-  res(CLOCK_MONOTONIC);
-  while ( ++c < 10 )
   {
-    std::cout << "CLOCK_MONOTONIC " << time(CLOCK_MONOTONIC) << std::endl;
+    int c = 0;
+    res(CLOCK_MONOTONIC);
+    while ( ++c < 10 )
+    {
+      std::cout << "CLOCK_MONOTONIC ("<< CLOCK_MONOTONIC << ")     " << time(CLOCK_MONOTONIC) << std::endl;
+    }
   }
-
+    {
+    int c = 0;
+    res(CLOCK_MONOTONIC_RAW);
+    while ( ++c < 10 )
+    {
+      std::cout << "CLOCK_MONOTONIC_RAW ("<< CLOCK_MONOTONIC_RAW << ") " << time(CLOCK_MONOTONIC_RAW) << std::endl;
+    }
+  }
   return 0;
 }
-
