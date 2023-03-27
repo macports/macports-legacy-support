@@ -44,7 +44,7 @@ bool os_unfair_lock_trylock(os_unfair_lock_t lock);
 
 void os_unfair_lock_unlock(os_unfair_lock_t lock);
 
-__MP__BEGIN_DECLS
+__MP__END_DECLS
 
 /*
 it is not clear how to implement these functions
