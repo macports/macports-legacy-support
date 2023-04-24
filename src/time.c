@@ -45,7 +45,7 @@ int clock_gettime( clockid_t clk_id, struct timespec *ts )
       if (timebase.numer == 0 || timebase.denom == 0) {
         mach_timebase_info(&timebase);
       }
-      const uint64_t tdiff = t * timebase.numer / timebase.denom;
+      uint64_t tdiff = t * timebase.numer / timebase.denom;
       if ( CLOCK_MONOTONIC == clk_id ) {
         tdiff = THOUSAND * ( tdiff / THOUSAND );
       }
