@@ -19,6 +19,7 @@
 
 #if __MP_LEGACY_SUPPORT_GETTIME__
 
+#include <stdio.h>
 #include <sys/time.h>
 #include <mach/mach_time.h>
 
@@ -40,13 +41,12 @@ int clock_gettime( clockid_t clk_id, struct timespec *ts )
     }
     else if ( CLOCK_MONOTONIC == clk_id || CLOCK_MONOTONIC_RAW == clk_id )
     {
-      const uint64_t t = mach_absolute_time();
       static mach_timebase_info_data_t timebase;
       if ( 0 == timebase.numer || 0 == timebase.denom ) {
-        const kern_return_t kr = mach_timebase_info(&timebase);
+        const kern_return_t kr = mach_timebase_info( &timebase );
         if ( kr != KERN_SUCCESS ) { return kr; }
       }
-      uint64_t tdiff = t * timebase.numer / timebase.denom;
+      uint64_t tdiff =  mach_absolute_time() * ( timebase.numer / timebase.denom );
       if ( CLOCK_MONOTONIC == clk_id ) {
         tdiff = THOUSAND * ( tdiff / THOUSAND );
       }
