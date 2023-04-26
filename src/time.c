@@ -19,7 +19,6 @@
 
 #if __MP_LEGACY_SUPPORT_GETTIME__
 
-#include <stdio.h>
 #include <sys/time.h>
 #include <mach/mach_time.h>
 
