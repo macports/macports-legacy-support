@@ -20,6 +20,7 @@
 #if __MP_LEGACY_SUPPORT_GETTIME__
 
 #include <sys/time.h>
+#include <sys/sysctl.h>
 #include <mach/mach_time.h>
 
 #define BILLION  1000000000L
@@ -38,7 +39,24 @@ int clock_gettime( clockid_t clk_id, struct timespec *ts )
       ts->tv_sec  = tv.tv_sec;
       ts->tv_nsec = tv.tv_usec * 1000;
     }
-    else if ( CLOCK_MONOTONIC == clk_id || CLOCK_MONOTONIC_RAW == clk_id )
+    else if ( CLOCK_MONOTONIC == clk_id )
+    {
+      struct timeval boottime;
+      size_t boottime_len = sizeof(boottime);
+      ret = sysctlbyname("kern.boottime", &boottime, &boottime_len, NULL, 0);
+      if (ret == -1)
+      {
+        boottime.tv_sec = 0;
+        boottime.tv_usec = 0;
+      }
+      struct timeval tv;
+      ret = gettimeofday(&tv, NULL);
+      timersub(&tv, &boottime, &tv);
+      ts->tv_sec  = tv.tv_sec;
+      ts->tv_nsec = tv.tv_usec * 1000;
+      ret = 0;
+    }
+    else if ( CLOCK_MONOTONIC_RAW == clk_id )
     {
       static mach_timebase_info_data_t timebase;
       if ( 0 == timebase.numer || 0 == timebase.denom ) {
@@ -46,9 +64,6 @@ int clock_gettime( clockid_t clk_id, struct timespec *ts )
         if ( kr != KERN_SUCCESS ) { return kr; }
       }
       uint64_t tdiff =  mach_absolute_time() * ( timebase.numer / timebase.denom );
-      if ( CLOCK_MONOTONIC == clk_id ) {
-        tdiff = THOUSAND * ( tdiff / THOUSAND );
-      }
       ts->tv_sec  = tdiff / BILLION;
       ts->tv_nsec = tdiff % BILLION;
       ret = 0;
