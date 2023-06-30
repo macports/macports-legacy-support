@@ -58,6 +58,15 @@ __MP__END_DECLS
 
 #endif /*  __MP_LEGACY_SUPPORT_GETLINE__ */
 
+/* open_memstream */
+#if __MP_LEGACY_SUPPORT_OPEN_MEMSTREAM__
+
+__MP__BEGIN_DECLS
+FILE *open_memstream(char **ptr, size_t *sizeloc);
+__MP__END_DECLS
+
+#endif /* __MP_LEGACY_SUPPORT_OPEN_MEMSTREAM__ */
+
 /* renameat */
 #if __MP_LEGACY_SUPPORT_ATCALLS__
 
