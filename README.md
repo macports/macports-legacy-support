@@ -59,19 +59,20 @@ Wrapped headers and replaced functions are:
     <td>Adds declaration of <code>AI_NUMERICSERV</code></td>
     <td>OSX10.5</td>
   </tr>
- <tr>
+  <tr>
     <td rowspan="2"><code>pthread.h</code></td>
     <td>Adds <code>PTHREAD_RWLOCK_INITIALIZER</code></td>
     <td>OSX10.4</td>
   </tr>
- <tr>
+  <tr>
     <td>Adds <code>pthread_setname_np</code> function</td>
     <td>OSX10.5</td>
   </tr>
   <tr>
     <td><code>stdio.h</code></td>
-    <td>Adds <code>dprintf</code>, <code>getline</code>, and <code>getdelim</code> functions</td>
-    <td>OSX10.6</td>
+    <td>Adds <code>dprintf</code>, <code>getline</code>, <code>getdelim</code>,
+        and <code>open_memstream</code> functions</td>
+    <td>OSX10.6, OSX10.12 (open_memstream)</td>
   </tr>
   <tr>
     <td rowspan="2"><code>stdlib.h</code></td>
