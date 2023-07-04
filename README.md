@@ -71,7 +71,7 @@ Wrapped headers and replaced functions are:
   <tr>
     <td><code>stdio.h</code></td>
     <td>Adds <code>dprintf</code>, <code>getline</code>, <code>getdelim</code>,
-        and <code>open_memstream</code> functions</td>
+        <code>open_memstream</code>, and <code>fmemopen</code> functions</td>
     <td>OSX10.6, OSX10.12 (open_memstream)</td>
   </tr>
   <tr>

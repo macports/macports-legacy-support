@@ -67,6 +67,15 @@ __MP__END_DECLS
 
 #endif /* __MP_LEGACY_SUPPORT_OPEN_MEMSTREAM__ */
 
+/* fmemopen */
+#if __MP_LEGACY_SUPPORT_FMEMOPEN__
+
+__MP__BEGIN_DECLS
+FILE *fmemopen(void *buf, size_t size, const char *mode);
+__MP__END_DECLS
+
+#endif /* __MP_LEGACY_SUPPORT_FMEMOPEN__ */
+
 /* renameat */
 #if __MP_LEGACY_SUPPORT_ATCALLS__
 
