@@ -32,6 +32,8 @@
 #include <string.h>
 #include <errno.h>
 
+extern int __sflags(const char *, int *);
+
 struct fmemopen_cookie
 {
   char  *buf;  /* pointer to the memory region */
