@@ -1,6 +1,7 @@
 
-/*-
+/*
  * Copyright (c) 2019
+ * Copyright (c) 2023 raf <raf@raf.org>, Tavian Barnes <tavianator@tavianator.com>
  *
  *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
@@ -22,11 +23,15 @@
 
 #include "common-priv.h"
 
+#define __MP_LEGACY_SUPPORT_NO_DIRFD_MACRO
+
+#include <stdlib.h>
 #include <dirent.h>
 #include <sys/errno.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <fcntl.h>
+
+#undef DIR
+#undef opendir
+#undef closedir
 
 
 /*
@@ -34,62 +39,107 @@
  *
  * https://www.freebsd.org/cgi/man.cgi?query=fdopendir&sektion=3
  * https://linux.die.net/man/3/fdopendir
+ *
+ * On success, this function returns allocated memory that must be
+ * deallocated by __mpls_closedir() (see closedir() macro in <dirent.h>).
  */
 
-DIR *fdopendir(int dirfd) {
-    DIR *dir;
-    struct stat st;
-    int oldCWD = -1;
+__MP_LEGACY_SUPPORT_DIR *fdopendir(int dirfd) {
 
-    if (fstat(dirfd, &st) < 0)
-        return 0;
+    /* Check dirfd here (for macos-10.4, see _ATCALL() and best_fchdir()) */
 
-    if (!S_ISDIR(st.st_mode)) {
-        errno = ENOTDIR;
+    if (dirfd != AT_FDCWD && dirfd < 0) {
+        errno = EBADF;
         return 0;
     }
 
-    if (dirfd == AT_FDCWD) {
-        dir = opendir (".");
-        /* dirfd can be closed only upon success */
-        if (dir) PROTECT_ERRNO(close(dirfd));
-        return dir;
-    }
+    /* Open the supplied directory safely */
 
-    oldCWD = open(".", O_RDONLY);
-    if (oldCWD == -1)
+    DIR *dir = _ATCALL(dirfd, ".", NULL, opendir("."));
+    if (!dir)
         return 0;
 
-    if(best_fchdir(dirfd) < 0) {
-        if (oldCWD != -1) PROTECT_ERRNO(close(oldCWD));
-        return 0;
-    }
+    /* Wrap it and return it (with the supplied directory file descriptor) */
 
-    dir = opendir (".");
-
-    if (best_fchdir(oldCWD) < 0) {
-        if (dir) PROTECT_ERRNO(closedir(dir));
-        if (oldCWD != -1) PROTECT_ERRNO(close(oldCWD));
+    __MP_LEGACY_SUPPORT_DIR *mplsdir = malloc(sizeof(*mplsdir));
+    if (!mplsdir) {
+        (void)closedir(dir);
+        errno = ENOMEM;
         return 0;
     }
 
-    if (oldCWD != -1)
-        PROTECT_ERRNO(close(oldCWD));
+    mplsdir->__mpls_dir = dir;
+    mplsdir->__mpls_dirfd = dirfd;
 
+    return mplsdir;
+}
 
-    /*
-     * FIXME -- this recently added bit makes the fdopendir tests fail on Tiger.
-     * check the whole commit where it was added to make sure it is
-     * doing the proper thing on all systems. Probably need more extensive tests
-     * to execise the whole system more aggressively.
-     */
+/*
+ * Wrapped version of opendir() for fdopendir() compatibility
+ *
+ * On success, this function returns allocated memory that must be
+ * deallocated by __mpls_closedir() (see closedir() macro in <dirent.h>).
+ */
 
-#if __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ >= 1050
-    /* dirfd can be closed only upon success */
-    if (dir && dirfd != -1) PROTECT_ERRNO(close(dirfd));
-#endif
+__MP_LEGACY_SUPPORT_DIR *__mpls_opendir(const char *name) {
 
-    return dir;
+    DIR *dir = opendir(name);
+    if (!dir)
+        return 0;
+
+    __MP_LEGACY_SUPPORT_DIR *mplsdir = malloc(sizeof(*mplsdir));
+    if (!mplsdir) {
+        (void)closedir(dir);
+        errno = ENOMEM;
+        return 0;
+    }
+
+    mplsdir->__mpls_dir = dir;
+    mplsdir->__mpls_dirfd = -1;
+
+    return mplsdir;
+}
+
+/*
+ * Wrapped version of closedir() for fdopendir() compatibility (see
+ * closedir() macro in <dirent.h>).
+ *
+ * This function deallocates memory that was allocated by fdopendir() or
+ * __mpls_opendir().
+ */
+
+int __mpls_closedir(__MP_LEGACY_SUPPORT_DIR *mplsdir) {
+
+    if (!mplsdir) {
+        errno = EBADF;
+        return -1;
+    }
+
+    int rc = closedir(mplsdir->__mpls_dir);
+
+    if (mplsdir->__mpls_dirfd != AT_FDCWD && mplsdir->__mpls_dirfd != -1)
+        PROTECT_ERRNO(close(mplsdir->__mpls_dirfd));
+
+    free(mplsdir);
+
+    return rc;
+}
+
+/*
+ * Wrapped version of dirfd() for fdopendir() compatibility because dirfd()
+ * itself is already a macro (see dirfd() macro in <dirent.h>).
+ */
+
+int __mpls_dirfd(__MP_LEGACY_SUPPORT_DIR *mplsdir) {
+
+    /* Return the supplied directory file descriptor if there was one */
+
+    if (mplsdir->__mpls_dirfd != AT_FDCWD && mplsdir->__mpls_dirfd != -1)
+        return mplsdir->__mpls_dirfd;
+
+    /* Otherwise call the underlying dirfd() macro */
+
+    return dirfd(mplsdir->__mpls_dir);
 }
 
 #endif /* __MP_LEGACY_SUPPORT_FDOPENDIR__ */
