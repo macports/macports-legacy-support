@@ -108,10 +108,10 @@ test_autoalloc()
      * Let fmemopen allocate the buffer.
      */
 
-    char str[] = "A quick test";
+    /* char str[] = "A quick test"; */
     FILE *fp;
     long pos;
-    size_t nofw, nofr, i;
+    size_t nofw, i;
     int rc;
 
     /* Open a FILE * using fmemopen. */

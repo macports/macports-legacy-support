@@ -1,5 +1,6 @@
 /*-
  * Copyright (c) 2019
+ * Copyright (c) 2023 raf <raf@raf.org>
  *
  *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
@@ -30,7 +31,10 @@ int best_fchdir(int dirfd)
   return syscall(SYS___pthread_fchdir, dirfd);
 #else
 /* Tiger does not have kernel support for __pthread_fchdir, so we have to fall back to fchdir */
-/* unless we can come up with a per-thread compatible implementation that works on Tiger */
+/* unless we can come up with a per-thread compatible implementation that works on Tiger. */
+/* Accept dirfd == -1 (which is meaningful for __pthread_fchdir) but do nothing with it. */
+  if (dirfd == -1)
+    return 0;
   return syscall(SYS_fchdir, dirfd);
 #endif
 }

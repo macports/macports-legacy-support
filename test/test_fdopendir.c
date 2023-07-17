@@ -1,6 +1,7 @@
 
 /*
  * Copyright (c) 2019
+ * Copyright (c) 2023 raf <raf@raf.org>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -15,9 +16,11 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#include <stdlib.h>
 #include <dirent.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/errno.h>
 #include <unistd.h>
 #include <limits.h>
 #include <fcntl.h>
@@ -55,6 +58,29 @@ int main() {
     }
 
     close(dfd);
+
+    /* Try to use fdopendir with stdin - Should fail with ENOTDIR */
+
+    if ((dir = fdopendir(STDIN_FILENO))) {
+        fprintf(stderr, "fdopendir(stdin) should have failed\n");
+        (void)closedir(dir);
+        return 1;
+    } else if (errno != ENOTDIR) {
+        perror("fdopendir(stdin) should have failed with ENOTDIR");
+        return 1;
+    }
+
+    /* Try to use fdopendir with -1 - Should fail with EBADF */
+
+    if ((dir = fdopendir(-1))) {
+        fprintf(stderr, "fdopendir(-1) should have failed\n");
+        (void)closedir(dir);
+        return 1;
+    } else if (errno != EBADF) {
+        perror("fdopendir(-1) should have failed with EBADF");
+        return 1;
+    }
+
     return 0;
 }
 

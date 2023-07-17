@@ -54,7 +54,7 @@ FORCE_ARCH      ?=
 ARCHFLAGS       ?=
 LIPO            ?= lipo
 CC              ?= cc $(ARCHFLAGS)
-CFLAGS          ?= -Os -Wall
+CFLAGS          ?= -Os -Wall -Wno-deprecated-declarations
 DLIBCFLAGS      ?= -fPIC
 SLIBCFLAGS      ?=
 CXX             ?= c++ $(ARCHFLAGS)
@@ -84,7 +84,7 @@ FIND_LIBHEADERS := find $(SRCINCDIR) -type f \( -name '*.h' -o \
 LIBHEADERS      := $(shell $(FIND_LIBHEADERS))
 ALLHEADERS      := $(LIBHEADERS) $(wildcard $(SRCDIR)/*.h)
 
-MULTISRCS       := $(SRCDIR)/fdopendir.c
+MULTISRCS       := # Used to have $(SRCDIR)/fdopendir.c because it used struct stat
 ADDSRCS         := $(SRCDIR)/add_symbols.c
 LIBSRCS         := $(filter-out $(MULTISRCS) $(ADDSRCS),$(wildcard $(SRCDIR)/*.c))
 
