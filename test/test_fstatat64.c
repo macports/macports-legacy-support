@@ -26,6 +26,14 @@
 
 #define FEEDBACK 1
 
+/*
+ * For newer macOS releases - where this syscall is available - it's declared
+ * in header 'sys/sysproto.h', within 'Kernel.framework'.
+ *
+ * To avoid depending on that, declare it ourselves. (Remember that C/C++
+ * allows redundant function declarations, as long as the signatures match.)
+ */
+int fstatat64(int dirfd, const char *pathname, struct stat64 *buf, int flags);
 
 int main (int argc, char **argv) {
 #if !__DARWIN_ONLY_64_BIT_INO_T && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ >= 1050
