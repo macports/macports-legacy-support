@@ -44,12 +44,35 @@ __MP__END_DECLS
 #if __MP_LEGACY_SUPPORT_GETTIME__
 
 /* One define types and methods if not already defined. */
-#if !defined(CLOCK_REALTIME) && !defined(CLOCK_MONOTONIC) && !defined(CLOCK_MONOTONIC_RAW)
-
-#define CLOCK_REALTIME      0
-#define CLOCK_MONOTONIC     6
-#define CLOCK_MONOTONIC_RAW 4
+#if !defined(CLOCK_REALTIME) && !defined(CLOCK_MONOTONIC)
 typedef int clockid_t;
+#endif /* !defined(CLOCK_REALTIME) && !defined(CLOCK_MONOTONIC) */
+
+#ifndef CLOCK_REALTIME
+#define CLOCK_REALTIME              0
+#endif
+#ifndef CLOCK_MONOTONIC
+#define CLOCK_MONOTONIC             6
+#endif
+
+#ifndef CLOCK_MONOTONIC_RAW
+#define CLOCK_MONOTONIC_RAW         4
+#endif
+#ifndef CLOCK_MONOTONIC_RAW_APPROX
+#define CLOCK_MONOTONIC_RAW_APPROX  5
+#endif
+
+#ifndef CLOCK_UPTIME_RAW
+#define CLOCK_UPTIME_RAW            8
+#endif
+
+#ifndef CLOCK_UPTIME_RAW_APPROX
+#define CLOCK_UPTIME_RAW_APPROX     8
+#endif
+
+#ifndef CLOCK_PROCESS_CPUTIME_ID
+#define CLOCK_PROCESS_CPUTIME_ID    12
+#endif
 
 __MP__BEGIN_DECLS
 
@@ -57,8 +80,6 @@ extern int clock_gettime( clockid_t clk_id, struct timespec *ts );
 extern int clock_getres ( clockid_t clk_id, struct timespec *ts );
 
 __MP__END_DECLS
-
-#endif /* !defined(CLOCK_REALTIME) && !defined(CLOCK_MONOTONIC) */
 
 #endif /* _MP_LEGACY_SUPPORT_GETTIME__ */
 

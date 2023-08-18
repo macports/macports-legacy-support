@@ -21,6 +21,7 @@
 
 #include <sys/time.h>
 #include <sys/sysctl.h>
+#include <sys/resource.h>
 #include <mach/mach_time.h>
 
 #define BILLION  1000000000L
@@ -44,11 +45,7 @@ int clock_gettime( clockid_t clk_id, struct timespec *ts )
       struct timeval boottime;
       size_t boottime_len = sizeof(boottime);
       ret = sysctlbyname("kern.boottime", &boottime, &boottime_len, NULL, 0);
-      if (ret == -1)
-      {
-        boottime.tv_sec = 0;
-        boottime.tv_usec = 0;
-      }
+      if (ret != KERN_SUCCESS) { return ret; }
       struct timeval tv;
       ret = gettimeofday(&tv, NULL);
       timersub(&tv, &boottime, &tv);
@@ -56,7 +53,18 @@ int clock_gettime( clockid_t clk_id, struct timespec *ts )
       ts->tv_nsec = tv.tv_usec * 1000;
       ret = 0;
     }
-    else if ( CLOCK_MONOTONIC_RAW == clk_id )
+    else if ( CLOCK_PROCESS_CPUTIME_ID == clk_id )
+    {
+      struct rusage ru;
+      ret = getrusage(RUSAGE_SELF, &ru);
+      timeradd(&ru.ru_utime, &ru.ru_stime, &ru.ru_utime);
+      ts->tv_sec  = ru.ru_utime.tv_sec;
+      ts->tv_nsec = ru.ru_utime.tv_usec * 1000;
+    }
+    else if ( CLOCK_MONOTONIC_RAW == clk_id ||
+              CLOCK_MONOTONIC_RAW_APPROX == clk_id ||
+              CLOCK_UPTIME_RAW == clk_id ||
+              CLOCK_UPTIME_RAW_APPROX == clk_id )
     {
       static mach_timebase_info_data_t timebase;
       if ( 0 == timebase.numer || 0 == timebase.denom ) {
@@ -78,14 +86,19 @@ int clock_getres( clockid_t clk_id, struct timespec *ts )
   if ( ts )
   {
     if ( CLOCK_REALTIME  == clk_id ||
-         CLOCK_MONOTONIC == clk_id )
+         CLOCK_MONOTONIC == clk_id ||
+         CLOCK_PROCESS_CPUTIME_ID == clk_id )
     {
       // return 1us precision
       ts->tv_sec  = 0;
       ts->tv_nsec = THOUSAND;
       ret         = 0;
     }
-    else if ( CLOCK_MONOTONIC_RAW == clk_id )
+    else if ( CLOCK_MONOTONIC_RAW == clk_id ||
+              CLOCK_MONOTONIC_RAW_APPROX == clk_id ||
+              CLOCK_PROCESS_CPUTIME_ID == clk_id ||
+              CLOCK_UPTIME_RAW == clk_id ||
+              CLOCK_UPTIME_RAW_APPROX == clk_id )
     {
       // return 1ns precision
       ts->tv_sec  = 0;

@@ -44,12 +44,44 @@ int main()
       std::cout << "CLOCK_MONOTONIC ("<< CLOCK_MONOTONIC << ")     " << time(CLOCK_MONOTONIC) << std::endl;
     }
   }
-    {
+  {
     int c = 0;
     res(CLOCK_MONOTONIC_RAW);
     while ( ++c < 10 )
     {
       std::cout << "CLOCK_MONOTONIC_RAW ("<< CLOCK_MONOTONIC_RAW << ") " << time(CLOCK_MONOTONIC_RAW) << std::endl;
+    }
+  }
+  {
+    int c = 0;
+    res(CLOCK_MONOTONIC_RAW_APPROX);
+    while ( ++c < 10 )
+    {
+      std::cout << "CLOCK_MONOTONIC_RAW_APPROX ("<< CLOCK_MONOTONIC_RAW_APPROX << ") " << time(CLOCK_MONOTONIC_RAW_APPROX) << std::endl;
+    }
+  }
+  {
+    int c = 0;
+    res(CLOCK_UPTIME_RAW);
+    while ( ++c < 10 )
+    {
+      std::cout << "CLOCK_UPTIME_RAW ("<< CLOCK_UPTIME_RAW << ") " << time(CLOCK_UPTIME_RAW) << std::endl;
+    }
+  }
+  {
+    int c = 0;
+    res(CLOCK_UPTIME_RAW_APPROX);
+    while ( ++c < 10 )
+    {
+      std::cout << "CLOCK_UPTIME_RAW_APPROX ("<< CLOCK_UPTIME_RAW_APPROX << ") " << time(CLOCK_UPTIME_RAW_APPROX) << std::endl;
+    }
+  }
+  {
+    int c = 0;
+    res(CLOCK_PROCESS_CPUTIME_ID);
+    while ( ++c < 10 )
+    {
+      std::cout << "CLOCK_PROCESS_CPUTIME_ID ("<< CLOCK_PROCESS_CPUTIME_ID << ") " << time(CLOCK_PROCESS_CPUTIME_ID) << std::endl;
     }
   }
   return 0;
