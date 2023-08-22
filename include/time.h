@@ -74,6 +74,10 @@ typedef int clockid_t;
 #define CLOCK_PROCESS_CPUTIME_ID    12
 #endif
 
+#ifndef CLOCK_THREAD_CPUTIME_ID
+#define CLOCK_THREAD_CPUTIME_ID     16
+#endif
+
 __MP__BEGIN_DECLS
 
 extern int clock_gettime( clockid_t clk_id, struct timespec *ts );

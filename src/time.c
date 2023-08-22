@@ -22,7 +22,11 @@
 #include <sys/time.h>
 #include <sys/sysctl.h>
 #include <sys/resource.h>
+
+#include <mach/mach_init.h>
+#include <mach/mach_port.h>
 #include <mach/mach_time.h>
+#include <mach/thread_act.h>
 
 #define BILLION  1000000000L
 #define MILLION  1000000L
@@ -61,6 +65,19 @@ int clock_gettime( clockid_t clk_id, struct timespec *ts )
       ts->tv_sec  = ru.ru_utime.tv_sec;
       ts->tv_nsec = ru.ru_utime.tv_usec * 1000;
     }
+    else if ( CLOCK_THREAD_CPUTIME_ID == clk_id )
+    {
+      mach_msg_type_number_t count = THREAD_BASIC_INFO_COUNT;
+      thread_basic_info_data_t info;
+
+      thread_port_t thread = mach_thread_self();
+      ret = thread_info(thread, THREAD_BASIC_INFO, (thread_info_t) &info, &count);
+      mach_port_deallocate(mach_task_self(), thread);
+
+      time_value_add(&info.user_time, &info.system_time);
+      ts->tv_sec  = info.user_time.seconds;
+      ts->tv_nsec = info.user_time.microseconds * 1000;
+    }
     else if ( CLOCK_MONOTONIC_RAW == clk_id ||
               CLOCK_MONOTONIC_RAW_APPROX == clk_id ||
               CLOCK_UPTIME_RAW == clk_id ||
@@ -87,7 +104,8 @@ int clock_getres( clockid_t clk_id, struct timespec *ts )
   {
     if ( CLOCK_REALTIME  == clk_id ||
          CLOCK_MONOTONIC == clk_id ||
-         CLOCK_PROCESS_CPUTIME_ID == clk_id )
+         CLOCK_PROCESS_CPUTIME_ID == clk_id ||
+         CLOCK_THREAD_CPUTIME_ID == clk_id)
     {
       // return 1us precision
       ts->tv_sec  = 0;
@@ -96,7 +114,6 @@ int clock_getres( clockid_t clk_id, struct timespec *ts )
     }
     else if ( CLOCK_MONOTONIC_RAW == clk_id ||
               CLOCK_MONOTONIC_RAW_APPROX == clk_id ||
-              CLOCK_PROCESS_CPUTIME_ID == clk_id ||
               CLOCK_UPTIME_RAW == clk_id ||
               CLOCK_UPTIME_RAW_APPROX == clk_id )
     {
