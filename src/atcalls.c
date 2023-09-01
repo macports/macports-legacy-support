@@ -104,6 +104,10 @@ int faccessat(int dirfd, const char *pathname, int mode, int flags)
     } __attribute__((aligned(4), packed)) ab;
     unsigned long opts = 0;
 
+    // Ignore AT_EACCESS, Bug #65569 and #67406
+    if (flags == AT_EACCESS)
+        flags = 0; // Zero out flag, ignore request to use effective user ID
+
     ERR_ON(EINVAL, flags & ~AT_SYMLINK_NOFOLLOW);
     if (flags & AT_SYMLINK_NOFOLLOW)
         opts |= FSOPT_NOFOLLOW;
