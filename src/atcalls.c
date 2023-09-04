@@ -2,6 +2,7 @@
  * atcalls.c
  *
  * Copyright (c) 2013-2015 Apple Inc. All rights reserved.
+ * Copyright (C) 2023 raf <raf@raf.org>
  *
  * @APPLE_LICENSE_HEADER_START@
  *
@@ -94,23 +95,23 @@ fail:
 
 int faccessat(int dirfd, const char *pathname, int mode, int flags)
 {
-    struct attrlist al = {
-        .bitmapcount = ATTR_BIT_MAP_COUNT,
-        .commonattr  = ATTR_CMN_USERACCESS,
-    };
-    struct {
-        uint32_t length;
-        uint32_t access;
-    } __attribute__((aligned(4), packed)) ab;
-    unsigned long opts = 0;
-
-    ERR_ON(EINVAL, flags & ~AT_SYMLINK_NOFOLLOW);
-    if (flags & AT_SYMLINK_NOFOLLOW)
-        opts |= FSOPT_NOFOLLOW;
-    if (getattrlistat(dirfd, pathname, &al, &ab, sizeof(ab), opts) < 0)
-        return -1;
-    ERR_ON(EACCES, (ab.access & mode) != (uint32_t)mode);
-    return 0;
+    ERR_ON(EINVAL, flags & ~AT_EACCESS);
+    uid_t ruid = getuid(), euid = geteuid();
+    gid_t rgid = getgid(), egid = getegid();
+    int check_euid = ruid != euid && (flags & AT_EACCESS);
+    int check_egid = rgid != egid && (flags & AT_EACCESS);
+    if (check_euid)
+        setreuid(euid, ruid);
+    if (check_egid)
+        setregid(egid, rgid);
+    int access_rc = ATCALL(dirfd, pathname, access(pathname, mode));
+    int access_errno = errno;
+    if (check_euid)
+        setreuid(ruid, euid);
+    if (check_egid)
+        setregid(rgid, egid);
+    errno = access_errno;
+    return access_rc;
 }
 
 #if 0
@@ -299,3 +300,5 @@ int unlinkat(int dirfd, const char *pathname, int flags)
 }
 
 #endif  /* __MP_LEGACY_SUPPORT_ATCALLS__ */
+
+/* vi:set et ts=4 sw=4: */
