@@ -72,20 +72,6 @@ static void* test_blackhole_thread(void *arg)
   return NULL;
 }
 
-static void* test_wait_thread(void *arg)
-{
-  int c = 0;
-  while ( ++c < 10 )
-  {
-    usleep(100);
-    ::pthread_mutex_lock(&lock);
-    std::cout << "[t2] CLOCK_THREAD_CPUTIME_ID ("<< CLOCK_THREAD_CPUTIME_ID << ") " << time(CLOCK_THREAD_CPUTIME_ID) << std::endl;
-    ::pthread_mutex_unlock(&lock);
-  }
-
-  return NULL;
-}
-
 int main()
 {
   {

@@ -295,6 +295,16 @@ test_cmath: test/test_cmath.cc $(ALLHEADERS)
 	$(info 4: $(CXX) -I$(SRCINCDIR) $(CXXFLAGS) -std=c++11 $< -o test/$@_cxx11)
 	@-$(CXX) -I$(SRCINCDIR) $(CXXFLAGS) -std=c++11 $< -o test/$@_cxx11 &> /dev/null && echo "4: c++11 legacy cmath build success (test succeeded)!" || echo "4: c++11 legacy cmath build failure (test failed)!"
 
+# Special clause for testing faccessat in a setuid program.
+# Must be run by root.
+# Assumes there is a _uucp user.
+# Tests setuid _uucp, setuid root, and setgid tty.
+test_faccessat_setuid: test/test_faccessat
+	@test/do_test_faccessat_setuid "$(BUILDDLIBPATH)"
+
+test_faccessat_setuid_msg:
+	@echo 'Run "sudo make test_faccessat_setuid" to test faccessat properly'
+
 $(TESTRUNS): $(TESTRUNPREFIX)%: $(TESTNAMEPREFIX)%
 	$<
 
@@ -325,11 +335,11 @@ install-slib: $(BUILDSLIBPATH)
 	$(MKINSTALLDIRS) $(DESTDIR)$(LIBDIR)
 	$(INSTALL_DATA) $(BUILDSLIBPATH) $(DESTDIR)$(LIBDIR)
 
-test check: $(TESTRUNS) test_cmath
+test check: $(TESTRUNS) test_cmath test_faccessat_setuid_msg
 
 clean:
 	$(RM) $(foreach D,$(SRCDIR) $(TESTDIR),$D/*.o $D/*.o.* $D/*.d)
-	$(RM) $(BUILDDLIBPATH) $(BUILDSLIBPATH) $(BUILDSYSLIBPATH) $(TESTPRGS) test/test_cmath_*
+	$(RM) $(BUILDDLIBPATH) $(BUILDSLIBPATH) $(BUILDSYSLIBPATH) $(TESTPRGS) test/test_cmath_* test/test_faccessat_setuid
 	@$(RMDIR) $(BUILDDLIBDIR) $(BUILDSLIBDIR)
 
 .PHONY: all dlib slib clean check test $(TESTRUNS) test_cmath
