@@ -57,23 +57,23 @@ extern int __mpls_dirfd(DIR *dir);
 #define dirfd(dir)         __mpls_dirfd(dir)
 #endif
 
-static inline struct dirent *__mpls_readdir(DIR *dir) {
+static __inline__ struct dirent *__mpls_readdir(DIR *dir) {
     return readdir(dir->__mpls_dir);
 }
 
-static inline int __mpls_readdir_r(DIR *dir, struct dirent *entry, struct dirent **result) {
+static __inline__ int __mpls_readdir_r(DIR *dir, struct dirent *entry, struct dirent **result) {
     return readdir_r(dir->__mpls_dir, entry, result);
 }
 
-static inline void __mpls_rewinddir(DIR *dir) {
+static __inline__ void __mpls_rewinddir(DIR *dir) {
     rewinddir(dir->__mpls_dir);
 }
 
-static inline void __mpls_seekdir(DIR *dir, long loc) {
+static __inline__ void __mpls_seekdir(DIR *dir, long loc) {
     seekdir(dir->__mpls_dir, loc);
 }
 
-static inline long __mpls_telldir(DIR *dir) {
+static __inline__ long __mpls_telldir(DIR *dir) {
     return telldir(dir->__mpls_dir);
 }
 
