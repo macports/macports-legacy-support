@@ -61,6 +61,8 @@
 #  define __MPLS_INODE64(sym) __DARWIN_ALIAS(sym)
 #endif
 
+#define __MPLS_ALIAS(sym) __DARWIN_ALIAS(sym)
+
 /* Declare alternative names for the underlying functions for use by the wrappers */
 /* Note: Each __MPLS_ALIAS* macro must match the corresponding __DARWIN_ALIAS* in system <dirent.h> */
 DIR *__mpls_libc_opendir(const char *name) __MPLS_ALIAS_I(opendir);
