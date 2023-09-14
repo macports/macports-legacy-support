@@ -47,18 +47,26 @@
 #undef seekdir
 #undef telldir
 
-/* Fallback to __DARWIN_ALIAS if the other variants are not defined (?) */
-/* Note: I don't know if this makes sense */
-#ifdef __DARWIN_ALIAS_I
-#  define __MPLS_ALIAS_I(sym) __DARWIN_ALIAS_I(sym)
-#else
-#  define __MPLS_ALIAS_I(sym) __DARWIN_ALIAS(sym)
+#ifndef __MPLS_ALIAS
+#  define __MPLS_ALIAS(sym) __DARWIN_ALIAS(sym)
 #endif
 
-#ifdef __DARWIN_INODE64
-#  define __MPLS_INODE64(sym) __DARWIN_INODE64(sym)
-#else
-#  define __MPLS_INODE64(sym) __DARWIN_ALIAS(sym)
+/* Fallback to __DARWIN_ALIAS if the other variants are not defined (?) */
+/* Note: I don't know if this makes sense */
+#ifndef __MPLS_ALIAS_I
+#  ifdef __DARWIN_ALIAS_I
+#    define __MPLS_ALIAS_I(sym) __DARWIN_ALIAS_I(sym)
+#  else
+#    define __MPLS_ALIAS_I(sym) __DARWIN_ALIAS(sym)
+#  endif
+#endif
+
+#ifndef __MPLS_INODE64
+#  ifdef __DARWIN_INODE64
+#    define __MPLS_INODE64(sym) __DARWIN_INODE64(sym)
+#  else
+#    define __MPLS_INODE64(sym) __DARWIN_ALIAS(sym)
+#  endif
 #endif
 
 /* Declare alternative names for the underlying functions for use by the wrappers */
