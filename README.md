@@ -41,10 +41,7 @@ Wrapped headers and replaced functions are:
   </tr>
   <tr>
     <td><code>dirent.h</code></td>
-    <td>Adds <code>fdopendir</code> function, and wraps <code>opendir</code>,
-    <code>readdir</code>, <code>readdir_r</code>, <code>rewinddir</code>,
-    <code>seekdir</code>, <code>telldir</code>, <code>dirfd</code>, and
-    <code>closedir</code>, to support <code>fdopendir</code></td>
+    <td>Adds <code>fdopendir</code> function.
     <td>OSX10.9</td>
   </tr>
   <tr>
