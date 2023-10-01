@@ -303,7 +303,7 @@ test_faccessat_setuid: test/test_faccessat
 	@test/do_test_faccessat_setuid "$(BUILDDLIBPATH)"
 
 test_faccessat_setuid_msg:
-	@echo 'Run "sudo make test_faccessat_setuid" to test faccessat properly'
+	@echo 'Run "sudo make test_faccessat_setuid" to test faccessat properly (Not on 10.4)'
 
 $(TESTRUNS): $(TESTRUNPREFIX)%: $(TESTNAMEPREFIX)%
 	$<
