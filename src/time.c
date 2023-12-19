@@ -20,9 +20,10 @@
 #if __MP_LEGACY_SUPPORT_GETTIME__
 
 #include <sys/time.h>
-#include <sys/sysctl.h>
 #include <sys/resource.h>
 
+#include <mach/clock.h>
+#include <mach/mach.h>
 #include <mach/mach_init.h>
 #include <mach/mach_port.h>
 #include <mach/mach_time.h>
@@ -46,15 +47,21 @@ int clock_gettime( clockid_t clk_id, struct timespec *ts )
     }
     else if ( CLOCK_MONOTONIC == clk_id )
     {
-      struct timeval boottime;
-      size_t boottime_len = sizeof(boottime);
-      ret = sysctlbyname("kern.boottime", &boottime, &boottime_len, NULL, 0);
-      if (ret != KERN_SUCCESS) { return ret; }
-      struct timeval tv;
-      ret = gettimeofday(&tv, NULL);
-      timersub(&tv, &boottime, &tv);
-      ts->tv_sec  = tv.tv_sec;
-      ts->tv_nsec = tv.tv_usec * 1000;
+      mach_timespec_t mts;
+      static clock_serv_t sclock = 0;
+      /*
+       * Obtain clock port on first call, then reuse it.
+       * Rely on exit cleanup to free it.
+       */
+      if ( 0 == sclock )
+      {
+        mach_port_t mach_host = mach_host_self();
+        host_get_clock_service(mach_host, SYSTEM_CLOCK, &sclock);
+        mach_port_deallocate(mach_task_self(), mach_host);
+      }
+      clock_get_time(sclock, &mts);
+      ts->tv_sec = mts.tv_sec;
+      ts->tv_nsec = mts.tv_nsec;
       ret = 0;
     }
     else if ( CLOCK_PROCESS_CPUTIME_ID == clk_id )
