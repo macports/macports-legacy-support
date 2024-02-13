@@ -84,7 +84,7 @@ FIND_LIBHEADERS := find $(SRCINCDIR) -type f \( -name '*.h' -o \
 LIBHEADERS      := $(shell $(FIND_LIBHEADERS))
 ALLHEADERS      := $(LIBHEADERS) $(wildcard $(SRCDIR)/*.h)
 
-MULTISRCS       := # Used to have $(SRCDIR)/fdopendir.c because it used struct stat
+MULTISRCS       := $(SRCDIR)/fdopendir.c
 ADDSRCS         := $(SRCDIR)/add_symbols.c
 LIBSRCS         := $(filter-out $(MULTISRCS) $(ADDSRCS),$(wildcard $(SRCDIR)/*.c))
 
