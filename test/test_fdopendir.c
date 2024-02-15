@@ -28,12 +28,32 @@
 
 #define FEEDBACK 1
 
+/* Test expected failure case */
+
+int check_failure(int fd, const char *name, const char *exp_sym, int exp_val)
+{
+    DIR *dir;
+
+    if ((dir = fdopendir(fd))) {
+        fprintf(stderr, "error: fdopendir(%s) should have failed\n", name);
+        (void)closedir(dir);
+        return 1;
+    } else if (errno != exp_val) {
+    fprintf(stderr, "error: fdopendir(%s) failure should have returned"
+                    " %d (%s), actually returned %d (%s)\n",
+                    name, exp_val, exp_sym, errno, strerror(errno));
+        return 1;
+    }
+    return 0;
+}
+
 int main() {
     struct stat st;
     struct dirent *entry;
     int dfd = -1;
     DIR *dir;
     char *first_entry = NULL;
+    int err;
 
     /* Test fdopendir with a valid directory fd, then use readdir */
 
@@ -174,36 +194,18 @@ int main() {
 
     /* Try to use fdopendir with stdin - Should fail with ENOTDIR */
 
-    if ((dir = fdopendir(STDIN_FILENO))) {
-        fprintf(stderr, "error: fdopendir(stdin) should have failed\n");
-        (void)closedir(dir);
-        return 1;
-    } else if (errno != ENOTDIR) {
-        perror("error: fdopendir(stdin) should have failed with ENOTDIR");
-        return 1;
-    }
+    err = check_failure(STDIN_FILENO, "stdin", "ENOTDIR", ENOTDIR);
+    if (err) return 1;
 
     /* Try to use fdopendir with -1 - Should fail with EBADF */
 
-    if ((dir = fdopendir(-1))) {
-        fprintf(stderr, "error: fdopendir(-1) should have failed\n");
-        (void)closedir(dir);
-        return 1;
-    } else if (errno != EBADF) {
-        perror("error: fdopendir(-1) should have failed with EBADF");
-        return 1;
-    }
+    err = check_failure(-1, "-1", "EBADF", EBADF);
+    if (err) return 1;
 
     /* Try to use fdopendir with AT_FDCWD - Should fail with EBADF */
 
-    if ((dir = fdopendir(AT_FDCWD))) {
-        fprintf(stderr, "error: fdopendir(AT_FDCWD) should have failed\n");
-        (void)closedir(dir);
-        return 1;
-    } else if (errno != EBADF) {
-        perror("error: fdopendir(AT_FDCWD) should have failed with EBADF");
-        return 1;
-    }
+    err = check_failure(AT_FDCWD, "AT_FDCWD", "EBADF", EBADF);
+    if (err) return 1;
 
     return 0;
 }
