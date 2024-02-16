@@ -24,6 +24,10 @@
 
 #include <dirent.h>
 
+#if __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1050
+#define __dd_fd dd_fd
+#endif /* __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1050 */
+
 /*
  * Implementation behavior largely follows these man page descriptions:
  *
@@ -51,13 +55,8 @@ DIR *fdopendir(int dirfd) {
      * A subsequent closedir() will close dirfd
      */
 
-    #if __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ == 1040
-    (void)close(dir->dd_fd);
-    dir->dd_fd = dirfd;
-    #else
     (void)close(dir->__dd_fd);
     dir->__dd_fd = dirfd;
-    #endif
 
     /*
      * Rewind to the start of the directory, in case the underlying file
