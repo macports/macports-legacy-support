@@ -54,6 +54,7 @@ int main() {
     DIR *dir;
     char *first_entry = NULL;
     int err;
+    int pipefds[2];
 
     /* Test fdopendir with a valid directory fd, then use readdir */
 
@@ -205,6 +206,28 @@ int main() {
     /* Try to use fdopendir with AT_FDCWD - Should fail with EBADF */
 
     err = check_failure(AT_FDCWD, "AT_FDCWD", "EBADF", EBADF);
+    if (err) return 1;
+
+    /*
+     * Try to use fdopendir with pipe - Should fail with ENOTDIR
+     *
+     * This reproduces the stdin test failure seen when running the test via
+     * a pipe, rather than a tty or pty.
+     */
+
+    if (pipe(pipefds) < 0) {
+        perror("Unable to create pipe for pipe test");
+        return 1;
+    }
+    (void) close(pipefds[1]);  /* Close the writing side immediately */
+
+    err = check_failure(pipefds[0], "pipe", "ENOTDIR", ENOTDIR);
+    (void) close(pipefds[0]);
+    if (err) return 1;
+
+    /* Also try with closed pipe - Should fail with EBADF */
+
+    err = check_failure(pipefds[0], "closed", "EBADF", EBADF);
     if (err) return 1;
 
     return 0;
