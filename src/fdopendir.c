@@ -23,6 +23,7 @@
 #include "common-priv.h"
 
 #include <dirent.h>
+#include <sys/stat.h>
 
 #if __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1050
 #define __dd_fd dd_fd
@@ -36,19 +37,26 @@
  */
 
 DIR *fdopendir(int dirfd) {
+    DIR *dir;
+    struct stat dirstat;
 
-    /* Check dirfd here (for macos-10.4, see _ATCALL() and best_fchdir()) */
+    /* Fail if dirfd isn't a valid open fd */
+    if (fstat(dirfd, &dirstat) < 0) {
+        return NULL;
+    }
 
-    if (dirfd < 0) {
-        errno = EBADF;
-        return 0;
+    /* Fail if dirfd isn't a directory */
+    if (!S_ISDIR(dirstat.st_mode)) {
+        errno = ENOTDIR;
+        return NULL;
     }
 
     /* Open given directory fd safely for iteration via readdir */
 
-    DIR *dir = _ATCALL(dirfd, ".", NULL, opendir("."));
-    if (!dir)
-        return 0;
+    dir = _ATCALL(dirfd, ".", NULL, opendir("."));
+    if (!dir) {
+        return NULL;
+    }
 
     /*
      * Replace underlying fd with supplied dirfd
