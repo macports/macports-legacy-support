@@ -26,8 +26,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#define FEEDBACK 1
-
 /* Test expected failure case */
 
 int check_failure(int fd, const char *name, const char *exp_sym, int exp_val)
@@ -87,7 +85,7 @@ int main() {
             return 1;
         }
 
-#if FEEDBACK
+#ifdef FEEDBACK
         printf("%s\n", entry->d_name);
 #endif
     }
