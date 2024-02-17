@@ -1,7 +1,5 @@
-test_arc4random
-test_cmath_cxx03
-test_cmath_cxx11
-test_realpath
-test_sysconf
-test_time
-test_wcscasecmp
+*
+!*.c
+!*.cc
+!*.cpp
+!do_test_faccessat_setuid
