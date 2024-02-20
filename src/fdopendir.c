@@ -46,7 +46,10 @@ DIR *fdopendir(int dirfd) {
     if (!dir)
         return 0;
 
-    /* Replace underlying fd with equivalent given fd (closed by closedir) */
+    /*
+     * Replace underlying fd with supplied dirfd
+     * A subsequent closedir() will close dirfd
+     */
 
     #if __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ == 1040
     (void)close(dir->dd_fd);
@@ -56,11 +59,14 @@ DIR *fdopendir(int dirfd) {
     dir->__dd_fd = dirfd;
     #endif
 
-    /* Rewind to the start of the directory (in case it's not there already) */
+    /*
+     * Rewind to the start of the directory, in case the underlying file
+     * is not positioned at the start
+     */
 
     rewinddir(dir);
 
-    /* Close given fd on exec (just in case not already done) */
+    /* Close given fd on exec (as per fdopendir() docs) */
 
     (void)fcntl(dirfd, F_SETFD, FD_CLOEXEC);
 
