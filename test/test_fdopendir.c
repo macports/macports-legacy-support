@@ -90,7 +90,14 @@ int main() {
 #endif
     }
 
-    /* Test wrapper functions/macros (all but readdir_r which is deprecated) */
+    /*
+     * Test wrapper functions/macros (all but readdir_r which is deprecated)
+     *
+     * Although the wrapper functions that these tests were originally
+     * intended for no longer exist, these same tests are also used to
+     * check the transparent wrappers added for compatibility with old
+     * client builds.
+     */
 
     int dfd2 = dirfd(dir);
     if (dfd2 != dfd) {
