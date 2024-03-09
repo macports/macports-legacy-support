@@ -21,7 +21,13 @@
  * wrapper calls.  For compatibility, we continue to provide those functions,
  * but just as transparent wrappers around the OS calls.
  *
- * This is only relevant for OS versions where our fdoopendir() is needed,
+ * These wrappers can eventually be removed once all dependents have been
+ * rebuilt with the current headers.  But since there would be significant
+ * work in determining when this is the case, and since they only add 752
+ * bytes to the library size, they should probably be left in place for a
+ * long time.
+ *
+ * This is only relevant for OS versions where our fdopendir() is needed,
  * hence the conditional (which is the same conditional as was used for
  * the earlier implementations).
  */
