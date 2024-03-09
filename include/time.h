@@ -85,7 +85,7 @@ extern int clock_getres ( clockid_t clk_id, struct timespec *ts );
 
 __MP__END_DECLS
 
-#endif /* _MP_LEGACY_SUPPORT_GETTIME__ */
+#endif /* __MP_LEGACY_SUPPORT_GETTIME__ */
 
 /* Legacy implementation of timespec */
 #if __MP_LEGACY_SUPPORT_TIMESPEC_GET__
