@@ -58,6 +58,9 @@
 /* <net/if.h> include <sys/socket.h> */
 #define __MP_LEGACY_SUPPORT_NETIF_SOCKET_FIX__  (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1090)
 
+/* CMSG_DATA definition in <sys/socket.h> */
+#define __MP_LEGACY_SUPPORT_CMSG_DATA_FIX__  (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1060)
+
 /* strnlen */
 #define __MP_LEGACY_SUPPORT_STRNLEN__         (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1070)
 
