@@ -92,10 +92,13 @@
 #define __MP_LEGACY_SUPPORT_SYSCONF_WRAP_NEED_SC_NPROCESSORS_ONLN__ 1
 #endif
 
+/* The OS-provided version of this item doesn't work properly on i386 */
+#if !defined(_SC_PHYS_PAGES) || defined (__i386__)
 #ifndef _SC_PHYS_PAGES
 #define _SC_PHYS_PAGES 200
-#define __MP_LEGACY_SUPPORT_SYSCONF_WRAP_NEED_SC_PHYS_PAGES__ 1
 #endif
+#define __MP_LEGACY_SUPPORT_SYSCONF_WRAP_NEED_SC_PHYS_PAGES__ 1
+#endif /* !defined(_SC_PHYS_PAGES) || defined (__i386__) */
 
 #if __MP_LEGACY_SUPPORT_FSETATTRLIST__
 

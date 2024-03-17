@@ -118,8 +118,9 @@
 /* sys/aio.h header needs adjustment to match newer SDKs */
 #define __MP_LEGACY_SUPPORT_SYSAIOTIGERFIX__  (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1050)
 
-/*  sysconf() is missing some functions on some systems */
-#define __MP_LEGACY_SUPPORT_SYSCONF_WRAP__    (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 101100)
+/*  sysconf() is missing some functions on some systems, and may misbehave on i386 */
+#define __MP_LEGACY_SUPPORT_SYSCONF_WRAP__    (__APPLE__ && (__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 101100 \
+                                                             || defined(__i386)))
 
 /* pthread_rwlock_initializer is not defined on Tiger */
 #define __MP_LEGACY_SUPPORT_PTHREAD_RWLOCK__  (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1050)
