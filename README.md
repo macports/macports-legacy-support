@@ -168,6 +168,11 @@ Wrapped headers and replaced functions are:
     <td>OSX10.11</td>
   </tr>
   <tr>
+    <td><code>sys/socket.h</code></td>
+    <td>Corrects <code>CMSG_DATA</code> definition</td>
+    <td>OSX10.5</td>
+  </tr>
+  <tr>
     <td><code>sys/time.h</code></td>
     <td>Adds <code>lutimes</code> function</td>
     <td>OSX10.4</td>
