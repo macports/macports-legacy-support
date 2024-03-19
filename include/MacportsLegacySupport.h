@@ -33,7 +33,9 @@
 /* foundational defs, used later */
 
 #if defined(__i386)
-#define __MP_LEGACY_SUPPORT_I386__
+#define __MP_LEGACY_SUPPORT_I386__            1
+#else
+#define __MP_LEGACY_SUPPORT_I386__            0
 #endif
 
 /* defines for when legacy support is required for various functions */
