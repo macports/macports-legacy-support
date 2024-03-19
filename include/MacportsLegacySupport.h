@@ -30,6 +30,12 @@
 #define	__MP__END_DECLS
 #endif
 
+/* foundational defs, used later */
+
+#if defined(__i386)
+#define __MP_LEGACY_SUPPORT_I386__
+#endif
+
 /* defines for when legacy support is required for various functions */
 
 /* fsgetpath */
@@ -123,7 +129,7 @@
 
 /*  sysconf() is missing some functions on some systems, and may misbehave on i386 */
 #define __MP_LEGACY_SUPPORT_SYSCONF_WRAP__    (__APPLE__ && (__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 101100 \
-                                                             || defined(__i386)))
+                                                             || __MP_LEGACY_SUPPORT_I386__))
 
 /* pthread_rwlock_initializer is not defined on Tiger */
 #define __MP_LEGACY_SUPPORT_PTHREAD_RWLOCK__  (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1050)
