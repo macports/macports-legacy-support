@@ -61,3 +61,23 @@ extern const char clock_gettime_tmp9 __asm("$ld$add$os10.9$_clock_gettime"); __a
 extern const char clock_gettime_tmp10 __asm("$ld$add$os10.10$_clock_gettime"); __attribute__((visibility("default"))) const char clock_gettime_tmp10 = 0;
 extern const char clock_gettime_tmp11 __asm("$ld$add$os10.11$_clock_gettime"); __attribute__((visibility("default"))) const char clock_gettime_tmp11 = 0;
 #endif
+
+#if !(__MP_LEGACY_SUPPORT_SYMBOL____bzero__)
+extern const char __bzero_tmp4 __asm("$ld$add$os10.4$___bzero"); __attribute__((visibility("default"))) const char __bzero_tmp4 = 0;
+extern const char __bzero_tmp5 __asm("$ld$add$os10.5$___bzero"); __attribute__((visibility("default"))) const char __bzero_tmp5 = 0;
+#endif
+
+#if !(__MP_LEGACY_SUPPORT_SYMBOL__dirfd__)
+extern const char dirfd_tmp4 __asm("$ld$add$os10.4$_dirfd"); __attribute__((visibility("default"))) const char dirfd_tmp4 = 0;
+extern const char dirfd_tmp5 __asm("$ld$add$os10.5$_dirfd"); __attribute__((visibility("default"))) const char dirfd_tmp5 = 0;
+extern const char dirfd_tmp6 __asm("$ld$add$os10.6$_dirfd"); __attribute__((visibility("default"))) const char dirfd_tmp6 = 0;
+extern const char dirfd_tmp7 __asm("$ld$add$os10.7$_dirfd"); __attribute__((visibility("default"))) const char dirfd_tmp7 = 0;
+#endif
+
+#if !(__MP_LEGACY_SUPPORT_ATCALLS__)
+extern const char fstatat$INODE64_tmp5 __asm("$ld$add$os10.5$_fstatat$INODE64"); __attribute__((visibility("default"))) const char fstatat$INODE64_tmp5 = 0;
+extern const char fstatat$INODE64_tmp6 __asm("$ld$add$os10.6$_fstatat$INODE64"); __attribute__((visibility("default"))) const char fstatat$INODE64_tmp6 = 0;
+extern const char fstatat$INODE64_tmp7 __asm("$ld$add$os10.7$_fstatat$INODE64"); __attribute__((visibility("default"))) const char fstatat$INODE64_tmp7 = 0;
+extern const char fstatat$INODE64_tmp8 __asm("$ld$add$os10.8$_fstatat$INODE64"); __attribute__((visibility("default"))) const char fstatat$INODE64_tmp8 = 0;
+extern const char fstatat$INODE64_tmp9 __asm("$ld$add$os10.9$_fstatat$INODE64"); __attribute__((visibility("default"))) const char fstatat$INODE64_tmp9 = 0;
+#endif

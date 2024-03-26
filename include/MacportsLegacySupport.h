@@ -192,4 +192,10 @@
 /* os_unfair_lock structure and its associated functions */
 #define __MP_LEGACY_SUPPORT_OS_UNFAIR_LOCK__  (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 101200)
 
+/* library symbol ___bzero */
+#define __MP_LEGACY_SUPPORT_SYMBOL____bzero__  (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1060)
+
+/* library symbol _dirfd */
+#define __MP_LEGACY_SUPPORT_SYMBOL__dirfd__  (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1080)
+
 #endif /* _MACPORTS_LEGACYSUPPORTDEFS_H_ */

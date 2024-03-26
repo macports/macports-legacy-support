@@ -221,6 +221,21 @@ Wrapped headers and replaced functions are:
         <code>TARGET_OS_WATCH</code> and <code>TARGET_OS_OSX</code> if needed.</td>
     <td>OSX10.10</td>
   </tr>
+  <tr>
+    <td><code>-</code></td>
+    <td>Adds <code>__bzero</code> library symbol</td>
+    <td>OSX10.5</td>
+  </tr>
+  <tr>
+    <td><code>-</code></td>
+    <td>Adds <code>_dirfd</code> library symbol</td>
+    <td>OSX10.7</td>
+  </tr>
+  <tr>
+    <td><code>-</code></td>
+    <td>Adds <code>_fstatat$INODE64</code> library symbol</td>
+    <td>OSX10.9</td>
+  </tr>
 </table>
 
 For information on building this library outside MacPorts, see BUILDING.txt.
