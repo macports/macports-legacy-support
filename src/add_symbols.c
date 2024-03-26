@@ -39,3 +39,25 @@ extern const char __cxa_thread_atexit_tmp4 __asm("$ld$add$os10.4$___cxa_thread_a
 extern const char __cxa_thread_atexit_tmp5 __asm("$ld$add$os10.5$___cxa_thread_atexit"); __attribute__((visibility("default"))) const char __cxa_thread_atexit_tmp5 = 0;
 extern const char __cxa_thread_atexit_tmp6 __asm("$ld$add$os10.6$___cxa_thread_atexit"); __attribute__((visibility("default"))) const char __cxa_thread_atexit_tmp6 = 0;
 #endif
+
+#if !(__MP_LEGACY_SUPPORT_GETENTROPY__)
+extern const char getentropy_tmp4 __asm("$ld$add$os10.4$_getentropy"); __attribute__((visibility("default"))) const char getentropy_tmp4 = 0;
+extern const char getentropy_tmp5 __asm("$ld$add$os10.5$_getentropy"); __attribute__((visibility("default"))) const char getentropy_tmp5 = 0;
+extern const char getentropy_tmp6 __asm("$ld$add$os10.6$_getentropy"); __attribute__((visibility("default"))) const char getentropy_tmp6 = 0;
+extern const char getentropy_tmp7 __asm("$ld$add$os10.7$_getentropy"); __attribute__((visibility("default"))) const char getentropy_tmp7 = 0;
+extern const char getentropy_tmp8 __asm("$ld$add$os10.8$_getentropy"); __attribute__((visibility("default"))) const char getentropy_tmp8 = 0;
+extern const char getentropy_tmp9 __asm("$ld$add$os10.9$_getentropy"); __attribute__((visibility("default"))) const char getentropy_tmp9 = 0;
+extern const char getentropy_tmp10 __asm("$ld$add$os10.10$_getentropy"); __attribute__((visibility("default"))) const char getentropy_tmp10 = 0;
+extern const char getentropy_tmp11 __asm("$ld$add$os10.11$_getentropy"); __attribute__((visibility("default"))) const char getentropy_tmp11 = 0;
+#endif
+
+#if !(__MP_LEGACY_SUPPORT_GETTIME__)
+extern const char clock_gettime_tmp4 __asm("$ld$add$os10.4$_clock_gettime"); __attribute__((visibility("default"))) const char clock_gettime_tmp4 = 0;
+extern const char clock_gettime_tmp5 __asm("$ld$add$os10.5$_clock_gettime"); __attribute__((visibility("default"))) const char clock_gettime_tmp5 = 0;
+extern const char clock_gettime_tmp6 __asm("$ld$add$os10.6$_clock_gettime"); __attribute__((visibility("default"))) const char clock_gettime_tmp6 = 0;
+extern const char clock_gettime_tmp7 __asm("$ld$add$os10.7$_clock_gettime"); __attribute__((visibility("default"))) const char clock_gettime_tmp7 = 0;
+extern const char clock_gettime_tmp8 __asm("$ld$add$os10.8$_clock_gettime"); __attribute__((visibility("default"))) const char clock_gettime_tmp8 = 0;
+extern const char clock_gettime_tmp9 __asm("$ld$add$os10.9$_clock_gettime"); __attribute__((visibility("default"))) const char clock_gettime_tmp9 = 0;
+extern const char clock_gettime_tmp10 __asm("$ld$add$os10.10$_clock_gettime"); __attribute__((visibility("default"))) const char clock_gettime_tmp10 = 0;
+extern const char clock_gettime_tmp11 __asm("$ld$add$os10.11$_clock_gettime"); __attribute__((visibility("default"))) const char clock_gettime_tmp11 = 0;
+#endif
