@@ -31,6 +31,7 @@ void __bzero(void *s, size_t n) { bzero(s, n); }
 #if __MP_LEGACY_SUPPORT_SYMBOL__dirfd__
 #include <dirent.h>
 #include <errno.h>
+#include <stddef.h>
 /*
 The need for this function is highly limited.
 Prior to 10.8, `dirfd` was a macro`.
