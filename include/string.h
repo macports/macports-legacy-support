@@ -24,6 +24,13 @@
 /* Include the primary system string.h */
 #include_next <string.h>
 
+/* stpncpy */
+#if __MP_LEGACY_SUPPORT_STPNCPY__
+__MP__BEGIN_DECLS
+extern char *stpncpy(char *dst, const char *src, size_t n);
+__MP__END_DECLS
+#endif
+
 /* strnlen */
 #if __MP_LEGACY_SUPPORT_STRNLEN__
 __MP__BEGIN_DECLS
