@@ -86,7 +86,7 @@ Wrapped headers and replaced functions are:
   </tr>
   <tr>
     <td><code>string.h</code></td>
-    <td>Adds <code>strnlen</code>, <code>strndup</code> and <code>memmem</code> functions</td>
+    <td>Adds <code>stpncpy</code>, <code>strnlen</code>, <code>strndup</code> and <code>memmem</code> functions</td>
     <td>OSX10.6</td>
   </tr>
   <tr>
