@@ -44,11 +44,9 @@ BUILDSYSLIBFLAGS = -dynamiclib -headerpad_max_install_names \
                    -install_name @executable_path/../$(BUILDSYSLIBPATH) \
                    -current_version $(SOCURVERSION) \
                    -compatibility_version $(SOCOMPATVERSION)
-SYSREEXPORTFLAG  = -Wl,-reexport_library /usr/lib/libSystem.B.dylib
+SYSREEXPORTFLAG  = -Wl,-reexport_library,/usr/lib/libSystem.B.dylib
 BUILDSLIBFLAGS   = -qs
 POSTINSTALL      = install_name_tool
-
-MAX_DARWIN_REEXPORT ?= 19
 
 FORCE_ARCH      ?=
 ARCHFLAGS       ?=
@@ -255,12 +253,9 @@ $(BUILDDLIBPATH): $(DLIBOBJS) $(MULTIDLIBOBJS)
 	$(MKINSTALLDIRS) $(BUILDDLIBDIR)
 	$(CC) $(BUILDDLIBFLAGS) $(LDFLAGS) $^ -o $@
 
-# Wrapped libSystem relies on reexport which does not work on Darwin20+
 $(BUILDSYSLIBPATH): $(DLIBOBJS) $(MULTIDLIBOBJS) $(ADDOBJS)
-ifeq ($(shell test $(PLATFORM) -le $(MAX_DARWIN_REEXPORT); echo $$?),0)
 	$(MKINSTALLDIRS) $(BUILDDLIBDIR)
 	$(CC) $(BUILDSYSLIBFLAGS) $(LDFLAGS) $(SYSREEXPORTFLAG) $^ -o $@
-endif
 
 $(BUILDSLIBPATH): $(SLIBOBJS) $(MULTISLIBOBJS)
 	$(MKINSTALLDIRS) $(BUILDSLIBDIR)
@@ -325,11 +320,9 @@ install-dlib: $(BUILDDLIBPATH)
 	$(POSTINSTALL) -id $(DLIBPATH) $(DESTDIR)$(DLIBPATH)
 
 install-syslib: $(BUILDSYSLIBPATH)
-ifeq ($(shell test $(PLATFORM) -le $(MAX_DARWIN_REEXPORT); echo $$?),0)
 	$(MKINSTALLDIRS) $(DESTDIR)$(LIBDIR)
 	$(INSTALL_PROGRAM) $(BUILDSYSLIBPATH) $(DESTDIR)$(LIBDIR)
 	$(POSTINSTALL) -id $(SYSLIBPATH) $(DESTDIR)$(SYSLIBPATH)
-endif
 
 install-slib: $(BUILDSLIBPATH)
 	$(MKINSTALLDIRS) $(DESTDIR)$(LIBDIR)
