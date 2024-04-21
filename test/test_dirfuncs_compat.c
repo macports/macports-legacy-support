@@ -35,6 +35,7 @@
 #define seekdir     __mpls_seekdir
 #define rewinddir   __mpls_rewinddir
 #define closedir    __mpls_closedir
+#undef dirfd
 #define dirfd       __mpls_dirfd
 
 #include "test_fdopendir.c"
