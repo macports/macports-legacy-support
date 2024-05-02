@@ -27,6 +27,7 @@
 /* stpncpy */
 #if __MP_LEGACY_SUPPORT_STPNCPY__
 __MP__BEGIN_DECLS
+#undef stpncpy  /* In case built with later SDK */
 extern char *stpncpy(char *dst, const char *src, size_t n);
 __MP__END_DECLS
 #endif
