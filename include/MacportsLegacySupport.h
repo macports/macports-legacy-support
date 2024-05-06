@@ -201,4 +201,11 @@
 /* library symbol _dirfd */
 #define __MP_LEGACY_SUPPORT_SYMBOL__dirfd__  (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1080)
 
+/* fix bug in pthread_get_stacksize_np */
+/* see https://github.com/rust-lang/rust/issues/43347 */
+#define __MP_LEGACY_SUPPORT_PTHREAD_GET_STACKSIZE_NP_FIX__ (__APPLE__ && ( \
+                                                            __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ == 101000 || \
+                                                            __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ == 1090 || \
+                                                            __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ <  1060 ))
+
 #endif /* _MACPORTS_LEGACYSUPPORTDEFS_H_ */

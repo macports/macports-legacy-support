@@ -236,6 +236,11 @@ Wrapped headers and replaced functions are:
     <td>Adds <code>_fstatat$INODE64</code> library symbol</td>
     <td>OSX10.9</td>
   </tr>
+  <tr>
+    <td><code>-</code></td>
+    <td>Provides a workaround for bug in <code>pthread_get_stacksize_np</code></td>
+    <td>OSX10.4, OSX10.5, OSX10.9, OSX10.10</td>
+  </tr>
 </table>
 
 For information on building this library outside MacPorts, see BUILDING.txt.
