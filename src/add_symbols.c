@@ -81,3 +81,10 @@ extern const char fstatat$INODE64_tmp7 __asm("$ld$add$os10.7$_fstatat$INODE64");
 extern const char fstatat$INODE64_tmp8 __asm("$ld$add$os10.8$_fstatat$INODE64"); __attribute__((visibility("default"))) const char fstatat$INODE64_tmp8 = 0;
 extern const char fstatat$INODE64_tmp9 __asm("$ld$add$os10.9$_fstatat$INODE64"); __attribute__((visibility("default"))) const char fstatat$INODE64_tmp9 = 0;
 #endif
+
+#if !(__MP_LEGACY_SUPPORT_PTHREAD_GET_STACKSIZE_NP_FIX__)
+extern const char pthread_get_stacksize_np_tmp4 __asm("$ld$add$os10.4$_pthread_get_stacksize_np"); __attribute__((visibility("default"))) const char pthread_get_stacksize_np_tmp4 = 0;
+extern const char pthread_get_stacksize_np_tmp5 __asm("$ld$add$os10.5$_pthread_get_stacksize_np"); __attribute__((visibility("default"))) const char pthread_get_stacksize_np_tmp5 = 0;
+extern const char pthread_get_stacksize_np_tmp9 __asm("$ld$add$os10.9$_pthread_get_stacksize_np"); __attribute__((visibility("default"))) const char pthread_get_stacksize_np_tmp9 = 0;
+extern const char pthread_get_stacksize_np_tmp10 __asm("$ld$add$os10.10$_pthread_get_stacksize_np"); __attribute__((visibility("default"))) const char pthread_get_stacksize_np_tmp10 = 0;
+#endif
