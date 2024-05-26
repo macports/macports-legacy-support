@@ -21,19 +21,25 @@
  * @APPLE_LICENSE_HEADER_END@
  */
 
- /*
+/*
  * NOTICE: This file was modified in April 2024 to allow
  * for use as a supporting file for MacPorts legacy support library. This notice
  * is included in support of clause 2.2 (b) of the Apple Public License,
  * Version 2.0.
  *
  * The code is almost verbatim from Apple except for the removal of the
- * 'restrict' qualifiers for compatibility with pre-C99 compilers.
+ * 'restrict' qualifiers for compatibility with pre-C99 compilers, and
+ * the _FORTIFY_SOURCE definition here in lieu of including it as a
+ * compiler flag (as the Apple build procedure does).
  */
 
 /* MP support header */
 #include "MacportsLegacySupport.h"
 #if __MP_LEGACY_SUPPORT_STPNCPY__
+
+/* Ensure that we don't use the wrapper macro when defining the function */
+#undef _FORTIFY_SOURCE
+#define _FORTIFY_SOURCE 0
 
 #include <string.h>
 
