@@ -328,6 +328,9 @@ test_faccessat_setuid_msg:
 $(TESTRUNS): $(TESTRUNPREFIX)%: $(TESTNAMEPREFIX)%
 	$<
 
+# The "dirfuncs_compat" test includes the fdopendir test source
+$(TESTNAMEPREFIX)dirfuncs_compat.o: $(TESTNAMEPREFIX)fdopendir.c
+
 # The "forced" tests include the unforced source
 $(TESTNAMEPREFIX)stpncpy_chk_forced.o: $(TESTNAMEPREFIX)stpncpy_chk.c
 $(TESTNAMEPREFIX)stpncpy_chk_force0.o: $(TESTNAMEPREFIX)stpncpy_chk.c
