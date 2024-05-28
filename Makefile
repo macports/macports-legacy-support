@@ -303,6 +303,10 @@ test_faccessat_setuid_msg:
 $(TESTRUNS): $(TESTRUNPREFIX)%: $(TESTNAMEPREFIX)%
 	$<
 
+# The "forced" tests include the unforced source
+$(TESTNAMEPREFIX)stpncpy_chk_forced.o: $(TESTNAMEPREFIX)stpncpy_chk.c
+$(TESTNAMEPREFIX)stpncpy_chk_force1.o: $(TESTNAMEPREFIX)stpncpy_chk.c
+
 install: install-headers install-lib
 
 install-headers:
