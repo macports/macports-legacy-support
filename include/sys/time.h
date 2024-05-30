@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2020
  *
@@ -21,7 +20,7 @@
 /* MP support header */
 #include "MacportsLegacySupport.h"
 
-/* Include the primary system time.h */
+/* Include the primary system sys/time.h */
 #include_next <sys/time.h>
 
 #if __MP_LEGACY_SUPPORT_LUTIMES__

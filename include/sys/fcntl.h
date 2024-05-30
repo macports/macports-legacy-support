@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2018 Chris Jones <jonesc@macports.org>
  *
@@ -21,7 +20,7 @@
 /* MP support header */
 #include "MacportsLegacySupport.h"
 
-/* Include the primary system fcntl.h */
+/* Include the primary system sys/fcntl.h */
 #include_next <sys/fcntl.h>
 
 /* replace missing O_CLOEXEC definition with 0, which works

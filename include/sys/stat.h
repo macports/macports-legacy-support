@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2018 Chris Jones <jonesc@macports.org>
  *
@@ -21,7 +20,7 @@
 /* MP support header */
 #include "MacportsLegacySupport.h"
 
-/* Include the primary system stat.h */
+/* Include the primary system sys/stat.h */
 #include_next <sys/stat.h>
 
 #if __MP_LEGACY_SUPPORT_UTIMENSAT__

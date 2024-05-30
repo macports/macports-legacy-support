@@ -29,4 +29,5 @@
 #endif
 #endif
 
+/* Include the primary system IOKit/usb/USB.h */
 #include_next <IOKit/usb/USB.h>
