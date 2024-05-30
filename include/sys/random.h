@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2021
  *
@@ -21,7 +20,7 @@
 /* MP support header */
 #include "MacportsLegacySupport.h"
 
-/* Include the primary system random.h */
+/* Include the primary system sys/random.h */
 #include_next <sys/random.h>
 
 #if __MP_LEGACY_SUPPORT_GETENTROPY__

@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2018 Chris Jones <jonesc@macports.org>
  * Copyright (c) 2018
@@ -22,7 +21,7 @@
 /* MP support header */
 #include "MacportsLegacySupport.h"
 
-/* Include the primary system time.h */
+/* Include the primary system stdio.h */
 #include_next <stdio.h>
 
 /* dprintf */

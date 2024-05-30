@@ -80,6 +80,7 @@
 /* MP support header */
 #include "MacportsLegacySupport.h"
 
+/* Include the primary system unistd.h */
 #include_next <unistd.h>
 
 #ifndef _SC_NPROCESSORS_CONF

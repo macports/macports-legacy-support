@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2020 Chris Jones <jonesc@macports.org>
  *
@@ -21,7 +20,7 @@
 /* MP support header */
 #include "MacportsLegacySupport.h"
 
-/* Include the primary system string.h */
+/* Include the primary system strings.h */
 #include_next <strings.h>
 
 /* ffsl */

@@ -32,6 +32,7 @@
 #  endif
 #endif
 
+/* Include the primary system OpenGL/gliDispatch.h */
 #include_next <OpenGL/gliDispatch.h>
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED < 1070

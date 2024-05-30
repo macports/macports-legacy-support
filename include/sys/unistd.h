@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2018 Chris Jones <jonesc@macports.org>
  *
@@ -21,7 +20,7 @@
 /* MP support header */
 #include "MacportsLegacySupport.h"
 
-/* Include the primary system unistd.h */
+/* Include the primary system sys/unistd.h */
 #include_next <sys/unistd.h>
 
 /* For types such as uint32_t. */
