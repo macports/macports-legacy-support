@@ -18,6 +18,10 @@
 
 /* MP support header */
 #include "MacportsLegacySupport.h"
+
+/* Do our SDK-related setup */
+#include <_macports_extras/sdkversion.h>
+
 #if __MP_LEGACY_SUPPORT_FDOPENDIR__
 
 #include "common-priv.h"
@@ -25,9 +29,9 @@
 #include <dirent.h>
 #include <sys/stat.h>
 
-#if __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1050
+#if __MPLS_PRE_10_5_SDK
 #define __dd_fd dd_fd
-#endif /* __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1050 */
+#endif /* __MPLS_PRE_10_5_SDK */
 
 /*
  * Implementation behavior largely follows these man page descriptions:

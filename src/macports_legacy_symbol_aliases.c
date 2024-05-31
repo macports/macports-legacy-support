@@ -17,6 +17,9 @@
 /* MP support header */
 #include "MacportsLegacySupport.h"
 
+/* Do our SDK-related setup */
+#include <_macports_extras/sdkversion.h>
+
 #if __MP_LEGACY_SUPPORT_SYMBOL____bzero__
 #include <strings.h>
 /*
@@ -38,9 +41,9 @@ Prior to 10.8, `dirfd` was a macro`.
 The Rust compiler requires `dirfd` to be a library symbol.
 */
 #undef dirfd
-#if __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1050
+#if __MPLS_PRE_10_5_SDK
 #define __dd_fd dd_fd
-#endif /* __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1050 */
+#endif /* __MPLS_PRE_10_5_SDK */
 int dirfd(DIR *dirp)
 {
     if (dirp == NULL || dirp->__dd_fd < 0)

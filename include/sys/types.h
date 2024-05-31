@@ -64,7 +64,21 @@
  *	@(#)types.h	8.4 (Berkeley) 1/21/94
  */
 
+/*
+ * The earlier version of this header was installed unconditionally on 10.4,
+ * causing potential compatibility problems when buiding with a different SDK.
+ * This updated version is installed unconditionally on all systems, but
+ * only takes its original extra actions when building with the 10.4 SDK.
+ *
+ * The guard macro is only used when the extra actions are taking place.
+ */
+
+/* Do our SDK-related setup */
+#include <_macports_extras/sdkversion.h>
+
 #include_next <sys/types.h>
+
+#if __MPLS_PRE_10_5_SDK
 
 #ifndef _MACPORTS_SYS_TYPES_H_
 #define _MACPORTS_SYS_TYPES_H_
@@ -84,3 +98,5 @@ typedef unsigned int        uint;       /* Sys V compatibility */
 #endif
 
 #endif /* _MACPORTS_SYS_TYPES_H_ */
+
+#endif /* !__MPLS_PRE_10_5_SDK */

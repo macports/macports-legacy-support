@@ -87,6 +87,12 @@
  * in manual_tests/headerinfo.c.
  */
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1050
+#define __MPLS_PRE_10_5_SDK 1
+#else
+#define __MPLS_PRE_10_5_SDK 0
+#endif
+
 #if MAC_OS_X_VERSION_MAX_ALLOWED < 101000
 #define __MPLS_PRE_10_10_SDK 1
 #else
@@ -115,6 +121,10 @@
 #else /* !__APPLE__ */
 
 /* If non-Apple, just assume an "infinitely late" SDK */
+
+#ifndef __MPLS_PRE_10_5_SDK
+#define __MPLS_PRE_10_5_SDK 0
+#endif
 
 #ifndef __MPLS_PRE_10_10_SDK
 #define __MPLS_PRE_10_10_SDK 0
