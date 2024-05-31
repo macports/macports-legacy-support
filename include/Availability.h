@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022
+ * Copyright (c) 2024 Frederick H. G. Wright II <fw@fwright.net>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -14,34 +14,20 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef _MACPORTS_COPYFILE_H_
-#define _MACPORTS_COPYFILE_H_
-
-/* MP support header */
-#include "MacportsLegacySupport.h"
+/*
+ * This is a wrapper header for Availability.h, to handle its absence in
+ * the 10.4 SDK.  In that case, we provide a substitute; otherwise we
+ * just pass through the SDK header.
+ *
+ * We don't bother with a guard macro, since the included headers will
+ * handle that.
+ */
 
 /* Do our SDK-related setup */
 #include <_macports_extras/sdkversion.h>
 
 #if __MPLS_PRE_10_5_SDK
-
-#include <_macports_extras/tiger_only/copyfile.h>
-
-/* The replacement copyfile.h doesn't need the wrapper */
-
-#else /* !__MPLS_PRE_10_5_SDK */
-
-/* Include the primary system copyfile.h */
-#include_next <copyfile.h>
-
-#if __MP_LEGACY_SUPPORT_COPYFILE_WRAP__
-
-#define COPYFILE_STATE_STATUS_CB        6
-#define COPYFILE_STATE_STATUS_CTX       7
-#define COPYFILE_STATE_COPIED           8
-
-#endif /* __MP_LEGACY_SUPPORT_COPYFILE_WRAP__ */
-
-#endif /* !__MPLS_PRE_10_5_SDK */
-
-#endif /* _MACPORTS_COPYFILE_H_ */
+#include <_macports_extras/tiger_only/Availability.h>
+#else
+#include_next <Availability.h>
+#endif
