@@ -46,6 +46,7 @@
 #include <sys/mount.h>
 #include <sys/ucred.h>
 #include <sys/shm.h>
+#include <sys/stdio.h>  /* For renameat() */
 #include <sys/unistd.h>
 
 #include <assert.h>
