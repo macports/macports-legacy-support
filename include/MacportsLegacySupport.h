@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2018 Chris Jones <jonesc@macports.org>
  * Copyright (c) 2019 Michael Dickens <michaelld@macports.org>
@@ -19,7 +18,8 @@
 #ifndef _MACPORTS_LEGACYSUPPORTDEFS_H_
 #define _MACPORTS_LEGACYSUPPORTDEFS_H_
 
-/* Not needed -- #include "AvailabilityMacros.h" */
+/* Not needed directly -- #include <AvailabilityMacros.h> */
+/* But see <_macports_extras/sdkversion.h> */
 
 /* C++ extern definitions */
 #if defined(__cplusplus)
