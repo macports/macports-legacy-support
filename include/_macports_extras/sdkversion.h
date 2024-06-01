@@ -80,7 +80,12 @@
 
 #endif /* MAC_OS_X_VERSION_MAX_ALLOWED */
 
-/* Set up our flags here for any needed version thresholds */
+/*
+ * Set up our flags here for any needed version thresholds.
+ *
+ * All flags defined here should also provide reports of their values
+ * in manual_tests/headerinfo.c.
+ */
 
 /* Then correct our munging, if necessary */
 
