@@ -64,4 +64,4 @@ __stpncpy_chk (char *dest, const char *src,
   return stpncpy (dest, src, len);
 }
 
-#endif /* __MP_LEGACY_SUPPORT_STPNCPY__  && >= 10.5*/
+#endif /* __MP_LEGACY_SUPPORT_STPNCPY__  && >= 10.5 */
