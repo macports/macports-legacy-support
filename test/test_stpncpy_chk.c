@@ -193,11 +193,15 @@ main(int argc, char *argv[])
   /* Forking with unflushed buffers may produce duplicate output. */
   fflush(NULL);
 
+  assert(run_test_func(&test_good_stpncpy_static) == 0);
+  assert(run_test_func(&test_good_stpncpy_auto) == 0);
   if (have_compile_time_checks) {
-    assert(run_test_func(&test_good_stpncpy_static) == 0);
     assert(run_test_func(&test_bad_stpncpy_static) != 0);
-    assert(run_test_func(&test_good_stpncpy_auto) == 0);
     assert(run_test_func(&test_bad_stpncpy_auto) != 0);
+  } else {
+    assert(run_test_func(&test_bad_stpncpy_static) == 0);
+    /* Apparently the "auto" check happens even when nominally disabled. */
+    /* assert(run_test_func(&test_bad_stpncpy_auto) == 0); */
   }
   if (have_runtime_checks) {
     assert(run_test_func(&test_good_stpncpy_runtime) == 0);
