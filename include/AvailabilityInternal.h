@@ -21,10 +21,20 @@
  *
  * We don't bother with a guard macro, since the included headers will
  * handle that.
+ *
+ * We also provide a dummy definition of __has_include() when the compiler
+ * doesn't provide it and we're using a 10.14+ SDK, which uses it here
+ * without checking.  It would probably be OK to do this for all SDKs,
+ * but for safety we limit it to the relevant cases.  Note that this has
+ * to be done *before* the include_next.
  */
 
 /* Do our SDK-related setup */
 #include <_macports_extras/sdkversion.h>
+
+#if !__MPLS_PRE_10_14_SDK && !defined(__has_include)
+#define __has_include(x) 0
+#endif
 
 #if __MPLS_PRE_10_5_SDK
 #include <_macports_extras/tiger_only/AvailabilityInternal.h>
