@@ -15,6 +15,8 @@
  */
 
 /* MP support header */
+#include "MacportsLegacySupport.h"
+
 #include <math.h>
 
 #if __MP_LEGACY_SUPPORT_COSSIN__
