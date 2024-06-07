@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2018 Chris Jones <jonesc@macports.org>
  *
@@ -25,16 +24,12 @@
 #include_next <string.h>
 
 /* stpncpy */
-/*
- * If we're building with a 10.7+ SDK, stpncpy may have already been defined as
- * a macro. In that case, leave it as is.  This not only leaves it as provided
- * by the SDK, but also informs the decision below.
- */
-#if __MP_LEGACY_SUPPORT_STPNCPY__ && !defined(stpncpy)
+#if __MP_LEGACY_SUPPORT_STPNCPY__
 __MP__BEGIN_DECLS
+#undef stpncpy  /* In case built with later SDK */
 extern char *stpncpy(char *dst, const char *src, size_t n);
 __MP__END_DECLS
-#endif /* __MP_LEGACY_SUPPORT_STPNCPY__ && !defined(stpncpy) */
+#endif /* __MP_LEGACY_SUPPORT_STPNCPY__ */
 
 /* strnlen */
 #if __MP_LEGACY_SUPPORT_STRNLEN__
@@ -70,15 +65,19 @@ __MP__END_DECLS
 #if defined(_USE_FORTIFY_LEVEL) && _USE_FORTIFY_LEVEL > 0
 
 /* stpncpy */
-/* Note the defense against building with a 10.7+ SDK, as above. */
-#if __MP_LEGACY_SUPPORT_STPNCPY__ && !defined(stpncpy)
 
+#if __MP_LEGACY_SUPPORT_STPNCPY__
 /*
  * GCC 4.2 for 10.5 lacks __builtin___stpncpy_chk, even though GCC 4.2
  * for 10.6 has it.  In the absence of a reasonable way to check for compiler
  * support directly, we rely on the OS version for the decision.  Note that
  * the security wrapper mechanism isn't enabled by default on 10.5, anyway,
  * but this allows it to work (inefficiently) if it's enabled explicitly.
+ *
+ * This applies regardless of whether the wrapper comes from here or from
+ * a 10.7+ SDK, hence we always define it here.  To make this effective
+ * in the 10.7+ SDK case, we use a different name for the inline, which
+ * also avoids a duplicate definition issue.
  */
 #if __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1060
 extern char *__stpncpy_chk(char *dest, const char *src, size_t len,
@@ -86,19 +85,20 @@ extern char *__stpncpy_chk(char *dest, const char *src, size_t len,
 #define __builtin___stpncpy_chk __stpncpy_chk
 #endif /* OS <10.6 */
 
+#undef stpncpy
 #define stpncpy(dest, src, len)					\
   ((__darwin_obsz0 (dest) != (size_t) -1)				\
    ? __builtin___stpncpy_chk (dest, src, len, __darwin_obsz (dest))	\
-   : __inline_stpncpy_chk (dest, src, len))
+   : __mpls_inline_stpncpy_chk (dest, src, len))
 
 static __inline char *
-__inline_stpncpy_chk (char *__restrict __dest, const char *__restrict __src,
-		      size_t __len)
+__mpls_inline_stpncpy_chk (char *__restrict __dest,
+                           const char *__restrict __src, size_t __len)
 {
   return __builtin___stpncpy_chk (__dest, __src, __len, __darwin_obsz(__dest));
 }
 
-#endif /* __MP_LEGACY_SUPPORT_STPNCPY__ && !defined(stpncpy) */
+#endif /* __MP_LEGACY_SUPPORT_STPNCPY__ */
 
 #endif /* _USE_FORTIFY_LEVEL > 0 */
 
