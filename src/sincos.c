@@ -35,4 +35,33 @@ void __sincos(double __x, double *__sinp, double *__cosp) {
   *__cosp = cos(__x);
 }
 
+/*
+ * The following definitions are only used on a 10.7+ build with a 10.9+ SDK.
+ *
+ * The comment and declarations are from the 10.9 math.h.
+ * The function definitions are new.
+ */
+
+/*  Implementation details of __sincos and __sincospi allowing them to return
+    two results while allowing the compiler to optimize away unnecessary load-
+    store traffic.  Although these interfaces are exposed in the math.h header
+    to allow compilers to generate better code, users should call __sincos[f]
+    and __sincospi[f] instead and allow the compiler to emit these calls.     */
+struct __float2 { float __sinval; float __cosval; };
+struct __double2 { double __sinval; double __cosval; };
+
+struct __float2 __sincosf_stret(float __x)
+{
+    const struct __float2 __stret = {.__sinval = sinf(__x),
+                                     .__cosval = cosf(__x)};
+    return __stret;
+}
+
+struct __double2 __sincos_stret(double __x)
+{
+    const struct __double2 __stret = {.__sinval = sin(__x),
+                                      .__cosval = cos(__x)};
+    return __stret;
+}
+
 #endif /* __MP_LEGACY_SUPPORT_COSSIN__ */
