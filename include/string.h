@@ -68,22 +68,41 @@ __MP__END_DECLS
 
 #if __MP_LEGACY_SUPPORT_STPNCPY__
 /*
- * GCC 4.2 for 10.5 lacks __builtin___stpncpy_chk, even though GCC 4.2
- * for 10.6 has it.  In the absence of a reasonable way to check for compiler
- * support directly, we rely on the OS version for the decision.  Note that
- * the security wrapper mechanism isn't enabled by default on 10.5, anyway,
- * but this allows it to work (inefficiently) if it's enabled explicitly.
+ * Some compilers lack __builtin___stpncpy_chk, requiring a workaround.
+ * Handling this is complicated by the fact that support was added to
+ * some compilers prior to the __has_builtin() feature that allows directly
+ * testing for it.  It's possible to work around this based on the compiler
+ * version, but that's further complicated by the fact that Apple added it
+ * earlier than the official GCC addition in 4.7.  So, in the absence of
+ * a positive __has_builtin() result, we need to see whether either the
+ * GCC version or the Apple GCC version is sufficiently recent.
+ *
+ * Apple didn't get around to adding this logic until the 10.9 SDK, even
+ * though stpncpy() was added in 10.7, so the correct (albeit complicated)
+ * condition was initially missed.  The condition here is taken directly
+ * from secure/_string.h in the 10.9+ SDKs.
+ *
+ * The workaround here is to define a missing __builtin___stpncpy_chk as
+ * a macro pointing at the runtime code, which is less efficient but works.
  *
  * This applies regardless of whether the wrapper comes from here or from
  * a 10.7+ SDK, hence we always define it here.  To make this effective
  * in the 10.7+ SDK case, we use a different name for the inline, which
  * also avoids a duplicate definition issue.
  */
-#if __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1060
+#ifdef __has_builtin
+#define __HAVE_BUILTIN_STPNCPY_CHK__ __has_builtin(__builtin___stpncpy_chk)
+#else
+#define __HAVE_BUILTIN_STPNCPY_CHK__  \
+        (__APPLE_CC__ >= 5666     \
+         || __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 7))
+#endif
+
+#if !__HAVE_BUILTIN_STPNCPY_CHK__
 extern char *__stpncpy_chk(char *dest, const char *src, size_t len,
                            size_t dstlen);
 #define __builtin___stpncpy_chk __stpncpy_chk
-#endif /* OS <10.6 */
+#endif /* !__HAVE_BUILTIN_STPNCPY_CHK__ */
 
 #undef stpncpy
 #define stpncpy(dest, src, len)					\
