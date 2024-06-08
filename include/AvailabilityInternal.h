@@ -27,6 +27,12 @@
  * without checking.  It would probably be OK to do this for all SDKs,
  * but for safety we limit it to the relevant cases.  Note that this has
  * to be done *before* the include_next.
+ *
+ * A similar issue exists with __has_builtin() in the 14.x+ SDK.  In this
+ * case, the offending code attempts to handle the missing feature by
+ * including a defined() condition, but that doesn't actually work because
+ * the intrinsic needs to be parseable before evaluating the boolean.
+ * So we again provide a default when needed.
  */
 
 /* Do our SDK-related setup */
@@ -34,6 +40,10 @@
 
 #if !__MPLS_PRE_10_14_SDK && !defined(__has_include)
 #define __has_include(x) 0
+#endif
+
+#if !__MPLS_PRE_14_0_SDK && !defined(__has_builtin)
+#define __has_builtin(x) 0
 #endif
 
 #if __MPLS_PRE_10_5_SDK
