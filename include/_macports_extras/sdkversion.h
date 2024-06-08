@@ -105,6 +105,12 @@
 #define __MPLS_PRE_10_14_SDK 0
 #endif
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 140000
+#define __MPLS_PRE_14_0_SDK 1
+#else
+#define __MPLS_PRE_14_0_SDK 0
+#endif
+
 /* Then correct our munging, if necessary */
 
 #ifdef __MPLS_NEED_MIN_REQUIRED_FIXUP
@@ -138,6 +144,10 @@
 
 #ifndef __MPLS_PRE_10_14_SDK
 #define __MPLS_PRE_10_14_SDK 0
+#endif
+
+#ifndef __MPLS_PRE_14_0_SDK
+#define __MPLS_PRE_14_0_SDK 0
 #endif
 
 #endif /* !__APPLE__ */
