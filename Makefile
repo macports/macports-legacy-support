@@ -108,6 +108,16 @@ TESTPRGS_CPP    := $(patsubst %.cpp,%,$(TESTSRCS_CPP))
 TESTPRGS         = $(TESTPRGS_C) $(TESTPRGS_CPP)
 TESTRUNS        := $(patsubst $(TESTNAMEPREFIX)%,$(TESTRUNPREFIX)%,$(TESTPRGS))
 
+MANTESTDIR       = manual_tests
+MANTESTPREFIX    = $(MANTESTDIR)/
+MANRUNPREFIX     = mantest_
+MANTESTLDFLAGS   = $(LDFLAGS)
+MANTESTSRCS_C   := $(wildcard $(MANTESTPREFIX)*.c)
+MANTESTOBJS_C   := $(patsubst %.c,%.o,$(MANTESTSRCS_C))
+MANTESTPRGS_C   := $(patsubst %.c,%,$(MANTESTSRCS_C))
+MANTESTRUNS     := $(patsubst \
+                     $(MANTESTPREFIX)%,$(MANRUNPREFIX)%,$(MANTESTPRGS_C))
+
 define splitandfilterandmergemultiarch
 	output='$(1)' && \
 	lipo='$(2)' && \
@@ -268,6 +278,13 @@ $(TESTPRGS_C): %: %.o $(BUILDDLIBPATH)
 $(TESTPRGS_CPP): %: %.o $(BUILDDLIBPATH)
 	$(CXX) $(TESTLDFLAGS) $< $(TESTLIBS) -o $@
 
+$(MANTESTOBJS_C): %.o: %.c $(ALLHEADERS)
+	$(CC) -c -std=c99 -I$(SRCINCDIR) $(CFLAGS) $< -o $@
+
+# Currently, the manual tests don't require the library
+$(MANTESTPRGS_C): %: %.o $(BUILDLIBDIR)
+	$(CC) $(MANTESTLDFLAGS) $< -o $@
+
 # Special clause for testing the cmath fix: Just need to verify that
 # building succeeds or fails, not that the executable runs or what it
 # produces.  Note that for some reason all Clang compilers tested
@@ -307,6 +324,9 @@ $(TESTRUNS): $(TESTRUNPREFIX)%: $(TESTNAMEPREFIX)%
 $(TESTNAMEPREFIX)stpncpy_chk_forced.o: $(TESTNAMEPREFIX)stpncpy_chk.c
 $(TESTNAMEPREFIX)stpncpy_chk_force1.o: $(TESTNAMEPREFIX)stpncpy_chk.c
 
+$(MANTESTRUNS): $(MANRUNPREFIX)%: $(MANTESTPREFIX)%
+	$<
+
 install: install-headers install-lib
 
 install-headers:
@@ -334,10 +354,14 @@ install-slib: $(BUILDSLIBPATH)
 
 test check: $(TESTRUNS) test_cmath test_faccessat_setuid_msg
 
-clean:
+$(MANRUNPREFIX)clean:
+	$(RM) $(MANTESTDIR)/*.o $(MANTESTPRGS_C)
+
+clean: $(MANRUNPREFIX)clean
 	$(RM) $(foreach D,$(SRCDIR) $(TESTDIR),$D/*.o $D/*.o.* $D/*.d)
 	$(RM) $(BUILDDLIBPATH) $(BUILDSLIBPATH) $(BUILDSYSLIBPATH) $(TESTPRGS) test/test_cmath_* test/test_faccessat_setuid
 	@$(RMDIR) $(BUILDDLIBDIR) $(BUILDSLIBDIR)
 
 .PHONY: all dlib slib clean check test $(TESTRUNS) test_cmath
+.PHONY: $(MANRUNPREFIX)clean
 .PHONY: install install-headers install-lib install-dlib install-slib
