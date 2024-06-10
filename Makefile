@@ -19,6 +19,7 @@ PREFIX          ?= /usr/local
 INCSUBDIR        = LegacySupport
 PKGINCDIR        = $(PREFIX)/include/$(INCSUBDIR)
 LIBDIR           = $(PREFIX)/lib
+BINDIR           = $(PREFIX)/bin
 AREXT            = .a
 SOEXT            = .dylib
 LIBNAME          = MacportsLegacySupport
@@ -117,6 +118,9 @@ MANTESTOBJS_C   := $(patsubst %.c,%.o,$(MANTESTSRCS_C))
 MANTESTPRGS_C   := $(patsubst %.c,%,$(MANTESTSRCS_C))
 MANTESTRUNS     := $(patsubst \
                      $(MANTESTPREFIX)%,$(MANRUNPREFIX)%,$(MANTESTPRGS_C))
+
+TIGERBINDIR      = tiger_only/bin
+TIGERBINS       := $(wildcard $(TIGERBINDIR)/*)
 
 define splitandfilterandmergemultiarch
 	output='$(1)' && \
@@ -285,6 +289,10 @@ $(MANTESTOBJS_C): %.o: %.c $(ALLHEADERS)
 $(MANTESTPRGS_C): %: %.o $(BUILDLIBDIR)
 	$(CC) $(MANTESTLDFLAGS) $< -o $@
 
+# Dummy target for building Tiger-only binaries, so Portfile can
+# reference it in case we need it in the future.
+tiger-bins:
+
 # Special clause for testing the cmath fix: Just need to verify that
 # building succeeds or fails, not that the executable runs or what it
 # produces.  Note that for some reason all Clang compilers tested
@@ -356,6 +364,9 @@ install-slib: $(BUILDSLIBPATH)
 	$(MKINSTALLDIRS) $(DESTDIR)$(LIBDIR)
 	$(INSTALL_DATA) $(BUILDSLIBPATH) $(DESTDIR)$(LIBDIR)
 
+install-tiger: $(TIGERBINS)
+	$(INSTALL_PROGRAM) $(TIGERBINS) $(DESTDIR)$(BINDIR)
+
 test check: $(TESTRUNS) test_cmath test_faccessat_setuid_msg
 
 test_clean:
@@ -372,3 +383,4 @@ clean: $(MANRUNPREFIX)clean test_clean
 .PHONY: all dlib slib clean check test $(TESTRUNS) test_cmath
 .PHONY: $(MANRUNPREFIX)clean test_clean
 .PHONY: install install-headers install-lib install-dlib install-slib
+.PHONY: tiger-bins install-tiger
