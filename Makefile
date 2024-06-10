@@ -358,14 +358,17 @@ install-slib: $(BUILDSLIBPATH)
 
 test check: $(TESTRUNS) test_cmath test_faccessat_setuid_msg
 
+test_clean:
+	$(RM) $(TESTDIR)/*.o $(TESTPRGS)
+
 $(MANRUNPREFIX)clean:
 	$(RM) $(MANTESTDIR)/*.o $(MANTESTPRGS_C)
 
-clean: $(MANRUNPREFIX)clean
-	$(RM) $(foreach D,$(SRCDIR) $(TESTDIR),$D/*.o $D/*.o.* $D/*.d)
+clean: $(MANRUNPREFIX)clean test_clean
+	$(RM) $(foreach D,$(SRCDIR),$D/*.o $D/*.o.* $D/*.d)
 	$(RM) $(BUILDDLIBPATH) $(BUILDSLIBPATH) $(BUILDSYSLIBPATH) $(TESTPRGS) test/test_cmath_* test/test_faccessat_setuid
 	@$(RMDIR) $(BUILDDLIBDIR) $(BUILDSLIBDIR)
 
 .PHONY: all dlib slib clean check test $(TESTRUNS) test_cmath
-.PHONY: $(MANRUNPREFIX)clean
+.PHONY: $(MANRUNPREFIX)clean test_clean
 .PHONY: install install-headers install-lib install-dlib install-slib
