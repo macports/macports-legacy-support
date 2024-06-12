@@ -52,7 +52,7 @@ extern int fstatat(int dirfd, const char *pathname, struct stat *buf, int flags)
 
 /* 64bit inode types appeared only on 10.5, and currently can't be replaced on Tiger */
 /* due to lack of kernel support for the underlying syscalls */
-#if !__DARWIN_ONLY_64_BIT_INO_T && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ >= 1050
+#if !__DARWIN_ONLY_64_BIT_INO_T && __MPLS_TARGET_OSVER >= 1050
   extern int fstatat64(int dirfd, const char *pathname, struct stat64 *buf, int flags);
 #endif
 
