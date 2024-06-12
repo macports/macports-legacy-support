@@ -27,7 +27,7 @@
 
 int best_fchdir(int dirfd)
 {
-#if __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ >= 1050
+#if __MPLS_TARGET_OSVER >= 1050
   return syscall(SYS___pthread_fchdir, dirfd);
 #else
 /* Tiger does not have kernel support for __pthread_fchdir, so we have to fall back to fchdir */
