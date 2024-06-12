@@ -44,7 +44,7 @@ int fsetattrlist(int fd, void *a, void *buf, size_t size, unsigned long flags)
         cont = 0;
     }
 
-#if __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1080
+#if __MPLS_TARGET_OSVER < 1080
     /*
      * Older systems don't correctly check if no attributes are to be set, which usually
      * means a buffer size of zero and return an error since they malloc a block of

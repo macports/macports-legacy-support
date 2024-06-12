@@ -42,8 +42,7 @@
 /* MP support header */
 #include "MacportsLegacySupport.h"
 /* Note that the support for this mechanism is absent prior to 10.5 */
-#if __MP_LEGACY_SUPPORT_STPNCPY__ && \
-  __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ >= 1050
+#if __MP_LEGACY_SUPPORT_STPNCPY__ && __MPLS_TARGET_OSVER >= 1050
 
 /* Ensure that we don't create an infinitely recursive check function */
 #undef _FORTIFY_SOURCE

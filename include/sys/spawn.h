@@ -23,7 +23,7 @@
 /* spawn.h exists on Leopard or later. Use this block method at present
  * because gcc versions < 5 don't recognize __have_include()
  */
-#if (__APPLE__ && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ >= 1050)
+#if __MPLS_TARGET_OSVER >= 1050
 
 /* Include the primary system sys/spawn.h */
 #include_next <sys/spawn.h>
@@ -33,6 +33,6 @@
 #define	POSIX_SPAWN_CLOEXEC_DEFAULT	0x4000
 #endif
 
-#endif
+#endif /* __MPLS_TARGET_OSVER >= 1050 */
 
 #endif /* _MACPORTS_SYS_SPAWN_H_ */

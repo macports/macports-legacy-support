@@ -31,7 +31,7 @@
 
 #if __MP_LEGACY_SUPPORT_FSGETPATH__
 
-#if __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ >= 1060
+#if __MPLS_TARGET_OSVER >= 1060
 
 __MP__BEGIN_DECLS
 extern ssize_t fsgetpath(char * __restrict buf, size_t bufsize, fsid_t* fsid, uint64_t objid);
@@ -39,7 +39,7 @@ __MP__END_DECLS
 
 #else
 #error "No implementation of fsgetpath is presently available for MacOSX prior to 10.6"
-#endif /* __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ >= 1060 */
+#endif /* __MPLS_TARGET_OSVER >= 1060 */
 
 #endif /* __MP_LEGACY_SUPPORT_FSGETPATH__ */
 

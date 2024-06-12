@@ -7,7 +7,7 @@
 #include <dlfcn.h>
 #include <stdlib.h>
 
-#if __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ >= 1090
+#if __MPLS_TARGET_OSVER >= 1090
 /* private system call available on OS X Mavericks (version 10.9) and later */
 /* see https://github.com/apple-oss-distributions/libpthread/blob/ba8e1488a0e6848b710c5daad2e226f66cfed656/private/pthread/private.h#L34 */
 pthread_t pthread_main_thread_np(void);
@@ -16,7 +16,7 @@ pthread_t pthread_main_thread_np(void);
 #define kMaxThreadStackSize 0x40000000 /* from LLVM: 1 << 30 or 1Gb */
 
 size_t pthread_get_stacksize_np(pthread_t t) {
-#if __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ >= 1090
+#if __MPLS_TARGET_OSVER >= 1090
      int is_main_thread = pthread_equal(t, pthread_main_thread_np());
 #else
      /* taken from Apple Libc */
