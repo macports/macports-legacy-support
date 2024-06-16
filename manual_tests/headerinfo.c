@@ -64,6 +64,11 @@ print_defs(void)
   #else
   PRINT_UNDEF(__MPLS_PRE_10_6_SDK);
   #endif
+  #ifdef __MPLS_PRE_10_7_SDK
+  PRINT_VAR(__MPLS_PRE_10_7_SDK);
+  #else
+  PRINT_UNDEF(__MPLS_PRE_10_7_SDK);
+  #endif
   #ifdef __MPLS_PRE_10_9_SDK
   PRINT_VAR(__MPLS_PRE_10_9_SDK);
   #else

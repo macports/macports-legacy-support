@@ -138,7 +138,8 @@
 #define __MPLS_SDK_CMSG_DATA_FIX__            __MPLS_PRE_10_6_SDK
 
 /* stpncpy */
-#define __MP_LEGACY_SUPPORT_STPNCPY__         (__MPLS_TARGET_OSVER < 1070)
+#define __MPLS_SDK_SUPPORT_STPNCPY__          __MPLS_PRE_10_7_SDK
+#define __MPLS_LIB_SUPPORT_STPNCPY__          (__MPLS_TARGET_OSVER < 1070)
 
 /* strnlen */
 #define __MP_LEGACY_SUPPORT_STRNLEN__         (__MPLS_TARGET_OSVER < 1070)

@@ -99,6 +99,12 @@
 #define __MPLS_PRE_10_6_SDK 0
 #endif
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1070
+#define __MPLS_PRE_10_7_SDK 1
+#else
+#define __MPLS_PRE_10_7_SDK 0
+#endif
+
 #if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
 #define __MPLS_PRE_10_9_SDK 1
 #else
@@ -152,6 +158,10 @@
 
 #ifndef __MPLS_PRE_10_6_SDK
 #define __MPLS_PRE_10_6_SDK 0
+#endif
+
+#ifndef __MPLS_PRE_10_7_SDK
+#define __MPLS_PRE_10_7_SDK 0
 #endif
 
 #ifndef __MPLS_PRE_10_9_SDK
