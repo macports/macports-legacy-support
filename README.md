@@ -148,6 +148,11 @@ Wrapped headers and replaced functions are:
     <td>OSX10.10</td>
   </tr>
   <tr>
+    <td><code>sys/queue.h</code></td>
+    <td>Adds <code>STAILQ_FOREACH</code> macro</td>
+    <td>OSX10.4</td>
+  </tr>
+  <tr>
     <td><code>sys/stdio.h</code></td>
     <td>Adds <code>renameat</code> function</td>
     <td>OSX10.9</td>
