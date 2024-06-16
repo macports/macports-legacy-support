@@ -24,16 +24,12 @@
 /* Include the primary system sys/queue.h */
 #include_next <sys/queue.h>
 
-#if __MP_LEGACY_SUPPORT_STAILQ_FOREACH__
 /* STAILQ_FOREACH is not defined on Tiger */
-
 #ifndef STAILQ_FOREACH
 #define STAILQ_FOREACH(var, head, field)     \
     for((var) = STAILQ_FIRST((head));        \
        (var);                                \
        (var) = STAILQ_NEXT((var), field))
 #endif
-
-#endif /* __MP_LEGACY_SUPPORT_STAILQ_FOREACH__ */
 
 #endif /* _MACPORTS_SYS_QUEUE_H_ */

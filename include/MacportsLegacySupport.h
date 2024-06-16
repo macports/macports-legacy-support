@@ -209,8 +209,8 @@
 /* pthread_rwlock_initializer is not defined until 10.5 */
 #define __MPLS_SDK_SUPPORT_PTHREAD_RWLOCK__   __MPLS_PRE_10_5_SDK
 
-/* STAILQ_FOREACH is not defined on Tiger*/
-#define __MP_LEGACY_SUPPORT_STAILQ_FOREACH__  (__MPLS_TARGET_OSVER < 1050)
+/* STAILQ_FOREACH is not defined until 10.5 */
+/* The addition uses an #ifndef, so no feature flag is necessary */
 
 /* c++11 <cmath> PPC 10.[45] and Intel 10.[4-6], GNU g++ 4.6 through 8. */
 #if (__MPLS_TARGET_OSVER < 1070 \
