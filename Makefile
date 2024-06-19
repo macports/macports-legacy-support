@@ -49,17 +49,23 @@ SYSREEXPORTFLAG  = -Wl,-reexport_library,/usr/lib/libSystem.B.dylib
 BUILDSLIBFLAGS   = -qs
 POSTINSTALL      = install_name_tool
 
+# The defaults for C[XX]FLAGS are defined as XC[XX]FLAGS, so that supplied
+# definitions of C[XX]FLAGS don't override them.  If overriding these defaults
+# is wanted, then override XC[XX]FLAGS.
+#
+# Note: Overriding CC or CXX with ?= doesn't work, since they're "defined".
 FORCE_ARCH      ?=
 ARCHFLAGS       ?=
 LIPO            ?= lipo
-CC              ?= cc $(ARCHFLAGS)
-CFLAGS          ?= -Os -Wall -Wno-deprecated-declarations
+XCFLAGS         ?= -Os -Wall -Wno-deprecated-declarations
+ALLCFLAGS       := $(ARCHFLAGS) $(XCFLAGS) $(CFLAGS)
 DLIBCFLAGS      ?= -fPIC
 SLIBCFLAGS      ?=
-CXX             ?= c++ $(ARCHFLAGS)
-CXXFLAGS        ?= -Os -Wall
+XCXXFLAGS       ?= -Os -Wall
+ALLCXXFLAGS     := $(ARCHFLAGS) $(XCXXFLAGS) $(CXXFLAGS)
 LD              ?= ld
 LDFLAGS         ?=
+ALLLDFLAGS      := $(ARCHFLAGS) $(LDFLAGS)
 AR              ?= ar
 
 UNAME           ?= uname
@@ -98,7 +104,7 @@ ADDOBJS         := $(patsubst %.c,%$(SLIBOBJEXT),$(ADDSRCS))
 TESTDIR          = test
 TESTNAMEPREFIX   = $(TESTDIR)/test_
 TESTRUNPREFIX    = run_
-TESTLDFLAGS      = -L$(BUILDDLIBDIR) $(LDFLAGS)
+TESTLDFLAGS      = -L$(BUILDDLIBDIR) $(ALLLDFLAGS)
 TESTLIBS         = -l$(LIBNAME)
 TESTSRCS_C      := $(wildcard $(TESTNAMEPREFIX)*.c)
 TESTSRCS_CPP    := $(wildcard $(TESTNAMEPREFIX)*.cpp)
@@ -112,7 +118,7 @@ TESTRUNS        := $(patsubst $(TESTNAMEPREFIX)%,$(TESTRUNPREFIX)%,$(TESTPRGS))
 MANTESTDIR       = manual_tests
 MANTESTPREFIX    = $(MANTESTDIR)/
 MANRUNPREFIX     = mantest_
-MANTESTLDFLAGS   = $(LDFLAGS)
+MANTESTLDFLAGS   = $(ALLLDFLAGS)
 MANTESTSRCS_C   := $(wildcard $(MANTESTPREFIX)*.c)
 MANTESTOBJS_C   := $(patsubst %.c,%.o,$(MANTESTSRCS_C))
 MANTESTPRGS_C   := $(patsubst %.c,%,$(MANTESTSRCS_C))
@@ -231,45 +237,45 @@ syslib: dlib $(BUILDSYSLIBPATH)
 # inode-based one.
 $(MULTIDLIBOBJS): %$(DLIBOBJEXT): %.c $(ALLHEADERS)
 	# Generate possibly multi-architecture object files ...
-	$(CC) -c -I$(SRCINCDIR) $(CFLAGS) $(DLIBCFLAGS) -D__DARWIN_UNIX03=0 -D__DARWIN_64_BIT_INO_T=0 -D__DARWIN_ONLY_64_BIT_INO_T=0 $< -o $@.inode32
-	$(CC) -c -I$(SRCINCDIR) $(CFLAGS) $(DLIBCFLAGS) -D__DARWIN_UNIX03=1 -D__DARWIN_ONLY_UNIX_CONFORMANCE=0 -D__DARWIN_64_BIT_INO_T=0 -D__DARWIN_ONLY_64_BIT_INO_T=0 $< -o $@.inode32unix2003
-	$(CC) -c -I$(SRCINCDIR) $(CFLAGS) $(DLIBCFLAGS) -D__DARWIN_UNIX03=1 -D__DARWIN_ONLY_UNIX_CONFORMANCE=1 -D__DARWIN_64_BIT_INO_T=1 -D__DARWIN_ONLY_64_BIT_INO_T=0 $< -o $@.inode64
-	$(CC) -c -I$(SRCINCDIR) $(CFLAGS) $(DLIBCFLAGS) -D__DARWIN_UNIX03=1 -D__DARWIN_ONLY_UNIX_CONFORMANCE=0 -D__DARWIN_64_BIT_INO_T=1 -D__DARWIN_ONLY_64_BIT_INO_T=0 $< -o $@.inode64unix2003
+	$(CC) -c -I$(SRCINCDIR) $(ALLCFLAGS) $(DLIBCFLAGS) -D__DARWIN_UNIX03=0 -D__DARWIN_64_BIT_INO_T=0 -D__DARWIN_ONLY_64_BIT_INO_T=0 $< -o $@.inode32
+	$(CC) -c -I$(SRCINCDIR) $(ALLCFLAGS) $(DLIBCFLAGS) -D__DARWIN_UNIX03=1 -D__DARWIN_ONLY_UNIX_CONFORMANCE=0 -D__DARWIN_64_BIT_INO_T=0 -D__DARWIN_ONLY_64_BIT_INO_T=0 $< -o $@.inode32unix2003
+	$(CC) -c -I$(SRCINCDIR) $(ALLCFLAGS) $(DLIBCFLAGS) -D__DARWIN_UNIX03=1 -D__DARWIN_ONLY_UNIX_CONFORMANCE=1 -D__DARWIN_64_BIT_INO_T=1 -D__DARWIN_ONLY_64_BIT_INO_T=0 $< -o $@.inode64
+	$(CC) -c -I$(SRCINCDIR) $(ALLCFLAGS) $(DLIBCFLAGS) -D__DARWIN_UNIX03=1 -D__DARWIN_ONLY_UNIX_CONFORMANCE=0 -D__DARWIN_64_BIT_INO_T=1 -D__DARWIN_ONLY_64_BIT_INO_T=0 $< -o $@.inode64unix2003
 	# ... and split them up, because ld can only generate single-architecture files ...
 	$(call splitandfilterandmergemultiarch,$@,$(LIPO),$(RM),$(CP),$(LD),$(GREP),$(PLATFORM),$(FORCE_ARCH))
 
 $(MULTISLIBOBJS): %$(SLIBOBJEXT): %.c $(ALLHEADERS)
 	# Generate possibly multi-architecture object files ...
-	$(CC) -c -I$(SRCINCDIR) $(CFLAGS) $(SLIBCFLAGS) -D__DARWIN_UNIX03=0 -D__DARWIN_64_BIT_INO_T=0 -D__DARWIN_ONLY_64_BIT_INO_T=0 $< -o $@.inode32
-	$(CC) -c -I$(SRCINCDIR) $(CFLAGS) $(SLIBCFLAGS) -D__DARWIN_UNIX03=1 -D__DARWIN_ONLY_UNIX_CONFORMANCE=0 -D__DARWIN_64_BIT_INO_T=0 -D__DARWIN_ONLY_64_BIT_INO_T=0 $< -o $@.inode32unix2003
-	$(CC) -c -I$(SRCINCDIR) $(CFLAGS) $(SLIBCFLAGS) -D__DARWIN_UNIX03=1 -D__DARWIN_ONLY_UNIX_CONFORMANCE=1 -D__DARWIN_64_BIT_INO_T=1 -D__DARWIN_ONLY_64_BIT_INO_T=0 $< -o $@.inode64
-	$(CC) -c -I$(SRCINCDIR) $(CFLAGS) $(SLIBCFLAGS) -D__DARWIN_UNIX03=1 -D__DARWIN_ONLY_UNIX_CONFORMANCE=0 -D__DARWIN_64_BIT_INO_T=1 -D__DARWIN_ONLY_64_BIT_INO_T=0 $< -o $@.inode64unix2003
+	$(CC) -c -I$(SRCINCDIR) $(ALLCFLAGS) $(SLIBCFLAGS) -D__DARWIN_UNIX03=0 -D__DARWIN_64_BIT_INO_T=0 -D__DARWIN_ONLY_64_BIT_INO_T=0 $< -o $@.inode32
+	$(CC) -c -I$(SRCINCDIR) $(ALLCFLAGS) $(SLIBCFLAGS) -D__DARWIN_UNIX03=1 -D__DARWIN_ONLY_UNIX_CONFORMANCE=0 -D__DARWIN_64_BIT_INO_T=0 -D__DARWIN_ONLY_64_BIT_INO_T=0 $< -o $@.inode32unix2003
+	$(CC) -c -I$(SRCINCDIR) $(ALLCFLAGS) $(SLIBCFLAGS) -D__DARWIN_UNIX03=1 -D__DARWIN_ONLY_UNIX_CONFORMANCE=1 -D__DARWIN_64_BIT_INO_T=1 -D__DARWIN_ONLY_64_BIT_INO_T=0 $< -o $@.inode64
+	$(CC) -c -I$(SRCINCDIR) $(ALLCFLAGS) $(SLIBCFLAGS) -D__DARWIN_UNIX03=1 -D__DARWIN_ONLY_UNIX_CONFORMANCE=0 -D__DARWIN_64_BIT_INO_T=1 -D__DARWIN_ONLY_64_BIT_INO_T=0 $< -o $@.inode64unix2003
 	# ... and split them up, because ld can only generate single-architecture files ...
 	$(call splitandfilterandmergemultiarch,$@,$(LIPO),$(RM),$(CP),$(LD),$(GREP),$(PLATFORM),$(FORCE_ARCH))
 
 # Generously marking all header files as potential dependencies
 $(DLIBOBJS): %$(DLIBOBJEXT): %.c $(ALLHEADERS)
-	$(CC) -c -I$(SRCINCDIR) $(CFLAGS) $(DLIBCFLAGS) $< -o $@
+	$(CC) -c -I$(SRCINCDIR) $(ALLCFLAGS) $(DLIBCFLAGS) $< -o $@
 
 $(SLIBOBJS): %$(SLIBOBJEXT): %.c $(ALLHEADERS)
-	$(CC) -c -I$(SRCINCDIR) $(CFLAGS) $(SLIBCFLAGS) $< -o $@
+	$(CC) -c -I$(SRCINCDIR) $(ALLCFLAGS) $(SLIBCFLAGS) $< -o $@
 
 $(ADDOBJS): %$(SLIBOBJEXT): %.c $(ALLHEADERS)
-	$(CC) -c -I$(SRCINCDIR) $(CFLAGS) $(SLIBCFLAGS) $< -o $@
+	$(CC) -c -I$(SRCINCDIR) $(ALLCFLAGS) $(SLIBCFLAGS) $< -o $@
 
 $(TESTOBJS_C): %.o: %.c $(ALLHEADERS)
-	$(CC) -c -std=c99 -I$(SRCINCDIR) $(CFLAGS) $< -o $@
+	$(CC) -c -std=c99 -I$(SRCINCDIR) $(ALLCFLAGS) $< -o $@
 
 $(TESTOBJS_CPP): %.o: %.cpp $(ALLHEADERS)
-	$(CXX) -c -I$(SRCINCDIR) $(CXXFLAGS) $< -o $@
+	$(CXX) -c -I$(SRCINCDIR) $(ALLCXXFLAGS) $< -o $@
 
 $(BUILDDLIBPATH): $(DLIBOBJS) $(MULTIDLIBOBJS)
 	$(MKINSTALLDIRS) $(BUILDDLIBDIR)
-	$(CC) $(BUILDDLIBFLAGS) $(LDFLAGS) $^ -o $@
+	$(CC) $(BUILDDLIBFLAGS) $(ALLLDFLAGS) $^ -o $@
 
 $(BUILDSYSLIBPATH): $(DLIBOBJS) $(MULTIDLIBOBJS) $(ADDOBJS)
 	$(MKINSTALLDIRS) $(BUILDDLIBDIR)
-	$(CC) $(BUILDSYSLIBFLAGS) $(LDFLAGS) $(SYSREEXPORTFLAG) $^ -o $@
+	$(CC) $(BUILDSYSLIBFLAGS) $(ALLLDFLAGS) $(SYSREEXPORTFLAG) $^ -o $@
 
 $(BUILDSLIBPATH): $(SLIBOBJS) $(MULTISLIBOBJS)
 	$(MKINSTALLDIRS) $(BUILDSLIBDIR)
@@ -303,17 +309,17 @@ tiger-bins:
 # succeeds using c++11 -- as desired.
 test_cmath: test/test_cmath.cc $(ALLHEADERS)
 	$(info 1: testing compiler '$(CXX)' for non-legacy cmath using c++03; the build should fail, regardless of the compiler or OS)
-	$(info 1: $(CXX) $(CXXFLAGS) -std=c++03 $< -o test/$@_cxx03)
-	@-$(CXX) -I$(SRCINCDIR) $(CXXFLAGS) -std=c++03 $< -o test/$@_cxx03 &> /dev/null && echo "1: c++03 no legacy cmath build success (test failed)!" || echo "1: c++03 no legacy cmath build failure (test succeeded)!"
+	$(info 1: $(CXX) $(ALLCXXFLAGS) -std=c++03 $< -o test/$@_cxx03)
+	@-$(CXX) -I$(SRCINCDIR) $(ALLCXXFLAGS) -std=c++03 $< -o test/$@_cxx03 &> /dev/null && echo "1: c++03 no legacy cmath build success (test failed)!" || echo "1: c++03 no legacy cmath build failure (test succeeded)!"
 	$(info 2: testing compiler '$(CXX)' for non-legacy cmath using c++03; the build should fail, regardless of the compiler or OS)
-	$(info 2: $(CXX) -I$(SRCINCDIR) $(CXXFLAGS) -std=c++03 $< -o test/$@_cxx03)
-	@-$(CXX) -I$(SRCINCDIR) $(CXXFLAGS) -std=c++03 $< -o test/$@_cxx03 &> /dev/null && echo "2: c++03 legacy cmath build success (test failed)!" || echo "2: c++03 legacy cmath build failure (test succeeded)!"
+	$(info 2: $(CXX) -I$(SRCINCDIR) $(ALLCXXFLAGS) -std=c++03 $< -o test/$@_cxx03)
+	@-$(CXX) -I$(SRCINCDIR) $(ALLCXXFLAGS) -std=c++03 $< -o test/$@_cxx03 &> /dev/null && echo "2: c++03 legacy cmath build success (test failed)!" || echo "2: c++03 legacy cmath build failure (test succeeded)!"
 	$(info 3: testing compiler '$(CXX)' for non-legacy cmath using c++11; if the compiler supports this standard, then the build should succeed regardless of OS)
-	$(info 3: $(CXX) $(CXXFLAGS) -std=c++11 $< -o test/$@_cxx11)
-	@-$(CXX) $(CXXFLAGS) -std=c++11 $< -o test/$@_cxx11 &> /dev/null && echo "3: c++11 no legacy cmath build success (test failed)!" || echo "3: c++11 no legacy cmath build failure (test succeeded)!"
+	$(info 3: $(CXX) $(ALLCXXFLAGS) -std=c++11 $< -o test/$@_cxx11)
+	@-$(CXX) $(ALLCXXFLAGS) -std=c++11 $< -o test/$@_cxx11 &> /dev/null && echo "3: c++11 no legacy cmath build success (test failed)!" || echo "3: c++11 no legacy cmath build failure (test succeeded)!"
 	$(info 4: testing compiler '$(CXX)' for legacy cmath using c++11; if the compiler supports this standard, then the build should succeed regardless of OS)
-	$(info 4: $(CXX) -I$(SRCINCDIR) $(CXXFLAGS) -std=c++11 $< -o test/$@_cxx11)
-	@-$(CXX) -I$(SRCINCDIR) $(CXXFLAGS) -std=c++11 $< -o test/$@_cxx11 &> /dev/null && echo "4: c++11 legacy cmath build success (test succeeded)!" || echo "4: c++11 legacy cmath build failure (test failed)!"
+	$(info 4: $(CXX) -I$(SRCINCDIR) $(ALLCXXFLAGS) -std=c++11 $< -o test/$@_cxx11)
+	@-$(CXX) -I$(SRCINCDIR) $(ALLCXXFLAGS) -std=c++11 $< -o test/$@_cxx11 &> /dev/null && echo "4: c++11 legacy cmath build success (test succeeded)!" || echo "4: c++11 legacy cmath build failure (test failed)!"
 
 # Special clause for testing faccessat in a setuid program.
 # Must be run by root.
