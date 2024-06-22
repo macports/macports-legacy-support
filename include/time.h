@@ -69,7 +69,7 @@ typedef int clockid_t;
 #endif
 
 #ifndef CLOCK_UPTIME_RAW_APPROX
-#define CLOCK_UPTIME_RAW_APPROX     8
+#define CLOCK_UPTIME_RAW_APPROX     9
 #endif
 
 #ifndef CLOCK_PROCESS_CPUTIME_ID
