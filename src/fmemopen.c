@@ -1,4 +1,4 @@
-/*-
+/*
  * Copyright (C) 2013 Pietro Cerutti <gahr@FreeBSD.org>
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -22,6 +22,10 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
+
+/* MP support header */
+#include "MacportsLegacySupport.h"
+#if __MP_LEGACY_SUPPORT_FMEMOPEN__
 
 #include <sys/cdefs.h>
 
@@ -260,3 +264,5 @@ fmemopen_close(void *cookie)
 
   return (0);
 }
+
+#endif /* __MP_LEGACY_SUPPORT_FMEMOPEN__ */
