@@ -66,8 +66,9 @@ ALLCXXFLAGS     := $(ARCHFLAGS) $(XCXXFLAGS) $(CXXFLAGS)
 LD              ?= ld
 LDFLAGS         ?=
 ALLLDFLAGS      := $(ARCHFLAGS) $(LDFLAGS)
-AR              ?= ar
+TEST_ARGS       ?=
 
+AR              ?= ar
 UNAME           ?= uname
 SED             ?= /usr/bin/sed
 GREP            ?= /usr/bin/grep
@@ -332,7 +333,7 @@ test_faccessat_setuid_msg:
 	@echo 'Run "sudo make test_faccessat_setuid" to test faccessat properly (Not on 10.4)'
 
 $(TESTRUNS): $(TESTRUNPREFIX)%: $(TESTNAMEPREFIX)%
-	$<
+	$< $(TEST_ARGS)
 
 # The "dirfuncs_compat" test includes the fdopendir test source
 $(TESTNAMEPREFIX)dirfuncs_compat.o: $(TESTNAMEPREFIX)fdopendir.c
@@ -346,7 +347,7 @@ $(TESTNAMEPREFIX)strncpy_chk_force0.o: $(TESTNAMEPREFIX)strncpy_chk.c
 $(TESTNAMEPREFIX)strncpy_chk_force1.o: $(TESTNAMEPREFIX)strncpy_chk.c
 
 $(MANTESTRUNS): $(MANRUNPREFIX)%: $(MANTESTPREFIX)%
-	$<
+	$< $(TEST_ARGS)
 
 install: install-headers install-lib
 
