@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2020
  *
@@ -21,6 +20,8 @@
 /* MP support header */
 #include "MacportsLegacySupport.h"
 
+/* Do our SDK-related setup */
+#include <_macports_extras/sdkversion.h>
 
 /*  in the MacOSX10.4.sdk, several definitions are missing from this file that are included
     in later SDKs. This fix includes the headers in the order used in this file
@@ -33,7 +34,7 @@
     
 */
 
-#if __MP_LEGACY_SUPPORT_SYSAIOTIGERFIX__
+#if __MPLS_SDK_SYS_AIO_TIGER_FIX__
 
 #include <sys/signal.h>
 #include <sys/_types.h>
@@ -49,7 +50,7 @@ typedef __darwin_off_t  off_t;
 typedef __darwin_ssize_t    ssize_t;
 #endif
 
-#endif /* __MP_LEGACY_SUPPORT_SYSAIOTIGERFIX__ */
+#endif /* __MPLS_SDK_SYS_AIO_TIGER_FIX__ */
 
 /* Include the primary system sys/aio.h */
 #include_next <sys/aio.h>

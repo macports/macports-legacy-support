@@ -20,6 +20,9 @@
 /* MP support header */
 #include "MacportsLegacySupport.h"
 
+/* Do our SDK-related setup */
+#include <_macports_extras/sdkversion.h>
+
 /* Include the primary system sys/socket.h */
 #include_next <sys/socket.h>
 
@@ -31,7 +34,7 @@
  * In those OS versions we substitute a version of the definition from 10.6.
  */
 
-#if __MP_LEGACY_SUPPORT_CMSG_DATA_FIX__
+#if __MPLS_SDK_CMSG_DATA_FIX__
 
 #define	__DARWIN_ALIGNBYTES32 (sizeof(__uint32_t) - 1)
 #define	__DARWIN_ALIGN32(p) \
@@ -43,6 +46,6 @@
 #define	CMSG_DATA(cmsg) ((unsigned char *)(cmsg) + \
 	__DARWIN_ALIGN32(sizeof(struct cmsghdr)))
 
-#endif /* __MP_LEGACY_SUPPORT_CMSG_DATA_FIX__ */
+#endif /* __MPLS_SDK_CMSG_DATA_FIX__ */
 
 #endif /* _MACPORTS_SYS_SOCKET_H_ */

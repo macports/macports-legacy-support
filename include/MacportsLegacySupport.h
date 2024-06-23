@@ -18,8 +18,13 @@
 #ifndef _MACPORTS_LEGACYSUPPORTDEFS_H_
 #define _MACPORTS_LEGACYSUPPORTDEFS_H_
 
-/* Not needed directly -- #include <AvailabilityMacros.h> */
-/* But see <_macports_extras/sdkversion.h> */
+/*
+ * Not needed directly -- #include <AvailabilityMacros.h>,
+ * but see <_macports_extras/sdkversion.h>
+ *
+ * NOTE: Not including AvailabilityMacros.h (directly or indirectly)
+ * makes it safe to include this header before sdkversion.h.
+ */
 
 /* C++ extern definitions */
 #if defined(__cplusplus)
@@ -71,7 +76,39 @@
 #endif /* !__APPLE__ */
 #endif /* __MPLS_TARGET_OSVER undef */
 
-/* defines for when legacy support is required for various functions */
+/*
+ * Defines for when legacy support is required for various functions:
+ *
+ * In the general case, each feature flag should really be two feature
+ * flags, one referring to the SDK version and one referring to the target
+ * OS version.  These will both refer to the same OS version, but applied
+ * in different ways.
+ *
+ * If a given feature is implemented entirely in the headers, then only
+ * the SDK-based flag needs to exist.  But it's highly unlikely that a feature
+ * would be implemented solely in the library without header support, so it's
+ * highly unlikely that the library flag would exist without the SDK flag.
+ *
+ * Occasionally, a header-only macro-based feature may require only an
+ * #ifndef as a condition, in which case no feature flag is necessary.
+ *
+ * With rare exception, the tests shouldn't directly reference any of these
+ * flags at all, since the intent is that a test should behave the same
+ * regardless of whether the feature is provided by the OS or by this
+ * package.
+ *
+ * In the new (not yet fully applied) naming scheme, the two flags for
+ * a given feature are named:
+ *    __MPLS_SDK_<feature>
+ *    __MPLS_LIB_<feature>
+ *
+ * The first flag is based on an appropriate __MPLS_PRE_<xxx>_SDK, which
+ * needs to exist in sdkversion.h, and files using it need to include
+ * that header (as well as this one).
+ *
+ * The second flag is typically defined as a comparison on __MPLS_TARGET_OSVER,
+ * though in some cases the condition may be more complicated.
+ */
 
 /* fsgetpath */
 #define __MP_LEGACY_SUPPORT_FSGETPATH__       (__MPLS_TARGET_OSVER < 101300)
@@ -94,13 +131,11 @@
 /* fdopendir */
 #define __MP_LEGACY_SUPPORT_FDOPENDIR__       (__MPLS_TARGET_OSVER < 101000)
 
-/* this header is automatically included by <net/if.h> on systems 10.9 and up.
-   It is therefore expected to be included by most current software. */
 /* <net/if.h> include <sys/socket.h> */
-#define __MP_LEGACY_SUPPORT_NETIF_SOCKET_FIX__  (__MPLS_TARGET_OSVER < 1090)
+#define __MPLS_SDK_NETIF_SOCKET_FIX__         __MPLS_PRE_10_9_SDK
 
 /* CMSG_DATA definition in <sys/socket.h> */
-#define __MP_LEGACY_SUPPORT_CMSG_DATA_FIX__  (__MPLS_TARGET_OSVER < 1060)
+#define __MPLS_SDK_CMSG_DATA_FIX__            __MPLS_PRE_10_6_SDK
 
 /* stpncpy */
 #define __MP_LEGACY_SUPPORT_STPNCPY__         (__MPLS_TARGET_OSVER < 1070)
@@ -154,7 +189,7 @@
 #define __MP_LEGACY_SUPPORT_FSETATTRLIST__    (__MPLS_TARGET_OSVER < 1060)
 
 /* localtime_r, gmtime_r, etc only declared on Tiger when _ANSI_SOURCE and _POSIX_C_SOURCE are undefined */
-#define __MP_LEGACY_SUPPORT_TIME_THREAD_SAFE_FUNCTIONS__     (__MPLS_TARGET_OSVER < 1050)
+#define __MPLS_SDK_SUPPORT_TIME_THREAD_SAFE_FUNCTIONS__  __MPLS_PRE_10_5_SDK
 
 /* lsmod does not exist on Tiger */
 #define __MP_LEGACY_SUPPORT_LSMOD__           (__MPLS_TARGET_OSVER < 1050)
@@ -163,14 +198,14 @@
 #define __MP_LEGACY_SUPPORT_LUTIMES__         (__MPLS_TARGET_OSVER < 1050)
 
 /* sys/aio.h header needs adjustment to match newer SDKs */
-#define __MP_LEGACY_SUPPORT_SYSAIOTIGERFIX__  (__MPLS_TARGET_OSVER < 1050)
+#define __MPLS_SDK_SYS_AIO_TIGER_FIX__        __MPLS_PRE_10_5_SDK
 
 /*  sysconf() is missing some functions on some systems, and may misbehave on i386 */
 #define __MP_LEGACY_SUPPORT_SYSCONF_WRAP__    (__MPLS_TARGET_OSVER < 101100 \
                                                || __MPLS_APPLE_I386__)
 
-/* pthread_rwlock_initializer is not defined on Tiger */
-#define __MP_LEGACY_SUPPORT_PTHREAD_RWLOCK__  (__MPLS_TARGET_OSVER < 1050)
+/* pthread_rwlock_initializer is not defined until 10.5 */
+#define __MPLS_SDK_SUPPORT_PTHREAD_RWLOCK__   __MPLS_PRE_10_5_SDK
 
 /* STAILQ_FOREACH is not defined on Tiger*/
 #define __MP_LEGACY_SUPPORT_STAILQ_FOREACH__  (__MPLS_TARGET_OSVER < 1050)
@@ -213,11 +248,11 @@
 
 #define __MP_LEGACY_SUPPORT_NEED_BEST_FCHDIR__    (__MP_LEGACY_SUPPORT_FDOPENDIR__ || __MP_LEGACY_SUPPORT_ATCALLS__ || __MP_LEGACY_SUPPORT_SETATTRLISTAT__)
 
-/* for now, just add missing typedef statements */
-#define __MP_LEGACY_SUPPORT_UUID__  (__MPLS_TARGET_OSVER < 1060)
+/* UUIDs - for now, just add missing typedef statements */
+#define __MPLS_SDK_SUPPORT_UUID__  __MPLS_PRE_10_6_SDK
 
 /* for now, just forward call to CFPropertyListCreateWithStream */
-#define __MP_LEGACY_SUPPORT_CoreFoundation__  (__MPLS_TARGET_OSVER < 1060)
+#define __MPLS_SDK_SUPPORT_CoreFoundation__  __MPLS_PRE_10_6_SDK
 
 /* copyfile and its associated functions have gained functionality over the years */
 #define __MP_LEGACY_SUPPORT_COPYFILE_WRAP__ (__MPLS_TARGET_OSVER < 1060)

@@ -20,9 +20,16 @@
 /* MP support header */
 #include "MacportsLegacySupport.h"
 
-#if __MP_LEGACY_SUPPORT_NETIF_SOCKET_FIX__
+/* Do our SDK-related setup */
+#include <_macports_extras/sdkversion.h>
+
+/*
+ * This header is automatically included by <net/if.h> on systems 10.9 and up.
+ * It is therefore expected to be included by most current software.
+ */
+#if __MPLS_SDK_NETIF_SOCKET_FIX__
 #  include <sys/socket.h>
-#endif
+#endif /* __MPLS_SDK_NETIF_SOCKET_FIX__ */
 
 /* Include the primary system <net/if.h> */
 #include_next <net/if.h>
