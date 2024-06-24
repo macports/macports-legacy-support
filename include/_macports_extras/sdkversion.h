@@ -53,10 +53,13 @@
  * In the non-Apple case, we avoid AvailabilityMacros.h, and just define our
  * flags for the "minimally hackish" case.
  *
- * It would be maximally flexible if we could simply derive an SDK version
+ * It would be maximally flexible if we could directly derive an SDK version
  * parameter from the "honest" ...MAX_ALLOWED, but cpp has no way to do that
  * and survive the possible redefinition of ...MAX_ALLOWED in step 4.  Hence,
- * all decisions related to the SDK version need to be made in step 3.
+ * all decisions related to the SDK version need to be made in step 3.  The
+ * #if/#elif chain derives an SDK version number, but only with respect to
+ * the "major" version (ignoring the least significant digit).  Hence, it's
+ * called "MAJOR" rather than "VERSION".
  *
  * NOTE: Some "mismatched SDK" configurations may produce compiler warnings.
  * These are not the fault of this header, and usually aren't fatal unless
@@ -111,6 +114,42 @@
 #define __MPLS_PRE_14_0_SDK 0
 #endif
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1050
+#define __MPLS_SDK_MAJOR 1040
+#elif MAC_OS_X_VERSION_MAX_ALLOWED < 1060
+#define __MPLS_SDK_MAJOR 1050
+#elif MAC_OS_X_VERSION_MAX_ALLOWED < 1070
+#define __MPLS_SDK_MAJOR 1060
+#elif MAC_OS_X_VERSION_MAX_ALLOWED < 1080
+#define __MPLS_SDK_MAJOR 1070
+#elif MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+#define __MPLS_SDK_MAJOR 1080
+#elif MAC_OS_X_VERSION_MAX_ALLOWED < 101000
+#define __MPLS_SDK_MAJOR 1090
+#elif MAC_OS_X_VERSION_MAX_ALLOWED < 101100
+#define __MPLS_SDK_MAJOR 101000
+#elif MAC_OS_X_VERSION_MAX_ALLOWED < 101200
+#define __MPLS_SDK_MAJOR 101100
+#elif MAC_OS_X_VERSION_MAX_ALLOWED < 101300
+#define __MPLS_SDK_MAJOR 101200
+#elif MAC_OS_X_VERSION_MAX_ALLOWED < 101400
+#define __MPLS_SDK_MAJOR 101300
+#elif MAC_OS_X_VERSION_MAX_ALLOWED < 101500
+#define __MPLS_SDK_MAJOR 101400
+#elif MAC_OS_X_VERSION_MAX_ALLOWED < 110000
+#define __MPLS_SDK_MAJOR 101500
+#elif MAC_OS_X_VERSION_MAX_ALLOWED < 120000
+#define __MPLS_SDK_MAJOR 110000
+#elif MAC_OS_X_VERSION_MAX_ALLOWED < 130000
+#define __MPLS_SDK_MAJOR 120000
+#elif MAC_OS_X_VERSION_MAX_ALLOWED < 140000
+#define __MPLS_SDK_MAJOR 130000
+#elif MAC_OS_X_VERSION_MAX_ALLOWED < 150000
+#define __MPLS_SDK_MAJOR 140000
+#else
+#error Unknown SDK version
+#endif
+
 /* Then correct our munging, if necessary */
 
 #ifdef __MPLS_NEED_MIN_REQUIRED_FIXUP
@@ -148,6 +187,10 @@
 
 #ifndef __MPLS_PRE_14_0_SDK
 #define __MPLS_PRE_14_0_SDK 0
+#endif
+
+#ifndef __MPLS_SDK_MAJOR
+#define __MPLS_SDK_MAJOR 999999
 #endif
 
 #endif /* !__APPLE__ */
