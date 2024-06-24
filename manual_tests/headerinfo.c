@@ -54,6 +54,11 @@ print_defs(void)
   #else
   PRINT_UNDEF(MAC_OS_X_VERSION_MAX_ALLOWED);
   #endif
+  #ifdef __MPLS_SDK_MAJOR
+  PRINT_VAR(__MPLS_SDK_MAJOR);
+  #else
+  PRINT_UNDEF(__MPLS_SDK_MAJOR);
+  #endif
   #ifdef __MPLS_PRE_10_5_SDK
   PRINT_VAR(__MPLS_PRE_10_5_SDK);
   #else
