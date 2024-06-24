@@ -59,26 +59,6 @@ print_defs(void)
   #else
   PRINT_UNDEF(__MPLS_SDK_MAJOR);
   #endif
-  #ifdef __MPLS_PRE_10_5_SDK
-  PRINT_VAR(__MPLS_PRE_10_5_SDK);
-  #else
-  PRINT_UNDEF(__MPLS_PRE_10_5_SDK);
-  #endif
-  #ifdef __MPLS_PRE_10_10_SDK
-  PRINT_VAR(__MPLS_PRE_10_10_SDK);
-  #else
-  PRINT_UNDEF(__MPLS_PRE_10_10_SDK);
-  #endif
-  #ifdef __MPLS_PRE_10_14_SDK
-  PRINT_VAR(__MPLS_PRE_10_14_SDK);
-  #else
-  PRINT_UNDEF(__MPLS_PRE_10_14_SDK);
-  #endif
-  #ifdef __MPLS_PRE_14_0_SDK
-  PRINT_VAR(__MPLS_PRE_14_0_SDK);
-  #else
-  PRINT_UNDEF(__MPLS_PRE_14_0_SDK);
-  #endif
 }
 
 /* Do this afterward, since it might influence the definitions. */

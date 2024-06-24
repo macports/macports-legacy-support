@@ -83,36 +83,8 @@
 
 #endif /* MAC_OS_X_VERSION_MAX_ALLOWED */
 
-/*
- * Set up our flags here for any needed version thresholds.
- *
- * All flags defined here should also provide reports of their values
- * in manual_tests/headerinfo.c.
- */
-
-#if MAC_OS_X_VERSION_MAX_ALLOWED < 1050
-#define __MPLS_PRE_10_5_SDK 1
-#else
-#define __MPLS_PRE_10_5_SDK 0
-#endif
-
-#if MAC_OS_X_VERSION_MAX_ALLOWED < 101000
-#define __MPLS_PRE_10_10_SDK 1
-#else
-#define __MPLS_PRE_10_10_SDK 0
-#endif
-
-#if MAC_OS_X_VERSION_MAX_ALLOWED < 101400
-#define __MPLS_PRE_10_14_SDK 1
-#else
-#define __MPLS_PRE_10_14_SDK 0
-#endif
-
-#if MAC_OS_X_VERSION_MAX_ALLOWED < 140000
-#define __MPLS_PRE_14_0_SDK 1
-#else
-#define __MPLS_PRE_14_0_SDK 0
-#endif
+/* Define the major SDK version via an if/elif chain. */
+/* Add new entries as needed. */
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED < 1050
 #define __MPLS_SDK_MAJOR 1040
@@ -172,22 +144,6 @@
 #else /* !__APPLE__ */
 
 /* If non-Apple, just assume an "infinitely late" SDK */
-
-#ifndef __MPLS_PRE_10_5_SDK
-#define __MPLS_PRE_10_5_SDK 0
-#endif
-
-#ifndef __MPLS_PRE_10_10_SDK
-#define __MPLS_PRE_10_10_SDK 0
-#endif
-
-#ifndef __MPLS_PRE_10_14_SDK
-#define __MPLS_PRE_10_14_SDK 0
-#endif
-
-#ifndef __MPLS_PRE_14_0_SDK
-#define __MPLS_PRE_14_0_SDK 0
-#endif
 
 #ifndef __MPLS_SDK_MAJOR
 #define __MPLS_SDK_MAJOR 999999
