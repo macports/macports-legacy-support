@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2022
  *
@@ -15,19 +14,22 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef _MACPORTS_CoreFoundationCoreFoundation_H_
-#define _MACPORTS_CoreFoundationCoreFoundation_H_
+#ifndef _MACPORTS_CoreFoundation_CoreFoundation_H_
+#define _MACPORTS_CoreFoundation_CoreFoundation_H_
 
 /* MP support header */
 #include "MacportsLegacySupport.h"
 
+/* Do our SDK-related setup */
+#include <_macports_extras/sdkversion.h>
+
 /* Include the primary system CoreFoundation/CoreFoundation.h */
 #include_next <CoreFoundation/CoreFoundation.h>
 
-#if __MP_LEGACY_SUPPORT_CoreFoundation__
+#if __MPLS_SDK_SUPPORT_CoreFoundation__
 
 #define CFPropertyListCreateWithStream(A,B,C,D,E,F) CFPropertyListCreateFromStream(A,B,C,D,E,F)
 
-#endif /* __MP_LEGACY_SUPPORT_CoreFoundation__ */
+#endif /* __MPLS_SDK_SUPPORT_CoreFoundation__ */
 
-#endif /* _MACPORTS_CoreFoundationCoreFoundation_H_ */
+#endif /* _MACPORTS_CoreFoundation_CoreFoundation_H_ */

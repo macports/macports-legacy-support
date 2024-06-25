@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2018 Chris Jones <jonesc@macports.org>
  *
@@ -21,13 +20,16 @@
 /* MP support header */
 #include "MacportsLegacySupport.h"
 
+/* Do our SDK-related setup */
+#include <_macports_extras/sdkversion.h>
+
 /* Include the primary system time.h */
 #include_next <time.h>
 
 /* The following functions are implemented by Tiger, but the declarations are
  * missing if _ANSI_SOURCE or _POSIX_C_SOURCE are defined, which occurs when
  * _XOPEN_SOURCE is set. */
-#if __MP_LEGACY_SUPPORT_TIME_THREAD_SAFE_FUNCTIONS__
+#if __MPLS_SDK_SUPPORT_TIME_THREAD_SAFE_FUNCTIONS__
 
 __MP__BEGIN_DECLS
 #if defined(_ANSI_SOURCE) || defined(_POSIX_C_SOURCE)
@@ -38,7 +40,7 @@ struct tm *localtime_r(const time_t *, struct tm *);
 #endif /* defined(_ANSI_SOURCE) || defined(_POSIX_C_SOURCE) */
 __MP__END_DECLS
 
-#endif /* __MP_LEGACY_SUPPORT_TIME_THREAD_SAFE_FUNCTIONS__ */
+#endif /* __MPLS_SDK_SUPPORT_TIME_THREAD_SAFE_FUNCTIONS__ */
 
 /* Legacy implementation of clock_gettime */
 #if __MP_LEGACY_SUPPORT_GETTIME__

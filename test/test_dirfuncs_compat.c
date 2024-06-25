@@ -20,6 +20,8 @@
  * the relevant functions as macros and reusing all of test_fdopendir.
  *
  * For OS versions that never used the wrappers, this entire test is a dummy.
+ * Because of that condition, this test is an exception to the rule that tests
+ * shouldn't check the feature flags.
  */
 
 /* MP support header */

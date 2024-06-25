@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2022
  *
@@ -15,22 +14,25 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef _MACPORTS_UUIDUUID_H_
-#define _MACPORTS_UUIDUUID_H_
+#ifndef _MACPORTS_UUID_UUID_H_
+#define _MACPORTS_UUID_UUID_H_
 
 /* MP support header */
 #include "MacportsLegacySupport.h"
 
+/* Do our SDK-related setup */
+#include <_macports_extras/sdkversion.h>
+
 /* Include the primary system uuid/uuid.h */
 #include_next <uuid/uuid.h>
 
-#if __MP_LEGACY_SUPPORT_UUID__
+#if __MPLS_SDK_SUPPORT_UUID__
 
 #ifndef _UUID_STRING_T
 #define _UUID_STRING_T
 typedef char uuid_string_t[37];
 #endif /* _UUID_STRING_T */
 
-#endif /* __MP_LEGACY_SUPPORT_UTIMENSAT__ */
+#endif /* __MPLS_SDK_SUPPORT_UUID__ */
 
-#endif /* _MACPORTS_UUIDUUID_H_ */
+#endif /* _MACPORTS_UUID_UUID_H_ */
