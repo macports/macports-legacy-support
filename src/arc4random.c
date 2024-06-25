@@ -20,7 +20,7 @@
 
 // MP support header
 #include "MacportsLegacySupport.h"
-#if __MP_LEGACY_SUPPORT_ARC4RANDOM__
+#if __MPLS_LIB_SUPPORT_ARC4RANDOM__
 
 /*
  * ChaCha based random number generator from OpenBSD.
@@ -281,8 +281,6 @@ _chacha_encrypt_bytes(chacha_ctx *x,const u8 *m,u8 *c,u32 bytes)
 
 #define minimum(a, b) ((a) < (b) ? (a) : (b))
 
-#include "arc4random.h"
-
 
 static inline void
 _rs_init(rand_state* st, u8 *buf, size_t n)
@@ -537,4 +535,4 @@ arc4random_uniform(uint32_t upper_bound)
 }
 
 
-#endif /* __MP_LEGACY_SUPPORT_ARC4RANDOM__ */
+#endif /* __MPLS_LIB_SUPPORT_ARC4RANDOM__ */
