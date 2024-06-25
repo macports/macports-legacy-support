@@ -42,7 +42,7 @@
 /* MP support header */
 #include "MacportsLegacySupport.h"
 /* Note that the support for this mechanism is absent prior to 10.5 */
-#if __MP_LEGACY_SUPPORT_STPNCPY__ && __MPLS_TARGET_OSVER >= 1050
+#if __MPLS_LIB_SUPPORT_STPNCPY__ && __MPLS_TARGET_OSVER >= 1050
 
 /* Ensure that we don't create an infinitely recursive check function */
 #undef _FORTIFY_SOURCE
@@ -63,4 +63,4 @@ __stpncpy_chk (char *dest, const char *src,
   return stpncpy (dest, src, len);
 }
 
-#endif /* __MP_LEGACY_SUPPORT_STPNCPY__  && >= 10.5 */
+#endif /* __MPLS_LIB_SUPPORT_STPNCPY__  && >= 10.5 */

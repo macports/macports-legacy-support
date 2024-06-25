@@ -35,7 +35,7 @@
 
 /* MP support header */
 #include "MacportsLegacySupport.h"
-#if __MP_LEGACY_SUPPORT_STPNCPY__
+#if __MPLS_LIB_SUPPORT_STPNCPY__
 
 /* Ensure that we don't use the wrapper macro when defining the function */
 #undef _FORTIFY_SOURCE
@@ -67,4 +67,4 @@ stpncpy(char * dst, const char * src, size_t maxlen) {
     }
 }
 
-#endif /* __MP_LEGACY_SUPPORT_STPNCPY__ */
+#endif /* __MPLS_LIB_SUPPORT_STPNCPY__ */
