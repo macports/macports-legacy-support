@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2018
  *
@@ -21,15 +20,18 @@
 /* MP support header */
 #include "MacportsLegacySupport.h"
 
+/* Do our SDK-related setup */
+#include <_macports_extras/sdkversion.h>
+
 /* Include the primary system pthread.h */
 #include_next <pthread.h>
 
-#if __MP_LEGACY_SUPPORT_PTHREAD_RWLOCK__
+#if __MPLS_SDK_SUPPORT_PTHREAD_RWLOCK__
 /* PTHREAD_RWLOCK_INITIALIZER is not defined on Tiger */
 #ifndef PTHREAD_RWLOCK_INITIALIZER
 #define PTHREAD_RWLOCK_INITIALIZER {_PTHREAD_RWLOCK_SIG_init, {0}}
 #endif
-#endif /* __MP_LEGACY_SUPPORT_PTHREAD_RWLOCK__  */
+#endif /* __MPLS_SDK_SUPPORT_PTHREAD_RWLOCK__  */
 
 
 __MP__BEGIN_DECLS
