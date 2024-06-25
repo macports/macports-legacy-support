@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2018 Chris Jones <jonesc@macports.org>
  *
@@ -20,6 +19,9 @@
 
 /* MP support header */
 #include "MacportsLegacySupport.h"
+
+/* Do our SDK-related setup */
+#include <_macports_extras/sdkversion.h>
 
 /* Include the primary system stdlib.h */
 #include_next <stdlib.h>
@@ -48,7 +50,7 @@ __MP__END_DECLS
 #endif /*  __MP_LEGACY_SUPPORT_POSIX_MEMALIGN__ */
 
 /* arc4random */
-#if __MP_LEGACY_SUPPORT_ARC4RANDOM__
+#if __MPLS_SDK_SUPPORT_ARC4RANDOM__
 
 #ifndef _SIZE_T
 #define _SIZE_T
@@ -74,6 +76,6 @@ __MP__BEGIN_DECLS
 extern void arc4random_buf( void* buf, size_t n );
 __MP__END_DECLS
 
-#endif /*  __MP_LEGACY_SUPPORT_ARC4RANDOM__ */
+#endif /*  __MPLS_SDK_SUPPORT_ARC4RANDOM__ */
 
 #endif /* _MACPORTS_STDLIB_H_ */

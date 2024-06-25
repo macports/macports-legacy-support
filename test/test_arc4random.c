@@ -1,17 +1,12 @@
 /*
  * Simple test harness and benchmark for MT Arc4Random
  */
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <unistd.h>
 #include <fcntl.h>
-
-#if __MP_LEGACY_SUPPORT_ARC4RANDOM__
-#include "../src/arc4random.h"
-#endif
-
-#include <stdint.h>
 
 /*
  * Performance counter access.
