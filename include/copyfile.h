@@ -23,13 +23,13 @@
 /* Do our SDK-related setup */
 #include <_macports_extras/sdkversion.h>
 
-#if __MPLS_PRE_10_5_SDK
+#if __MPLS_SDK_MAJOR < 1050
 
 #include <_macports_extras/tiger_only/copyfile.h>
 
 /* The replacement copyfile.h doesn't need the wrapper */
 
-#else /* !__MPLS_PRE_10_5_SDK */
+#else /* __MPLS_SDK_MAJOR >= 1050 */
 
 /* Include the primary system copyfile.h */
 #include_next <copyfile.h>
@@ -42,6 +42,6 @@
 
 #endif /* __MP_LEGACY_SUPPORT_COPYFILE_WRAP__ */
 
-#endif /* !__MPLS_PRE_10_5_SDK */
+#endif /* __MPLS_SDK_MAJOR >= 1050 */
 
 #endif /* _MACPORTS_COPYFILE_H_ */

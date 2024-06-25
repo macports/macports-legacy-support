@@ -78,7 +78,7 @@
 
 #include_next <sys/types.h>
 
-#if __MPLS_PRE_10_5_SDK
+#if __MPLS_SDK_MAJOR < 1050
 
 #ifndef _MACPORTS_SYS_TYPES_H_
 #define _MACPORTS_SYS_TYPES_H_
@@ -99,4 +99,4 @@ typedef unsigned int        uint;       /* Sys V compatibility */
 
 #endif /* _MACPORTS_SYS_TYPES_H_ */
 
-#endif /* !__MPLS_PRE_10_5_SDK */
+#endif /* __MPLS_SDK_MAJOR < 1050 */
