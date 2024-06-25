@@ -24,8 +24,8 @@
 /* Do our SDK-related setup */
 #include <_macports_extras/sdkversion.h>
 
-/* Include the primary system sys/stdio.h (10.7+ only) */
-#if !__MPLS_PRE_10_10_SDK
+/* Include the primary system sys/stdio.h (10.10+ only) */
+#if __MPLS_SDK_MAJOR >= 101000
 #include_next <sys/stdio.h>
 #endif
 

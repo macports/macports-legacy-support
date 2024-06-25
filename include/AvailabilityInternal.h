@@ -38,15 +38,15 @@
 /* Do our SDK-related setup */
 #include <_macports_extras/sdkversion.h>
 
-#if !__MPLS_PRE_10_14_SDK && !defined(__has_include)
+#if __MPLS_SDK_MAJOR >= 101400 && !defined(__has_include)
 #define __has_include(x) 0
 #endif
 
-#if !__MPLS_PRE_14_0_SDK && !defined(__has_builtin)
+#if __MPLS_SDK_MAJOR >= 140000 && !defined(__has_builtin)
 #define __has_builtin(x) 0
 #endif
 
-#if __MPLS_PRE_10_5_SDK
+#if __MPLS_SDK_MAJOR < 1050
 #include <_macports_extras/tiger_only/AvailabilityInternal.h>
 #else
 #include_next <AvailabilityInternal.h>

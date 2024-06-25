@@ -19,15 +19,25 @@
  * the 10.4 SDK.  In that case, we provide a substitute; otherwise we
  * just pass through the SDK header.
  *
- * We don't bother with a guard macro, since the included headers will
- * handle that.
+ * We don't use a guard macro, since it's not only unnecessary, but actually
+ * harmful in this context.  It's unnecessary since all we do here is include
+ * other headers which have their own guard macros, and we don't define
+ * anything here.  It would be harmful because we need to short-circuit the
+ * possible sdkversion.h->AvailabilityMacros.h->Availability.h path where
+ * __MPLS_SDK_MAJOR is not yet defined, and hence need a second bite of
+ * the apple to get Availability.h for real.
  */
 
 /* Do our SDK-related setup */
 #include <_macports_extras/sdkversion.h>
 
-#if __MPLS_PRE_10_5_SDK
+/* If __MPLS_SDK_MAJOR isn't defined here, do nothing. */
+#ifdef __MPLS_SDK_MAJOR
+
+#if __MPLS_SDK_MAJOR < 1050
 #include <_macports_extras/tiger_only/Availability.h>
 #else
 #include_next <Availability.h>
 #endif
+
+#endif /* __MPLS_SDK_MAJOR defined */

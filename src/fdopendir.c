@@ -29,9 +29,9 @@
 #include <dirent.h>
 #include <sys/stat.h>
 
-#if __MPLS_PRE_10_5_SDK
+#if __MPLS_SDK_MAJOR < 1050
 #define __dd_fd dd_fd
-#endif /* __MPLS_PRE_10_5_SDK */
+#endif /* __MPLS_SDK_MAJOR < 1050 */
 
 /*
  * Implementation behavior largely follows these man page descriptions:

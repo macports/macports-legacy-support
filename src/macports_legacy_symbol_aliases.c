@@ -41,9 +41,9 @@ Prior to 10.8, `dirfd` was a macro`.
 The Rust compiler requires `dirfd` to be a library symbol.
 */
 #undef dirfd
-#if __MPLS_PRE_10_5_SDK
+#if __MPLS_SDK_MAJOR < 1050
 #define __dd_fd dd_fd
-#endif /* __MPLS_PRE_10_5_SDK */
+#endif /* __MPLS_SDK_MAJOR < 1050 */
 int dirfd(DIR *dirp)
 {
     if (dirp == NULL || dirp->__dd_fd < 0)
