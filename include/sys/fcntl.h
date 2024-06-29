@@ -26,7 +26,7 @@
 /* Include the primary system sys/fcntl.h */
 #include_next <sys/fcntl.h>
 
-/* replace missing O_CLOEXEC definition with 0, which works
+/* replace missing (<10.7) O_CLOEXEC definition with 0, which works
  * but does not replace the full function of that flag
  * this is the commonly done fix in MacPorts (see gtk3, for example)
  * FIXME - this could use a proper fix, if possible
@@ -39,21 +39,11 @@
 /* atcalls */
 #if __MPLS_SDK_SUPPORT_ATCALLS__
 
-#ifndef AT_FDCWD
-#define AT_FDCWD		-2
-#endif
-#ifndef AT_EACCESS
+#define AT_FDCWD		-2  /*Descriptor value for the current working directory */
 #define AT_EACCESS		0x0010	/* Use effective ids in access check */
-#endif
-#ifndef AT_SYMLINK_NOFOLLOW
 #define AT_SYMLINK_NOFOLLOW	0x0020	/* Act on the symlink itself not the target */
-#endif
-#ifndef AT_SYMLINK_FOLLOW
 #define AT_SYMLINK_FOLLOW	0x0040	/* Act on target of symlink */
-#endif
-#ifndef AT_REMOVEDIR
 #define AT_REMOVEDIR		0x0080	/* Path refers to directory */
-#endif
 
 __MP__BEGIN_DECLS
 
