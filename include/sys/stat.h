@@ -28,13 +28,8 @@
 
 #if __MPLS_SDK_SUPPORT_UTIMENSAT__
 
-#if !defined(UTIME_NOW)
 #define UTIME_NOW -1
-#endif
-
-#if !defined(UTIME_OMIT)
 #define UTIME_OMIT -2
-#endif
 
 __MP__BEGIN_DECLS
 
