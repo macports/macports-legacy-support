@@ -45,19 +45,30 @@ __MP__END_DECLS
 /* Legacy implementation of clock_gettime */
 #if __MPLS_SDK_SUPPORT_GETTIME__
 
-/* One define types and methods if not already defined. */
-#if !defined(CLOCK_REALTIME) && !defined(CLOCK_MONOTONIC)
-typedef int clockid_t;
-#endif /* !defined(CLOCK_REALTIME) && !defined(CLOCK_MONOTONIC) */
-
-#define CLOCK_REALTIME              0
-#define CLOCK_MONOTONIC             6
-#define CLOCK_MONOTONIC_RAW         4
-#define CLOCK_MONOTONIC_RAW_APPROX  5
-#define CLOCK_UPTIME_RAW            8
-#define CLOCK_UPTIME_RAW_APPROX     9
-#define CLOCK_PROCESS_CPUTIME_ID    12
-#define CLOCK_THREAD_CPUTIME_ID     16
+/*
+ * Define clock_id type and values as in the 10.12 SDK, but without the
+ * pointless __CLOCK_AVAILABILITY.
+ */
+typedef enum {
+_CLOCK_REALTIME = 0,
+#define CLOCK_REALTIME _CLOCK_REALTIME
+_CLOCK_MONOTONIC = 6,
+#define CLOCK_MONOTONIC _CLOCK_MONOTONIC
+#if !defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE)
+_CLOCK_MONOTONIC_RAW = 4,
+#define CLOCK_MONOTONIC_RAW _CLOCK_MONOTONIC_RAW
+_CLOCK_MONOTONIC_RAW_APPROX = 5,
+#define CLOCK_MONOTONIC_RAW_APPROX _CLOCK_MONOTONIC_RAW_APPROX
+_CLOCK_UPTIME_RAW = 8,
+#define CLOCK_UPTIME_RAW _CLOCK_UPTIME_RAW
+_CLOCK_UPTIME_RAW_APPROX = 9,
+#define CLOCK_UPTIME_RAW_APPROX _CLOCK_UPTIME_RAW_APPROX
+#endif
+_CLOCK_PROCESS_CPUTIME_ID = 12,
+#define CLOCK_PROCESS_CPUTIME_ID _CLOCK_PROCESS_CPUTIME_ID
+_CLOCK_THREAD_CPUTIME_ID = 16
+#define CLOCK_THREAD_CPUTIME_ID _CLOCK_THREAD_CPUTIME_ID
+} clockid_t;
 
 __MP__BEGIN_DECLS
 
