@@ -86,23 +86,14 @@
 /* Include the primary system unistd.h */
 #include_next <unistd.h>
 
-#ifndef _SC_NPROCESSORS_CONF
+#if __MPLS_SDK_SUPPORT_SYSCONF_NPROCESSORS__
 #define _SC_NPROCESSORS_CONF 57
-#define __MP_LEGACY_SUPPORT_SYSCONF_WRAP_NEED_SC_NPROCESSORS_CONF__ 1
-#endif
-
-#ifndef _SC_NPROCESSORS_ONLN
 #define _SC_NPROCESSORS_ONLN 58
-#define __MP_LEGACY_SUPPORT_SYSCONF_WRAP_NEED_SC_NPROCESSORS_ONLN__ 1
 #endif
 
-/* The OS-provided version of this item doesn't work properly on i386 */
-#if !defined(_SC_PHYS_PAGES) || defined (__i386__)
-#ifndef _SC_PHYS_PAGES
+#if __MPLS_SDK_SUPPORT_SYSCONF_PHYS_PAGES__
 #define _SC_PHYS_PAGES 200
 #endif
-#define __MP_LEGACY_SUPPORT_SYSCONF_WRAP_NEED_SC_PHYS_PAGES__ 1
-#endif /* !defined(_SC_PHYS_PAGES) || defined (__i386__) */
 
 #if __MPLS_SDK_SUPPORT_FSETATTRLIST__
 
