@@ -32,7 +32,7 @@
 #define TARGET_OS 1040
 #endif
 
-int
+static int
 get_sdknum(const char *sdkver)
 {
   long major, minor;
@@ -48,8 +48,8 @@ get_sdknum(const char *sdkver)
   }
   if (major < 10 || (major > 10 && minor != 0)) return -1;
   if (*endp && (major != 10 || minor != 4 || *endp != 'u')) return -1;
-  if (major == 10 && minor <= 9) return major * 100 + minor * 10;
-  return major * 10000 + minor * 100;
+  if (major == 10 && minor <= 9) return (int) (major * 100 + minor * 10);
+  return (int) (major * 10000 + minor * 100);
 }
 
 int
@@ -66,7 +66,7 @@ main(int argc, char *argv[])
     fprintf(stderr, "Bad SDK version: %s\n", sdkver ? sdkver : "???");
     return 20;
   }
-  sdkmajor = sdknum / 10 * 10;  /* Paranoia - not actually needed here */
+  sdkmajor = sdknum / 10 * 10;
 
   printf("Testing SDK version %s,%s numeric = %d, major = %d\n",
          sdkver ? sdkver : "<default>", sdkver ? "" : " assumed",
@@ -76,7 +76,7 @@ main(int argc, char *argv[])
     printf("  __MPLS_SDK_MAJOR is undefined\n");
     return 1;
   #else
-    if (__MPLS_SDK_MAJOR != sdknum) {
+    if (__MPLS_SDK_MAJOR != sdkmajor) {
       printf("  __MPLS_SDK_MAJOR is %d, should be %d\n",
              __MPLS_SDK_MAJOR, sdkmajor);
       return 2;
