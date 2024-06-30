@@ -33,10 +33,20 @@
  * including a defined() condition, but that doesn't actually work because
  * the intrinsic needs to be parseable before evaluating the boolean.
  * So we again provide a default when needed.
+ *
+ * There'a complication in the case where AvailabilityMacros.h (included by
+ * sdkversion.h) #includes Availability.h (currently in 10.9+ SDKs).  In that
+ * case, the sdkversion.h #include below does nothing due to its guard
+ * macro (avoiding infinite recursion), but then we're here before defining
+ * __MPLS_SDK_MAJOR.  Since we know that a 10.4 AvailabilityMacros.h would
+ * never include its nonexistent Availability.h, it's safe to apply the
+ * non-10.4 treatment in that case.
  */
 
 /* Do our SDK-related setup */
 #include <_macports_extras/sdkversion.h>
+
+#ifdef __MPLS_SDK_MAJOR
 
 #if __MPLS_SDK_MAJOR >= 101400 && !defined(__has_include)
 #define __has_include(x) 0
@@ -46,7 +56,9 @@
 #define __has_builtin(x) 0
 #endif
 
-#if __MPLS_SDK_MAJOR < 1050
+#endif /* __MPLS_SDK_MAJOR */
+
+#if defined(__MPLS_SDK_MAJOR) && __MPLS_SDK_MAJOR < 1050
 #include <_macports_extras/tiger_only/AvailabilityInternal.h>
 #else
 #include_next <AvailabilityInternal.h>
