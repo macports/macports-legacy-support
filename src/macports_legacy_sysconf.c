@@ -27,12 +27,15 @@
 #include <dlfcn.h>
 #include <stdlib.h>
 
-/* emulate several commonly used but missing selectors from sysconf() on various OS versions */
+/*
+ * Emulate several commonly used but missing (or broken) selectors from
+ * sysconf() on various OS versions.
+ */
 
 long sysconf(int name) {
     long (*real_sysconf)(int);
 
-#if __MP_LEGACY_SUPPORT_SYSCONF_WRAP_NEED_SC_NPROCESSORS_ONLN__
+#if __MPLS_LIB_SUPPORT_SYSCONF_NPROCESSORS__
     if ( name == _SC_NPROCESSORS_ONLN ) {
 
         int nm[2];
@@ -50,9 +53,6 @@ long sysconf(int name) {
             return (long)count;
         }
     }
-#endif
-
-#if __MP_LEGACY_SUPPORT_SYSCONF_WRAP_NEED_SC_NPROCESSORS_CONF__
     if ( name == _SC_NPROCESSORS_CONF ) {
 
         int nm[2];
@@ -67,9 +67,9 @@ long sysconf(int name) {
         if (ret < 0 || count < 1) { count = 1; }
         return (long)count;
     }
-#endif
+#endif /* __MPLS_LIB_SUPPORT_SYSCONF_NPROCESSORS__ */
 
-#if __MP_LEGACY_SUPPORT_SYSCONF_WRAP_NEED_SC_PHYS_PAGES__
+#if __MPLS_LIB_SUPPORT_SYSCONF_PHYS_PAGES__
     if ( name == _SC_PHYS_PAGES ) {
 
         /* the number of pages is the total memory / pagesize */
@@ -82,7 +82,7 @@ long sysconf(int name) {
         return (long)(mem_size/pagesize);
 
     }
-#endif
+#endif /* __MPLS_LIB_SUPPORT_SYSCONF_PHYS_PAGES__ */
 
     /* for any other values of "name", call the real sysconf() */
     real_sysconf = dlsym(RTLD_NEXT, "sysconf");

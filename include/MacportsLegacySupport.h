@@ -237,8 +237,15 @@
 #define __MPLS_SDK_SYS_AIO_TIGER_FIX__        (__MPLS_SDK_MAJOR < 1050)
 
 /*  sysconf() is missing some functions on some systems, and may misbehave on i386 */
-#define __MPLS_LIB_SUPPORT_SYSCONF_WRAP__     (__MPLS_TARGET_OSVER < 101100 \
-                                               || __MPLS_APPLE_I386__)
+#define __MPLS_SDK_SUPPORT_SYSCONF_NPROCESSORS__  (__MPLS_SDK_MAJOR < 1050)
+#define __MPLS_LIB_SUPPORT_SYSCONF_NPROCESSORS__  (__MPLS_TARGET_OSVER < 1050)
+
+#define __MPLS_SDK_SUPPORT_SYSCONF_PHYS_PAGES__   (__MPLS_SDK_MAJOR < 101100)
+#define __MPLS_LIB_SUPPORT_SYSCONF_PHYS_PAGES__   (__MPLS_TARGET_OSVER < 101100 \
+                                                   || __MPLS_APPLE_I386__)
+
+#define __MPLS_LIB_SUPPORT_SYSCONF_WRAP__ (__MPLS_LIB_SUPPORT_SYSCONF_NPROCESSORS__ \
+                                           || __MPLS_LIB_SUPPORT_SYSCONF_PHYS_PAGES__)
 
 /* PTHREAD_RWLOCK_INITIALIZER is not defined until 10.5 */
 /* The addition uses an #ifndef, so no feature flag is necessary */
