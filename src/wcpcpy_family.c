@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2018 Christian Cornelssen
  *
@@ -17,7 +16,8 @@
 
 // MP support header
 #include "MacportsLegacySupport.h"
-#if __MP_LEGACY_SUPPORT_WCPCPY__
+
+#if __MPLS_LIB_SUPPORT_WCPCPY__
 
 #include <wchar.h>
 
@@ -34,4 +34,4 @@ wchar_t *wcpcpy(wchar_t *__restrict d, const wchar_t *__restrict s)
     return d;
 }
 
-#endif /*  __MP_LEGACY_SUPPORT_WCPCPY__ */
+#endif /*  __MPLS_LIB_SUPPORT_WCPCPY__ */

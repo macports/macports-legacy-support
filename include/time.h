@@ -43,7 +43,7 @@ __MP__END_DECLS
 #endif /* __MPLS_SDK_SUPPORT_TIME_THREAD_SAFE_FUNCTIONS__ */
 
 /* Legacy implementation of clock_gettime */
-#if __MP_LEGACY_SUPPORT_GETTIME__
+#if __MPLS_SDK_SUPPORT_GETTIME__
 
 /* One define types and methods if not already defined. */
 #if !defined(CLOCK_REALTIME) && !defined(CLOCK_MONOTONIC)
@@ -87,10 +87,10 @@ extern int clock_getres ( clockid_t clk_id, struct timespec *ts );
 
 __MP__END_DECLS
 
-#endif /* __MP_LEGACY_SUPPORT_GETTIME__ */
+#endif /* __MPLS_SDK_SUPPORT_GETTIME__ */
 
 /* Legacy implementation of timespec */
-#if __MP_LEGACY_SUPPORT_TIMESPEC_GET__
+#if __MPLS_SDK_SUPPORT_TIMESPEC_GET__
 
 #ifndef TIME_UTC
 #define TIME_UTC	1	/* time elapsed since epoch */
@@ -102,6 +102,6 @@ extern int timespec_get(struct timespec *ts, int base);
 
 __MP__END_DECLS
 
-#endif /* __MP_LEGACY_SUPPORT_TIMESPEC_GET__ */
+#endif /* __MPLS_SDK_SUPPORT_TIMESPEC_GET__ */
 
 #endif /* _MACPORTS_TIME_H_ */

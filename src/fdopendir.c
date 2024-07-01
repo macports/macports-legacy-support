@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2019
  * Copyright (C) 2023 raf <raf@raf.org>, Tavian Barnes <tavianator@tavianator.com>
@@ -22,7 +21,7 @@
 /* Do our SDK-related setup */
 #include <_macports_extras/sdkversion.h>
 
-#if __MP_LEGACY_SUPPORT_FDOPENDIR__
+#if __MPLS_LIB_SUPPORT_FDOPENDIR__
 
 #include "common-priv.h"
 
@@ -84,4 +83,4 @@ DIR *fdopendir(int dirfd) {
     return dir;
 }
 
-#endif /* __MP_LEGACY_SUPPORT_FDOPENDIR__ */
+#endif /* __MPLS_LIB_SUPPORT_FDOPENDIR__ */

@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2018 Chris Jones <jonesc@macports.org>
  *
@@ -21,29 +20,32 @@
 /* MP support header */
 #include "MacportsLegacySupport.h"
 
+/* Do our SDK-related setup */
+#include <_macports_extras/sdkversion.h>
+
 /* Include the primary system wchar.h */
 #include_next <wchar.h>
 
 __MP__BEGIN_DECLS
 
 /* wcsdup */
-#if __MP_LEGACY_SUPPORT_WCSDUP__
+#if __MPLS_SDK_SUPPORT_WCSDUP__
   extern wchar_t * wcsdup(const wchar_t *s);
 #endif
 
 /* wcsnlen */
-#if __MP_LEGACY_SUPPORT_WCSNLEN__
+#if __MPLS_SDK_SUPPORT_WCSNLEN__
   extern size_t wcsnlen(const wchar_t *, size_t);
 #endif
 
 /* wcpcpy, wcpncpy */
-#if __MP_LEGACY_SUPPORT_WCPCPY__
+#if __MPLS_SDK_SUPPORT_WCPCPY__
   extern wchar_t * wcpcpy(wchar_t *__restrict d, const wchar_t *__restrict s);
   extern wchar_t *wcpncpy(wchar_t *__restrict d, const wchar_t *__restrict s, size_t n);
 #endif
 
 /* wcsncasecmp, wcscasecmp */
-#if __MP_LEGACY_SUPPORT_WCSCASECMP__
+#if __MPLS_SDK_SUPPORT_WCSCASECMP__
   extern int  wcscasecmp(const wchar_t *l, const wchar_t *r);
   extern int wcsncasecmp(const wchar_t *l, const wchar_t *r, size_t n);
 #endif

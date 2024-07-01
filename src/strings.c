@@ -1,5 +1,4 @@
-
-/*-
+/*
  * SPDX-License-Identifier: BSD-3-Clause
  *
  * Copyright (c) 1990, 1993
@@ -33,7 +32,7 @@
 // MP support header
 #include "MacportsLegacySupport.h"
 
-#if __MP_LEGACY_SUPPORT_FFSL__
+#if __MPLS_LIB_SUPPORT_FFSL__
 int ffsl(long mask)
 {
   int bit = 0;
@@ -46,7 +45,7 @@ int ffsl(long mask)
 }
 #endif
 
-#if __MP_LEGACY_SUPPORT_FFSLL__
+#if __MPLS_LIB_SUPPORT_FFSLL__
 int ffsll(long long mask)
 {
   int bit = 0;
@@ -59,7 +58,7 @@ int ffsll(long long mask)
 }
 #endif
 
-#if __MP_LEGACY_SUPPORT_FLS__
+#if __MPLS_LIB_SUPPORT_FLS__
 int fls(int mask)
 {
   int bit = 0;
@@ -72,7 +71,7 @@ int fls(int mask)
 }
 #endif
 
-#if __MP_LEGACY_SUPPORT_FLSL__
+#if __MPLS_LIB_SUPPORT_FLSL__
 int flsl(long mask)
 {
   int bit = 0;
@@ -85,7 +84,7 @@ int flsl(long mask)
 }
 #endif
 
-#if __MP_LEGACY_SUPPORT_FLSLL__
+#if __MPLS_LIB_SUPPORT_FLSLL__
 int flsll(long long mask)
 {
   int bit = 0;

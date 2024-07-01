@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2019
  *
@@ -21,11 +20,14 @@
 /* MP support header */
 #include "MacportsLegacySupport.h"
 
+/* Do our SDK-related setup */
+#include <_macports_extras/sdkversion.h>
+
 /* Include the primary system dirent.h */
 #include_next <dirent.h>
 
 /* fdopendir */
-#if __MP_LEGACY_SUPPORT_FDOPENDIR__
+#if __MPLS_SDK_SUPPORT_FDOPENDIR__
 
 __MP__BEGIN_DECLS
 
@@ -37,6 +39,6 @@ extern DIR *fdopendir(int fd) __DARWIN_ALIAS_I(fdopendir);
 
 __MP__END_DECLS
 
-#endif /* __MP_LEGACY_SUPPORT_FDOPENDIR__ */
+#endif /* __MPLS_SDK_SUPPORT_FDOPENDIR__ */
 
 #endif /* _MACPORTS_DIRENT_H_ */

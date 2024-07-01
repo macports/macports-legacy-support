@@ -1,5 +1,4 @@
-
-/*-
+/*
  * Copyright (c) 2011 The NetBSD Foundation, Inc.
  * All rights reserved.
  *
@@ -30,7 +29,7 @@
 
 // MP support header
 #include "MacportsLegacySupport.h"
-#if __MP_LEGACY_SUPPORT_GETLINE__
+#if __MPLS_LIB_SUPPORT_GETLINE__
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -102,4 +101,4 @@ getdelim(char **buf, size_t *bufsiz, int delimiter, FILE *fp)
 	}
 }
 
-#endif
+#endif /* __MPLS_LIB_SUPPORT_GETLINE__ */

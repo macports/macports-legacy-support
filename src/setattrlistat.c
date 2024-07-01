@@ -30,10 +30,10 @@
   * Version 2.0.
   */
 
-
 /* MP support header */
 #include "MacportsLegacySupport.h"
-#if __MP_LEGACY_SUPPORT_SETATTRLISTAT__
+
+#if __MPLS_LIB_SUPPORT_SETATTRLISTAT__
 
 #include "common-priv.h"
 
@@ -73,4 +73,4 @@ int setattrlistat(int dirfd, const char *pathname, void *a,
     return ret;
 }
 
-#endif  /* __MP_LEGACY_SUPPORT_SETATTRLISTAT__ */
+#endif  /* __MPLS_LIB_SUPPORT_SETATTRLISTAT__ */

@@ -1,5 +1,4 @@
-
-/*-
+/*
  * Copyright (c) 2005 Tim J. Robbins.
  * All rights reserved.
  *
@@ -27,7 +26,7 @@
 
 // MP support header
 #include "MacportsLegacySupport.h"
-#if __MP_LEGACY_SUPPORT_WCSDUP__
+#if __MPLS_LIB_SUPPORT_WCSDUP__
 
 #include <sys/cdefs.h>
 #include <stdlib.h>
@@ -45,5 +44,4 @@ wcsdup(const wchar_t *s)
 	return (wmemcpy(copy, s, len));
 }
 
-#endif /*  __MP_LEGACY_SUPPORT_WCSDUP__ */
-
+#endif /*  __MPLS_LIB_SUPPORT_WCSDUP__ */

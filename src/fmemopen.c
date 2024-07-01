@@ -25,7 +25,7 @@
 
 /* MP support header */
 #include "MacportsLegacySupport.h"
-#if __MP_LEGACY_SUPPORT_FMEMOPEN__
+#if __MPLS_LIB_SUPPORT_FMEMOPEN__
 
 #include <sys/cdefs.h>
 
@@ -265,4 +265,4 @@ fmemopen_close(void *cookie)
   return (0);
 }
 
-#endif /* __MP_LEGACY_SUPPORT_FMEMOPEN__ */
+#endif /* __MPLS_LIB_SUPPORT_FMEMOPEN__ */

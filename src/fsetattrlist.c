@@ -16,7 +16,8 @@
 
 /* MP support header */
 #include "MacportsLegacySupport.h"
-#if __MP_LEGACY_SUPPORT_FSETATTRLIST__
+
+#if __MPLS_LIB_SUPPORT_FSETATTRLIST__
 
 #include <sys/attr.h>
 #include <sys/fcntl.h>
@@ -74,4 +75,4 @@ int fsetattrlist(int fd, void *a, void *buf, size_t size, unsigned long flags)
     return ret;
 }
 
-#endif  /* __MP_LEGACY_SUPPORT_FSETATTRLIST__ */
+#endif  /* __MPLS_LIB_SUPPORT_FSETATTRLIST__ */

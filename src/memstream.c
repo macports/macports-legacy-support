@@ -47,7 +47,7 @@
 
 /* MP support header */
 #include "MacportsLegacySupport.h"
-#if __MP_LEGACY_SUPPORT_OPEN_MEMSTREAM__
+#if __MPLS_LIB_SUPPORT_OPEN_MEMSTREAM__
 
 #include "stdio.h"
 
@@ -177,4 +177,4 @@ FILE *open_memstream(char **ptr, size_t *sizeloc)
     return 0;
 }
 
-#endif /* __MP_LEGACY_SUPPORT_OPEN_MEMSTREAM__ */
+#endif /* __MPLS_LIB_SUPPORT_OPEN_MEMSTREAM__ */

@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2018 Chris Jones <jonesc@macports.org>
  *
@@ -17,7 +16,7 @@
 
 #include "time.h"
 
-#if __MP_LEGACY_SUPPORT_GETTIME__
+#if __MPLS_LIB_SUPPORT_GETTIME__
 
 #include <sys/time.h>
 #include <sys/sysctl.h>
@@ -126,9 +125,9 @@ int clock_getres( clockid_t clk_id, struct timespec *ts )
   return ret;
 }
 
-#endif
+#endif /* __MPLS_LIB_SUPPORT_GETTIME__ */
 
-#if __MP_LEGACY_SUPPORT_TIMESPEC_GET__
+#if __MPLS_LIB_SUPPORT_TIMESPEC_GET__
 
 int timespec_get(struct timespec *ts, int base)
 {
@@ -144,4 +143,4 @@ int timespec_get(struct timespec *ts, int base)
   }
 }
 
-#endif
+#endif /* __MPLS_LIB_SUPPORT_TIMESPEC_GET__ */

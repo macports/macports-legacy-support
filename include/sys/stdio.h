@@ -29,7 +29,7 @@
 #include_next <sys/stdio.h>
 #endif
 
-#if __MP_LEGACY_SUPPORT_ATCALLS__
+#if __MPLS_SDK_SUPPORT_ATCALLS__
 
 /* renameat */
 __MP__BEGIN_DECLS
@@ -37,6 +37,6 @@ extern int renameat(int olddirfd, const char *oldpath,
                     int newdirfd, const char *newpath);
 __MP__END_DECLS
 
-#endif /* __MP_LEGACY_SUPPORT_ATCALLS__ */
+#endif /* __MPLS_SDK_SUPPORT_ATCALLS__ */
 
 #endif /* _MACPORTS_SYS_STDIO_H_ */

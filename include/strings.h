@@ -20,39 +20,42 @@
 /* MP support header */
 #include "MacportsLegacySupport.h"
 
+/* Do our SDK-related setup */
+#include <_macports_extras/sdkversion.h>
+
 /* Include the primary system strings.h */
 #include_next <strings.h>
 
 /* ffsl */
-#if __MP_LEGACY_SUPPORT_FFSL__
+#if __MPLS_SDK_SUPPORT_FFSL__
 __MP__BEGIN_DECLS
 extern int ffsl(long int);
 __MP__END_DECLS
 #endif
 
 /* ffsll */
-#if __MP_LEGACY_SUPPORT_FFSLL__
+#if __MPLS_SDK_SUPPORT_FFSLL__
 __MP__BEGIN_DECLS
 extern int ffsll(long long int);
 __MP__END_DECLS
 #endif
 
 /* fls */
-#if __MP_LEGACY_SUPPORT_FLS__
+#if __MPLS_SDK_SUPPORT_FLS__
 __MP__BEGIN_DECLS
 extern int fls(int);
 __MP__END_DECLS
 #endif
 
 /* flsl */
-#if __MP_LEGACY_SUPPORT_FLSL__
+#if __MPLS_SDK_SUPPORT_FLSL__
 __MP__BEGIN_DECLS
 extern int flsl(long int);
 __MP__END_DECLS
 #endif
 
 /* flsll */
-#if __MP_LEGACY_SUPPORT_FLSLL__
+#if __MPLS_SDK_SUPPORT_FLSLL__
 __MP__BEGIN_DECLS
 extern int flsll(long long int);
 __MP__END_DECLS

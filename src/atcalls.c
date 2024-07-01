@@ -34,7 +34,7 @@
 
 /* MP support header */
 #include "MacportsLegacySupport.h"
-#if __MP_LEGACY_SUPPORT_ATCALLS__
+#if __MPLS_LIB_SUPPORT_ATCALLS__
 
 #include "common-priv.h"
 
@@ -300,6 +300,6 @@ int unlinkat(int dirfd, const char *pathname, int flags)
     }
 }
 
-#endif  /* __MP_LEGACY_SUPPORT_ATCALLS__ */
+#endif  /* __MPLS_LIB_SUPPORT_ATCALLS__ */
 
 /* vi:set et ts=4 sw=4: */

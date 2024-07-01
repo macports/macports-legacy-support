@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2018 Christian Cornelssen
  *
@@ -18,14 +17,17 @@
 #ifndef _MACPORTS_XLOCALE__WCHAR_H_
 #define _MACPORTS_XLOCALE__WCHAR_H_
 
-/* Include the primary system xlocale/_wchar.h */
-#include_next <xlocale/_wchar.h>
-
 /* MP support header */
 #include "MacportsLegacySupport.h"
 
+/* Do our SDK-related setup */
+#include <_macports_extras/sdkversion.h>
+
+/* Include the primary system xlocale/_wchar.h */
+#include_next <xlocale/_wchar.h>
+
 /* wcsncasecmp_l, wcscasecmp_l */
-#if __MP_LEGACY_SUPPORT_WCSCASECMP__
+#if __MPLS_SDK_SUPPORT_WCSCASECMP__
 __MP__BEGIN_DECLS
 extern int wcscasecmp_l(const wchar_t *l, const wchar_t *r, locale_t locale);
 extern int wcsncasecmp_l(const wchar_t *l, const wchar_t *r, size_t n, locale_t locale);

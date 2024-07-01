@@ -30,7 +30,7 @@
 
 // MP support header
 #include "MacportsLegacySupport.h"
-#if  __MP_LEGACY_SUPPORT_UTIMENSAT__
+#if  __MPLS_LIB_SUPPORT_UTIMENSAT__
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -147,4 +147,4 @@ utimensat(int fd, const char *path, const struct timespec _times_in[2], int flag
 	return setattrlistat(fd, path, &a, &times_out, attrbuf_size, flags_out);
 }
 
-#endif  /*  __MP_LEGACY_SUPPORT_UTIMENSAT__ */
+#endif  /*  __MPLS_LIB_SUPPORT_UTIMENSAT__ */

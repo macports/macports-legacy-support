@@ -56,11 +56,11 @@ int dirfd(DIR *dirp)
 }
 #endif /* __MP_LEGACY_SUPPORT_SYMBOL__dirfd__ */
 
-#if __MP_LEGACY_SUPPORT_ATCALLS__ && __MPLS_TARGET_OSVER >= 1050
+#if __MPLS_LIB_SUPPORT_ATCALLS__ && __MPLS_TARGET_OSVER >= 1050
 #include <sys/stat.h>
 /*
 The need for this function is highly limited.
 The Rust compiler requires `fstatat$INODE64` to be a library symbol.
 */
 int fstatat$INODE64(int dirfd, const char *pathname, struct stat64 *buf, int flags) { return fstatat64(dirfd, pathname, buf, flags); }
-#endif /* __MP_LEGACY_SUPPORT_ATCALLS__ && __MPLS_TARGET_OSVER >= 1050 */
+#endif /* __MPLS_LIB_SUPPORT_ATCALLS__ && __MPLS_TARGET_OSVER >= 1050 */

@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1995 - 1999 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
@@ -38,7 +37,7 @@
 
 // MP support header
 #include "MacportsLegacySupport.h"
-#if __MP_LEGACY_SUPPORT_STRNDUP__
+#if __MPLS_LIB_SUPPORT_STRNDUP__
 
 #ifndef HAVE_STRNDUP
 
@@ -63,4 +62,4 @@ strndup (const char *old, size_t sz)
 
 #endif /* HAVE_STRNDUP */
 
-#endif /* __MP_LEGACY_SUPPORT_STRDUP__ */
+#endif /* __MPLS_LIB_SUPPORT_STRNDUP__ */

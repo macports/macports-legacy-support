@@ -20,6 +20,9 @@
 /* MP support header */
 #include "MacportsLegacySupport.h"
 
+/* Do our SDK-related setup */
+#include <_macports_extras/sdkversion.h>
+
 /* Include the primary system sys/fcntl.h */
 #include_next <sys/fcntl.h>
 
@@ -34,7 +37,7 @@
 #endif
 
 /* atcalls */
-#if __MP_LEGACY_SUPPORT_ATCALLS__
+#if __MPLS_SDK_SUPPORT_ATCALLS__
 
 #ifndef AT_FDCWD
 #define AT_FDCWD		-2
@@ -58,6 +61,6 @@ extern int openat(int dirfd, const char *pathname, int flags, ...);
 
 __MP__END_DECLS
 
-#endif /* __MP_LEGACY_SUPPORT_ATCALLS__ */
+#endif /* __MPLS_SDK_SUPPORT_ATCALLS__ */
 
 #endif /* _MACPORTS_SYSFCNTL_H_ */

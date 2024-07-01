@@ -112,23 +112,29 @@
 /* fsgetpath */
 #define __MP_LEGACY_SUPPORT_FSGETPATH__       (__MPLS_TARGET_OSVER < 101300)
 
-/* **setattrlistat */
-#define __MP_LEGACY_SUPPORT_SETATTRLISTAT__   (__MPLS_TARGET_OSVER < 101300)
+/* setattrlistat */
+#define __MPLS_SDK_SUPPORT_SETATTRLISTAT__    (__MPLS_SDK_MAJOR < 101300)
+#define __MPLS_LIB_SUPPORT_SETATTRLISTAT__    (__MPLS_TARGET_OSVER < 101300)
 
 /* ** utimensat, futimens, UTIME_NOW, UTIME_OMIT */
-#define __MP_LEGACY_SUPPORT_UTIMENSAT__       (__MPLS_TARGET_OSVER < 101300)
+#define __MPLS_SDK_SUPPORT_UTIMENSAT__        (__MPLS_SDK_MAJOR < 101300)
+#define __MPLS_LIB_SUPPORT_UTIMENSAT__        (__MPLS_TARGET_OSVER < 101300)
 
 /* clock_gettime */
-#define __MP_LEGACY_SUPPORT_GETTIME__         (__MPLS_TARGET_OSVER < 101200)
+#define __MPLS_SDK_SUPPORT_GETTIME__          (__MPLS_SDK_MAJOR < 101200)
+#define __MPLS_LIB_SUPPORT_GETTIME__          (__MPLS_TARGET_OSVER < 101200)
 
 /* timespec_get */
-#define __MP_LEGACY_SUPPORT_TIMESPEC_GET__    (__MPLS_TARGET_OSVER < 101500)
+#define __MPLS_SDK_SUPPORT_TIMESPEC_GET__     (__MPLS_SDK_MAJOR < 101500)
+#define __MPLS_LIB_SUPPORT_TIMESPEC_GET__     (__MPLS_TARGET_OSVER < 101500)
 
-/* **at calls */
-#define __MP_LEGACY_SUPPORT_ATCALLS__         (__MPLS_TARGET_OSVER < 101000)
+/* "at" calls */
+#define __MPLS_SDK_SUPPORT_ATCALLS__          (__MPLS_SDK_MAJOR < 101000)
+#define __MPLS_LIB_SUPPORT_ATCALLS__          (__MPLS_TARGET_OSVER < 101000)
 
 /* fdopendir */
-#define __MP_LEGACY_SUPPORT_FDOPENDIR__       (__MPLS_TARGET_OSVER < 101000)
+#define __MPLS_SDK_SUPPORT_FDOPENDIR__        (__MPLS_SDK_MAJOR < 101000)
+#define __MPLS_LIB_SUPPORT_FDOPENDIR__        (__MPLS_TARGET_OSVER < 101000)
 
 /* <net/if.h> include <sys/socket.h> */
 #define __MPLS_SDK_NETIF_SOCKET_FIX__         (__MPLS_SDK_MAJOR < 1090)
@@ -141,31 +147,40 @@
 #define __MPLS_LIB_SUPPORT_STPNCPY__          (__MPLS_TARGET_OSVER < 1070)
 
 /* strnlen */
-#define __MP_LEGACY_SUPPORT_STRNLEN__         (__MPLS_TARGET_OSVER < 1070)
+#define __MPLS_SDK_SUPPORT_STRNLEN__          (__MPLS_SDK_MAJOR < 1070)
+#define __MPLS_LIB_SUPPORT_STRNLEN__          (__MPLS_TARGET_OSVER < 1070)
 
 /* strndup */
-#define __MP_LEGACY_SUPPORT_STRNDUP__         (__MPLS_TARGET_OSVER < 1070)
+#define __MPLS_SDK_SUPPORT_STRNDUP__          (__MPLS_SDK_MAJOR < 1070)
+#define __MPLS_LIB_SUPPORT_STRNDUP__          (__MPLS_TARGET_OSVER < 1070)
 
 /* dprintf */
-#define __MP_LEGACY_SUPPORT_DPRINTF__         (__MPLS_TARGET_OSVER < 1070)
+#define __MPLS_SDK_SUPPORT_DPRINTF__          (__MPLS_SDK_MAJOR < 1070)
+#define __MPLS_LIB_SUPPORT_DPRINTF__          (__MPLS_TARGET_OSVER < 1070)
 
 /* getline */
-#define __MP_LEGACY_SUPPORT_GETLINE__         (__MPLS_TARGET_OSVER < 1070)
+#define __MPLS_SDK_SUPPORT_GETLINE__          (__MPLS_SDK_MAJOR < 1070)
+#define __MPLS_LIB_SUPPORT_GETLINE__          (__MPLS_TARGET_OSVER < 1070)
 
 /* memmem */
-#define __MP_LEGACY_SUPPORT_MEMMEM__          (__MPLS_TARGET_OSVER < 1070)
+#define __MPLS_SDK_SUPPORT_MEMMEM__           (__MPLS_SDK_MAJOR < 1070)
+#define __MPLS_LIB_SUPPORT_MEMMEM__           (__MPLS_TARGET_OSVER < 1070)
 
 /* wcsdup */
-#define __MP_LEGACY_SUPPORT_WCSDUP__          (__MPLS_TARGET_OSVER < 1070)
+#define __MPLS_SDK_SUPPORT_WCSDUP__           (__MPLS_SDK_MAJOR < 1070)
+#define __MPLS_LIB_SUPPORT_WCSDUP__           (__MPLS_TARGET_OSVER < 1070)
 
 /* wcsnlen */
-#define __MP_LEGACY_SUPPORT_WCSNLEN__         (__MPLS_TARGET_OSVER < 1070)
+#define __MPLS_SDK_SUPPORT_WCSNLEN__          (__MPLS_SDK_MAJOR < 1070)
+#define __MPLS_LIB_SUPPORT_WCSNLEN__          (__MPLS_TARGET_OSVER < 1070)
 
 /* wcpcpy, wcpncpy */
-#define __MP_LEGACY_SUPPORT_WCPCPY__          (__MPLS_TARGET_OSVER < 1070)
+#define __MPLS_SDK_SUPPORT_WCPCPY__           (__MPLS_SDK_MAJOR < 1070)
+#define __MPLS_LIB_SUPPORT_WCPCPY__           (__MPLS_TARGET_OSVER < 1070)
 
 /* wcsncasecmp_l, wcscasecmp_l, wcsncasecmp, wcscasecmp */
-#define __MP_LEGACY_SUPPORT_WCSCASECMP__      (__MPLS_TARGET_OSVER < 1070)
+#define __MPLS_SDK_SUPPORT_WCSCASECMP__       (__MPLS_SDK_MAJOR < 1070)
+#define __MPLS_LIB_SUPPORT_WCSCASECMP__       (__MPLS_TARGET_OSVER < 1070)
 
 /* llround */
 #define __MP_LEGACY_SUPPORT_LLROUND__         (__MPLS_TARGET_OSVER < 1070)
@@ -186,8 +201,9 @@
 /*  realpath() on < 1060 does not support modern NULL buffer usage */
 #define __MP_LEGACY_SUPPORT_REALPATH_WRAP__   (__MPLS_TARGET_OSVER < 1060)
 
-/* setattrlistat */
-#define __MP_LEGACY_SUPPORT_FSETATTRLIST__    (__MPLS_TARGET_OSVER < 1060)
+/* setattrlist */
+#define __MPLS_SDK_SUPPORT_FSETATTRLIST__     (__MPLS_SDK_MAJOR < 1060)
+#define __MPLS_LIB_SUPPORT_FSETATTRLIST__     (__MPLS_TARGET_OSVER < 1060)
 
 /* localtime_r, gmtime_r, etc only declared on Tiger when _ANSI_SOURCE and _POSIX_C_SOURCE are undefined */
 #define __MPLS_SDK_SUPPORT_TIME_THREAD_SAFE_FUNCTIONS__  (__MPLS_SDK_MAJOR < 1050)
@@ -224,30 +240,38 @@
 #define __MP_LEGACY_SUPPORT_COSSIN__  (__MPLS_TARGET_OSVER < 1090)
 
 /* ffsl */
-#define __MP_LEGACY_SUPPORT_FFSL__    (__MPLS_TARGET_OSVER < 1050)
+#define __MPLS_SDK_SUPPORT_FFSL__     (__MPLS_SDK_MAJOR < 1050)
+#define __MPLS_LIB_SUPPORT_FFSL__     (__MPLS_TARGET_OSVER < 1050)
 /* ffsll */
-#define __MP_LEGACY_SUPPORT_FFSLL__   (__MPLS_TARGET_OSVER < 1090)
+#define __MPLS_SDK_SUPPORT_FFSLL__    (__MPLS_SDK_MAJOR < 1090)
+#define __MPLS_LIB_SUPPORT_FFSLL__    (__MPLS_TARGET_OSVER < 1090)
 
 /* fls */
-#define __MP_LEGACY_SUPPORT_FLS__     (__MPLS_TARGET_OSVER < 1050)
+#define __MPLS_SDK_SUPPORT_FLS__      (__MPLS_SDK_MAJOR < 1050)
+#define __MPLS_LIB_SUPPORT_FLS__      (__MPLS_TARGET_OSVER < 1050)
 /* flsl */
-#define __MP_LEGACY_SUPPORT_FLSL__    (__MPLS_TARGET_OSVER < 1050)
+#define __MPLS_SDK_SUPPORT_FLSL__     (__MPLS_SDK_MAJOR < 1050)
+#define __MPLS_LIB_SUPPORT_FLSL__     (__MPLS_TARGET_OSVER < 1050)
 /* flsll */
-#define __MP_LEGACY_SUPPORT_FLSLL__   (__MPLS_TARGET_OSVER < 1090)
+#define __MPLS_SDK_SUPPORT_FLSLL__    (__MPLS_SDK_MAJOR < 1090)
+#define __MPLS_LIB_SUPPORT_FLSLL__    (__MPLS_TARGET_OSVER < 1090)
 
 /* open_memstream */
-#define __MP_LEGACY_SUPPORT_OPEN_MEMSTREAM__  (__MPLS_TARGET_OSVER < 101300)
+#define __MPLS_SDK_SUPPORT_OPEN_MEMSTREAM__   (__MPLS_SDK_MAJOR < 101300)
+#define __MPLS_LIB_SUPPORT_OPEN_MEMSTREAM__   (__MPLS_TARGET_OSVER < 101300)
 
 /* fmemopen */
-#define __MP_LEGACY_SUPPORT_FMEMOPEN__  (__MPLS_TARGET_OSVER < 101300)
+#define __MPLS_SDK_SUPPORT_FMEMOPEN__   (__MPLS_SDK_MAJOR < 101300)
+#define __MPLS_LIB_SUPPORT_FMEMOPEN__   (__MPLS_TARGET_OSVER < 101300)
 
 /* pthread_setname_np */
 #define __MP_LEGACY_SUPPORT_PTHREAD_SETNAME_NP__  (__MPLS_TARGET_OSVER < 1060)
 
 /* Compound macros, bundling functionality needed by multiple single features. */
-#define __MP_LEGACY_SUPPORT_NEED_ATCALL_MACROS__  (__MP_LEGACY_SUPPORT_ATCALLS__ || __MP_LEGACY_SUPPORT_SETATTRLISTAT__)
+#define __MPLS_SDK_NEED_ATCALL_MACROS__  (__MPLS_SDK_SUPPORT_ATCALLS__ || __MPLS_SDK_SUPPORT_SETATTRLISTAT__)
 
-#define __MP_LEGACY_SUPPORT_NEED_BEST_FCHDIR__    (__MP_LEGACY_SUPPORT_FDOPENDIR__ || __MP_LEGACY_SUPPORT_ATCALLS__ || __MP_LEGACY_SUPPORT_SETATTRLISTAT__)
+#define __MPLS_SDK_NEED_BEST_FCHDIR__    (__MPLS_SDK_SUPPORT_FDOPENDIR__ || __MPLS_SDK_SUPPORT_ATCALLS__ || __MPLS_SDK_SUPPORT_SETATTRLISTAT__)
+#define __MPLS_LIB_NEED_BEST_FCHDIR__    (__MPLS_LIB_SUPPORT_FDOPENDIR__ || __MPLS_LIB_SUPPORT_ATCALLS__ || __MPLS_LIB_SUPPORT_SETATTRLISTAT__)
 
 /* UUIDs - for now, just add missing typedef statements */
 #define __MPLS_SDK_SUPPORT_UUID__  (__MPLS_SDK_MAJOR < 1060)

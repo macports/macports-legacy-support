@@ -30,7 +30,7 @@
 
 // MP support header
 #include "MacportsLegacySupport.h"
-#if __MP_LEGACY_SUPPORT_WCSNLEN__
+#if __MPLS_LIB_SUPPORT_WCSNLEN__
 
 #include <wchar.h>
 
@@ -41,4 +41,4 @@ size_t wcsnlen(const wchar_t *s, size_t n)
     return n;
 }
 
-#endif /* __MP_LEGACY_SUPPORT_WCSNLEN__ */
+#endif /* __MPLS_LIB_SUPPORT_WCSNLEN__ */

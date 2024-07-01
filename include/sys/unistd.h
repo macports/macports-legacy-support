@@ -14,11 +14,14 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef _MACPORTS_SYSUNISTD_H_
-#define _MACPORTS_SYSUNISTD_H_
+#ifndef _MACPORTS_SYS_UNISTD_H_
+#define _MACPORTS_SYS_UNISTD_H_
 
 /* MP support header */
 #include "MacportsLegacySupport.h"
+
+/* Do our SDK-related setup */
+#include <_macports_extras/sdkversion.h>
 
 /* Include the primary system sys/unistd.h */
 #include_next <sys/unistd.h>
@@ -26,7 +29,7 @@
 /* For types such as uint32_t. */
 #include <stdint.h>
 
-#if __MP_LEGACY_SUPPORT_ATCALLS__
+#if __MPLS_SDK_SUPPORT_ATCALLS__
 
 /*
  * [XSI] The ssize_t and size_t types shall be defined as described
@@ -65,10 +68,9 @@ extern int unlinkat(int dirfd, const char *pathname, int flags);
 
 __MP__END_DECLS
 
-#endif /* __MP_LEGACY_SUPPORT_ATCALLS__ */
+#endif /* __MPLS_SDK_SUPPORT_ATCALLS__ */
 
-
-#if __MP_LEGACY_SUPPORT_SETATTRLISTAT__
+#if __MPLS_SDK_SUPPORT_SETATTRLISTAT__
 
 /*
  * [XSI] The ssize_t and size_t types shall be defined as described
@@ -87,6 +89,6 @@ extern int setattrlistat(int dirfd, const char *pathname, void *a,
 
 __MP__END_DECLS
 
-#endif /* __MP_LEGACY_SUPPORT_SETATTRLISTAT__ */
+#endif /* __MPLS_SDK_SUPPORT_SETATTRLISTAT__ */
 
-#endif /* _MACPORTS_SYSUNISTD_H_ */
+#endif /* _MACPORTS_SYS_UNISTD_H_ */
