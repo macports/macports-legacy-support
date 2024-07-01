@@ -20,10 +20,13 @@
 /* MP support header */
 #include "MacportsLegacySupport.h"
 
+/* Do our SDK-related setup */
+#include <_macports_extras/sdkversion.h>
+
 /* Include the primary system sys/stat.h */
 #include_next <sys/stat.h>
 
-#if __MP_LEGACY_SUPPORT_UTIMENSAT__
+#if __MPLS_SDK_SUPPORT_UTIMENSAT__
 
 #if !defined(UTIME_NOW)
 #define UTIME_NOW -1
@@ -36,31 +39,37 @@
 __MP__BEGIN_DECLS
 
 extern int futimens(int fd, const struct timespec _times_in[2]);
-extern int utimensat(int fd, const char *path, const struct timespec _times_in[2], int flags);
+extern int utimensat(int fd, const char *path,
+                     const struct timespec _times_in[2], int flags);
 
 __MP__END_DECLS
 
-#endif /* __MP_LEGACY_SUPPORT_UTIMENSAT__ */
+#endif /* __MPLS_SDK_SUPPORT_UTIMENSAT__ */
 
 
-#if __MP_LEGACY_SUPPORT_ATCALLS__
+#if __MPLS_SDK_SUPPORT_ATCALLS__
 
 __MP__BEGIN_DECLS
 
 extern int fchmodat(int dirfd, const char *pathname, mode_t mode, int flags);
-extern int fstatat(int dirfd, const char *pathname, struct stat *buf, int flags);
+extern int fstatat(int dirfd, const char *pathname,
+                   struct stat *buf, int flags);
 
-/* 64bit inode types appeared only on 10.5, and currently can't be replaced on Tiger */
-/* due to lack of kernel support for the underlying syscalls */
+/*
+ * 64bit inode types appeared only on 10.5, and currently can't be replaced
+ * on Tiger due to lack of kernel support for the underlying syscalls
+ */
 #if !__DARWIN_ONLY_64_BIT_INO_T && __MPLS_TARGET_OSVER >= 1050
-  extern int fstatat64(int dirfd, const char *pathname, struct stat64 *buf, int flags);
+struct stat64;
+extern int fstatat64(int dirfd, const char *pathname,
+                     struct stat64 *buf, int flags);
 #endif
 
 extern int mkdirat(int dirfd, const char *pathname, mode_t mode);
 
 __MP__END_DECLS
 
-#endif /* __MP_LEGACY_SUPPORT_ATCALLS__ */
+#endif /* __MPLS_SDK_SUPPORT_ATCALLS__ */
 
 #if __MP_LEGACY_SUPPORT_LSMOD__
 

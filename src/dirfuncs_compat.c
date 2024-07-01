@@ -34,7 +34,7 @@
 
 /* MP support header */
 #include "MacportsLegacySupport.h"
-#if __MP_LEGACY_SUPPORT_FDOPENDIR__
+#if __MPLS_LIB_SUPPORT_FDOPENDIR__
 
 #include "dirfuncs_compat.h"
 
@@ -78,4 +78,4 @@ __mpls_dirfd(DIR *dirp) {
     return dirfd(dirp);
 }
 
-#endif /* __MP_LEGACY_SUPPORT_FDOPENDIR__ */
+#endif /* __MPLS_LIB_SUPPORT_FDOPENDIR__ */

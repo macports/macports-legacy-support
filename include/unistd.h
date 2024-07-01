@@ -80,6 +80,9 @@
 /* MP support header */
 #include "MacportsLegacySupport.h"
 
+/* Do our SDK-related setup */
+#include <_macports_extras/sdkversion.h>
+
 /* Include the primary system unistd.h */
 #include_next <unistd.h>
 
@@ -101,7 +104,7 @@
 #define __MP_LEGACY_SUPPORT_SYSCONF_WRAP_NEED_SC_PHYS_PAGES__ 1
 #endif /* !defined(_SC_PHYS_PAGES) || defined (__i386__) */
 
-#if __MP_LEGACY_SUPPORT_FSETATTRLIST__
+#if __MPLS_SDK_SUPPORT_FSETATTRLIST__
 
 #ifdef __LP64__
 int   fsetattrlist(int,void*,void*,size_t,unsigned int);
@@ -109,6 +112,6 @@ int   fsetattrlist(int,void*,void*,size_t,unsigned int);
 int   fsetattrlist(int,void*,void*,size_t,unsigned long);
 #endif /* defined (__LP64__) */
 
-#endif  /* __MP_LEGACY_SUPPORT_FSETATTRLIST__ */
+#endif  /* __MPLS_SDK_SUPPORT_FSETATTRLIST__ */
 
 #endif /* _MACPORTS_UNISTD_H_ */

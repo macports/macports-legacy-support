@@ -34,26 +34,26 @@ __MP__END_DECLS
 #endif /* __MPLS_SDK_SUPPORT_STPNCPY__ */
 
 /* strnlen */
-#if __MP_LEGACY_SUPPORT_STRNLEN__
+#if __MPLS_SDK_SUPPORT_STRNLEN__
 __MP__BEGIN_DECLS
 extern size_t strnlen(const char *s, size_t maxlen);
 __MP__END_DECLS
-#endif
+#endif /* __MPLS_SDK_SUPPORT_STRNLEN__ */
 
 /* strndup */
-#if __MP_LEGACY_SUPPORT_STRNDUP__
+#if __MPLS_SDK_SUPPORT_STRNDUP__
 __MP__BEGIN_DECLS
 extern char *strndup(const char *s, size_t n);
 __MP__END_DECLS
-#endif
+#endif /* __MPLS_SDK_SUPPORT_STRNDUP__ */
 
 /* memmem */
-#if __MP_LEGACY_SUPPORT_MEMMEM__
+#if __MPLS_SDK_SUPPORT_MEMMEM__
 __MP__BEGIN_DECLS
 extern void *
 memmem(const void *l, size_t l_len, const void *s, size_t s_len);
 __MP__END_DECLS
-#endif
+#endif /* __MPLS_SDK_SUPPORT_MEMMEM__ */
 
 /*
  * Security wrapper support

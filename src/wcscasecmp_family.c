@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2018 Christian Cornelssen
  *
@@ -17,7 +16,8 @@
 
 // MP support header
 #include "MacportsLegacySupport.h"
-#if __MP_LEGACY_SUPPORT_WCSCASECMP__
+
+#if __MPLS_LIB_SUPPORT_WCSCASECMP__
 
 #include <wchar.h>
 #include <wctype.h>
@@ -62,4 +62,4 @@ int wcscasecmp(const wchar_t *l, const wchar_t *r)
     return wcsncasecmp_l(l, r, -1, 0);
 }
 
-#endif /* __MP_LEGACY_SUPPORT_WCSCASECMP__ */
+#endif /* __MPLS_LIB_SUPPORT_WCSCASECMP__ */

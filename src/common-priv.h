@@ -31,23 +31,23 @@
   * Version 2.0.
   */
 
-
-
-#ifndef macports_common_priv_h_
-#define macports_common_priv_h_
+#ifndef _MACPORTS_COMMON_PRIV_H_
+#define _MACPORTS_COMMON_PRIV_H_
 
 /* MP support header */
 #include "MacportsLegacySupport.h"
-
 /* Should be generic enough so that we don't need a global feature macro. */
+
+/* Do our SDK-related setup */
+#include <_macports_extras/sdkversion.h>
 
 #include <sys/errno.h>
 
-#if __MP_LEGACY_SUPPORT_NEED_ATCALL_MACROS__
+#if __MPLS_SDK_NEED_ATCALL_MACROS__
 #include <sys/fcntl.h>
 #include <fcntl.h>
 #include <unistd.h>
-#endif /* __MP_LEGACY_SUPPORT_NEED_ATCALL_MACROS__ */
+#endif /* __MPLS_SDK_NEED_ATCALL_MACROS__ */
 
 #define PROTECT_ERRNO(what)  ({ int __err = (errno); what; errno = __err; })
 #define ERR_ON(code, what)   if (what) { errno = (code); return -1; }
@@ -57,14 +57,14 @@
 #endif
 
 
-#if __MP_LEGACY_SUPPORT_NEED_BEST_FCHDIR__
+#if __MPLS_SDK_NEED_BEST_FCHDIR__
 
 int best_fchdir(int dirfd);
 
-#endif /* __MP_LEGACY_SUPPORT_NEED_BEST_FCHDIR__ */
+#endif /* __MPLS_SDK_NEED_BEST_FCHDIR__ */
 
 
-#if __MP_LEGACY_SUPPORT_NEED_ATCALL_MACROS__
+#if __MPLS_SDK_NEED_ATCALL_MACROS__
 
 #define _ATCALL(fd, p, onerr, what)                             \
     ({  typeof(what) __result;                                  \
@@ -90,6 +90,6 @@ int best_fchdir(int dirfd);
 
 #define ATCALL(fd, p, what)  _ATCALL(fd, p, -1, what)
 
-#endif /* __MP_LEGACY_SUPPORT_NEED_ATCALL_MACROS__ */
+#endif /* __MPLS_SDK_NEED_ATCALL_MACROS__ */
 
-#endif /* !defined (macports_common_priv_h_) */
+#endif /* _MACPORTS_COMMON_PRIV_H_ */

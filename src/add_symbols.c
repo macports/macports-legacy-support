@@ -51,7 +51,7 @@ extern const char getentropy_tmp10 __asm("$ld$add$os10.10$_getentropy"); __attri
 extern const char getentropy_tmp11 __asm("$ld$add$os10.11$_getentropy"); __attribute__((visibility("default"))) const char getentropy_tmp11 = 0;
 #endif
 
-#if !(__MP_LEGACY_SUPPORT_GETTIME__)
+#if !(__MPLS_LIB_SUPPORT_GETTIME__)
 extern const char clock_gettime_tmp4 __asm("$ld$add$os10.4$_clock_gettime"); __attribute__((visibility("default"))) const char clock_gettime_tmp4 = 0;
 extern const char clock_gettime_tmp5 __asm("$ld$add$os10.5$_clock_gettime"); __attribute__((visibility("default"))) const char clock_gettime_tmp5 = 0;
 extern const char clock_gettime_tmp6 __asm("$ld$add$os10.6$_clock_gettime"); __attribute__((visibility("default"))) const char clock_gettime_tmp6 = 0;
@@ -74,7 +74,7 @@ extern const char dirfd_tmp6 __asm("$ld$add$os10.6$_dirfd"); __attribute__((visi
 extern const char dirfd_tmp7 __asm("$ld$add$os10.7$_dirfd"); __attribute__((visibility("default"))) const char dirfd_tmp7 = 0;
 #endif
 
-#if !(__MP_LEGACY_SUPPORT_ATCALLS__)
+#if !(__MPLS_LIB_SUPPORT_ATCALLS__)
 extern const char fstatat$INODE64_tmp5 __asm("$ld$add$os10.5$_fstatat$INODE64"); __attribute__((visibility("default"))) const char fstatat$INODE64_tmp5 = 0;
 extern const char fstatat$INODE64_tmp6 __asm("$ld$add$os10.6$_fstatat$INODE64"); __attribute__((visibility("default"))) const char fstatat$INODE64_tmp6 = 0;
 extern const char fstatat$INODE64_tmp7 __asm("$ld$add$os10.7$_fstatat$INODE64"); __attribute__((visibility("default"))) const char fstatat$INODE64_tmp7 = 0;

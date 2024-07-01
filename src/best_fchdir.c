@@ -1,4 +1,4 @@
-/*-
+/*
  * Copyright (c) 2019
  * Copyright (c) 2023 raf <raf@raf.org>
  *
@@ -18,7 +18,8 @@
 
 /* MP support header */
 #include "MacportsLegacySupport.h"
-#if __MP_LEGACY_SUPPORT_NEED_BEST_FCHDIR__
+
+#if __MPLS_LIB_NEED_BEST_FCHDIR__
 
 #include "common-priv.h"
 
@@ -39,4 +40,4 @@ int best_fchdir(int dirfd)
 #endif
 }
 
-#endif /* __MP_LEGACY_SUPPORT_NEED_BEST_FCHDIR__ */
+#endif /* __MPLS_LIB_NEED_BEST_FCHDIR__ */

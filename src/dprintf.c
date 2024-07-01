@@ -16,7 +16,7 @@
 
 // MP support header
 #include "MacportsLegacySupport.h"
-#if __MP_LEGACY_SUPPORT_DPRINTF__
+#if __MPLS_LIB_SUPPORT_DPRINTF__
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -36,4 +36,4 @@ int dprintf(int fildes, const char * __restrict format, ...) {
     return result;
 }
 
-#endif /* __MP_LEGACY_SUPPORT_DPRINTF__ */
+#endif /* __MPLS_LIB_SUPPORT_DPRINTF__ */

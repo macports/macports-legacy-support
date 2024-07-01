@@ -1,5 +1,4 @@
-
-/*-
+/*
  * Copyright (c) 2005 Pascal Gloor <pascal.gloor@spale.com>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,7 +28,7 @@
 
 /* MP support header */
 #include "MacportsLegacySupport.h"
-#if __MP_LEGACY_SUPPORT_MEMMEM__
+#if __MPLS_LIB_SUPPORT_MEMMEM__
 
 #include <sys/cdefs.h>
 #include <string.h>
@@ -69,4 +68,4 @@ memmem(const void *l, size_t l_len, const void *s, size_t s_len)
   return NULL;
 }
 
-#endif /* __MP_LEGACY_SUPPORT_MEMMEM__ */
+#endif /* __MPLS_LIB_SUPPORT_MEMMEM__ */

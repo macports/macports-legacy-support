@@ -21,20 +21,23 @@
 /* MP support header */
 #include "MacportsLegacySupport.h"
 
+/* Do our SDK-related setup */
+#include <_macports_extras/sdkversion.h>
+
 /* Include the primary system stdio.h */
 #include_next <stdio.h>
 
 /* dprintf */
-#if __MP_LEGACY_SUPPORT_DPRINTF__
+#if __MPLS_SDK_SUPPORT_DPRINTF__
 
 __MP__BEGIN_DECLS
 extern int dprintf(int fd, const char * __restrict format, ...);
 __MP__END_DECLS
 
-#endif /* __MP_LEGACY_SUPPORT_DPRINTF__ */
+#endif /* __MPLS_SDK_SUPPORT_DPRINTF__ */
 
 /* getline */
-#if __MP_LEGACY_SUPPORT_GETLINE__
+#if __MPLS_SDK_SUPPORT_GETLINE__
 
 /*
  * [XSI] The ssize_t and size_t types shall be defined as described
@@ -55,24 +58,24 @@ extern ssize_t getdelim(char **lineptr, size_t *n, int delimiter, FILE *fp);
 extern ssize_t getline (char **lineptr, size_t *n, FILE *stream);
 __MP__END_DECLS
 
-#endif /*  __MP_LEGACY_SUPPORT_GETLINE__ */
+#endif /*  __MPLS_SDK_SUPPORT_GETLINE__ */
 
 /* open_memstream */
-#if __MP_LEGACY_SUPPORT_OPEN_MEMSTREAM__
+#if __MPLS_SDK_SUPPORT_OPEN_MEMSTREAM__
 
 __MP__BEGIN_DECLS
 FILE *open_memstream(char **ptr, size_t *sizeloc);
 __MP__END_DECLS
 
-#endif /* __MP_LEGACY_SUPPORT_OPEN_MEMSTREAM__ */
+#endif /* __MPLS_SDK_SUPPORT_OPEN_MEMSTREAM__ */
 
 /* fmemopen */
-#if __MP_LEGACY_SUPPORT_FMEMOPEN__
+#if __MPLS_SDK_SUPPORT_FMEMOPEN__
 
 __MP__BEGIN_DECLS
 FILE *fmemopen(void *buf, size_t size, const char *mode);
 __MP__END_DECLS
 
-#endif /* __MP_LEGACY_SUPPORT_FMEMOPEN__ */
+#endif /* __MPLS_SDK_SUPPORT_FMEMOPEN__ */
 
 #endif /* _MACPORTS_STDIO_H_ */
