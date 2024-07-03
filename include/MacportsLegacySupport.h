@@ -121,6 +121,10 @@
  * That means that either building with "later" SDKs should be avoided, or
  * both enabling availability warnings and treating warnings as errors
  * should be avoided.
+ *
+ * NOTE: When adding new features, be sure to respect __DARWIN_C_LEVEL in
+ * the relevant header(s) if applicable, and add appropriate test cases
+ * to manual_tests/darwin_c.c if so.
  */
 
 /* fsgetpath */

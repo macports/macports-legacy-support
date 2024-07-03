@@ -27,6 +27,11 @@
 /* Include the primary system stdio.h */
 #include_next <stdio.h>
 
+/* Additional functionality provided by:
+ * POSIX.1-2008
+ */
+#if __DARWIN_C_LEVEL >= 200809L
+
 /* dprintf */
 #if __MPLS_SDK_SUPPORT_DPRINTF__
 
@@ -77,5 +82,7 @@ FILE *fmemopen(void *buf, size_t size, const char *mode);
 __MP__END_DECLS
 
 #endif /* __MPLS_SDK_SUPPORT_FMEMOPEN__ */
+
+#endif /* __DARWIN_C_LEVEL >= 200809L */
 
 #endif /* _MACPORTS_STDIO_H_ */

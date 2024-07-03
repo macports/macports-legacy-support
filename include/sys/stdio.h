@@ -24,10 +24,20 @@
 /* Do our SDK-related setup */
 #include <_macports_extras/sdkversion.h>
 
-/* Include the primary system sys/stdio.h (10.10+ only) */
+/*
+ * Include the primary system sys/stdio.h (10.10+ only)
+ * Otherwise include sys.cdefs.h to set up __DARWIN_C_*
+ */
 #if __MPLS_SDK_MAJOR >= 101000
 #include_next <sys/stdio.h>
+#else
+#include <sys/cdefs.h>
 #endif
+
+/* Additional functionality provided by:
+ * POSIX.1-2008
+ */
+#if __DARWIN_C_LEVEL >= 200809L
 
 #if __MPLS_SDK_SUPPORT_ATCALLS__
 
@@ -38,5 +48,7 @@ extern int renameat(int olddirfd, const char *oldpath,
 __MP__END_DECLS
 
 #endif /* __MPLS_SDK_SUPPORT_ATCALLS__ */
+
+#endif /* __DARWIN_C_LEVEL >= 200809L */
 
 #endif /* _MACPORTS_SYS_STDIO_H_ */

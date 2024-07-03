@@ -26,6 +26,9 @@
 /* Include the primary system strings.h */
 #include_next <strings.h>
 
+/* Darwin extensions */
+#if __DARWIN_C_LEVEL >= __DARWIN_C_FULL
+
 /* ffsl */
 #if __MPLS_SDK_SUPPORT_FFSL__
 __MP__BEGIN_DECLS
@@ -60,5 +63,7 @@ __MP__BEGIN_DECLS
 extern int flsll(long long int);
 __MP__END_DECLS
 #endif
+
+#endif /* __DARWIN_C_LEVEL >= __DARWIN_C_FULL */
 
 #endif /* _MACPORTS_STRINGS_H_ */

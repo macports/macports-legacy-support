@@ -26,6 +26,11 @@
 /* Include the primary system wchar.h */
 #include_next <wchar.h>
 
+/* Additional functionality provided by:
+ * POSIX.1-2008
+ */
+#if __DARWIN_C_LEVEL >= 200809L
+
 __MP__BEGIN_DECLS
 
 /* wcsdup */
@@ -51,5 +56,7 @@ __MP__BEGIN_DECLS
 #endif
 
 __MP__END_DECLS
+
+#endif /* __DARWIN_C_LEVEL >= 200809L */
 
 #endif /* _MACPORTS_WCHAR_H_ */

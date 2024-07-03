@@ -26,6 +26,9 @@
 /* Include the primary system time.h */
 #include_next <time.h>
 
+/* Make sure __DARWIN_C_* defs are set up (since time.h might not) */
+#include <sys/cdefs.h>
+
 /* The following functions are implemented by Tiger, but the declarations are
  * missing if _ANSI_SOURCE or _POSIX_C_SOURCE are defined, which occurs when
  * _XOPEN_SOURCE is set. */
@@ -41,6 +44,8 @@ struct tm *localtime_r(const time_t *, struct tm *);
 __MP__END_DECLS
 
 #endif /* __MPLS_SDK_SUPPORT_TIME_THREAD_SAFE_FUNCTIONS__ */
+
+#if __DARWIN_C_LEVEL >= 199309L
 
 /* Legacy implementation of clock_gettime */
 #if __MPLS_SDK_SUPPORT_GETTIME__
@@ -79,12 +84,16 @@ __MP__END_DECLS
 
 #endif /* __MPLS_SDK_SUPPORT_GETTIME__ */
 
+#endif /* __DARWIN_C_LEVEL >= 199309L*/
+
+#if (__DARWIN_C_LEVEL >= __DARWIN_C_FULL) || \
+        (defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L) || \
+        (defined(__cplusplus) && __cplusplus >= 201703L)
+
 /* Legacy implementation of timespec */
 #if __MPLS_SDK_SUPPORT_TIMESPEC_GET__
 
-#ifndef TIME_UTC
 #define TIME_UTC	1	/* time elapsed since epoch */
-#endif
 
 __MP__BEGIN_DECLS
 
@@ -93,5 +102,7 @@ extern int timespec_get(struct timespec *ts, int base);
 __MP__END_DECLS
 
 #endif /* __MPLS_SDK_SUPPORT_TIMESPEC_GET__ */
+
+#endif /* __DARWIN_C_LEVEL ... */
 
 #endif /* _MACPORTS_TIME_H_ */

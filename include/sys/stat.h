@@ -14,8 +14,8 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef _MACPORTS_SYSSTAT_H_
-#define _MACPORTS_SYSSTAT_H_
+#ifndef _MACPORTS_SYS_STAT_H_
+#define _MACPORTS_SYS_STAT_H_
 
 /* MP support header */
 #include "MacportsLegacySupport.h"
@@ -25,6 +25,8 @@
 
 /* Include the primary system sys/stat.h */
 #include_next <sys/stat.h>
+
+#if __DARWIN_C_LEVEL >= 200809L
 
 #if __MPLS_SDK_SUPPORT_UTIMENSAT__
 
@@ -40,7 +42,6 @@ extern int utimensat(int fd, const char *path,
 __MP__END_DECLS
 
 #endif /* __MPLS_SDK_SUPPORT_UTIMENSAT__ */
-
 
 #if __MPLS_SDK_SUPPORT_ATCALLS__
 
@@ -66,6 +67,10 @@ __MP__END_DECLS
 
 #endif /* __MPLS_SDK_SUPPORT_ATCALLS__ */
 
+#endif /* __DARWIN_C_LEVEL >= 200809L */
+
+#if !defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE)
+
 #if __MPLS_SDK_SUPPORT_LCHMOD__
 
 __MP__BEGIN_DECLS
@@ -76,4 +81,6 @@ __MP__END_DECLS
 
 #endif /* __MPLS_SDK_SUPPORT_LCHMOD__ */
 
-#endif /* _MACPORTS_SYSSTAT_H_ */
+#endif /* (!_POSIX_C_SOURCE || _DARWIN_C_SOURCE) */
+
+#endif /* _MACPORTS_SYS_STAT_H_ */
