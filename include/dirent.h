@@ -26,6 +26,11 @@
 /* Include the primary system dirent.h */
 #include_next <dirent.h>
 
+/* Additional functionality provided by:
+ * POSIX.1-2008
+ */
+#if __DARWIN_C_LEVEL >= 200809L
+
 /* fdopendir */
 #if __MPLS_SDK_SUPPORT_FDOPENDIR__
 
@@ -40,5 +45,7 @@ extern DIR *fdopendir(int fd) __DARWIN_ALIAS_I(fdopendir);
 __MP__END_DECLS
 
 #endif /* __MPLS_SDK_SUPPORT_FDOPENDIR__ */
+
+#endif /* __DARWIN_C_LEVEL >= 200809L */
 
 #endif /* _MACPORTS_DIRENT_H_ */

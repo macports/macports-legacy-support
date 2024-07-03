@@ -26,6 +26,11 @@
 /* Include the primary system string.h */
 #include_next <string.h>
 
+/* Additional functionality provided by:
+ * POSIX.1-2008
+ */
+#if __DARWIN_C_LEVEL >= 200809L
+
 /* stpncpy */
 #if __MPLS_SDK_SUPPORT_STPNCPY__
 __MP__BEGIN_DECLS
@@ -47,6 +52,12 @@ extern char *strndup(const char *s, size_t n);
 __MP__END_DECLS
 #endif /* __MPLS_SDK_SUPPORT_STRNDUP__ */
 
+#endif /* __DARWIN_C_LEVEL >= 200809L */
+
+/* Darwin extensions */
+
+#if __DARWIN_C_LEVEL >= __DARWIN_C_FULL
+
 /* memmem */
 #if __MPLS_SDK_SUPPORT_MEMMEM__
 __MP__BEGIN_DECLS
@@ -54,6 +65,8 @@ extern void *
 memmem(const void *l, size_t l_len, const void *s, size_t s_len);
 __MP__END_DECLS
 #endif /* __MPLS_SDK_SUPPORT_MEMMEM__ */
+
+#endif /* __DARWIN_C_LEVEL >= __DARWIN_C_FULL */
 
 /*
  * Security wrapper support
@@ -65,6 +78,8 @@ __MP__END_DECLS
  * Otherwise, _USE_FORTIFY_LEVEL is undefined.
  */
 #if defined(_USE_FORTIFY_LEVEL) && _USE_FORTIFY_LEVEL > 0
+
+#if __DARWIN_C_LEVEL >= 200809L
 
 /* stpncpy */
 
@@ -130,6 +145,8 @@ __mpls_inline_stpncpy_chk (char *__restrict __dest,
 }
 
 #endif /* __MPLS_SDK_SUPPORT_STPNCPY__ || !__HAVE_BUILTIN_STPNCPY_CHK__ */
+
+#endif /* __DARWIN_C_LEVEL >= 200809L */
 
 #endif /* _USE_FORTIFY_LEVEL > 0 */
 

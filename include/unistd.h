@@ -86,6 +86,8 @@
 /* Include the primary system unistd.h */
 #include_next <unistd.h>
 
+#if __DARWIN_C_LEVEL >= __DARWIN_C_FULL
+
 #if __MPLS_SDK_SUPPORT_SYSCONF_NPROCESSORS__
 #define _SC_NPROCESSORS_CONF 57
 #define _SC_NPROCESSORS_ONLN 58
@@ -104,5 +106,7 @@ int   fsetattrlist(int,void*,void*,size_t,unsigned long);
 #endif /* defined (__LP64__) */
 
 #endif  /* __MPLS_SDK_SUPPORT_FSETATTRLIST__ */
+
+#endif /* __DARWIN_C_LEVEL >= __DARWIN_C_FULL */
 
 #endif /* _MACPORTS_UNISTD_H_ */

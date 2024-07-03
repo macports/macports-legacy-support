@@ -14,8 +14,8 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef _MACPORTS_SYSFCNTL_H_
-#define _MACPORTS_SYSFCNTL_H_
+#ifndef _MACPORTS_SYS_FCNTL_H_
+#define _MACPORTS_SYS_FCNTL_H_
 
 /* MP support header */
 #include "MacportsLegacySupport.h"
@@ -36,6 +36,8 @@
 #define O_CLOEXEC 0
 #endif
 
+#if __DARWIN_C_LEVEL >= 200809L
+
 /* atcalls */
 #if __MPLS_SDK_SUPPORT_ATCALLS__
 
@@ -53,4 +55,6 @@ __MP__END_DECLS
 
 #endif /* __MPLS_SDK_SUPPORT_ATCALLS__ */
 
-#endif /* _MACPORTS_SYSFCNTL_H_ */
+#endif /* __DARWIN_C_LEVEL >= 200809L */
+
+#endif /* _MACPORTS_SYS_FCNTL_H_ */
