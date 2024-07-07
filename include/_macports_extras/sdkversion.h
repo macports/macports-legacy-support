@@ -64,13 +64,15 @@
  * suppressed in some configurations in 11.x+ SDKs.  In such cases it's
  * impossible to detect the correct SDK version, with or without the
  * "earlier SDK" hack.  To suppress that behavior, we define _DARWIN_C_SOURCE
- * before #including AvailabilityMacros.h, and restore its definedness
- * afterward.  That may result in a small amount of additional namespace
- * pollution, but no worse than is always the case with pre-11.x SDKs.
+ * before #including AvailabilityMacros.h, restore its definedness
+ * afterward, and add another step:
+ *
+ * 5) Undefine any version macros whose definition would have been suppressed.
  *
  * It would be maximally flexible if we could directly derive an SDK version
  * parameter from the "honest" ...MAX_ALLOWED, but cpp has no way to do that
- * and survive the possible redefinition of ...MAX_ALLOWED in step 4.  Hence,
+ * and survive the possible redefinition of ...MAX_ALLOWED in step 4, or
+ * the possible removal of the relevant version macro in step 5.  Hence,
  * all decisions related to the SDK version need to be made in step 3.  The
  * #if/#elif chain derives an SDK version number, but only with respect to
  * the "major" version (ignoring the least significant digit).  Hence, it's
@@ -111,10 +113,14 @@
 #endif
 
 /* Make sure version macros get defined in 11.x+ SDKs. */
+#if !((!defined(_POSIX_C_SOURCE) && !defined(_XOPEN_SOURCE)) \
+      || defined(_DARWIN_C_SOURCE))
+#define __MPLS_SDK11_BLOCKS_VERSION_MACROS
 #ifndef _DARWIN_C_SOURCE
 #define _DARWIN_C_SOURCE 1
 #define __MPLS_DARWIN_C_UNDEF
 #endif
+#endif /* 11.x+ SDK would block version macros */
 
 #include <AvailabilityMacros.h>
 
@@ -170,6 +176,7 @@
 
 /* Then correct our munging, if necessary. */
 
+/* First the ...MIN_REQUIRED hack. */
 #ifdef __MPLS_NEED_MIN_REQUIRED_FIXUP
 
 #undef MAC_OS_X_VERSION_MIN_REQUIRED
@@ -186,8 +193,49 @@
 #endif
 
 #undef __MPLS_NEED_MIN_REQUIRED_FIXUP
-
 #endif /* __MPLS_NEED_MIN_REQUIRED_FIXUP */
+
+/* Then the version macro undisabled definition hack. */
+#ifdef __MPLS_SDK11_BLOCKS_VERSION_MACROS
+
+#if __MPLS_SDK_MAJOR >= 110000
+
+/* Version macros conditionally provided by 11.x+ SDKs. */
+/* Add new entries as needed, lest unwanted defs linger. */
+#undef MAC_OS_VERSION_11_0
+#undef MAC_OS_VERSION_11_1
+#undef MAC_OS_VERSION_11_3
+#undef MAC_OS_VERSION_11_4
+#undef MAC_OS_VERSION_11_5
+#undef MAC_OS_VERSION_11_6
+#undef MAC_OS_VERSION_12_0
+#undef MAC_OS_VERSION_12_1
+#undef MAC_OS_VERSION_12_2
+#undef MAC_OS_VERSION_12_3
+#undef MAC_OS_VERSION_12_4
+#undef MAC_OS_VERSION_12_5
+#undef MAC_OS_VERSION_12_6
+#undef MAC_OS_VERSION_12_7
+#undef MAC_OS_VERSION_13_0
+#undef MAC_OS_VERSION_13_1
+#undef MAC_OS_VERSION_13_1
+#undef MAC_OS_VERSION_13_2
+#undef MAC_OS_VERSION_13_3
+#undef MAC_OS_VERSION_13_4
+#undef MAC_OS_VERSION_13_5
+#undef MAC_OS_VERSION_13_6
+#undef MAC_OS_VERSION_14_0
+#undef MAC_OS_VERSION_14_1
+#undef MAC_OS_VERSION_14_2
+#undef MAC_OS_VERSION_14_3
+#undef MAC_OS_VERSION_14_4
+#undef MAC_OS_VERSION_14_5
+#undef MAC_OS_VERSION_15_0
+
+#endif /* __MPLS_SDK_MAJOR >= 110000 */
+
+#undef __MPLS_SDK11_BLOCKS_VERSION_MACROS
+#endif /* __MPLS_SDK11_BLOCKS_VERSION_MACROS */
 
 #else /* !__APPLE__ */
 
