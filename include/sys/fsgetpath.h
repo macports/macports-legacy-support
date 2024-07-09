@@ -14,33 +14,30 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef _MACPORTS_FSGETPATH_H_
-#define _MACPORTS_FSGETPATH_H_
+#ifndef _MACPORTS_SYS_FSGETPATH_H_
+#define _MACPORTS_SYS_FSGETPATH_H_
 
 /* MP support header */
 #include "MacportsLegacySupport.h"
 
-#if defined(__has_include_next)
-#if __has_include_next(<sys/fsgetpath.h>)
+/* Do our SDK-related setup */
+#include <_macports_extras/sdkversion.h>
 
-/* Include the primary system sys/fsgetpath.h */
+/* Include the primary system sys/fsgetpath.h (10.13+ only) */
+#if __MPLS_SDK_MAJOR >= 101300
 #include_next <sys/fsgetpath.h>
-
-#endif
 #endif
 
-#if __MP_LEGACY_SUPPORT_FSGETPATH__
-
-#if __MPLS_TARGET_OSVER >= 1060
+#if __MPLS_SDK_SUPPORT_FSGETPATH__
 
 __MP__BEGIN_DECLS
 extern ssize_t fsgetpath(char * __restrict buf, size_t bufsize, fsid_t* fsid, uint64_t objid);
 __MP__END_DECLS
 
-#else
+#if __MPLS_TARGET_OSVER < 1060
 #error "No implementation of fsgetpath is presently available for MacOSX prior to 10.6"
-#endif /* __MPLS_TARGET_OSVER >= 1060 */
+#endif
 
-#endif /* __MP_LEGACY_SUPPORT_FSGETPATH__ */
+#endif /* __MPLS_SDK_SUPPORT_FSGETPATH__ */
 
-#endif /* _MACPORTS_FSGETPATH_H_ */
+#endif /* _MACPORTS_SYS_FSGETPATH_H_ */

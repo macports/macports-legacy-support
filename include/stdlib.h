@@ -27,7 +27,7 @@
 #include_next <stdlib.h>
 
 /* posix_memalign */
-#if __MP_LEGACY_SUPPORT_POSIX_MEMALIGN__
+#if __MPLS_SDK_SUPPORT_POSIX_MEMALIGN__
 
 /*
  * [XSI] The ssize_t and size_t types shall be defined as described
@@ -47,7 +47,7 @@ __MP__BEGIN_DECLS
 extern int posix_memalign(void **memptr, size_t alignment, size_t size);
 __MP__END_DECLS
 
-#endif /*  __MP_LEGACY_SUPPORT_POSIX_MEMALIGN__ */
+#endif /*  __MPLS_SDK_SUPPORT_POSIX_MEMALIGN__ */
 
 /* arc4random */
 #if __MPLS_SDK_SUPPORT_ARC4RANDOM__

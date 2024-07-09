@@ -21,7 +21,10 @@
 /* MP support header */
 #include "MacportsLegacySupport.h"
 
-#if __MP_LEGACY_SUPPORT_LLROUND__
+/* Do our SDK-related setup */
+#include <_macports_extras/sdkversion.h>
+
+#if __MPLS_SDK_SUPPORT_LLROUND__
 
 __MP__BEGIN_DECLS
 
@@ -67,7 +70,7 @@ __MP__END_DECLS
 #define _GLIBCXX_INCLUDE_NEXT_C_HEADERS 1
 #endif
 
-#endif /* __MP_LEGACY_SUPPORT_LLROUND__ */
+#endif /* __MPLS_SDK_SUPPORT_LLROUND__ */
 
 /*
  * Include the next math.h, which might be from the primary system or
@@ -76,7 +79,7 @@ __MP__END_DECLS
 
 #include_next <math.h>
 
-#if __MP_LEGACY_SUPPORT_COSSIN__
+#if __MPLS_SDK_SUPPORT_COSSIN__
 
 /* Following is borrowed from math.h on macOS 10.9+ */
 
@@ -89,9 +92,9 @@ extern void __sincosf(float __x, float *__sinp, float *__cosp);
 extern void __sincos(double __x, double *__sinp, double *__cosp);
 __MP__END_DECLS
 
-#endif /* __MP_LEGACY_SUPPORT_COSSIN__ */
+#endif /* __MPLS_SDK_SUPPORT_COSSIN__ */
 
-#if __MP_LEGACY_SUPPORT_LLROUND__
+#if __MPLS_SDK_SUPPORT_LLROUND__
 
 #ifdef L_GLIBCXX_MATH_H
 #undef L_GLIBCXX_MATH_H
@@ -103,6 +106,6 @@ __MP__END_DECLS
 #undef _GLIBCXX_INCLUDE_NEXT_C_HEADERS
 #endif
 
-#endif /* __MP_LEGACY_SUPPORT_LLROUND__ */
+#endif /* __MPLS_SDK_SUPPORT_LLROUND__ */
 
 #endif /* _MACPORTS_MATH_H_ */

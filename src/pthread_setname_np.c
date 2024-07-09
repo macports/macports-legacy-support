@@ -16,10 +16,11 @@ Until such time as this behavior can be emulated, do nothing and return success.
 
 /* MP support header */
 #include "MacportsLegacySupport.h"
-#if __MP_LEGACY_SUPPORT_PTHREAD_SETNAME_NP__
+
+#if __MPLS_LIB_SUPPORT_PTHREAD_SETNAME_NP__
 
 int pthread_setname_np(const char *name) {
   return 0;
 }
 
-#endif /* __MP_LEGACY_SUPPORT_PTHREAD_SETNAME_NP__ */
+#endif /* __MPLS_LIB_SUPPORT_PTHREAD_SETNAME_NP__ */

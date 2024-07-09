@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2018 Chris Jones <jonesc@macports.org>
  *
@@ -17,9 +16,6 @@
 
 #ifndef _MACPORTS_SYS_QUEUE_H_
 #define _MACPORTS_SYS_QUEUE_H_
-
-/* MP support header */
-#include "MacportsLegacySupport.h"
 
 /* Include the primary system sys/queue.h */
 #include_next <sys/queue.h>

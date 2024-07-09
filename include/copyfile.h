@@ -34,14 +34,14 @@
 /* Include the primary system copyfile.h */
 #include_next <copyfile.h>
 
-#if __MP_LEGACY_SUPPORT_COPYFILE_WRAP__
+#endif /* __MPLS_SDK_MAJOR >= 1050 */
+
+#if __MPLS_SDK_SUPPORT_COPYFILE_WRAP__
 
 #define COPYFILE_STATE_STATUS_CB        6
 #define COPYFILE_STATE_STATUS_CTX       7
 #define COPYFILE_STATE_COPIED           8
 
-#endif /* __MP_LEGACY_SUPPORT_COPYFILE_WRAP__ */
-
-#endif /* __MPLS_SDK_MAJOR >= 1050 */
+#endif /* __MPLS_SDK_SUPPORT_COPYFILE_WRAP__ */
 
 #endif /* _MACPORTS_COPYFILE_H_ */

@@ -18,7 +18,7 @@
 #include "MacportsLegacySupport.h"
 
 /* _tlv_atexit wrap */
-#if __MP_LEGACY_SUPPORT_ATEXIT_WRAP__
+#if __MPLS_LIB_SUPPORT_ATEXIT_WRAP__
 
 #include <stdlib.h>
 #include <dlfcn.h>
@@ -79,4 +79,4 @@ int __cxa_thread_atexit(void (*dtor)(void*), void* obj, void* dso_symbol) {
     exit(EXIT_FAILURE);
 }
 
-#endif /*__MP_LEGACY_SUPPORT_ATEXIT_WRAP__*/
+#endif /*__MPLS_LIB_SUPPORT_ATEXIT_WRAP__*/

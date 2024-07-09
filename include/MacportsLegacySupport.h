@@ -22,7 +22,7 @@
  * Not needed directly -- #include <AvailabilityMacros.h>,
  * but see <_macports_extras/sdkversion.h>
  *
- * NOTE: Not including AvailabilityMacros.h (directly or indirectly)
+ * NOTE: Not including AvailabilityMacros.h (directly or indirectly) here
  * makes it safe to include this header before sdkversion.h.
  */
 
@@ -85,9 +85,9 @@
  * in different ways.
  *
  * If a given feature is implemented entirely in the headers, then only
- * the SDK-based flag needs to exist.  But it's highly unlikely that a feature
- * would be implemented solely in the library without header support, so it's
- * highly unlikely that the library flag would exist without the SDK flag.
+ * the SDK-based flag needs to exist.  In a few cases, a feature is
+ * implemented solely in the library without added header support,
+ * in which case the library flag exists without the SDK flag.
  *
  * Occasionally, a header-only macro-based feature may require only an
  * #ifndef as a condition, in which case no feature flag is necessary.
@@ -97,20 +97,35 @@
  * regardless of whether the feature is provided by the OS or by this
  * package.
  *
- * In the new (not yet fully applied) naming scheme, the two flags for
- * a given feature are named:
+ * In the new naming scheme, the two flags for a given feature are named:
  *    __MPLS_SDK_<feature>
  *    __MPLS_LIB_<feature>
  *
- * The first flag is based on a comparison on __MPLS_SDK_MAJOR,
+ * The first flag is defined as a comparison on __MPLS_SDK_MAJOR,
  * and files using it need to include sdkversion.h (as well as this one).
  *
  * The second flag is typically defined as a comparison on __MPLS_TARGET_OSVER,
  * though in some cases the condition may be more complicated.
+ *
+ * NOTE: At present, no attempt is made to correct the availability attributes
+ * of definitions obtained from the SDK.  When using an SDK matched to the
+ * target OS version, this is a non-issue, since any feature provided by
+ * that OS version would be shown as available in that OS version, and any
+ * feature not provided by the target OS would be declared/defined in our
+ * own headers with no availability attributes.  But if a build uses a later
+ * SDK for an OS version that provides the feature, then it would usually
+ * show as unavailable for any OS version where our own support is needed.
+ * This is likely to produce availability warnings when such warnings are
+ * enabled.  If any fix for this is possible, it would be likely to involve
+ * considerable effort to implement; hence the problem is ignored for now.
+ * That means that either building with "later" SDKs should be avoided, or
+ * both enabling availability warnings and treating warnings as errors
+ * should be avoided.
  */
 
 /* fsgetpath */
-#define __MP_LEGACY_SUPPORT_FSGETPATH__       (__MPLS_TARGET_OSVER < 101300)
+#define __MPLS_SDK_SUPPORT_FSGETPATH__        (__MPLS_SDK_MAJOR < 101300)
+#define __MPLS_LIB_SUPPORT_FSGETPATH__        (__MPLS_TARGET_OSVER < 101300)
 
 /* setattrlistat */
 #define __MPLS_SDK_SUPPORT_SETATTRLISTAT__    (__MPLS_SDK_MAJOR < 101300)
@@ -183,23 +198,25 @@
 #define __MPLS_LIB_SUPPORT_WCSCASECMP__       (__MPLS_TARGET_OSVER < 1070)
 
 /* llround */
-#define __MP_LEGACY_SUPPORT_LLROUND__         (__MPLS_TARGET_OSVER < 1070)
+#define __MPLS_SDK_SUPPORT_LLROUND__          (__MPLS_SDK_MAJOR < 1070)
 
 /* arc4random */
 #define __MPLS_SDK_SUPPORT_ARC4RANDOM__       (__MPLS_SDK_MAJOR < 1070)
 #define __MPLS_LIB_SUPPORT_ARC4RANDOM__       (__MPLS_TARGET_OSVER < 1070)
 
 /* getentropy */
-#define __MP_LEGACY_SUPPORT_GETENTROPY__      (__MPLS_TARGET_OSVER < 101200)
+#define __MPLS_SDK_SUPPORT_GETENTROPY__       (__MPLS_SDK_MAJOR < 101200)
+#define __MPLS_LIB_SUPPORT_GETENTROPY__       (__MPLS_TARGET_OSVER < 101200)
 
-/* posix_memalign does not exist on < 1060 */
-#define __MP_LEGACY_SUPPORT_POSIX_MEMALIGN__  (__MPLS_TARGET_OSVER < 1060)
+/* posix_memalign does not exist on < 10.6 */
+#define __MPLS_SDK_SUPPORT_POSIX_MEMALIGN__   (__MPLS_SDK_MAJOR < 1060)
+#define __MPLS_LIB_SUPPORT_POSIX_MEMALIGN__   (__MPLS_TARGET_OSVER < 1060)
 
-/* AI_NUMERICSERV does not exist on < 1060 */
-#define __MP_LEGACY_SUPPORT_AI_NUMERICSERV__  (__MPLS_TARGET_OSVER < 1060)
+/* AI_NUMERICSERV does not exist on < 10.6 */
+/* The addition uses an #ifndef, so no feature flag is necessary */
 
-/*  realpath() on < 1060 does not support modern NULL buffer usage */
-#define __MP_LEGACY_SUPPORT_REALPATH_WRAP__   (__MPLS_TARGET_OSVER < 1060)
+/*  realpath() on < 10.6 does not support modern NULL buffer usage */
+#define __MPLS_LIB_SUPPORT_REALPATH_WRAP__    (__MPLS_TARGET_OSVER < 1060)
 
 /* setattrlist */
 #define __MPLS_SDK_SUPPORT_FSETATTRLIST__     (__MPLS_SDK_MAJOR < 1060)
@@ -208,21 +225,23 @@
 /* localtime_r, gmtime_r, etc only declared on Tiger when _ANSI_SOURCE and _POSIX_C_SOURCE are undefined */
 #define __MPLS_SDK_SUPPORT_TIME_THREAD_SAFE_FUNCTIONS__  (__MPLS_SDK_MAJOR < 1050)
 
-/* lsmod does not exist on Tiger */
-#define __MP_LEGACY_SUPPORT_LSMOD__           (__MPLS_TARGET_OSVER < 1050)
+/* lchmod does not exist on Tiger */
+#define __MPLS_SDK_SUPPORT_LCHMOD__           (__MPLS_SDK_MAJOR < 1050)
+#define __MPLS_LIB_SUPPORT_LCHMOD__           (__MPLS_TARGET_OSVER < 1050)
 
 /* lutimes does not exist on Tiger */
-#define __MP_LEGACY_SUPPORT_LUTIMES__         (__MPLS_TARGET_OSVER < 1050)
+#define __MPLS_SDK_SUPPORT_LUTIMES__          (__MPLS_SDK_MAJOR < 1050)
+#define __MPLS_LIB_SUPPORT_LUTIMES__          (__MPLS_TARGET_OSVER < 1050)
 
 /* sys/aio.h header needs adjustment to match newer SDKs */
 #define __MPLS_SDK_SYS_AIO_TIGER_FIX__        (__MPLS_SDK_MAJOR < 1050)
 
 /*  sysconf() is missing some functions on some systems, and may misbehave on i386 */
-#define __MP_LEGACY_SUPPORT_SYSCONF_WRAP__    (__MPLS_TARGET_OSVER < 101100 \
+#define __MPLS_LIB_SUPPORT_SYSCONF_WRAP__     (__MPLS_TARGET_OSVER < 101100 \
                                                || __MPLS_APPLE_I386__)
 
-/* pthread_rwlock_initializer is not defined until 10.5 */
-#define __MPLS_SDK_SUPPORT_PTHREAD_RWLOCK__   (__MPLS_SDK_MAJOR < 1050)
+/* PTHREAD_RWLOCK_INITIALIZER is not defined until 10.5 */
+/* The addition uses an #ifndef, so no feature flag is necessary */
 
 /* STAILQ_FOREACH is not defined until 10.5 */
 /* The addition uses an #ifndef, so no feature flag is necessary */
@@ -237,7 +256,8 @@
 #endif
 
 /* cossin */
-#define __MP_LEGACY_SUPPORT_COSSIN__  (__MPLS_TARGET_OSVER < 1090)
+#define __MPLS_SDK_SUPPORT_COSSIN__   (__MPLS_SDK_MAJOR < 1090)
+#define __MPLS_LIB_SUPPORT_COSSIN__   (__MPLS_TARGET_OSVER < 1090)
 
 /* ffsl */
 #define __MPLS_SDK_SUPPORT_FFSL__     (__MPLS_SDK_MAJOR < 1050)
@@ -265,7 +285,8 @@
 #define __MPLS_LIB_SUPPORT_FMEMOPEN__   (__MPLS_TARGET_OSVER < 101300)
 
 /* pthread_setname_np */
-#define __MP_LEGACY_SUPPORT_PTHREAD_SETNAME_NP__  (__MPLS_TARGET_OSVER < 1060)
+#define __MPLS_SDK_SUPPORT_PTHREAD_SETNAME_NP__   (__MPLS_SDK_MAJOR < 1060)
+#define __MPLS_LIB_SUPPORT_PTHREAD_SETNAME_NP__   (__MPLS_TARGET_OSVER < 1060)
 
 /* Compound macros, bundling functionality needed by multiple single features. */
 #define __MPLS_SDK_NEED_ATCALL_MACROS__  (__MPLS_SDK_SUPPORT_ATCALLS__ || __MPLS_SDK_SUPPORT_SETATTRLISTAT__)
@@ -280,24 +301,26 @@
 #define __MPLS_SDK_SUPPORT_CoreFoundation__  (__MPLS_SDK_MAJOR < 1060)
 
 /* copyfile and its associated functions have gained functionality over the years */
-#define __MP_LEGACY_SUPPORT_COPYFILE_WRAP__ (__MPLS_TARGET_OSVER < 1060)
+#define __MPLS_SDK_SUPPORT_COPYFILE_WRAP__  (__MPLS_SDK_MAJOR < 1060)
+#define __MPLS_LIB_SUPPORT_COPYFILE_WRAP__  (__MPLS_TARGET_OSVER < 1060)
 
 /* _tlv_atexit and __cxa_thread_atexit */
-#define __MP_LEGACY_SUPPORT_ATEXIT_WRAP__  (__MPLS_TARGET_OSVER < 1070)
+#define __MPLS_LIB_SUPPORT_ATEXIT_WRAP__   (__MPLS_TARGET_OSVER < 1070)
 
 /* os_unfair_lock structure and its associated functions */
-#define __MP_LEGACY_SUPPORT_OS_UNFAIR_LOCK__  (__MPLS_TARGET_OSVER < 101200)
+#define __MPLS_SDK_SUPPORT_OS_UNFAIR_LOCK__   (__MPLS_SDK_MAJOR < 101200)
+#define __MPLS_LIB_SUPPORT_OS_UNFAIR_LOCK__   (__MPLS_TARGET_OSVER < 101200)
 
 /* library symbol ___bzero */
-#define __MP_LEGACY_SUPPORT_SYMBOL____bzero__  (__MPLS_TARGET_OSVER < 1060)
+#define __MPLS_LIB_SUPPORT_SYMBOL____bzero__   (__MPLS_TARGET_OSVER < 1060)
 
 /* library symbol _dirfd */
-#define __MP_LEGACY_SUPPORT_SYMBOL__dirfd__  (__MPLS_TARGET_OSVER < 1080)
+#define __MPLS_LIB_SUPPORT_SYMBOL__dirfd__   (__MPLS_TARGET_OSVER < 1080)
 
 /* fix bug in pthread_get_stacksize_np */
 /* see https://github.com/rust-lang/rust/issues/43347 */
-#define __MP_LEGACY_SUPPORT_PTHREAD_GET_STACKSIZE_NP_FIX__ (__MPLS_TARGET_OSVER == 101000 \
+#define __MPLS_LIB_SUPPORT_PTHREAD_GET_STACKSIZE_NP_FIX__  (__MPLS_TARGET_OSVER == 101000 \
                                                             || __MPLS_TARGET_OSVER == 1090 \
-                                                            || __MPLS_TARGET_OSVER <  1060 )
+                                                            || __MPLS_TARGET_OSVER <  1060)
 
 #endif /* _MACPORTS_LEGACYSUPPORTDEFS_H_ */

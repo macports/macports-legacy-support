@@ -16,8 +16,8 @@
 
 /* Prototypes for directory function compatibility wrappers */
 
-#ifndef __MP_LEGACY_SUPPORT_DIRFUNCS_COMPAT_H
-#define __MP_LEGACY_SUPPORT_DIRFUNCS_COMPAT_H
+#ifndef __MACPORTS_DIRFUNCS_COMPAT_H
+#define __MACPORTS_DIRFUNCS_COMPAT_H
 
 #include <dirent.h>
 
@@ -45,4 +45,4 @@ __mpls_closedir(DIR *dirp);
 int
 __mpls_dirfd(DIR *dirp);
 
-#endif /* __MP_LEGACY_SUPPORT_DIRFUNCS_COMPAT_H */
+#endif /* __MACPORTS_DIRFUNCS_COMPAT_H */

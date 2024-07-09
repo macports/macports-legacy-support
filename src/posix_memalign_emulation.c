@@ -42,9 +42,8 @@
 
 /* MP support header */
 #include "MacportsLegacySupport.h"
-#if __MP_LEGACY_SUPPORT_POSIX_MEMALIGN__
 
-
+#if __MPLS_LIB_SUPPORT_POSIX_MEMALIGN__
 
 #include <stdlib.h>
 #include <errno.h>
@@ -84,4 +83,4 @@ int posix_memalign(void** pp, size_t alignment, size_t bytes) {
   }
 }
 
-#endif /* __MP_LEGACY_SUPPORT_POSIX_MEMALIGN__ */
+#endif /* __MPLS_LIB_SUPPORT_POSIX_MEMALIGN__ */

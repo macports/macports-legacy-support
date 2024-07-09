@@ -18,7 +18,7 @@
 #include "MacportsLegacySupport.h"
 
 /* realpath wrap */
-#if __MP_LEGACY_SUPPORT_REALPATH_WRAP__
+#if __MPLS_LIB_SUPPORT_REALPATH_WRAP__
 
 #include <limits.h>
 #include <stdlib.h>
@@ -51,4 +51,4 @@ char *realpath(const char * __restrict stringsearch, char * __restrict buffer)
 /* compatibility function so code does not have to be recompiled */
 char *macports_legacy_realpath(const char * __restrict stringsearch, char * __restrict buffer) { return realpath(stringsearch, buffer); }
 
-#endif /*__MP_LEGACY_SUPPORT_REALPATH_WRAP__*/
+#endif /*__MPLS_LIB_SUPPORT_REALPATH_WRAP__*/
