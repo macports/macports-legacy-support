@@ -18,7 +18,7 @@
 #include "MacportsLegacySupport.h"
 
 /* sysconf wrap */
-#if __MP_LEGACY_SUPPORT_SYSCONF_WRAP__
+#if __MPLS_LIB_SUPPORT_SYSCONF_WRAP__
 
 #include <sys/types.h>
 #include <sys/sysctl.h>
@@ -95,4 +95,4 @@ long sysconf(int name) {
 /* compatibility function so code does not have to be recompiled */
 long macports_legacy_sysconf(int name) { return sysconf(name); }
 
-#endif /*__MP_LEGACY_SUPPORT_SYSCONF_WRAP__*/
+#endif /*__MPLS_LIB_SUPPORT_SYSCONF_WRAP__*/

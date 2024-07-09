@@ -30,8 +30,8 @@
 
 /* MP support header */
 #include "MacportsLegacySupport.h"
-#if __MP_LEGACY_SUPPORT_LSMOD__
 
+#if __MPLS_LIB_SUPPORT_LCHMOD__
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -57,4 +57,4 @@ lchmod(const char *path, mode_t mode)
 	return setattrlist(path, &a, &m, sizeof(int), FSOPT_NOFOLLOW);
 }
 
-#endif
+#endif /* __MPLS_LIB_SUPPORT_LCHMOD__ */

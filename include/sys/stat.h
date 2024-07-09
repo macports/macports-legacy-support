@@ -66,7 +66,7 @@ __MP__END_DECLS
 
 #endif /* __MPLS_SDK_SUPPORT_ATCALLS__ */
 
-#if __MP_LEGACY_SUPPORT_LSMOD__
+#if __MPLS_SDK_SUPPORT_LCHMOD__
 
 __MP__BEGIN_DECLS
 
@@ -74,6 +74,6 @@ extern int lchmod(const char *, mode_t);
 
 __MP__END_DECLS
 
-#endif /* __MP_LEGACY_SUPPORT_LSMOD__ */
+#endif /* __MPLS_SDK_SUPPORT_LCHMOD__ */
 
 #endif /* _MACPORTS_SYSSTAT_H_ */

@@ -14,16 +14,19 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef _MACPORTS_SYSRANDOM_H_
-#define _MACPORTS_SYSRANDOM_H_
+#ifndef _MACPORTS_SYS_RANDOM_H_
+#define _MACPORTS_SYS_RANDOM_H_
 
 /* MP support header */
 #include "MacportsLegacySupport.h"
 
+/* Do our SDK-related setup */
+#include <_macports_extras/sdkversion.h>
+
 /* Include the primary system sys/random.h */
 #include_next <sys/random.h>
 
-#if __MP_LEGACY_SUPPORT_GETENTROPY__
+#if __MPLS_SDK_SUPPORT_GETENTROPY__
 
 __MP__BEGIN_DECLS
 
@@ -31,6 +34,6 @@ extern int getentropy(void *buf, size_t buflen);
 
 __MP__END_DECLS
 
-#endif /* __MP_LEGACY_SUPPORT_GETENTROPY__ */
+#endif /* __MPLS_SDK_SUPPORT_GETENTROPY__ */
 
-#endif /* _MACPORTS_SYSRANDOM_H_ */
+#endif /* _MACPORTS_SYS_RANDOM_H_ */

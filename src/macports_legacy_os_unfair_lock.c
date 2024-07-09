@@ -17,7 +17,7 @@
 /* MP support header */
 #include "MacportsLegacySupport.h"
 
-#if __MP_LEGACY_SUPPORT_OS_UNFAIR_LOCK__
+#if __MPLS_LIB_SUPPORT_OS_UNFAIR_LOCK__
 
 #include <os/lock.h>
 
@@ -33,4 +33,4 @@ void os_unfair_lock_unlock(os_unfair_lock_t lock) {
      return OSSpinLockUnlock(lock);
 }
 
-#endif /*__MP_LEGACY_SUPPORT_OS_UNFAIR_LOCK__*/
+#endif /* __MPLS_LIB_SUPPORT_OS_UNFAIR_LOCK__ */

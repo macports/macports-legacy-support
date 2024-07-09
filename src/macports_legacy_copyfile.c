@@ -18,7 +18,7 @@
 #include "MacportsLegacySupport.h"
 
 /* copyfile and its associated functions wrap */
-#if __MP_LEGACY_SUPPORT_COPYFILE_WRAP__
+#if __MPLS_LIB_SUPPORT_COPYFILE_WRAP__
 
 #include <stdlib.h>
 #include <dlfcn.h>
@@ -75,4 +75,4 @@ int copyfile_state_get(copyfile_state_t s, uint32_t flag, void * dst)
     return 0;
 }
 
-#endif /* __MP_LEGACY_SUPPORT_COPYFILE_WRAP__ */
+#endif /* __MPLS_LIB_SUPPORT_COPYFILE_WRAP__ */

@@ -16,15 +16,13 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-
-// MP support header
+/* MP support header */
 #include "MacportsLegacySupport.h"
-#if __MP_LEGACY_SUPPORT_FSGETPATH__
-
+#if __MPLS_LIB_SUPPORT_FSGETPATH__
 
 #if 1
 /* SYS_fsgetpath is only available on 10.6 and up */
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1060
+#if __APPLE__ && __MPLS_TARGET_OSVER >= 1060
 /* implement using a syscall available macOS 10.6 to 10.12 */
 /* this should be thoroughly vetted as a syscall, but is private API */
 #include <unistd.h>
@@ -77,4 +75,4 @@ ssize_t fsgetpath(char * buf, size_t buflen, fsid_t * fsid, uint64_t obj_id) {
 }
 #endif
 
-#endif /* __MP_LEGACY_SUPPORT_FSGETPATH__ */
+#endif /* __MPLS_LIB_SUPPORT_FSGETPATH__ */

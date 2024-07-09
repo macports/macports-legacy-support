@@ -26,19 +26,17 @@
 /* Include the primary system pthread.h */
 #include_next <pthread.h>
 
-#if __MPLS_SDK_SUPPORT_PTHREAD_RWLOCK__
 /* PTHREAD_RWLOCK_INITIALIZER is not defined on Tiger */
 #ifndef PTHREAD_RWLOCK_INITIALIZER
 #define PTHREAD_RWLOCK_INITIALIZER {_PTHREAD_RWLOCK_SIG_init, {0}}
 #endif
-#endif /* __MPLS_SDK_SUPPORT_PTHREAD_RWLOCK__  */
 
 
 __MP__BEGIN_DECLS
 
-#if __MP_LEGACY_SUPPORT_PTHREAD_SETNAME_NP__
+#if __MPLS_SDK_SUPPORT_PTHREAD_SETNAME_NP__
 int pthread_setname_np(const char *);
-#endif /* __MP_LEGACY_SUPPORT_PTHREAD_SETNAME_NP__ */
+#endif /* __MPLS_SDK_SUPPORT_PTHREAD_SETNAME_NP__ */
 
 __MP__END_DECLS
 

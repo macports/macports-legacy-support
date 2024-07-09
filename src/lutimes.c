@@ -30,7 +30,8 @@
 
 /* MP support header */
 #include "MacportsLegacySupport.h"
-#if __MP_LEGACY_SUPPORT_LUTIMES__
+
+#if __MPLS_LIB_SUPPORT_LUTIMES__
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -70,4 +71,4 @@ lutimes(const char *path, const struct timeval *times)
 	return setattrlist(path, &a, &t, sizeof(t), FSOPT_NOFOLLOW);
 }
 
-#endif  /* __MP_LEGACY_SUPPORT_LUTIMES__ */
+#endif  /* __MPLS_LIB_SUPPORT_LUTIMES__ */

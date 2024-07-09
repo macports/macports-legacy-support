@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2018
  *
@@ -17,17 +16,11 @@
 
 #ifndef _MACPORTS_NETDB_H_
 #define _MACPORTS_NETDB_H_
-
-/* MP support header */
-#include "MacportsLegacySupport.h"
-
 /* Include the primary system netdb.h */
 #include_next <netdb.h>
 
-#if __MP_LEGACY_SUPPORT_AI_NUMERICSERV__
-#  ifndef AI_NUMERICSERV
-#    define	AI_NUMERICSERV	0x00001000 /* prevent service name resolution */
-#  endif
+#ifndef AI_NUMERICSERV
+#define	AI_NUMERICSERV	0x00001000 /* prevent service name resolution */
 #endif
 
 #endif /* _MACPORTS_NETDB_H_ */

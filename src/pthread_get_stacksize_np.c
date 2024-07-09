@@ -1,6 +1,7 @@
 /* MP support header */
 #include "MacportsLegacySupport.h"
-#if __MP_LEGACY_SUPPORT_PTHREAD_GET_STACKSIZE_NP_FIX__
+
+#if __MPLS_LIB_SUPPORT_PTHREAD_GET_STACKSIZE_NP_FIX__
 
 #include <pthread.h>
 #include <sys/resource.h>
@@ -67,4 +68,4 @@ size_t pthread_get_stacksize_np(pthread_t t) {
      }
 }
 
-#endif /* __MP_LEGACY_SUPPORT_PTHREAD_GET_STACKSIZE_NP_FIX__ */
+#endif /* __MPLS_LIB_SUPPORT_PTHREAD_GET_STACKSIZE_NP_FIX__ */

@@ -14,16 +14,19 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef _MACPORTS_SYSTIME_H_
-#define _MACPORTS_SYSTIME_H_
+#ifndef _MACPORTS_SYS_TIME_H_
+#define _MACPORTS_SYS_TIME_H_
 
 /* MP support header */
 #include "MacportsLegacySupport.h"
 
+/* Do our SDK-related setup */
+#include <_macports_extras/sdkversion.h>
+
 /* Include the primary system sys/time.h */
 #include_next <sys/time.h>
 
-#if __MP_LEGACY_SUPPORT_LUTIMES__
+#if __MPLS_SDK_SUPPORT_LUTIMES__
 
 __MP__BEGIN_DECLS
 
@@ -31,6 +34,6 @@ extern int lutimes(const char *, const struct timeval *);
 
 __MP__END_DECLS
 
-#endif /* __MP_LEGACY_SUPPORT_LUTIMES__ */
+#endif /* __MPLS_SDK_SUPPORT_LUTIMES__ */
 
-#endif /* _MACPORTS_SYSTIME_H_ */
+#endif /* _MACPORTS_SYS_TIME_H_ */

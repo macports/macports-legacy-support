@@ -20,7 +20,15 @@
 /* MP support header */
 #include "MacportsLegacySupport.h"
 
-#if __MP_LEGACY_SUPPORT_OS_UNFAIR_LOCK__
+/* Do our SDK-related setup */
+#include <_macports_extras/sdkversion.h>
+
+/* Include the primary system os/lock.h (10.12+ only) */
+#if __MPLS_SDK_MAJOR >= 101200
+#include_next <os/lock.h>
+#endif
+
+#if __MPLS_SDK_SUPPORT_OS_UNFAIR_LOCK__
 
 /*
   os/lock.h does not exist
@@ -53,11 +61,6 @@ void os_unfair_lock_assert_owner(const os_unfair_lock *lock);
 void os_unfair_lock_assert_not_owner(const os_unfair_lock *lock);
 */
 
-#else /*__MP_LEGACY_SUPPORT_OS_UNFAIR_LOCK__*/
-
-/* Include the primary system os/lock.h */
-#include_next <os/lock.h>
-
-#endif /*__MP_LEGACY_SUPPORT_OS_UNFAIR_LOCK__*/
+#endif /* __MPLS_SDK_SUPPORT_OS_UNFAIR_LOCK__ */
 
 #endif

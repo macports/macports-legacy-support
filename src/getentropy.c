@@ -17,7 +17,7 @@
 
 // MP support header
 #include "MacportsLegacySupport.h"
-#if __MP_LEGACY_SUPPORT_GETENTROPY__
+#if __MPLS_LIB_SUPPORT_GETENTROPY__
 
 #include <fcntl.h>
 #include <stdint.h>
@@ -86,4 +86,4 @@ getentropy(void* buf, size_t n)
     return 0;
 }
 
-#endif /* __MP_LEGACY_SUPPORT_GETENTROPY__ */
+#endif /* __MPLS_LIB_SUPPORT_GETENTROPY__ */

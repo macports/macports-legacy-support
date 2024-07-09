@@ -18,9 +18,10 @@
 #include "MacportsLegacySupport.h"
 
 /* Do our SDK-related setup */
-#include <_macports_extras/sdkversion.h>
+#include <_macports_extras/sdkversion.h>  /* For 10.4 hack */
 
-#if __MP_LEGACY_SUPPORT_SYMBOL____bzero__
+#if __MPLS_LIB_SUPPORT_SYMBOL____bzero__
+
 #include <strings.h>
 /*
 The need for this function is highly limited.
@@ -29,9 +30,9 @@ When the Rust stage0 compiler for 10.5 is built on newer machines, it bakes `__b
 This may be due to the fact that on newer machines, the `_bzero` symbol is an indirect reference to another symbol.
 */
 void __bzero(void *s, size_t n) { bzero(s, n); }
-#endif /* __MP_LEGACY_SUPPORT_SYMBOL_ALIASES__ */
+#endif /* __MPLS_LIB_SUPPORT_SYMBOL____bzero__ */
 
-#if __MP_LEGACY_SUPPORT_SYMBOL__dirfd__
+#if __MPLS_LIB_SUPPORT_SYMBOL__dirfd__
 #include <dirent.h>
 #include <errno.h>
 #include <stddef.h>
@@ -54,7 +55,7 @@ int dirfd(DIR *dirp)
     else
         return dirp->__dd_fd;
 }
-#endif /* __MP_LEGACY_SUPPORT_SYMBOL__dirfd__ */
+#endif /* __MPLS_LIB_SUPPORT_SYMBOL__dirfd__ */
 
 #if __MPLS_LIB_SUPPORT_ATCALLS__ && __MPLS_TARGET_OSVER >= 1050
 #include <sys/stat.h>
