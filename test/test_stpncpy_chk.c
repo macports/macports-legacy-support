@@ -26,8 +26,20 @@
 /* Allow deferring the stdio.h include */
 int printf(const char *format, ...);
 
-#define PRINT_VAR(x) printf("    %s = %lld\n", #x, (long long) x)
+#define PRINT_VAR(x) printf("    " #x " = %lld\n", (long long) x)
 #define PRINT_UNDEF(x) printf("    " #x " is undefined\n")
+#define XPRINT_VAR(x) printf(#x " = %lld", (long long) x)
+#define XPRINT_UNDEF(x) printf(#x " (undef)")
+
+void
+print_source(void)
+{
+  #ifdef _FORTIFY_SOURCE
+  XPRINT_VAR(_FORTIFY_SOURCE);
+  #else
+  XPRINT_UNDEF(_FORTIFY_SOURCE);
+  #endif
+}
 
 void
 print_before(void)
@@ -46,6 +58,16 @@ print_before(void)
 }
 
 #include <string.h>
+
+void
+print_use(void)
+{
+  #ifdef _USE_FORTIFY_LEVEL
+  XPRINT_VAR(_USE_FORTIFY_LEVEL);
+  #else
+  XPRINT_UNDEF(_USE_FORTIFY_LEVEL);
+  #endif
+}
 
 void
 print_after(void)
@@ -73,6 +95,7 @@ print_after(void)
 #include <libgen.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include <sys/wait.h>
 
@@ -184,12 +207,23 @@ main(int argc, char *argv[])
 {
   int have_compile_time_checks = CHECKS_ARE_ENABLED;
   int have_runtime_checks = 0;  /* These don't currently work */
+  int verbose = 0;
 
-  (void) argc;
+  if (argc > 1 && !strcmp(argv[1], "-v")) verbose = 1;
 
-  printf("Running %s\n", basename(argv[0]));
-  print_before();
-  print_after();
+  printf("Running %s", basename(argv[0]));
+  if (!verbose) {
+    printf(", ");
+    print_source();
+    printf(" => ");
+    print_use();
+    printf("\n");
+  } else {
+    printf("\n");
+    print_before();
+    print_after();
+  }
+
   /* Forking with unflushed buffers may produce duplicate output. */
   fflush(NULL);
 
@@ -208,6 +242,6 @@ main(int argc, char *argv[])
     assert(run_test_func(&test_bad_stpncpy_runtime) != 0);
   }
 
-  printf("Tests pass\n");
+  if (verbose) printf("Tests pass\n");
   return 0;
 }
