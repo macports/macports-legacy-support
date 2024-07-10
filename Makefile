@@ -125,6 +125,9 @@ MANTESTOBJS_C   := $(patsubst %.c,%.o,$(MANTESTSRCS_C))
 MANTESTPRGS_C   := $(patsubst %.c,%,$(MANTESTSRCS_C))
 MANTESTRUNS     := $(patsubst \
                      $(MANTESTPREFIX)%,$(MANRUNPREFIX)%,$(MANTESTPRGS_C))
+DARWINSRCS_C    := $(wildcard $(MANTESTPREFIX)darwin_c*.c)
+DARWINRUNS      := $(patsubst \
+                     $(MANTESTPREFIX)%.c,$(MANRUNPREFIX)%,$(DARWINSRCS_C))
 
 TIGERBINDIR      = tiger_only/bin
 TIGERBINS       := $(wildcard $(TIGERBINDIR)/*)
@@ -289,8 +292,10 @@ $(TESTPRGS_C): %: %.o $(BUILDDLIBPATH)
 $(TESTPRGS_CPP): %: %.o $(BUILDDLIBPATH)
 	$(CXX) $(TESTLDFLAGS) $< $(TESTLIBS) -o $@
 
+# The "darwin_c" tests need the -fno-builtin option with some compilers.
+# It shouldn't hurt the other manual tests.
 $(MANTESTOBJS_C): %.o: %.c $(ALLHEADERS)
-	$(CC) -c -std=c99 -I$(SRCINCDIR) $(CFLAGS) $< -o $@
+	$(CC) -c -std=c99 -fno-builtin -I$(SRCINCDIR) $(CFLAGS) $< -o $@
 
 # Currently, the manual tests don't require the library
 $(MANTESTPRGS_C): %: %.o $(BUILDLIBDIR)
@@ -345,6 +350,14 @@ $(TESTNAMEPREFIX)stpncpy_chk_force1.o: $(TESTNAMEPREFIX)stpncpy_chk.c
 $(TESTNAMEPREFIX)strncpy_chk_forced.o: $(TESTNAMEPREFIX)strncpy_chk.c
 $(TESTNAMEPREFIX)strncpy_chk_force0.o: $(TESTNAMEPREFIX)strncpy_chk.c
 $(TESTNAMEPREFIX)strncpy_chk_force1.o: $(TESTNAMEPREFIX)strncpy_chk.c
+
+# The "darwin_c" tests include the basic "darwin_c" source
+$(MANTESTPREFIX)darwin_c_199309.o: $(MANTESTPREFIX)darwin_c.c
+$(MANTESTPREFIX)darwin_c_200809.o: $(MANTESTPREFIX)darwin_c.c
+$(MANTESTPREFIX)darwin_c_full.o: $(MANTESTPREFIX)darwin_c.c
+
+# Provide a target for all "darwin_c" tests
+$(MANRUNPREFIX)darwin_c_all: $(DARWINRUNS)
 
 $(MANTESTRUNS): $(MANRUNPREFIX)%: $(MANTESTPREFIX)%
 	$< $(TEST_ARGS)
