@@ -124,6 +124,7 @@
 
 #include <AvailabilityMacros.h>
 
+/* Now restore _DARWIN_C_SOURCE to the way it was. */
 #ifdef __MPLS_DARWIN_C_UNDEF
 #undef _DARWIN_C_SOURCE
 #undef __MPLS_DARWIN_C_UNDEF
