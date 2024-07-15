@@ -222,7 +222,7 @@
 /*  realpath() on < 10.6 does not support modern NULL buffer usage */
 #define __MPLS_LIB_SUPPORT_REALPATH_WRAP__    (__MPLS_TARGET_OSVER < 1060)
 
-/* setattrlist */
+/* fsetattrlistat, fgetattrlistat */
 #define __MPLS_SDK_SUPPORT_FSETATTRLIST__     (__MPLS_SDK_MAJOR < 1060)
 #define __MPLS_LIB_SUPPORT_FSETATTRLIST__     (__MPLS_TARGET_OSVER < 1060)
 

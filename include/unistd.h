@@ -101,8 +101,10 @@
 
 #ifdef __LP64__
 int   fsetattrlist(int,void*,void*,size_t,unsigned int);
+int   fgetattrlist(int,void*,void*,size_t,unsigned int);
 #else /* defined (__LP64__) */
 int   fsetattrlist(int,void*,void*,size_t,unsigned long);
+int   fgetattrlist(int,void*,void*,size_t,unsigned long);
 #endif /* defined (__LP64__) */
 
 #endif  /* __MPLS_SDK_SUPPORT_FSETATTRLIST__ */
