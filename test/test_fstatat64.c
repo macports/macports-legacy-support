@@ -24,8 +24,6 @@
 #include <errno.h>
 #include <fcntl.h>
 
-#define FEEDBACK 1
-
 /*
  * For newer macOS releases - where this syscall is available - it's declared
  * in header 'sys/sysproto.h', within 'Kernel.framework'.
@@ -33,6 +31,7 @@
  * To avoid depending on that, declare it ourselves. (Remember that C/C++
  * allows redundant function declarations, as long as the signatures match.)
  */
+struct stat64;  /* Avoid warning on 10.4 (where this doesn't work, anyway) */
 int fstatat64(int dirfd, const char *pathname, struct stat64 *buf, int flags);
 
 int main (int argc, char **argv) {
