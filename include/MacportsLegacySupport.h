@@ -254,8 +254,14 @@
 /* PTHREAD_RWLOCK_INITIALIZER is not defined until 10.5 */
 /* The addition uses an #ifndef, so no feature flag is necessary */
 
-/* STAILQ_FOREACH is not defined until 10.5 */
-/* The addition uses an #ifndef, so no feature flag is necessary */
+/* Macros missing from some earlier versions of sys/queue.h */
+/* All additions use #ifndef, so no feature flags are necessary. */
+
+/* Missing until 10.5 */
+/* SLIST_HEAD_INITIALIZER, STAILQ_FOREACH */
+
+/* Missing until 10.7 */
+/* SLIST_REMOVE_AFTER */
 
 /* c++11 <cmath> PPC 10.[45] and Intel 10.[4-6], GNU g++ 4.6 through 8. */
 #if (__MPLS_TARGET_OSVER < 1070 \

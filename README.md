@@ -148,7 +148,15 @@ Wrapped headers and replaced functions are:
     <td>OSX10.10</td>
   </tr>
   <tr>
-    <td><code>sys/queue.h</code></td>
+    <td rowspan="3"><code>sys/queue.h</code></td>
+    <td>Adds <code>SLIST_HEAD_INITIALIZER</code> macro</td>
+    <td>OSX10.4</td>
+  </tr>
+  <tr>
+    <td>Adds <code>SLIST_REMOVE_AFTER</code> macro</td>
+    <td>OSX10.6</td>
+  </tr>
+  <tr>
     <td>Adds <code>STAILQ_FOREACH</code> macro</td>
     <td>OSX10.4</td>
   </tr>

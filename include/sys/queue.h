@@ -20,7 +20,28 @@
 /* Include the primary system sys/queue.h */
 #include_next <sys/queue.h>
 
-/* STAILQ_FOREACH is not defined on Tiger */
+/* SLIST functions missing from earlier SDK versions */
+
+/* Missing until 10.5 */
+
+#ifndef SLIST_HEAD_INITIALIZER
+#define	SLIST_HEAD_INITIALIZER(head)					\
+	{ NULL }
+#endif
+
+/* Missing until 10.7 */
+
+#ifndef SLIST_REMOVE_AFTER
+#define SLIST_REMOVE_AFTER(elm, field) do {             \
+        SLIST_NEXT(elm, field) =                        \
+            SLIST_NEXT(SLIST_NEXT(elm, field), field);  \
+} while (0)
+#endif
+
+/* STAILQ functions missing from earlier SDK versions */
+
+/* Missing until 10.5 */
+
 #ifndef STAILQ_FOREACH
 #define STAILQ_FOREACH(var, head, field)     \
     for((var) = STAILQ_FIRST((head));        \
