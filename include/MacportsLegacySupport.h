@@ -173,7 +173,7 @@
 #define __MPLS_SDK_SUPPORT_STRNDUP__          (__MPLS_SDK_MAJOR < 1070)
 #define __MPLS_LIB_SUPPORT_STRNDUP__          (__MPLS_TARGET_OSVER < 1070)
 
-/* dprintf */
+/* dprintf, vdprintf */
 #define __MPLS_SDK_SUPPORT_DPRINTF__          (__MPLS_SDK_MAJOR < 1070)
 #define __MPLS_LIB_SUPPORT_DPRINTF__          (__MPLS_TARGET_OSVER < 1070)
 

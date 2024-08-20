@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Evan Miller   <emmiller@gmail.com>
+ * Copyright (c) 2021 Evan Miller <emmiller@gmail.com>, 2024 raf <raf@raf.org>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -23,7 +23,8 @@
 #include <sys/errno.h>
 
 int dprintf(int fildes, const char * __restrict format, ...) {
-    FILE *stream = fdopen(fildes, "w");
+    int dup_fildes = dup(fildes);
+    FILE *stream = fdopen(dup_fildes, "w");
     if (stream == NULL) {
         errno = EBADF;
         return -1;
@@ -32,6 +33,21 @@ int dprintf(int fildes, const char * __restrict format, ...) {
     va_start(ap, format);
     int result = vfprintf(stream, format, ap);
     va_end(ap);
+    fclose(stream);
+    return result;
+}
+
+int vdprintf(int fildes, const char * __restrict format, va_list ap) {
+    int dup_fildes = dup(fildes);
+    FILE *stream = fdopen(dup_fildes, "w");
+    if (stream == NULL) {
+        errno = EBADF;
+        return -1;
+    }
+    va_list ap_copy;
+    va_copy(ap_copy, ap);
+    int result = vfprintf(stream, format, ap_copy);
+    va_end(ap_copy);
     fclose(stream);
     return result;
 }
