@@ -102,6 +102,21 @@ SLIBOBJS        := $(patsubst %.c,%$(SLIBOBJEXT),$(LIBSRCS))
 MULTISLIBOBJS   := $(patsubst %.c,%$(SLIBOBJEXT),$(MULTISRCS))
 ADDOBJS         := $(patsubst %.c,%$(SLIBOBJEXT),$(ADDSRCS))
 
+# Automatic tests that don't use the library, and are OK with -fno-builtin
+XTESTDIR          = xtest
+XTESTNAMEPREFIX   = $(XTESTDIR)/test_
+XTESTRUNPREFIX    = run_
+XTESTLDFLAGS      = $(ALLLDFLAGS)
+XTESTSRCS_C      := $(wildcard $(XTESTNAMEPREFIX)*.c)
+XTESTOBJS_C      := $(patsubst %.c,%.o,$(XTESTSRCS_C))
+XTESTPRGS_C      := $(patsubst %.c,%,$(XTESTSRCS_C))
+XTESTPRGS         = $(XTESTPRGS_C)
+XTESTRUNS        := $(patsubst $(XTESTNAMEPREFIX)%,$(XTESTRUNPREFIX)%,$(XTESTPRGS))
+DARWINSRCS_C    := $(wildcard $(XTESTNAMEPREFIX)darwin_c*.c)
+DARWINRUNS      := $(patsubst \
+                     $(XTESTNAMEPREFIX)%.c,$(XTESTRUNPREFIX)%,$(DARWINSRCS_C))
+
+# Normal automatic tests
 TESTDIR          = test
 TESTNAMEPREFIX   = $(TESTDIR)/test_
 TESTRUNPREFIX    = run_
@@ -116,6 +131,7 @@ TESTPRGS_CPP    := $(patsubst %.cpp,%,$(TESTSRCS_CPP))
 TESTPRGS         = $(TESTPRGS_C) $(TESTPRGS_CPP)
 TESTRUNS        := $(patsubst $(TESTNAMEPREFIX)%,$(TESTRUNPREFIX)%,$(TESTPRGS))
 
+# Tests that are only run manually
 MANTESTDIR       = manual_tests
 MANTESTPREFIX    = $(MANTESTDIR)/
 MANRUNPREFIX     = mantest_
@@ -125,9 +141,6 @@ MANTESTOBJS_C   := $(patsubst %.c,%.o,$(MANTESTSRCS_C))
 MANTESTPRGS_C   := $(patsubst %.c,%,$(MANTESTSRCS_C))
 MANTESTRUNS     := $(patsubst \
                      $(MANTESTPREFIX)%,$(MANRUNPREFIX)%,$(MANTESTPRGS_C))
-DARWINSRCS_C    := $(wildcard $(MANTESTPREFIX)darwin_c*.c)
-DARWINRUNS      := $(patsubst \
-                     $(MANTESTPREFIX)%.c,$(MANRUNPREFIX)%,$(DARWINSRCS_C))
 
 TIGERBINDIR      = tiger_only/bin
 TIGERBINS       := $(wildcard $(TIGERBINDIR)/*)
@@ -293,6 +306,14 @@ $(TESTPRGS_CPP): %: %.o $(BUILDDLIBPATH)
 	$(CXX) $(TESTLDFLAGS) $< $(TESTLIBS) -o $@
 
 # The "darwin_c" tests need the -fno-builtin option with some compilers.
+$(XTESTOBJS_C): %.o: %.c $(ALLHEADERS)
+	$(CC) -c -std=c99 -fno-builtin -I$(SRCINCDIR) $(CFLAGS) $< -o $@
+
+# The xtests don't require the library
+$(XTESTPRGS_C): %: %.o $(BUILDLIBDIR)
+	$(CC) $(XTESTLDFLAGS) $< -o $@
+
+# The "darwin_c" tests need the -fno-builtin option with some compilers.
 # It shouldn't hurt the other manual tests.
 $(MANTESTOBJS_C): %.o: %.c $(ALLHEADERS)
 	$(CC) -c -std=c99 -fno-builtin -I$(SRCINCDIR) $(CFLAGS) $< -o $@
@@ -340,6 +361,9 @@ test_faccessat_setuid_msg:
 $(TESTRUNS): $(TESTRUNPREFIX)%: $(TESTNAMEPREFIX)%
 	$< $(TEST_ARGS)
 
+$(XTESTRUNS): $(XTESTRUNPREFIX)%: $(XTESTNAMEPREFIX)%
+	$< $(TEST_ARGS)
+
 # The "dirfuncs_compat" test includes the fdopendir test source
 $(TESTNAMEPREFIX)dirfuncs_compat.o: $(TESTNAMEPREFIX)fdopendir.c
 
@@ -352,12 +376,12 @@ $(TESTNAMEPREFIX)strncpy_chk_force0.o: $(TESTNAMEPREFIX)strncpy_chk.c
 $(TESTNAMEPREFIX)strncpy_chk_force1.o: $(TESTNAMEPREFIX)strncpy_chk.c
 
 # The "darwin_c" tests include the basic "darwin_c" source
-$(MANTESTPREFIX)darwin_c_199309.o: $(MANTESTPREFIX)darwin_c.c
-$(MANTESTPREFIX)darwin_c_200809.o: $(MANTESTPREFIX)darwin_c.c
-$(MANTESTPREFIX)darwin_c_full.o: $(MANTESTPREFIX)darwin_c.c
+$(XTESTNAMEPREFIX)darwin_c_199309.o: $(XTESTNAMEPREFIX)darwin_c.c
+$(XTESTNAMEPREFIX)darwin_c_200809.o: $(XTESTNAMEPREFIX)darwin_c.c
+$(XTESTNAMEPREFIX)darwin_c_full.o: $(XTESTNAMEPREFIX)darwin_c.c
 
 # Provide a target for all "darwin_c" tests
-$(MANRUNPREFIX)darwin_c_all: $(DARWINRUNS)
+$(XTESTRUNPREFIX)darwin_c_all: $(DARWINRUNS)
 
 $(MANTESTRUNS): $(MANRUNPREFIX)%: $(MANTESTPREFIX)%
 	$< $(TEST_ARGS)
@@ -390,10 +414,13 @@ install-slib: $(BUILDSLIBPATH)
 install-tiger: $(TIGERBINS)
 	$(INSTALL_PROGRAM) $(TIGERBINS) $(DESTDIR)$(BINDIR)
 
-test check: $(TESTRUNS) test_cmath test_faccessat_setuid_msg
+test check: $(TESTRUNS) $(XTESTRUNS) test_cmath test_faccessat_setuid_msg
 
-test_clean:
-	$(RM) $(TESTDIR)/*.o $(TESTPRGS)
+xtest_clean:
+	$(RM) $(XTESTDIR)/*.o $(XTESTPRGS)
+
+test_clean: xtest_clean
+	$(RM) $(TESTDIR)/*.o $(TESTPRGS) $(XTESTDIR)/*.o $(XTESTPRGS)
 
 $(MANRUNPREFIX)clean:
 	$(RM) $(MANTESTDIR)/*.o $(MANTESTPRGS_C)
@@ -403,7 +430,8 @@ clean: $(MANRUNPREFIX)clean test_clean
 	$(RM) $(BUILDDLIBPATH) $(BUILDSLIBPATH) $(BUILDSYSLIBPATH) $(TESTPRGS) test/test_cmath_* test/test_faccessat_setuid
 	@$(RMDIR) $(BUILDDLIBDIR) $(BUILDSLIBDIR)
 
-.PHONY: all dlib slib clean check test $(TESTRUNS) test_cmath
-.PHONY: $(MANRUNPREFIX)clean test_clean
+.PHONY: all dlib slib clean check test test_cmath
+.PHONY: $(TESTRUNS) $(XTESTRUNS) $(MANTESTRUNS)
+.PHONY: $(MANRUNPREFIX)clean test_clean xtest_clean
 .PHONY: install install-headers install-lib install-dlib install-slib
 .PHONY: tiger-bins install-tiger
