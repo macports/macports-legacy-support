@@ -6,4 +6,4 @@
 /* Use assumed __DARWIN_C_FULL value */
 #define _POSIX_C_SOURCE (900000L-1)
 
-#include "darwin_c.c"
+#include "test_darwin_c.c"
