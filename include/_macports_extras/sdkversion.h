@@ -46,7 +46,7 @@
  * but since the purpose of this package is to override Apple's notion of
  * availability, that isn't necessarily inappropriate.  Nevertheless,
  * we make accommodating "earlier" SDKs optional, by using the parameter
- * MACPORTS_LEGACY_MIN_EARLY_SDK_ALLOWED to specify the earliest "earlier"
+ * _MACPORTS_LEGACY_MIN_EARLY_SDK_ALLOWED to specify the earliest "earlier"
  * SDK supported.  If this isn't both defined and earlier than the target OS,
  * then the hack is disabled.
  *
@@ -90,16 +90,16 @@
 
 /* First set up the condition for applying the "earlier SDK" hack. */
 
-#ifndef MACPORTS_LEGACY_MIN_EARLY_SDK_ALLOWED
+#ifndef _MACPORTS_LEGACY_MIN_EARLY_SDK_ALLOWED
 #define __MPLS_MIN_SDK_ALLOWED 999999
 #else
 /* Minimum allowable value is 1000 (10.0) */
-#if MACPORTS_LEGACY_MIN_EARLY_SDK_ALLOWED < 1000
+#if _MACPORTS_LEGACY_MIN_EARLY_SDK_ALLOWED < 1000
 #define __MPLS_MIN_SDK_ALLOWED 1000
 #else
-#define __MPLS_MIN_SDK_ALLOWED MACPORTS_LEGACY_MIN_EARLY_SDK_ALLOWED
+#define __MPLS_MIN_SDK_ALLOWED _MACPORTS_LEGACY_MIN_EARLY_SDK_ALLOWED
 #endif
-#endif /* MACPORTS_LEGACY_MIN_EARLY_SDK_ALLOWED defined */
+#endif /* _MACPORTS_LEGACY_MIN_EARLY_SDK_ALLOWED defined */
 
 /* If we already have ...MAX_ALLOWED, we can't do anything to get it. */
 #ifndef MAC_OS_X_VERSION_MAX_ALLOWED
