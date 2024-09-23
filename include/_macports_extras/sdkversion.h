@@ -175,6 +175,24 @@
 #error Unknown SDK version
 #endif
 
+/*
+ * Workaround for broken 15.0 SDK
+ *
+ * Apple screwed up and failed to update AvailabilityMacros.h for the
+ * 15.0 SDK, causing it to appear to be the 14.x SDK.  However, the 15.0
+ * macro was added to AvailabilityVersions.h, so we can check for
+ * that as a workaround, when the apparent version is 14.x.  In this
+ * case, AvailabilityVersions.h has already been included, so we don't
+ * need to do it again.
+ */
+
+#if __MPLS_SDK_MAJOR == 140000
+  #ifdef MAC_OS_VERSION_15_0
+    #undef __MPLS_SDK_MAJOR
+    #define __MPLS_SDK_MAJOR 150000
+  #endif
+#endif /* __MPLS_SDK_MAJOR == 140000 */
+
 /* Then correct our munging, if necessary. */
 
 /* First the ...MIN_REQUIRED hack. */
