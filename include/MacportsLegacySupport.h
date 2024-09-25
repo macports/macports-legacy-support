@@ -155,6 +155,9 @@
 #define __MPLS_SDK_SUPPORT_FDOPENDIR__        (__MPLS_SDK_MAJOR < 101000)
 #define __MPLS_LIB_SUPPORT_FDOPENDIR__        (__MPLS_TARGET_OSVER < 101000)
 
+/* new signature for scandir and alphasort */
+#define __MPLS_SDK_SUPPORT_NEW_SCANDIR__      (__MPLS_SDK_MAJOR < 1080)
+
 /* <net/if.h> include <sys/socket.h> */
 #define __MPLS_SDK_NETIF_SOCKET_FIX__         (__MPLS_SDK_MAJOR < 1090)
 
