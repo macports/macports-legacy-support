@@ -51,6 +51,8 @@
 #include <dirent.h>
 #if __DARWIN_C_LEVEL < 200809L
 int fdopendir = 0;
+int alphasort = 0;
+int scandir = 0;
 #endif /* __DARWIN_C_LEVEL < 200809L */
 
 /* stdio.h */
