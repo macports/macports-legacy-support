@@ -250,6 +250,7 @@
 #undef MAC_OS_VERSION_14_4
 #undef MAC_OS_VERSION_14_5
 #undef MAC_OS_VERSION_15_0
+#undef MAC_OS_VERSION_15_1
 
 #endif /* __MPLS_SDK_MAJOR >= 110000 */
 
