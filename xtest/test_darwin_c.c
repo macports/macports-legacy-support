@@ -59,6 +59,7 @@ int scandir = 0;
 #include <stdio.h>
 #if __DARWIN_C_LEVEL < 200809L
 int dprintf = 0;
+int vdprintf = 0;
 int getdelim = 0;
 int getline = 0;
 int open_memstream = 0;
