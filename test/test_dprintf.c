@@ -15,12 +15,13 @@
  */
 
 /*
- * This provides functional tests for dprintf, including *not* closing the
- * provided fd.
+ * This provides functional tests for dprintf and vdprintf, including
+ * *not* closing the provided fd.
  */
 
 #include <assert.h>
 #include <errno.h>
+#include <stdarg.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
@@ -69,6 +70,18 @@ test_xdprintf(const char *name, test_func_t func, int pipes[], int verbose)
 }
 
 int
+test_vdprintf(int fd, const char * __restrict format, ...)
+{
+  va_list args;
+
+  va_start(args, format);
+  int ret = vdprintf(fd, format, args);
+  va_end(args);
+
+  return ret;
+}
+
+int
 main(int argc, const char *argv[]) {
   int verbose = 0, pipes[2];
 
@@ -80,6 +93,7 @@ main(int argc, const char *argv[]) {
   }
 
   test_xdprintf("dprintf", dprintf, pipes, verbose);
+  test_xdprintf("vdprintf", test_vdprintf, pipes, verbose);
 
   if (close(pipes[1])) {
     perror("Unable to close write pipe");
@@ -90,6 +104,6 @@ main(int argc, const char *argv[]) {
     return 1;
   }
 
-  printf("dprintf test succeeded\n");
+  printf("dprintf/vdprintf test succeeded\n");
   return 0;
 }
