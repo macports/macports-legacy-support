@@ -37,6 +37,7 @@
 
 __MP__BEGIN_DECLS
 extern int dprintf(int fd, const char * __restrict format, ...);
+extern int vdprintf(int fd, const char * __restrict format, va_list ap);
 __MP__END_DECLS
 
 #endif /* __MPLS_SDK_SUPPORT_DPRINTF__ */
