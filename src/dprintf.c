@@ -16,6 +16,7 @@
 
 /* MP support header */
 #include "MacportsLegacySupport.h"
+
 #if __MPLS_LIB_SUPPORT_DPRINTF__
 
 #include <errno.h>
@@ -24,8 +25,7 @@
 #include <unistd.h>
 
 int
-dprintf(int fildes, const char * __restrict format, ...) {
-  va_list ap;
+vdprintf(int fildes, const char * __restrict format, va_list ap) {
   FILE *stream;
   int ret;
   char buf[BUFSIZ];
@@ -39,9 +39,7 @@ dprintf(int fildes, const char * __restrict format, ...) {
   setbuffer(stream, buf, sizeof(buf));
 
   /* Do the output. */
-  va_start(ap, format);
   ret = vfprintf(stream, format, ap);
-  va_end(ap);
 
   /*
    * Close the FILE and the duplicate fd.
@@ -51,6 +49,18 @@ dprintf(int fildes, const char * __restrict format, ...) {
    * work.
    */
   if (fclose(stream)) ret = -1;
+
+  return ret;
+}
+
+int
+dprintf(int fildes, const char * __restrict format, ...) {
+  va_list ap;
+  int ret;
+
+  va_start(ap, format);
+  ret = vdprintf(fildes, format, ap);
+  va_end(ap);
 
   return ret;
 }
