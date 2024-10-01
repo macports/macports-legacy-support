@@ -18,6 +18,44 @@
 #define _MACPORTS_SYS_CDEFS_H_
 
 /*
+ * Work around bug in some versions of clang (e.g. Xcode 7.2 clang 7).
+ * See: https://bugs.llvm.org/show_bug.cgi?id=23435
+ *
+ * Some versions of clang implement __has_cpp_attribute, but are unable to
+ * parse a namespaced argument in C mode.  The official fix is to make
+ * __has_cpp_attribute undefined when compiling C.  We can't do that here,
+ * but we can override it with a dummy, disabling the resulting warning
+ * as we do so.  Since the condition is based on the actual clang bug, no
+ * SDK version condition is needed.
+ *
+ * The first case where this arose was in using the 15.x SDK with the
+ * Xcode 7.2 clang 7 compiler on OS 10.10.
+ *
+ * A similar bug exists in some versions of gcc, and a similar workaround
+ * is applicable, except that suppressing the resulting warning doesn't
+ * seem to work, for an unknown reason.
+ *
+ * Note that the case where __has_cpp_attribute is undefined is already
+ * handled by the Apple include, so only the inappropriately defined case
+ * needs to be handled here.
+ */
+
+#if defined(__has_cpp_attribute) && !defined(__cplusplus)
+  #if defined (__clang__)
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Wbuiltin-macro-redefined"
+    #define __has_cpp_attribute(x) 0
+    #pragma clang diagnostic pop
+  #elif defined(__GNUC__)
+    #pragma GCC diagnostic push
+    /* The following doesn't seem to work */
+    #pragma GCC diagnostic ignored "-Wbuiltin-macro-redefined"
+    #define __has_cpp_attribute(x) 0
+    #pragma GCC diagnostic pop
+  #endif
+#endif
+
+/*
  * This provides definitions for the __DARWIN_C_* macros for earlier SDKs
  * that don't provide them.  Since the definitions are based on #ifndef,
  * there's no need for explicit SDK version thresholds.
