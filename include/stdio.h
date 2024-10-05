@@ -24,6 +24,16 @@
 /* Do our SDK-related setup */
 #include <_macports_extras/sdkversion.h>
 
+/* Work around recent compilers that treat undefineds as errors. */
+#if __MPLS_SDK_MAJOR >= 101200
+  #ifndef TARGET_OS_EMBEDDED
+  #define TARGET_OS_EMBEDDED 0
+  #endif
+  #ifndef TARGET_OS_IPHONE
+  #define TARGET_OS_IPHONE 0
+  #endif
+#endif
+
 /* Include the primary system stdio.h */
 #include_next <stdio.h>
 
