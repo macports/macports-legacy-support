@@ -137,10 +137,14 @@ MANTESTPREFIX    = $(MANTESTDIR)/
 MANRUNPREFIX     = mantest_
 MANTESTLDFLAGS   = $(ALLLDFLAGS)
 MANTESTSRCS_C   := $(wildcard $(MANTESTPREFIX)*.c)
+MANTESTSRCS_CPP := $(wildcard $(MANTESTPREFIX)*.cpp)
 MANTESTOBJS_C   := $(patsubst %.c,%.o,$(MANTESTSRCS_C))
+MANTESTOBJS_CPP := $(patsubst %.cpp,%.o,$(MANTESTSRCS_CPP))
 MANTESTPRGS_C   := $(patsubst %.c,%,$(MANTESTSRCS_C))
+MANTESTPRGS_CPP := $(patsubst %.cpp,%,$(MANTESTSRCS_CPP))
+MANTESTPRGS      = $(MANTESTPRGS_C) $(MANTESTPRGS_CPP)
 MANTESTRUNS     := $(patsubst \
-                     $(MANTESTPREFIX)%,$(MANRUNPREFIX)%,$(MANTESTPRGS_C))
+                     $(MANTESTPREFIX)%,$(MANRUNPREFIX)%,$(MANTESTPRGS))
 
 TIGERBINDIR      = tiger_only/bin
 TIGERBINS       := $(wildcard $(TIGERBINDIR)/*)
@@ -318,9 +322,16 @@ $(XTESTPRGS_C): %: %.o $(BUILDLIBDIR)
 $(MANTESTOBJS_C): %.o: %.c $(ALLHEADERS)
 	$(CC) -c -std=c99 -fno-builtin -I$(SRCINCDIR) $(CFLAGS) $< -o $@
 
-# Currently, the manual tests don't require the library
+# Currently, the manual C tests don't require the library
 $(MANTESTPRGS_C): %: %.o $(BUILDLIBDIR)
 	$(CC) $(MANTESTLDFLAGS) $< -o $@
+
+# But the manual C++ tests *do* require the library
+$(MANTESTOBJS_CPP): %.o: %.cpp $(ALLHEADERS)
+	$(CXX) -c -I$(SRCINCDIR) $(ALLCXXFLAGS) $< -o $@
+
+$(MANTESTPRGS_CPP): %: %.o $(BUILDDLIBPATH)
+	$(CXX) $(TESTLDFLAGS) $< $(TESTLIBS) -o $@
 
 # Dummy target for building Tiger-only binaries, so Portfile can
 # reference it in case we need it in the future.
@@ -424,7 +435,7 @@ xtest_clean:
 	$(RM) $(XTESTDIR)/*.o $(XTESTPRGS)
 
 $(MANRUNPREFIX)clean:
-	$(RM) $(MANTESTDIR)/*.o $(MANTESTPRGS_C)
+	$(RM) $(MANTESTDIR)/*.o $(MANTESTPRGS)
 
 test_clean: xtest_clean $(MANRUNPREFIX)clean
 	$(RM) $(TESTDIR)/*.o $(TESTPRGS) $(XTESTDIR)/*.o $(XTESTPRGS)
