@@ -56,6 +56,27 @@
 #endif
 
 /*
+ * Work around issues with depending on __has_include().
+ *
+ * The system sys/cdefs.h may provide an always-false fallback for the
+ * __has_include() operator.  But this may cause some files to be
+ * inappropriately not included.  Here we set up a flag for this case,
+ * which can be used by other headers as needed to fix the fallback.
+ *
+ * The state is represented by the __MPLS_HAS_INCLUDE_STATUS macro:
+ *   -1  undef->undef  Remained undef
+ *    0  undef->def    Defined false by sys/cdefs.h
+ *    1  def->def      Provided by compiler
+ */
+
+/* First capture the initial defined state. */
+#ifndef __has_include
+#define __MPLS_HAS_INCLUDE_STATUS -1
+#else
+#define __MPLS_HAS_INCLUDE_STATUS 1
+#endif
+
+/*
  * This provides definitions for the __DARWIN_C_* macros for earlier SDKs
  * that don't provide them.  Since the definitions are based on #ifndef,
  * there's no need for explicit SDK version thresholds.
@@ -65,6 +86,12 @@
 
 /* Include the primary system sys/cdefs.h */
 #include_next <sys/cdefs.h>
+
+/* Now update the __has_include() status if needed. */
+#if __MPLS_HAS_INCLUDE_STATUS < 0 && defined(__has_include)
+#undef __MPLS_HAS_INCLUDE_STATUS
+#define __MPLS_HAS_INCLUDE_STATUS 0
+#endif
 
 /* The following is copied from the 10.7 SDK, but with additional #ifndefs */
 
