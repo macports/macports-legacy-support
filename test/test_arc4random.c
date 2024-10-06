@@ -64,7 +64,7 @@ bench(int fd, size_t siz, size_t niter)
         s0 = sys_cpu_timestamp();
         arc4random_buf(buf, siz);
         s1 = sys_cpu_timestamp();
-        m  =  read(fd, buf, siz);
+        m  =  read(fd, buf, siz); (void) m;
         s2 = sys_cpu_timestamp();
 
         ta += s1 - s0;
