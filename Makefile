@@ -423,11 +423,11 @@ test check: $(TESTRUNS) $(XTESTRUNS) test_cmath test_faccessat_setuid_msg
 xtest_clean:
 	$(RM) $(XTESTDIR)/*.o $(XTESTPRGS)
 
-test_clean: xtest_clean
-	$(RM) $(TESTDIR)/*.o $(TESTPRGS) $(XTESTDIR)/*.o $(XTESTPRGS)
-
 $(MANRUNPREFIX)clean:
 	$(RM) $(MANTESTDIR)/*.o $(MANTESTPRGS_C)
+
+test_clean: xtest_clean $(MANRUNPREFIX)clean
+	$(RM) $(TESTDIR)/*.o $(TESTPRGS) $(XTESTDIR)/*.o $(XTESTPRGS)
 
 clean: $(MANRUNPREFIX)clean test_clean
 	$(RM) $(foreach D,$(SRCDIR),$D/*.o $D/*.o.* $D/*.d)
