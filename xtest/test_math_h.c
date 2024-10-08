@@ -55,6 +55,7 @@ print_details(void)
   printf("Compiler is " COMPILER);
   printf(COMPILER_APPLE);
   printf("Architecture is " ARCH "\n");
+  printf("__MPLS_FLOAT16_STATUS = %d\n", __MPLS_FLOAT16_STATUS);
 }
 
 int
