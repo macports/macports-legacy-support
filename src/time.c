@@ -47,7 +47,9 @@ int clock_gettime( clockid_t clk_id, struct timespec *ts )
     {
       struct timeval boottime;
       size_t boottime_len = sizeof(boottime);
-      ret = sysctlbyname("kern.boottime", &boottime, &boottime_len, NULL, 0);
+      int bt_mib[] = {CTL_KERN, KERN_BOOTTIME};
+      size_t bt_miblen = sizeof(bt_mib) / sizeof(bt_mib[0]);
+      ret = sysctl(bt_mib, bt_miblen, &boottime, &boottime_len, NULL, 0);
       if (ret != KERN_SUCCESS) { return ret; }
       struct timeval tv;
       ret = gettimeofday(&tv, NULL);
