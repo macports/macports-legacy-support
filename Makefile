@@ -431,6 +431,8 @@ install-tiger: $(TIGERBINS)
 
 test check: $(TESTRUNS) $(XTESTRUNS) test_cmath test_faccessat_setuid_msg
 
+xtest: $(XTESTRUNS)
+
 xtest_clean:
 	$(RM) $(XTESTDIR)/*.o $(XTESTPRGS)
 
@@ -445,7 +447,7 @@ clean: $(MANRUNPREFIX)clean test_clean
 	$(RM) $(BUILDDLIBPATH) $(BUILDSLIBPATH) $(BUILDSYSLIBPATH) $(TESTPRGS) test/test_cmath_* test/test_faccessat_setuid
 	@$(RMDIR) $(BUILDDLIBDIR) $(BUILDSLIBDIR)
 
-.PHONY: all dlib slib clean check test test_cmath
+.PHONY: all dlib slib clean check test test_cmath xtest
 .PHONY: $(TESTRUNS) $(XTESTRUNS) $(MANTESTRUNS)
 .PHONY: $(MANRUNPREFIX)clean test_clean xtest_clean
 .PHONY: install install-headers install-lib install-dlib install-slib
