@@ -3,3 +3,4 @@
 !*.cc
 !*.cpp
 !do_test_faccessat_setuid
+!*.txt
