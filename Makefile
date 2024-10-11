@@ -123,12 +123,9 @@ TESTRUNPREFIX    = run_
 TESTLDFLAGS      = -L$(BUILDDLIBDIR) $(ALLLDFLAGS)
 TESTLIBS         = -l$(LIBNAME)
 TESTSRCS_C      := $(wildcard $(TESTNAMEPREFIX)*.c)
-TESTSRCS_CPP    := $(wildcard $(TESTNAMEPREFIX)*.cpp)
 TESTOBJS_C      := $(patsubst %.c,%.o,$(TESTSRCS_C))
-TESTOBJS_CPP    := $(patsubst %.cpp,%.o,$(TESTSRCS_CPP))
 TESTPRGS_C      := $(patsubst %.c,%,$(TESTSRCS_C))
-TESTPRGS_CPP    := $(patsubst %.cpp,%,$(TESTSRCS_CPP))
-TESTPRGS         = $(TESTPRGS_C) $(TESTPRGS_CPP)
+TESTPRGS         = $(TESTPRGS_C)
 TESTRUNS        := $(patsubst $(TESTNAMEPREFIX)%,$(TESTRUNPREFIX)%,$(TESTPRGS))
 
 # Tests that are only run manually
@@ -287,9 +284,6 @@ $(ADDOBJS): %$(SLIBOBJEXT): %.c $(ALLHEADERS)
 $(TESTOBJS_C): %.o: %.c $(ALLHEADERS)
 	$(CC) -c -std=c99 -I$(SRCINCDIR) $(ALLCFLAGS) $< -o $@
 
-$(TESTOBJS_CPP): %.o: %.cpp $(ALLHEADERS)
-	$(CXX) -c -I$(SRCINCDIR) $(ALLCXXFLAGS) $< -o $@
-
 $(BUILDDLIBPATH): $(DLIBOBJS) $(MULTIDLIBOBJS)
 	$(MKINSTALLDIRS) $(BUILDDLIBDIR)
 	$(CC) $(BUILDDLIBFLAGS) $(ALLLDFLAGS) $^ -o $@
@@ -305,9 +299,6 @@ $(BUILDSLIBPATH): $(SLIBOBJS) $(MULTISLIBOBJS)
 
 $(TESTPRGS_C): %: %.o $(BUILDDLIBPATH)
 	$(CC) $(TESTLDFLAGS) $< $(TESTLIBS) -o $@
-
-$(TESTPRGS_CPP): %: %.o $(BUILDDLIBPATH)
-	$(CXX) $(TESTLDFLAGS) $< $(TESTLIBS) -o $@
 
 # The "darwin_c" tests need the -fno-builtin option with some compilers.
 $(XTESTOBJS_C): %.o: %.c $(ALLHEADERS)
