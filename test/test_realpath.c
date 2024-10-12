@@ -1,6 +1,6 @@
-
 /*
  * Copyright (c) 2019 Christian Cornelssen
+ * Copyright (c) 2024 Frederick H. G. Wright II <fw@fwright.net>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -28,49 +28,66 @@ typedef char * (*strfunc_t)(const char *, char *);
 typedef struct { char *realpath; } rpv_t;
 typedef struct { strfunc_t realpath; } rpf_t;
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 #include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
-int main() {
-    /* Test with direct function call */
-    const char *p = realpath(".", NULL);	/* bus error up to 10.5 */
-    if (!p) return 1;
-    printf("cwd = %s\n", p);
-    printf("realpath(path, NULL) supported.\n");
+#include <sys/param.h>
 
-    /* Test with name (reference) only */
-    {
-        strfunc_t f = realpath;
-        const char *q = f(".", NULL);
-        if (!q) return 1;
-        assert (!strcmp(q, p));
-        printf("f = realpath, f(path, NULL) supported.\n");
-        free((void*)q);
-    }
+int
+main(int argc, char *argv[])
+{
+  int verbose = 0;
+  const char *p, *q;
+  strfunc_t f;
+  rpf_t rpf = { realpath };
+  rpv_t rpv;
+  char buf[PATH_MAX], cwd[MAXPATHLEN];
 
-    /* Test with function macro disabler */
-    {
-        const char *q = (realpath)(".", NULL);
-        if (!q) return 1;
-        assert (!strcmp(q, p));
-        printf("(realpath)(path, NULL) supported.\n");
-        free((void*)q);
-    }
+  if (argc > 1 && !strcmp(argv[1], "-v")) verbose = 1;
 
-    /* Test with same-named fields */
-    {
-        rpf_t rpf = { realpath };
-	rpv_t rpv;
-        rpv.realpath = rpf.realpath(".", NULL);
-        if (!rpv.realpath) return 1;
-        assert (!strcmp(rpv.realpath, p));
-        printf("rpv.realpath = rpf.realpath(path, NULL) supported.\n");
-        free((void*)rpv.realpath);
-    }
+  (void) getcwd(cwd, sizeof(cwd));
+  if (verbose) {
+    printf("Starting realpath test.\n");
+    printf("cwd = %s\n", cwd);
+  }
 
-    free((void*)p);
-    return 0;
+  /* Test traditional version with supplied buffer */
+  p = realpath(".", buf);
+  assert(p && "realpath(path, buf) returned NULL");
+  if (verbose) printf("realpath(path, buf) supported.\n");
+
+  /* Test with direct function call */
+  q = realpath(".", NULL);
+  assert(q && "realpath(path, NULL) returned NULL");
+  assert (!strcmp(q, p) && "realpath(path, NULL) miscompared");
+  if (verbose) printf("realpath(path, NULL) supported.\n");
+  free((void*)q);
+
+  /* Test with name (reference) only */
+  f = realpath;
+  q = f(".", NULL);
+  assert(q && "realpath, f(path, NULL) returned NULL");
+  assert (!strcmp(q, p) && "realpath, f(path, NULL) miscompared");
+  if (verbose) printf("f = realpath, f(path, NULL) supported.\n");
+  free((void*)q);
+
+  /* Test with function macro disabler */
+  q = (realpath)(".", NULL);
+  assert(q && "(realpath)(path, NULL) returned NULL");
+  assert (!strcmp(q, p) && "(realpath)(path, NULL) miscompared");
+  if (verbose) printf("(realpath)(path, NULL) supported.\n");
+  free((void*)q);
+
+  /* Test with same-named fields */
+  rpv.realpath = rpf.realpath(".", NULL);
+  assert(rpv.realpath && "rpf.realpath(path, NULL) returned NULL");
+  assert (!strcmp(rpv.realpath, p) && "rpf.realpath(path, NULL) miscompared");
+  if (verbose) printf("rpv.realpath = rpf.realpath(path, NULL) supported.\n");
+  free((void*)rpv.realpath);
+
+  printf("realpath test succeeded.\n");
+  return 0;
 }
-
