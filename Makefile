@@ -102,6 +102,22 @@ SLIBOBJS        := $(patsubst %.c,%$(SLIBOBJEXT),$(LIBSRCS))
 MULTISLIBOBJS   := $(patsubst %.c,%$(SLIBOBJEXT),$(MULTISRCS))
 ADDOBJS         := $(patsubst %.c,%$(SLIBOBJEXT),$(ADDSRCS))
 
+# Defs for filtering out empty object files
+#
+# Some object files are logically empty, due to their content being
+# conditionaled out for the current target.  We provide a mechanism
+# for filtering out logically empty object files from the list used
+# for linking the static library.  This is done by creating a reference
+# empty object file, and excluding any object files with identical contents.
+#
+# This not only reduces the size of the static library a bit, but also
+# avoids the "no symbols" warnings when creating it.
+#
+# This treatment is only applicable to the static library.
+EMPTY            = empty_source_content
+EMPTYSOBJ        = $(SRCDIR)/$(EMPTY)$(SLIBOBJEXT)
+SOBJLIST         = $(SRCDIR)/slibobjs.tmp
+
 # Automatic tests that don't use the library, and are OK with -fno-builtin
 XTESTDIR          = xtest
 XTESTNAMEPREFIX   = $(XTESTDIR)/test_
@@ -289,8 +305,9 @@ slibobjs: $(SLIBOBJS) $(MULTISLIBOBJS)
 
 allobjs: dlibobjs slibobjs syslibobjs
 
-$(TESTOBJS_C): %.o: %.c $(ALLHEADERS)
-	$(CC) -c -std=c99 -I$(SRCINCDIR) $(ALLCFLAGS) $< -o $@
+$(SOBJLIST): $(SLIBOBJS) $(MULTISLIBOBJS)
+	$(CC) -c $(ALLCFLAGS) $(SLIBCFLAGS) -xc /dev/null -o $(EMPTYSOBJ)
+	for f in $^; do cmp -s $(EMPTYSOBJ) $$f || echo $$f; done > $@
 
 $(BUILDDLIBPATH): $(DLIBOBJS) $(MULTIDLIBOBJS)
 	$(MKINSTALLDIRS) $(BUILDDLIBDIR)
@@ -300,10 +317,13 @@ $(BUILDSYSLIBPATH): $(DLIBOBJS) $(MULTIDLIBOBJS) $(ADDOBJS)
 	$(MKINSTALLDIRS) $(BUILDDLIBDIR)
 	$(CC) $(BUILDSYSLIBFLAGS) $(ALLLDFLAGS) $(SYSREEXPORTFLAG) $^ -o $@
 
-$(BUILDSLIBPATH): $(SLIBOBJS) $(MULTISLIBOBJS)
+$(BUILDSLIBPATH): $(SOBJLIST)
 	$(MKINSTALLDIRS) $(BUILDSLIBDIR)
 	$(RM) $@
-	$(AR) $(BUILDSLIBFLAGS) $@ $^
+	$(AR) $(BUILDSLIBFLAGS) $@ $$(cat $^)
+
+$(TESTOBJS_C): %.o: %.c $(ALLHEADERS)
+	$(CC) -c -std=c99 -I$(SRCINCDIR) $(ALLCFLAGS) $< -o $@
 
 $(TESTPRGS_C): %: %.o $(BUILDDLIBPATH)
 	$(CC) $(TESTLDFLAGS) $< $(TESTLIBS) -o $@
