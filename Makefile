@@ -281,6 +281,14 @@ $(SLIBOBJS): %$(SLIBOBJEXT): %.c $(ALLHEADERS)
 $(ADDOBJS): %$(SLIBOBJEXT): %.c $(ALLHEADERS)
 	$(CC) -c -I$(SRCINCDIR) $(ALLCFLAGS) $(SLIBCFLAGS) $< -o $@
 
+dlibobjs: $(DLIBOBJS) $(MULTIDLIBOBJS)
+
+syslibobjs: $(DLIBOBJS) $(MULTIDLIBOBJS) $(ADDOBJS)
+
+slibobjs: $(SLIBOBJS) $(MULTISLIBOBJS)
+
+allobjs: dlibobjs slibobjs syslibobjs
+
 $(TESTOBJS_C): %.o: %.c $(ALLHEADERS)
 	$(CC) -c -std=c99 -I$(SRCINCDIR) $(ALLCFLAGS) $< -o $@
 
@@ -443,3 +451,4 @@ clean: $(MANRUNPREFIX)clean test_clean
 .PHONY: $(MANRUNPREFIX)clean test_clean xtest_clean
 .PHONY: install install-headers install-lib install-dlib install-slib
 .PHONY: tiger-bins install-tiger
+.PHONY: allobjs dlibobjs slibobjs syslibobjs
