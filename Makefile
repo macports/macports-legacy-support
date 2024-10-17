@@ -247,7 +247,7 @@ endef
 all: dlib slib syslib
 dlib: $(BUILDDLIBPATH)
 slib: $(BUILDSLIBPATH)
-syslib: dlib $(BUILDSYSLIBPATH)
+syslib: $(BUILDSYSLIBPATH)
 
 # Special rules for special implementations.
 # For instance, functions using struct stat need to be implemented multiple
@@ -446,7 +446,7 @@ clean: $(MANRUNPREFIX)clean test_clean
 	$(RM) $(BUILDDLIBPATH) $(BUILDSLIBPATH) $(BUILDSYSLIBPATH) $(TESTPRGS) test/test_cmath_* test/test_faccessat_setuid
 	@$(RMDIR) $(BUILDDLIBDIR) $(BUILDSLIBDIR)
 
-.PHONY: all dlib slib clean check test test_cmath xtest
+.PHONY: all dlib syslib slib clean check test test_cmath xtest
 .PHONY: $(TESTRUNS) $(XTESTRUNS) $(MANTESTRUNS)
 .PHONY: $(MANRUNPREFIX)clean test_clean xtest_clean
 .PHONY: install install-headers install-lib install-dlib install-slib
