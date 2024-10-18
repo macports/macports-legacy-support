@@ -141,8 +141,11 @@ TESTLIBS         = -l$(LIBNAME)
 TESTSRCS_C      := $(wildcard $(TESTNAMEPREFIX)*.c)
 TESTOBJS_C      := $(patsubst %.c,%.o,$(TESTSRCS_C))
 TESTPRGS_C      := $(patsubst %.c,%,$(TESTSRCS_C))
-TESTPRGS         = $(TESTPRGS_C)
-TESTRUNS        := $(patsubst $(TESTNAMEPREFIX)%,$(TESTRUNPREFIX)%,$(TESTPRGS))
+TESTSPRGS_C     := $(patsubst %.c,%_static,$(TESTSRCS_C))
+TESTRUNS        := $(patsubst \
+                     $(TESTNAMEPREFIX)%,$(TESTRUNPREFIX)%,$(TESTPRGS_C))
+TESTSRUNS       := $(patsubst \
+                     $(TESTNAMEPREFIX)%,$(TESTRUNPREFIX)%,$(TESTSPRGS_C))
 
 # Tests that are only run manually
 MANTESTDIR       = manual_tests
@@ -328,6 +331,9 @@ $(TESTOBJS_C): %.o: %.c $(ALLHEADERS)
 $(TESTPRGS_C): %: %.o $(BUILDDLIBPATH)
 	$(CC) $(TESTLDFLAGS) $< $(TESTLIBS) -o $@
 
+$(TESTSPRGS_C): %_static: %.o $(BUILDSLIBPATH)
+	$(CC) $(ALLLDFLAGS) $< $(BUILDSLIBPATH) -o $@
+
 # The "darwin_c" tests need the -fno-builtin option with some compilers.
 $(XTESTOBJS_C): %.o: %.c $(ALLHEADERS)
 	$(CC) -c -std=c99 -fno-builtin -I$(SRCINCDIR) $(CFLAGS) $< -o $@
@@ -391,6 +397,9 @@ test_faccessat_setuid_msg:
 $(TESTRUNS): $(TESTRUNPREFIX)%: $(TESTNAMEPREFIX)%
 	$< $(TEST_ARGS)
 
+$(TESTSRUNS): $(TESTRUNPREFIX)%: $(TESTNAMEPREFIX)%
+	$< $(TEST_ARGS)
+
 $(XTESTRUNS): $(XTESTRUNPREFIX)%: $(XTESTNAMEPREFIX)%
 	$< $(TEST_ARGS)
 
@@ -450,6 +459,8 @@ install-tiger: $(TIGERBINS)
 
 test check: $(TESTRUNS) $(XTESTRUNS) test_cmath test_faccessat_setuid_msg
 
+test_static: $(TESTSRUNS)
+
 xtest: $(XTESTRUNS)
 
 xtest_clean:
@@ -466,7 +477,7 @@ clean: $(MANRUNPREFIX)clean test_clean
 	$(RM) $(BUILDDLIBPATH) $(BUILDSLIBPATH) $(BUILDSYSLIBPATH) $(TESTPRGS) test/test_cmath_* test/test_faccessat_setuid
 	@$(RMDIR) $(BUILDDLIBDIR) $(BUILDSLIBDIR)
 
-.PHONY: all dlib syslib slib clean check test test_cmath xtest
+.PHONY: all dlib syslib slib clean check test test_cmath xtest test_static
 .PHONY: $(TESTRUNS) $(XTESTRUNS) $(MANTESTRUNS)
 .PHONY: $(MANRUNPREFIX)clean test_clean xtest_clean
 .PHONY: install install-headers install-lib install-dlib install-slib
