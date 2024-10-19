@@ -1,26 +1,71 @@
-#include <dlfcn.h>
-#include <assert.h>
+/*
+ * Copyright (c) 2024 Frederick H. G. Wright II <fw@fwright.net>
+ *
+ * Permission to use, copy, modify, and distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ */
+
+/*
+ * This provides tests to verify that certain symbol aliases are present.
+ *
+ * Although there is probably a way to exploit weak references to defer
+ * errors until runtime, there are some complications with that approach,
+ * so we settle for simple external references, where failures are build
+ * errors rather than runtime errors.
+ */
+
 #include <stdio.h>
+#include <string.h>
 
-int main()
-{
-     void (*fptr)();
-
-     // void __bzero(void *s, size_t n);
-     fptr = dlsym(RTLD_DEFAULT, "__bzero");
-     assert( fptr!=0 && "__bzero symbol does not exist");
-
-     // int dirfd(DIR *dirp);
-     fptr = dlsym(RTLD_DEFAULT, "dirfd");
-     assert( fptr!=0 && "dirfd symbol does not exist");
-
-#if  __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ >= 1050 && !defined(__arm64__)
-     // int fstatat$INODE64(int dirfd, const char *pathname, struct stat64 *buf, int flags);
-     fptr = dlsym(RTLD_DEFAULT, "fstatat$INODE64");
-     assert( fptr!=0 && "fstatat$INODE64 symbol does not exist");
+/* Macro to avoid warnings converting pointer to ULL */
+#if defined(__LP64__) && __LP64__
+#define PTR2ULL(x) ((unsigned long long) (x))
+#else
+#define PTR2ULL(x) ((unsigned long long) (unsigned int) (x))
 #endif
 
-     printf("All symbol aliases found\n");
+#define BASE_SYMS \
+  SYM_MAC(__bzero) \
+  SYM_MAC(dirfd)
 
-     return 0;
+#if defined(__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__) \
+    && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ >= 1050 \
+    && !defined(__arm64__)
+  #define CHECK_SYMS BASE_SYMS \
+    SYM_MAC(fstatat$INODE64)
+#else
+  #define CHECK_SYMS BASE_SYMS
+#endif
+
+#define SYM_MAC(name) \
+  extern void name(); \
+  void *name##_adr = &name;
+CHECK_SYMS
+#undef SYM_MAC
+
+int
+main(int argc, char *argv[])
+{
+  int verbose = 0;
+
+  if (argc > 1 && !strcmp(argv[1], "-v")) verbose = 1;
+
+  if (verbose) {
+    #define SYM_MAC(name) \
+      printf(" " #name " = %llX\n", PTR2ULL(name##_adr));
+    CHECK_SYMS
+    #undef SYM_MAC
+  }
+
+  printf("symbol aliases test passed.\n");
+  return 0;
 }
