@@ -30,11 +30,10 @@ SYSLIBFILE       = lib$(SYSLIBNAME)$(SOEXT)
 DLIBPATH         = $(LIBDIR)/$(DLIBFILE)
 SLIBPATH         = $(LIBDIR)/$(SLIBFILE)
 SYSLIBPATH       = $(LIBDIR)/$(SYSLIBFILE)
-BUILDDLIBDIR     = lib
-BUILDSLIBDIR     = lib
-BUILDDLIBPATH    = $(BUILDDLIBDIR)/$(DLIBFILE)
-BUILDSLIBPATH    = $(BUILDSLIBDIR)/$(SLIBFILE)
-BUILDSYSLIBPATH  = $(BUILDDLIBDIR)/$(SYSLIBFILE)
+BUILDLIBDIR      = lib
+BUILDDLIBPATH    = $(BUILDLIBDIR)/$(DLIBFILE)
+BUILDSLIBPATH    = $(BUILDLIBDIR)/$(SLIBFILE)
+BUILDSYSLIBPATH  = $(BUILDLIBDIR)/$(SYSLIBFILE)
 SOCURVERSION    ?= 1.0
 SOCOMPATVERSION ?= 1.0
 BUILDDLIBFLAGS   = -dynamiclib -headerpad_max_install_names \
@@ -98,9 +97,12 @@ DLIBOBJEXT       = .dl.o
 SLIBOBJEXT       = .o
 DLIBOBJS        := $(patsubst %.c,%$(DLIBOBJEXT),$(LIBSRCS))
 MULTIDLIBOBJS   := $(patsubst %.c,%$(DLIBOBJEXT),$(MULTISRCS))
+ALLDLIBOBJS     := $(DLIBOBJS) $(MULTIDLIBOBJS)
 SLIBOBJS        := $(patsubst %.c,%$(SLIBOBJEXT),$(LIBSRCS))
 MULTISLIBOBJS   := $(patsubst %.c,%$(SLIBOBJEXT),$(MULTISRCS))
+ALLSLIBOBJS     := $(SLIBOBJS) $(MULTISLIBOBJS)
 ADDOBJS         := $(patsubst %.c,%$(SLIBOBJEXT),$(ADDSRCS))
+ALLSYSLIBOBJS   := $(ALLDLIBOBJS) $(ADDOBJS)
 
 # Defs for filtering out empty object files
 #
@@ -136,7 +138,7 @@ DARWINRUNS      := $(patsubst \
 TESTDIR          = test
 TESTNAMEPREFIX   = $(TESTDIR)/test_
 TESTRUNPREFIX    = run_
-TESTLDFLAGS      = -L$(BUILDDLIBDIR) $(ALLLDFLAGS)
+TESTLDFLAGS      = -L$(BUILDLIBDIR) $(ALLLDFLAGS)
 TESTLIBS         = -l$(LIBNAME)
 TESTSRCS_C      := $(wildcard $(TESTNAMEPREFIX)*.c)
 TESTOBJS_C      := $(patsubst %.c,%.o,$(TESTSRCS_C))
@@ -300,30 +302,33 @@ $(SLIBOBJS): %$(SLIBOBJEXT): %.c $(ALLHEADERS)
 $(ADDOBJS): %$(SLIBOBJEXT): %.c $(ALLHEADERS)
 	$(CC) -c -I$(SRCINCDIR) $(ALLCFLAGS) $(SLIBCFLAGS) $< -o $@
 
-dlibobjs: $(DLIBOBJS) $(MULTIDLIBOBJS)
+dlibobjs: $(ALLDLIBOBJS)
 
-syslibobjs: $(DLIBOBJS) $(MULTIDLIBOBJS) $(ADDOBJS)
+syslibobjs: $(ALLSYSLIBOBJS)
 
-slibobjs: $(SLIBOBJS) $(MULTISLIBOBJS)
+slibobjs: $(ALLSLIBOBJS)
 
 allobjs: dlibobjs slibobjs syslibobjs
 
-$(SOBJLIST): $(SLIBOBJS) $(MULTISLIBOBJS)
+# Create a list of nonempty static object files.
+$(SOBJLIST): $(ALLSLIBOBJS)
 	$(CC) -c $(ALLCFLAGS) $(SLIBCFLAGS) -xc /dev/null -o $(EMPTYSOBJ)
 	for f in $^; do cmp -s $(EMPTYSOBJ) $$f || echo $$f; done > $@
 
-$(BUILDDLIBPATH): $(DLIBOBJS) $(MULTIDLIBOBJS)
-	$(MKINSTALLDIRS) $(BUILDDLIBDIR)
-	$(CC) $(BUILDDLIBFLAGS) $(ALLLDFLAGS) $^ -o $@
+# Make the directories separate targets to avoid collisions in parallel builds.
+$(BUILDLIBDIR) $(DESTDIR)$(LIBDIR):
+	$(MKINSTALLDIRS) $@
 
-$(BUILDSYSLIBPATH): $(DLIBOBJS) $(MULTIDLIBOBJS) $(ADDOBJS)
-	$(MKINSTALLDIRS) $(BUILDDLIBDIR)
-	$(CC) $(BUILDSYSLIBFLAGS) $(ALLLDFLAGS) $(SYSREEXPORTFLAG) $^ -o $@
+$(BUILDDLIBPATH): $(ALLDLIBOBJS) $(BUILDLIBDIR)
+	$(CC) $(BUILDDLIBFLAGS) $(ALLLDFLAGS) $(ALLDLIBOBJS) -o $@
 
-$(BUILDSLIBPATH): $(SOBJLIST)
-	$(MKINSTALLDIRS) $(BUILDSLIBDIR)
+$(BUILDSYSLIBPATH): $(ALLSYSLIBOBJS) $(BUILDLIBDIR)
+	$(CC) $(BUILDSYSLIBFLAGS) $(ALLLDFLAGS) $(SYSREEXPORTFLAG) \
+	      $(ALLSYSLIBOBJS) -o $@
+
+$(BUILDSLIBPATH): $(SOBJLIST) $(BUILDLIBDIR)
 	$(RM) $@
-	$(AR) $(BUILDSLIBFLAGS) $@ $$(cat $^)
+	$(AR) $(BUILDSLIBFLAGS) $@ $$(cat $<)
 
 $(TESTOBJS_C): %.o: %.c $(ALLHEADERS)
 	$(CC) -c -std=c99 -I$(SRCINCDIR) $(ALLCFLAGS) $< -o $@
@@ -440,18 +445,15 @@ install-headers:
 
 install-lib: install-dlib install-slib install-syslib
 
-install-dlib: $(BUILDDLIBPATH)
-	$(MKINSTALLDIRS) $(DESTDIR)$(LIBDIR)
+install-dlib: $(BUILDDLIBPATH) $(DESTDIR)$(LIBDIR)
 	$(INSTALL_PROGRAM) $(BUILDDLIBPATH) $(DESTDIR)$(LIBDIR)
 	$(POSTINSTALL) -id $(DLIBPATH) $(DESTDIR)$(DLIBPATH)
 
-install-syslib: $(BUILDSYSLIBPATH)
-	$(MKINSTALLDIRS) $(DESTDIR)$(LIBDIR)
+install-syslib: $(BUILDSYSLIBPATH) $(DESTDIR)$(LIBDIR)
 	$(INSTALL_PROGRAM) $(BUILDSYSLIBPATH) $(DESTDIR)$(LIBDIR)
 	$(POSTINSTALL) -id $(SYSLIBPATH) $(DESTDIR)$(SYSLIBPATH)
 
-install-slib: $(BUILDSLIBPATH)
-	$(MKINSTALLDIRS) $(DESTDIR)$(LIBDIR)
+install-slib: $(BUILDSLIBPATH) $(DESTDIR)$(LIBDIR)
 	$(INSTALL_DATA) $(BUILDSLIBPATH) $(DESTDIR)$(LIBDIR)
 
 install-tiger: $(TIGERBINS)
@@ -475,7 +477,7 @@ test_clean: xtest_clean $(MANRUNPREFIX)clean
 clean: $(MANRUNPREFIX)clean test_clean
 	$(RM) $(foreach D,$(SRCDIR),$D/*.o $D/*.o.* $D/*.d)
 	$(RM) $(BUILDDLIBPATH) $(BUILDSLIBPATH) $(BUILDSYSLIBPATH) $(TESTPRGS) test/test_cmath_* test/test_faccessat_setuid
-	@$(RMDIR) $(BUILDDLIBDIR) $(BUILDSLIBDIR)
+	@$(RMDIR) $(BUILDLIBDIR)
 
 .PHONY: all dlib syslib slib clean check test test_cmath xtest test_static
 .PHONY: $(TESTRUNS) $(XTESTRUNS) $(MANTESTRUNS)
