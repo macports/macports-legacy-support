@@ -158,6 +158,9 @@ TESTSRUNS       := $(patsubst \
                      $(TESTNAMEPREFIX)%,$(TESTRUNPREFIX)%,$(TESTSPRGS_C))
 TESTSYSRUNS     := $(patsubst \
                      $(TESTNAMEPREFIX)%,$(TESTRUNPREFIX)%,$(TESTSYSPRGS_C))
+REALPATHSRCS_C  := $(wildcard $(TESTNAMEPREFIX)realpath*.c)
+REALPATHRUNS    := $(patsubst \
+                     $(TESTNAMEPREFIX)%.c,$(TESTRUNPREFIX)%,$(REALPATHSRCS_C))
 
 # Tests that are only run manually
 MANTESTDIR       = manual_tests
@@ -455,8 +458,15 @@ $(XTESTNAMEPREFIX)darwin_c_full.o: $(XTESTNAMEPREFIX)darwin_c.c
 $(XTESTNAMEPREFIX)scandir_old.o: $(XTESTNAMEPREFIX)scandir.c
 $(XTESTNAMEPREFIX)scandir_ino32.o: $(XTESTNAMEPREFIX)scandir.c
 
+# The nonstandard realpath tests include the realpath source
+$(TESTNAMEPREFIX)realpath_nonext.o: $(TESTNAMEPREFIX)realpath.c
+$(TESTNAMEPREFIX)realpath_nonposix.o: $(TESTNAMEPREFIX)realpath.c
+
 # Provide a target for all "darwin_c" tests
 $(XTESTRUNPREFIX)darwin_c_all: $(DARWINRUNS)
+
+# Provide a target for all "realpath" tests
+$(TESTRUNPREFIX)realpath_all: $(REALPATHRUNS)
 
 $(MANTESTRUNS): $(MANRUNPREFIX)%: $(MANTESTPREFIX)%
 	$< $(TEST_ARGS)
