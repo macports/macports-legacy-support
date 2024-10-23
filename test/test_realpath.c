@@ -16,6 +16,13 @@
  */
 
 /*
+ * NOTE: Much of the complexity in this test is left over from an earlier
+ * implementation that used a wrapper macro instead of a wrapper function.
+ * Macro-related issues are no longer important to test, though the extra
+ * tests haven't been removed.
+ */
+
+/*
  * Deliberately declaring some potentially redefined names
  * before including the associated header file, to test robustness.
  */
@@ -29,6 +36,7 @@ typedef struct { char *realpath; } rpv_t;
 typedef struct { strfunc_t realpath; } rpf_t;
 
 #include <assert.h>
+#include <libgen.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -88,6 +96,6 @@ main(int argc, char *argv[])
   if (verbose) printf("rpv.realpath = rpf.realpath(path, NULL) supported.\n");
   free((void*)rpv.realpath);
 
-  printf("realpath test succeeded.\n");
+  printf("%s succeeded.\n", basename(argv[0]));
   return 0;
 }
