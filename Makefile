@@ -44,7 +44,12 @@ BUILDSYSLIBFLAGS = -dynamiclib -headerpad_max_install_names \
                    -install_name @executable_path/../$(BUILDSYSLIBPATH) \
                    -current_version $(SOCURVERSION) \
                    -compatibility_version $(SOCOMPATVERSION)
-SYSREEXPORTFLAG  = -Wl,-reexport_library,/usr/lib/libSystem.B.dylib
+OSLIBDIR         = /usr/lib
+OSLIBNAME        = System.B
+OSLIBLINK        = System
+XLIBDIR          = xlib
+XLIBPATH         = $(XLIBDIR)/lib$(OSLIBLINK)$(SOEXT)
+SYSREEXPORTFLAG  = -Wl,-reexport_library,$(OSLIBDIR)/lib$(OSLIBNAME)$(SOEXT)
 BUILDSLIBFLAGS   = -qs
 POSTINSTALL      = install_name_tool
 
@@ -140,14 +145,18 @@ TESTNAMEPREFIX   = $(TESTDIR)/test_
 TESTRUNPREFIX    = run_
 TESTLDFLAGS      = -L$(BUILDLIBDIR) $(ALLLDFLAGS)
 TESTLIBS         = -l$(LIBNAME)
+TESTSYSLDFLAGS   = -L$(XLIBDIR) $(ALLLDFLAGS)
 TESTSRCS_C      := $(wildcard $(TESTNAMEPREFIX)*.c)
 TESTOBJS_C      := $(patsubst %.c,%.o,$(TESTSRCS_C))
 TESTPRGS_C      := $(patsubst %.c,%,$(TESTSRCS_C))
 TESTSPRGS_C     := $(patsubst %.c,%_static,$(TESTSRCS_C))
+TESTSYSPRGS_C   := $(patsubst %.c,%_syslib,$(TESTSRCS_C))
 TESTRUNS        := $(patsubst \
                      $(TESTNAMEPREFIX)%,$(TESTRUNPREFIX)%,$(TESTPRGS_C))
 TESTSRUNS       := $(patsubst \
                      $(TESTNAMEPREFIX)%,$(TESTRUNPREFIX)%,$(TESTSPRGS_C))
+TESTSYSRUNS     := $(patsubst \
+                     $(TESTNAMEPREFIX)%,$(TESTRUNPREFIX)%,$(TESTSYSPRGS_C))
 
 # Tests that are only run manually
 MANTESTDIR       = manual_tests
@@ -330,11 +339,25 @@ $(BUILDSLIBPATH): $(SOBJLIST) $(BUILDLIBDIR)
 	$(RM) $@
 	$(AR) $(BUILDSLIBFLAGS) $@ $$(cat $<)
 
+# To run tests with our syslib, we want to suppress linking with the OS syslib,
+# just to be certain that our replacement is an adequate substitute.
+# But there doesn't seem to be any compiler option that does that correctly
+# and without unwanted side effects.  So instead we create a special lib
+# directory containing a symlink to our replacement library, but with the
+# normal OS syslib name, to fake out the implied '-lSystem'.
+$(XLIBPATH): $(BUILDSYSLIBPATH)
+	$(MKINSTALLDIRS) $(XLIBDIR)
+	cd $(XLIBDIR) && ln -sf ../$< ../$@
+
 $(TESTOBJS_C): %.o: %.c $(ALLHEADERS)
 	$(CC) -c -std=c99 -I$(SRCINCDIR) $(ALLCFLAGS) $< -o $@
 
 $(TESTPRGS_C): %: %.o $(BUILDDLIBPATH)
 	$(CC) $(TESTLDFLAGS) $< $(TESTLIBS) -o $@
+
+# Build tests with *only* our replacement syslib.
+$(TESTSYSPRGS_C): %_syslib: %.o $(XLIBPATH)
+	$(CC) $(TESTSYSLDFLAGS) $< -o $@
 
 $(TESTSPRGS_C): %_static: %.o $(BUILDSLIBPATH)
 	$(CC) $(ALLLDFLAGS) $< $(BUILDSLIBPATH) -o $@
@@ -405,6 +428,9 @@ $(TESTRUNS): $(TESTRUNPREFIX)%: $(TESTNAMEPREFIX)%
 $(TESTSRUNS): $(TESTRUNPREFIX)%: $(TESTNAMEPREFIX)%
 	$< $(TEST_ARGS)
 
+$(TESTSYSRUNS): $(TESTRUNPREFIX)%: $(TESTNAMEPREFIX)%
+	$< $(TEST_ARGS)
+
 $(XTESTRUNS): $(XTESTRUNPREFIX)%: $(XTESTNAMEPREFIX)%
 	$< $(TEST_ARGS)
 
@@ -463,6 +489,10 @@ test check: $(TESTRUNS) $(XTESTRUNS) test_cmath test_faccessat_setuid_msg
 
 test_static: $(TESTSRUNS)
 
+test_syslib: $(TESTSYSRUNS)
+
+test_all: test test_static test_syslib
+
 xtest: $(XTESTRUNS)
 
 xtest_clean:
@@ -472,14 +502,16 @@ $(MANRUNPREFIX)clean:
 	$(RM) $(MANTESTDIR)/*.o $(MANTESTPRGS)
 
 test_clean: xtest_clean $(MANRUNPREFIX)clean
-	$(RM) $(TESTDIR)/*.o $(TESTPRGS) $(XTESTDIR)/*.o $(XTESTPRGS)
+	$(RM) $(TESTDIR)/*.o $(TESTPRGS) $(XTESTDIR)/*.o $(XTESTPRGS) $(XLIBPATH)
+	@$(RMDIR) $(XLIBDIR)
 
 clean: $(MANRUNPREFIX)clean test_clean
 	$(RM) $(foreach D,$(SRCDIR),$D/*.o $D/*.o.* $D/*.d)
 	$(RM) $(BUILDDLIBPATH) $(BUILDSLIBPATH) $(BUILDSYSLIBPATH) $(TESTPRGS) test/test_cmath_* test/test_faccessat_setuid
 	@$(RMDIR) $(BUILDLIBDIR)
 
-.PHONY: all dlib syslib slib clean check test test_cmath xtest test_static
+.PHONY: all dlib syslib slib clean check test test_cmath xtest
+.PHONY: test_static test_syslib test_all
 .PHONY: $(TESTRUNS) $(XTESTRUNS) $(MANTESTRUNS)
 .PHONY: $(MANRUNPREFIX)clean test_clean xtest_clean
 .PHONY: install install-headers install-lib install-dlib install-slib
