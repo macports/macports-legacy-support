@@ -44,6 +44,13 @@
 #define __MPLS_APPLE_I386__            0
 #endif
 
+/* True for 64-bit build */
+#if defined(__LP64__) && __LP64__
+#define __MPLS_64BIT 1
+#else
+#define __MPLS_64BIT 0
+#endif
+
 /*
  * More concise and more comprehensive target OS definition, to simplify
  * many conditionals.
