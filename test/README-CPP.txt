@@ -21,7 +21,7 @@ dirent_with_cplusplus:
 The former fdopendir() implementation relied on a macro that collided with C++
 headers, causing errors.  The test was created to demonstrate that problem and
 its fix.  It was written in C++ since that was how the problem was actually
-discovered, though a test using plain C probably could have been constructed. 
+discovered, though a test using plain C probably could have been constructed.
 Meanwhile, the fdopendir() implementation has been rewritten in such a way that
 the aforementioned problem no longer exists.  For that reason, the test was
 replaced with a simple include-only test, rather than rewriting the former test
