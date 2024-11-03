@@ -151,6 +151,7 @@ TESTOBJS_C      := $(patsubst %.c,%.o,$(TESTSRCS_C))
 TESTPRGS_C      := $(patsubst %.c,%,$(TESTSRCS_C))
 TESTSPRGS_C     := $(patsubst %.c,%_static,$(TESTSRCS_C))
 TESTSYSPRGS_C   := $(patsubst %.c,%_syslib,$(TESTSRCS_C))
+ALLTESTPRGS     := $(TESTPRGS_C) $(TESTSPRGS_C) $(TESTSYSPRGS_C)
 TESTRUNS        := $(patsubst \
                      $(TESTNAMEPREFIX)%,$(TESTRUNPREFIX)%,$(TESTPRGS_C))
 TESTSRUNS       := $(patsubst \
@@ -502,12 +503,13 @@ $(MANRUNPREFIX)clean:
 	$(RM) $(MANTESTDIR)/*.o $(MANTESTPRGS)
 
 test_clean: xtest_clean $(MANRUNPREFIX)clean
-	$(RM) $(TESTDIR)/*.o $(TESTPRGS) $(XTESTDIR)/*.o $(XTESTPRGS) $(XLIBPATH)
+	$(RM) $(TESTDIR)/*.o $(ALLTESTPRGS) $(XLIBPATH)
+	$(RM) test/test_cmath_* test/test_faccessat_setuid
 	@$(RMDIR) $(XLIBDIR)
 
 clean: $(MANRUNPREFIX)clean test_clean
 	$(RM) $(foreach D,$(SRCDIR),$D/*.o $D/*.o.* $D/*.d)
-	$(RM) $(BUILDDLIBPATH) $(BUILDSLIBPATH) $(BUILDSYSLIBPATH) $(TESTPRGS) test/test_cmath_* test/test_faccessat_setuid
+	$(RM) $(BUILDDLIBPATH) $(BUILDSLIBPATH) $(BUILDSYSLIBPATH)
 	@$(RMDIR) $(BUILDLIBDIR)
 
 .PHONY: all dlib syslib slib clean check test test_cmath xtest
