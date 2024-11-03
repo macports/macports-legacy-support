@@ -328,14 +328,14 @@ $(SOBJLIST): $(ALLSLIBOBJS)
 $(BUILDLIBDIR) $(DESTDIR)$(LIBDIR):
 	$(MKINSTALLDIRS) $@
 
-$(BUILDDLIBPATH): $(ALLDLIBOBJS) $(BUILDLIBDIR)
+$(BUILDDLIBPATH): $(ALLDLIBOBJS) | $(BUILDLIBDIR)
 	$(CC) $(BUILDDLIBFLAGS) $(ALLLDFLAGS) $(ALLDLIBOBJS) -o $@
 
-$(BUILDSYSLIBPATH): $(ALLSYSLIBOBJS) $(BUILDLIBDIR)
+$(BUILDSYSLIBPATH): $(ALLSYSLIBOBJS) | $(BUILDLIBDIR)
 	$(CC) $(BUILDSYSLIBFLAGS) $(ALLLDFLAGS) $(SYSREEXPORTFLAG) \
 	      $(ALLSYSLIBOBJS) -o $@
 
-$(BUILDSLIBPATH): $(SOBJLIST) $(BUILDLIBDIR)
+$(BUILDSLIBPATH): $(SOBJLIST) | $(BUILDLIBDIR)
 	$(RM) $@
 	$(AR) $(BUILDSLIBFLAGS) $@ $$(cat $<)
 
@@ -367,7 +367,7 @@ $(XTESTOBJS_C): %.o: %.c $(ALLHEADERS)
 	$(CC) -c -std=c99 -fno-builtin -I$(SRCINCDIR) $(CFLAGS) $< -o $@
 
 # The xtests don't require the library
-$(XTESTPRGS_C): %: %.o $(BUILDLIBDIR)
+$(XTESTPRGS_C): %: %.o
 	$(CC) $(XTESTLDFLAGS) $< -o $@
 
 # The "darwin_c" tests need the -fno-builtin option with some compilers.
@@ -376,7 +376,7 @@ $(MANTESTOBJS_C): %.o: %.c $(ALLHEADERS)
 	$(CC) -c -std=c99 -fno-builtin -I$(SRCINCDIR) $(CFLAGS) $< -o $@
 
 # Currently, the manual C tests don't require the library
-$(MANTESTPRGS_C): %: %.o $(BUILDLIBDIR)
+$(MANTESTPRGS_C): %: %.o
 	$(CC) $(MANTESTLDFLAGS) $< -o $@
 
 # But the manual C++ tests *do* require the library
@@ -471,15 +471,15 @@ install-headers:
 
 install-lib: install-dlib install-slib install-syslib
 
-install-dlib: $(BUILDDLIBPATH) $(DESTDIR)$(LIBDIR)
+install-dlib: $(BUILDDLIBPATH) | $(DESTDIR)$(LIBDIR)
 	$(INSTALL_PROGRAM) $(BUILDDLIBPATH) $(DESTDIR)$(LIBDIR)
 	$(POSTINSTALL) -id $(DLIBPATH) $(DESTDIR)$(DLIBPATH)
 
-install-syslib: $(BUILDSYSLIBPATH) $(DESTDIR)$(LIBDIR)
+install-syslib: $(BUILDSYSLIBPATH) | $(DESTDIR)$(LIBDIR)
 	$(INSTALL_PROGRAM) $(BUILDSYSLIBPATH) $(DESTDIR)$(LIBDIR)
 	$(POSTINSTALL) -id $(SYSLIBPATH) $(DESTDIR)$(SYSLIBPATH)
 
-install-slib: $(BUILDSLIBPATH) $(DESTDIR)$(LIBDIR)
+install-slib: $(BUILDSLIBPATH) | $(DESTDIR)$(LIBDIR)
 	$(INSTALL_DATA) $(BUILDSLIBPATH) $(DESTDIR)$(LIBDIR)
 
 install-tiger: $(TIGERBINS)
