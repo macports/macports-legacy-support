@@ -1,13 +1,10 @@
 /*
  * Version of test_realpath with non-POSIX semantics (32-bit only).
+ *
+ * Attempting a 64-bit build with _NONSTD_SOURCE results in an error.
  */
 
-#if !defined(__LP64__) || !__LP64__
-
-#define _NONSTD_SOURCE
-#include "test_realpath.c"
-
-#else
+#if defined(__LP64__) && __LP64__
 
 #include <libgen.h>
 #include <stdio.h>
@@ -20,4 +17,9 @@ main(int argc, char *argv[])
   return 0;
 }
 
-#endif
+#else /* 32-bit */
+
+#define _NONSTD_SOURCE
+#include "test_realpath.c"
+
+#endif /* 32-bit */
