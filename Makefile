@@ -242,10 +242,7 @@ define splitandfilterandmergemultiarch
 		$$(: 'On the contrary, the i386 architecture has only $$UNIX2003-compat functions for the $$INODE64 feature set.') && \
 		$$(: '10.4 is so old that it does not even have the $$INODE64 feature.') && \
 		case "$${arch}" in \
-			('x86_64') \
-				$${ld} -r "$${output}.inode32.$${arch}" "$${output}.inode64.$${arch}" -o "$${output}.$${arch}"; \
-				;; \
-			('ppc64') \
+			('x86_64'|'ppc64') \
 				if [ '9' -gt "$${platform}" ]; then \
 					$${ld} -r "$${output}.inode32.$${arch}" -o "$${output}.$${arch}"; \
 				else \
