@@ -5,7 +5,7 @@ extern const char posix_memalign_tmp4 __asm("$ld$add$os10.4$_posix_memalign"); _
 extern const char posix_memalign_tmp5 __asm("$ld$add$os10.5$_posix_memalign"); __attribute__((visibility("default"))) const char posix_memalign_tmp5 = 0;
 #endif
 
-#if !(__MPLS_LIB_SUPPORT_REALPATH_WRAP__)
+#if !(__MPLS_LIB_SUPPORT_REALPATH_ALLOC__)
 extern const char realpath_tmp4 __asm("$ld$add$os10.4$_realpath"); __attribute__((visibility("default"))) const char realpath_tmp4 = 0;
 extern const char realpath_tmp5 __asm("$ld$add$os10.5$_realpath$DARWIN_EXTSN"); __attribute__((visibility("default"))) const char realpath_tmp5 = 0;
 #endif
