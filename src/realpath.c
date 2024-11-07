@@ -54,8 +54,13 @@
 /* Function type for realpath() */
 typedef char *rp_func_t(const char * __restrict, char * __restrict);
 
-/* Macro defining all versions */
-/* Note that the UNIX2003 version never exists in 64-bit builds. */
+/*
+ * Macro defining all versions
+ * Note that the UNIX2003 version never exists in 64-bit builds.
+ * Also note that the 10.6 "nonext" fix only needs the basic version.
+ */
+
+# if __MPLS_LIB_SUPPORT_REALPATH_ALLOC__
 
 #if !__MPLS_64BIT
 
@@ -71,6 +76,14 @@ typedef char *rp_func_t(const char * __restrict, char * __restrict);
   RP_ENT($,DARWIN_EXTSN,darwin)
 
 #endif /* 64-bit */
+
+#endif /* __MPLS_LIB_SUPPORT_REALPATH_ALLOC__ */
+
+#if __MPLS_LIB_SUPPORT_REALPATH_NONEX_FIX__
+
+#define RP_ALL RP_ENT(,,basic)
+
+#endif /* __MPLS_LIB_SUPPORT_REALPATH_NONEX_FIX__ */
 
 /* Table of indices of versions */
 #define RP_ENT(d,x,t) rp_##t,
@@ -140,6 +153,8 @@ realpath##d##x(const char * __restrict file_name, \
 RP_ALL
 #undef RP_ENT
 
+# if __MPLS_LIB_SUPPORT_REALPATH_ALLOC__
+
 /*
  * Compatibility function to avoid the need to rebuild existing binaries
  * built with the old wrapper-macro implementation (between Jan-2019 and
@@ -161,5 +176,7 @@ macports_legacy_realpath(const char * __restrict file_name,
 {
   return realpath_internal(file_name, resolved_name, RP_DEFAULT);
 }
+
+#endif /* __MPLS_LIB_SUPPORT_REALPATH_ALLOC__ */
 
 #endif /*__MPLS_LIB_SUPPORT_REALPATH_WRAP__*/

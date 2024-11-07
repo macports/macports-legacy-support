@@ -12,14 +12,14 @@
 
 /* MP support header */
 #include "MacportsLegacySupport.h"
-#if __MPLS_LIB_SUPPORT_REALPATH_WRAP__
+#if __MPLS_LIB_SUPPORT_REALPATH_ALLOC__
 
 #define TEST_MACPORTS_LEGACY_REALPATH
 
 #include "test_realpath.c"
 
-#else /* !__MPLS_LIB_SUPPORT_REALPATH_WRAP__ */
+#else /* !__MPLS_LIB_SUPPORT_REALPATH_ALLOC__ */
 
 int main(){ return 0; }
 
-#endif /* !__MPLS_LIB_SUPPORT_REALPATH_WRAP__ */
+#endif /* !__MPLS_LIB_SUPPORT_REALPATH_ALLOC__ */

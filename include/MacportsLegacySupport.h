@@ -230,7 +230,13 @@
 /* The addition uses an #ifndef, so no feature flag is necessary */
 
 /*  realpath() on < 10.6 does not support modern NULL buffer usage */
-#define __MPLS_LIB_SUPPORT_REALPATH_WRAP__    (__MPLS_TARGET_OSVER < 1060)
+#define __MPLS_LIB_SUPPORT_REALPATH_ALLOC__   (__MPLS_TARGET_OSVER < 1060)
+
+/* Also, 10.6 non-POSIX realpath() (32-bit only) with a nonexistent path and
+ * a NULL buffer returns an unsafe pointer to an internal buffer. */
+#define __MPLS_LIB_SUPPORT_REALPATH_NONEX_FIX__ (__MPLS_TARGET_OSVER >= 1060 \
+                                                 && __MPLS_TARGET_OSVER < 1070 \
+                                                 && !__MPLS_64BIT)
 
 /* fsetattrlistat, fgetattrlistat */
 #define __MPLS_SDK_SUPPORT_FSETATTRLIST__     (__MPLS_SDK_MAJOR < 1060)
@@ -316,10 +322,18 @@
 #define __MPLS_LIB_SUPPORT_PTHREAD_SETNAME_NP__   (__MPLS_TARGET_OSVER < 1060)
 
 /* Compound macros, bundling functionality needed by multiple single features. */
-#define __MPLS_SDK_NEED_ATCALL_MACROS__  (__MPLS_SDK_SUPPORT_ATCALLS__ || __MPLS_SDK_SUPPORT_SETATTRLISTAT__)
+#define __MPLS_SDK_NEED_ATCALL_MACROS__  (__MPLS_SDK_SUPPORT_ATCALLS__ \
+                                          || __MPLS_SDK_SUPPORT_SETATTRLISTAT__)
 
-#define __MPLS_SDK_NEED_BEST_FCHDIR__    (__MPLS_SDK_SUPPORT_FDOPENDIR__ || __MPLS_SDK_SUPPORT_ATCALLS__ || __MPLS_SDK_SUPPORT_SETATTRLISTAT__)
-#define __MPLS_LIB_NEED_BEST_FCHDIR__    (__MPLS_LIB_SUPPORT_FDOPENDIR__ || __MPLS_LIB_SUPPORT_ATCALLS__ || __MPLS_LIB_SUPPORT_SETATTRLISTAT__)
+#define __MPLS_SDK_NEED_BEST_FCHDIR__    (__MPLS_SDK_SUPPORT_FDOPENDIR__ \
+                                          || __MPLS_SDK_SUPPORT_ATCALLS__ \
+                                          || __MPLS_SDK_SUPPORT_SETATTRLISTAT__)
+#define __MPLS_LIB_NEED_BEST_FCHDIR__    (__MPLS_LIB_SUPPORT_FDOPENDIR__ \
+                                          || __MPLS_LIB_SUPPORT_ATCALLS__ \
+                                          || __MPLS_LIB_SUPPORT_SETATTRLISTAT__)
+
+#define __MPLS_LIB_SUPPORT_REALPATH_WRAP__ (__MPLS_LIB_SUPPORT_REALPATH_ALLOC__ \
+                                            || __MPLS_LIB_SUPPORT_REALPATH_NONEX_FIX__)
 
 /* UUIDs - for now, just add missing typedef statements */
 #define __MPLS_SDK_SUPPORT_UUID__  (__MPLS_SDK_MAJOR < 1060)

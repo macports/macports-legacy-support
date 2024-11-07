@@ -75,10 +75,17 @@ Wrapped headers and replaced functions are:
     <td>OSX10.6, OSX10.12 (open_memstream)</td>
   </tr>
   <tr>
-    <td rowspan="2"><code>stdlib.h</code></td>
-    <td>Adds <code>posix_memalign</code> functional replacement, and wraps <code>realpath</code>
-        to accept a <code>NULL</code> buffer argument</td>
+    <td rowspan="4"><code>stdlib.h</code></td>
+    <td>Adds <code>posix_memalign</code> functional replacement</td>
     <td>OSX10.5</td>
+  </tr>
+  <tr>
+    <td>Wraps <code>realpath</code> to accept a <code>NULL</code> buffer argument</td>
+    <td>OSX10.5</td>
+  </tr>
+  <tr>
+    <td>Fixes non-POSIX <code>realpath</code> in 10.6</td>
+    <td>OSX10.6</td>
   </tr>
   <tr>
     <td>Adds <code>arc4random_uniform</code> and <code>arc4random_buf</code> functions</td>
