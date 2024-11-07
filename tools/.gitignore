@@ -1,0 +1,6 @@
+*
+!.gitignore
+!*.c
+!*.cc
+!*.cpp
+!*.sh
