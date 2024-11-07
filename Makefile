@@ -365,7 +365,7 @@ $(TESTSPRGS_C): %_static: %.o $(BUILDSLIBPATH)
 
 # The "darwin_c" tests need the -fno-builtin option with some compilers.
 $(XTESTOBJS_C): %.o: %.c $(ALLHEADERS)
-	$(CC) -c -std=c99 -fno-builtin -I$(SRCINCDIR) $(CFLAGS) $< -o $@
+	$(CC) -c -std=c99 -fno-builtin -I$(SRCINCDIR) $(ALLCFLAGS) $< -o $@
 
 # The xtests don't require the library
 $(XTESTPRGS_C): %: %.o
@@ -374,7 +374,7 @@ $(XTESTPRGS_C): %: %.o
 # The "darwin_c" tests need the -fno-builtin option with some compilers.
 # It shouldn't hurt the other manual tests.
 $(MANTESTOBJS_C): %.o: %.c $(ALLHEADERS)
-	$(CC) -c -std=c99 -fno-builtin -I$(SRCINCDIR) $(CFLAGS) $< -o $@
+	$(CC) -c -std=c99 -fno-builtin -I$(SRCINCDIR) $(ALLCFLAGS) $< -o $@
 
 # Currently, the manual C tests don't require the library
 $(MANTESTPRGS_C): %: %.o
