@@ -44,14 +44,25 @@ typedef struct { strfunc_t realpath; } rpf_t;
 
 #include <sys/param.h>
 
+/*
+ * Allow testing the legacy compatibility entry.
+ * We use a simple argless macro and disable the fancier tests.
+ */
+#ifdef TEST_MACPORTS_LEGACY_REALPATH
+#define realpath macports_legacy_realpath
+extern char *realpath(const char * __restrict, char * __restrict);
+#endif
+
 int
 main(int argc, char *argv[])
 {
   int verbose = 0;
   const char *p, *q;
+#ifndef TEST_MACPORTS_LEGACY_REALPATH
   strfunc_t f;
   rpf_t rpf = { realpath };
   rpv_t rpv;
+#endif /* !TEST_MACPORTS_LEGACY_REALPATH */
   char buf[PATH_MAX], cwd[MAXPATHLEN];
 
   if (argc > 1 && !strcmp(argv[1], "-v")) verbose = 1;
@@ -74,6 +85,7 @@ main(int argc, char *argv[])
   if (verbose) printf("realpath(path, NULL) supported.\n");
   free((void*)q);
 
+#ifndef TEST_MACPORTS_LEGACY_REALPATH
   /* Test with name (reference) only */
   f = realpath;
   q = f(".", NULL);
@@ -95,6 +107,7 @@ main(int argc, char *argv[])
   assert (!strcmp(rpv.realpath, p) && "rpf.realpath(path, NULL) miscompared");
   if (verbose) printf("rpv.realpath = rpf.realpath(path, NULL) supported.\n");
   free((void*)rpv.realpath);
+#endif /* !TEST_MACPORTS_LEGACY_REALPATH */
 
   printf("%s succeeded.\n", basename(argv[0]));
   return 0;

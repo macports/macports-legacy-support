@@ -461,6 +461,7 @@ $(XTESTNAMEPREFIX)scandir_ino32.o: $(XTESTNAMEPREFIX)scandir.c
 # The nonstandard realpath tests include the realpath source
 $(TESTNAMEPREFIX)realpath_nonext.o: $(TESTNAMEPREFIX)realpath.c
 $(TESTNAMEPREFIX)realpath_nonposix.o: $(TESTNAMEPREFIX)realpath.c
+$(TESTNAMEPREFIX)realpath_compat.o: $(TESTNAMEPREFIX)realpath.c
 
 # Provide a target for all "darwin_c" tests
 $(XTESTRUNPREFIX)darwin_c_all: $(DARWINRUNS)
