@@ -37,12 +37,24 @@ typedef struct { strfunc_t realpath; } rpf_t;
 
 #include <assert.h>
 #include <libgen.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
 #include <sys/param.h>
+
+/*
+ * Beginning in the 15.x SDK, including malloc.h doesn't work when
+ * _POSIX_C_SOURCE is defined, which we need for the "nonext" version.
+ * So we avoid the official include and declare malloc_size() directly.
+ *
+ * #include <malloc/malloc.h>
+ */
+extern size_t malloc_size(const void *ptr);
+
+#define NONEX_PATH "4981a2d5a4c7bea88154c434b4708045"
 
 /*
  * Allow testing the legacy compatibility entry.
@@ -84,6 +96,20 @@ main(int argc, char *argv[])
   assert (!strcmp(q, p) && "realpath(path, NULL) miscompared");
   if (verbose) printf("realpath(path, NULL) supported.\n");
   free((void*)q);
+
+  /*
+   * Test nonexistent path with no supplied buffer.
+   * In some cases (10.6 non-POSIX) this may "succeed" with a bad
+   * returned buffer address.  We accept either failure or success
+   * with a valid buffer.
+   */
+  q = realpath(NONEX_PATH, NULL);
+  assert((!q || malloc_size(q)) \
+         && "realpath(_nonexpath, NULL) returned bad address");
+  if (verbose) {
+    printf("realpath(nonex_path, NULL) %s.\n", q ? "succeeds" : "fails");
+  }
+  if (q && malloc_size(q)) free((void*)q);
 
 #ifndef TEST_MACPORTS_LEGACY_REALPATH
   /* Test with name (reference) only */
