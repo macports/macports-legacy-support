@@ -33,7 +33,7 @@
  */
 
 long sysconf(int name) {
-    long (*real_sysconf)(int);
+    static long (*os_sysconf)(int);
 
 #if __MPLS_LIB_SUPPORT_SYSCONF_NPROCESSORS__
     if ( name == _SC_NPROCESSORS_ONLN ) {
@@ -85,11 +85,14 @@ long sysconf(int name) {
 #endif /* __MPLS_LIB_SUPPORT_SYSCONF_PHYS_PAGES__ */
 
     /* for any other values of "name", call the real sysconf() */
-    real_sysconf = dlsym(RTLD_NEXT, "sysconf");
-    if (real_sysconf == NULL) {
-        exit(EXIT_FAILURE);
+    if (!os_sysconf) {
+        os_sysconf = dlsym(RTLD_NEXT, "sysconf");
+        /* Something's badly broken if this fails */
+        if (!os_sysconf) {
+            abort();
+        }
     }
-    return real_sysconf(name);
+    return (*os_sysconf)(name);
 }
 
 /* compatibility function so code does not have to be recompiled */
