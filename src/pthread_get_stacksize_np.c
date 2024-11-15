@@ -43,29 +43,33 @@ size_t pthread_get_stacksize_np(pthread_t t) {
      } *thread = (void*) t;
      int is_main_thread = ((thread->detached & 4) == 4);
 #endif
-     if ( is_main_thread ) {
-	  /* use LLVM workaround */
-	  /* see https://github.com/llvm/llvm-project/blob/617a15a9eac96088ae5e9134248d8236e34b91b1/compiler-rt/lib/sanitizer_common/sanitizer_mac.cpp#L414 */
-         /* OpenJDK also has a workaround */
-         /* see https://github.com/openjdk/jdk/blob/e833bfc8ac6104522d037e7eb300f5aa112688bb/src/hotspot/os_cpu/bsd_x86/os_bsd_x86.cpp#L715 */
-	  struct rlimit limit;
-	  if( getrlimit(RLIMIT_STACK, &limit) ) {
-	       exit(EXIT_FAILURE);
-	  }
-	  if( limit.rlim_cur < kMaxThreadStackSize ) {
-	       return limit.rlim_cur;
-	  } else {
-	       return kMaxThreadStackSize;
-	  }
-     } else {
-	  /* bug only affects main thread */
-	  size_t (*real_pthread_get_stacksize_np)(pthread_t);
-	  real_pthread_get_stacksize_np = dlsym(RTLD_NEXT, "pthread_get_stacksize_np");
-	  if (real_pthread_get_stacksize_np == NULL) {
-	       exit(EXIT_FAILURE);
-	  }
-	  return real_pthread_get_stacksize_np(t);
-     }
+    if ( is_main_thread ) {
+        /* use LLVM workaround */
+        /* see https://github.com/llvm/llvm-project/blob/617a15a9eac96088ae5e9134248d8236e34b91b1/compiler-rt/lib/sanitizer_common/sanitizer_mac.cpp#L414 */
+       /* OpenJDK also has a workaround */
+       /* see https://github.com/openjdk/jdk/blob/e833bfc8ac6104522d037e7eb300f5aa112688bb/src/hotspot/os_cpu/bsd_x86/os_bsd_x86.cpp#L715 */
+        struct rlimit limit;
+        if( getrlimit(RLIMIT_STACK, &limit) ) {
+             exit(EXIT_FAILURE);
+        }
+        if( limit.rlim_cur < kMaxThreadStackSize ) {
+             return limit.rlim_cur;
+        } else {
+             return kMaxThreadStackSize;
+        }
+    } else {
+        /* bug only affects main thread */
+        static size_t (*os_pthread_get_stacksize_np)(pthread_t);
+        if (!os_pthread_get_stacksize_np) {
+            os_pthread_get_stacksize_np =
+                dlsym(RTLD_NEXT, "pthread_get_stacksize_np");
+            /* Something's badly broken if this fails */
+            if (!os_pthread_get_stacksize_np) {
+                abort();
+            }
+        }
+        return (*os_pthread_get_stacksize_np)(t);
+    }
 }
 
 #endif /* __MPLS_LIB_SUPPORT_PTHREAD_GET_STACKSIZE_NP_FIX__ */
