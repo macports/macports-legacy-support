@@ -26,6 +26,7 @@
 #include <unistd.h>
 #include <dlfcn.h>
 #include <stdlib.h>
+#include <stddef.h>
 
 /*
  * Emulate several commonly used but missing (or broken) selectors from
@@ -75,10 +76,21 @@ long sysconf(int name) {
         /* the number of pages is the total memory / pagesize */
         uint64_t mem_size;
         size_t len = sizeof(mem_size);
+        int ms_mib[] = {CTL_HW, HW_MEMSIZE};
+        size_t ms_miblen = sizeof(ms_mib) / sizeof(ms_mib[0]);
         int pagesize = getpagesize();
 
-        sysctlbyname("hw.memsize", &mem_size, &len, NULL, 0);
+        if (sysctl(ms_mib, ms_miblen, &mem_size, &len, NULL, 0)) {
+          return -1;
+        }
 
+        /*
+         * Note that the 32-bit version of this function is inherently
+         * invalid in any system with >=1TB of RAM.
+         * Apple's 32-bit implementation is invalid in any system with
+         * >=2GB of RAM, which is why we override any existing Apple
+         * implementation in all 32-bit builds.
+         */
         return (long)(mem_size/pagesize);
 
     }

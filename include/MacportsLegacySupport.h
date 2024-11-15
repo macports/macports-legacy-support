@@ -262,7 +262,7 @@
 
 #define __MPLS_SDK_SUPPORT_SYSCONF_PHYS_PAGES__   (__MPLS_SDK_MAJOR < 101100)
 #define __MPLS_LIB_SUPPORT_SYSCONF_PHYS_PAGES__   (__MPLS_TARGET_OSVER < 101100 \
-                                                   || __MPLS_APPLE_I386__)
+                                                   || !__MPLS_64BIT)
 
 #define __MPLS_LIB_SUPPORT_SYSCONF_WRAP__ (__MPLS_LIB_SUPPORT_SYSCONF_NPROCESSORS__ \
                                            || __MPLS_LIB_SUPPORT_SYSCONF_PHYS_PAGES__)
