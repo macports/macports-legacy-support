@@ -26,6 +26,12 @@
 
 #include <sys/cdefs.h>
 
+/* Modification from original source */
+#ifndef __FBSDID
+#define __FBSDID(x)
+#endif
+/* End of addition */
+
 __FBSDID("$FreeBSD: src/usr.bin/which/which.c,v 1.6 2005/02/10 16:04:22 ru Exp $");
 
 #include <sys/stat.h>
