@@ -46,7 +46,7 @@ int main()
      assert( stack_size_thread == stack_size_detached && "Unknown Error, non-main threads are assumed to have the same stack size" );
      assert( stack_size_main > stack_size_thread && "Default stack size for main thread is the same as the default stack size of non-main threads" );
 
-     printf("Stack size for the non-main thread (%zu) is larger than for non-main threads (%zu), which is expected.\n", stack_size_main, stack_size_thread);
+     printf("Stack size for the main thread (%zu) is larger than for non-main threads (%zu), which is expected.\n", stack_size_main, stack_size_thread);
 
      return 0;
 }
