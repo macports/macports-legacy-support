@@ -20,6 +20,8 @@ INCSUBDIR        = LegacySupport
 PKGINCDIR        = $(PREFIX)/include/$(INCSUBDIR)
 LIBDIR           = $(PREFIX)/lib
 BINDIR           = $(PREFIX)/bin
+MANDIR           = $(PREFIX)/share/man
+MAN1DIR          = $(MANDIR)/man1
 AREXT            = .a
 SOEXT            = .dylib
 LIBNAME          = MacportsLegacySupport
@@ -81,6 +83,7 @@ CP              ?= /bin/cp
 MKINSTALLDIRS    = install -d -m 755
 INSTALL_PROGRAM  = install -c -m 755
 INSTALL_DATA     = install -c -m 644
+INSTALL_MAN      = install -c -m 444
 RM               = rm -f
 RMDIR            = sh -c 'for d; do test ! -d "$$d" || rmdir -p "$$d"; done' rmdir
 
@@ -180,6 +183,7 @@ MANTESTRUNS     := $(patsubst \
 TIGERSRCDIR      = tiger_only/src
 TIGERSRCS       := $(wildcard $(TIGERSRCDIR)/*.c)
 TIGERPRGS       := $(patsubst %.c,%,$(TIGERSRCS))
+TIGERMAN1S      := $(wildcard $(TIGERSRCDIR)/*.1)
 
 TOOLDIR          = tools
 ARCHTOOL         = $(TOOLDIR)/binarchs.sh
@@ -498,6 +502,7 @@ install-slib: $(BUILDSLIBPATH) | $(DESTDIR)$(LIBDIR)
 
 install-tiger: $(TIGERPRGS)
 	$(INSTALL_PROGRAM) $(TIGERPRGS) $(DESTDIR)$(BINDIR)
+	$(INSTALL_MAN) $(TIGERMAN1S) $(DESTDIR)$(MAN1DIR)
 
 test check: $(TESTRUNS) $(XTESTRUNS) test_cmath test_faccessat_setuid_msg
 
