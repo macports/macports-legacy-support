@@ -177,8 +177,12 @@ MANTESTPRGS      = $(MANTESTPRGS_C) $(MANTESTPRGS_CPP)
 MANTESTRUNS     := $(patsubst \
                      $(MANTESTPREFIX)%,$(MANRUNPREFIX)%,$(MANTESTPRGS))
 
-TIGERBINDIR      = tiger_only/bin
-TIGERBINS       := $(wildcard $(TIGERBINDIR)/*)
+TIGERSRCDIR      = tiger_only/src
+TIGERSRCS       := $(wildcard $(TIGERSRCDIR)/*.c)
+TIGERPRGS       := $(patsubst %.c,%,$(TIGERSRCS))
+
+TOOLDIR          = tools
+ARCHTOOL         = $(TOOLDIR)/binarchs.sh
 
 define splitandfilterandmergemultiarch
 	output='$(1)' && \
@@ -387,9 +391,10 @@ $(MANTESTOBJS_CPP): %.o: %.cpp $(ALLHEADERS)
 $(MANTESTPRGS_CPP): %: %.o $(BUILDDLIBPATH)
 	$(CXX) $(TESTLDFLAGS) $< $(TESTLIBS) -o $@
 
-# Dummy target for building Tiger-only binaries, so Portfile can
-# reference it in case we need it in the future.
-tiger-bins:
+$(TIGERPRGS): %: %.c
+	$(CC) $$($(ARCHTOOL)) $< -o $@
+
+tiger-bins: $(TIGERPRGS)
 
 # Special clause for testing the cmath fix: Just need to verify that
 # building succeeds or fails, not that the executable runs or what it
@@ -491,8 +496,8 @@ install-syslib: $(BUILDSYSLIBPATH) | $(DESTDIR)$(LIBDIR)
 install-slib: $(BUILDSLIBPATH) | $(DESTDIR)$(LIBDIR)
 	$(INSTALL_DATA) $(BUILDSLIBPATH) $(DESTDIR)$(LIBDIR)
 
-install-tiger: $(TIGERBINS)
-	$(INSTALL_PROGRAM) $(TIGERBINS) $(DESTDIR)$(BINDIR)
+install-tiger: $(TIGERPRGS)
+	$(INSTALL_PROGRAM) $(TIGERPRGS) $(DESTDIR)$(BINDIR)
 
 test check: $(TESTRUNS) $(XTESTRUNS) test_cmath test_faccessat_setuid_msg
 
