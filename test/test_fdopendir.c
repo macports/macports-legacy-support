@@ -16,15 +16,17 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include <stdlib.h>
 #include <dirent.h>
+#include <fcntl.h>
+#include <libgen.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
+#include <sys/errno.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <sys/errno.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <string.h>
 
 /* Test expected failure case */
 
@@ -45,7 +47,10 @@ int check_failure(int fd, const char *name, const char *exp_sym, int exp_val)
     return 0;
 }
 
-int main() {
+int
+main(int argc, char *argv[])
+{
+    int verbose = 0;
     struct stat st;
     struct dirent *entry;
     int dfd = -1;
@@ -53,6 +58,8 @@ int main() {
     char *first_entry = NULL;
     int err;
     int pipefds[2];
+
+    if (argc > 1 && !strcmp(argv[1], "-v")) verbose = 1;
 
     /* Test fdopendir with a valid directory fd, then use readdir */
 
@@ -85,9 +92,7 @@ int main() {
             return 1;
         }
 
-#ifdef FEEDBACK
-        printf("%s\n", entry->d_name);
-#endif
+        if (verbose) printf("%s\n", entry->d_name);
     }
 
     /*
@@ -235,6 +240,7 @@ int main() {
     err = check_failure(pipefds[0], "closed", "EBADF", EBADF);
     if (err) return 1;
 
+    printf("%s succeeded.\n", basename(argv[0]));
     return 0;
 }
 
