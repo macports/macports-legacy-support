@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2019
  * Copyright (C) 2023 raf <raf@raf.org>
@@ -28,6 +27,20 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
+/*
+ * Buffer for fstatat() result.  Due to possible confusion over which variant
+ * should apply, we make it large enough for either variant.  Since the
+ * use of fstatat is only incidental to this test, and the data isn't actually
+ * used, we don't bother checking for this confusion (and the related possible
+ * buffer overrun).  A separate test should handle that.
+ */
+static union stat_u {
+    struct stat st;
+#ifdef __DARWIN_STRUCT_STAT64
+    struct stat_64 __DARWIN_STRUCT_STAT64 st64;
+#endif
+} stbuf;
+
 /* Test expected failure case */
 
 int check_failure(int fd, const char *name, const char *exp_sym, int exp_val)
@@ -51,7 +64,6 @@ int
 main(int argc, char *argv[])
 {
     int verbose = 0;
-    struct stat st;
     struct dirent *entry;
     int dfd = -1;
     DIR *dir;
@@ -84,7 +96,7 @@ main(int argc, char *argv[])
             return 1;
         }
 
-        if (fstatat(dfd, entry->d_name, &st, AT_SYMLINK_NOFOLLOW) < 0) {
+        if (fstatat(dfd, entry->d_name, &stbuf.st, AT_SYMLINK_NOFOLLOW) < 0) {
             perror("error: fstatat after fdopendir failed");
             fprintf(stderr, "dfd=%i d_name=%s\n", dfd, entry->d_name);
             free(first_entry);
@@ -193,7 +205,7 @@ main(int argc, char *argv[])
         if (!strcmp(entry->d_name, ".") || !strcmp(entry->d_name, ".."))
             continue;
 
-        if (fstatat(dfd, entry->d_name, &st, AT_SYMLINK_NOFOLLOW) < 0) {
+        if (fstatat(dfd, entry->d_name, &stbuf.st, AT_SYMLINK_NOFOLLOW) < 0) {
             perror("error: fstatat after opendir failed");
             fprintf(stderr, "dfd=%i d_name=%s\n", dfd, entry->d_name);
             (void)closedir(dir);
