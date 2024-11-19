@@ -143,6 +143,9 @@ XTESTRUNS        := $(patsubst $(XTESTNAMEPREFIX)%,$(XTESTRUNPREFIX)%,$(XTESTPRG
 DARWINSRCS_C    := $(wildcard $(XTESTNAMEPREFIX)darwin_c*.c)
 DARWINRUNS      := $(patsubst \
                      $(XTESTNAMEPREFIX)%.c,$(XTESTRUNPREFIX)%,$(DARWINSRCS_C))
+SCANDIRSRCS_C   := $(wildcard $(XTESTNAMEPREFIX)scandir*.c)
+SCANDIRRUNS     := $(patsubst \
+                     $(XTESTNAMEPREFIX)%.c,$(XTESTRUNPREFIX)%,$(SCANDIRSRCS_C))
 
 # Normal automatic tests
 TESTDIR          = test
@@ -465,6 +468,7 @@ $(XTESTNAMEPREFIX)darwin_c_full.o: $(XTESTNAMEPREFIX)darwin_c.c
 # The "scandir_*" tests include the basic "scandir" source
 $(XTESTNAMEPREFIX)scandir_old.o: $(XTESTNAMEPREFIX)scandir.c
 $(XTESTNAMEPREFIX)scandir_ino32.o: $(XTESTNAMEPREFIX)scandir.c
+$(XTESTNAMEPREFIX)scandir_ino64.o: $(XTESTNAMEPREFIX)scandir.c
 
 # The nonstandard realpath tests include the realpath source
 $(TESTNAMEPREFIX)realpath_nonext.o: $(TESTNAMEPREFIX)realpath.c
@@ -473,6 +477,9 @@ $(TESTNAMEPREFIX)realpath_compat.o: $(TESTNAMEPREFIX)realpath.c
 
 # Provide a target for all "darwin_c" tests
 $(XTESTRUNPREFIX)darwin_c_all: $(DARWINRUNS)
+
+# Provide a target for all "scandir" tests
+$(XTESTRUNPREFIX)scandir_all: $(SCANDIRRUNS)
 
 # Provide a target for all "realpath" tests
 $(TESTRUNPREFIX)realpath_all: $(REALPATHRUNS)
@@ -536,6 +543,7 @@ clean: $(MANRUNPREFIX)clean test_clean
 .PHONY: test_static test_syslib test_all
 .PHONY: $(TESTRUNS) $(XTESTRUNS) $(MANTESTRUNS)
 .PHONY: $(MANRUNPREFIX)clean test_clean xtest_clean
+.PHONY: $(XTESTRUNPREFIX)scandir_all
 .PHONY: install install-headers install-lib install-dlib install-slib
 .PHONY: tiger-bins install-tiger
 .PHONY: allobjs dlibobjs slibobjs syslibobjs
