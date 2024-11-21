@@ -53,7 +53,7 @@ XLIBDIR          = xlib
 XLIBPATH         = $(XLIBDIR)/lib$(OSLIBLINK)$(SOEXT)
 SYSREEXPORTFLAG  = -Wl,-reexport_library,$(OSLIBDIR)/lib$(OSLIBNAME)$(SOEXT)
 BUILDSLIBFLAGS   = -qs
-POSTINSTALL      = install_name_tool
+POSTINSTALL     ?= /usr/bin/install_name_tool
 
 # The defaults for C[XX]FLAGS are defined as XC[XX]FLAGS, so that supplied
 # definitions of C[XX]FLAGS don't override them.  If overriding these defaults
@@ -71,12 +71,12 @@ DLIBCFLAGS      ?= -fPIC
 SLIBCFLAGS      ?=
 XCXXFLAGS       ?= $(DEBUG) $(OPT) -Wall
 ALLCXXFLAGS     := $(ARCHFLAGS) $(XCXXFLAGS) $(CXXFLAGS)
-LD              ?= /usr/bin/ld
+LDX             ?= /usr/bin/ld
 LDFLAGS         ?= $(DEBUG)
 ALLLDFLAGS      := $(ARCHFLAGS) $(LDFLAGS)
 TEST_ARGS       ?=
 
-AR              ?= ar
+ARX             ?= /usr/bin/ar
 UNAME           ?= uname
 SED             ?= /usr/bin/sed
 GREP            ?= /usr/bin/grep
@@ -307,7 +307,7 @@ $(MULTIDLIBOBJS): %$(DLIBOBJEXT): %.c $(ALLHEADERS)
 	$(CC) -c -I$(SRCINCDIR) $(ALLCFLAGS) $(DLIBCFLAGS) -D__DARWIN_UNIX03=1 -D__DARWIN_ONLY_UNIX_CONFORMANCE=1 -D__DARWIN_64_BIT_INO_T=1 -D__DARWIN_ONLY_64_BIT_INO_T=0 $< -o $@.inode64
 	$(CC) -c -I$(SRCINCDIR) $(ALLCFLAGS) $(DLIBCFLAGS) -D__DARWIN_UNIX03=1 -D__DARWIN_ONLY_UNIX_CONFORMANCE=0 -D__DARWIN_64_BIT_INO_T=1 -D__DARWIN_ONLY_64_BIT_INO_T=0 $< -o $@.inode64unix2003
 	# ... and split them up, because ld can only generate single-architecture files ...
-	$(call splitandfilterandmergemultiarch,$@,$(LIPO),$(RM),$(CP),$(LD),$(GREP),$(PLATFORM),$(FORCE_ARCH))
+	$(call splitandfilterandmergemultiarch,$@,$(LIPO),$(RM),$(CP),$(LDX),$(GREP),$(PLATFORM),$(FORCE_ARCH))
 
 $(MULTISLIBOBJS): %$(SLIBOBJEXT): %.c $(ALLHEADERS)
 	# Generate possibly multi-architecture object files ...
@@ -316,7 +316,7 @@ $(MULTISLIBOBJS): %$(SLIBOBJEXT): %.c $(ALLHEADERS)
 	$(CC) -c -I$(SRCINCDIR) $(ALLCFLAGS) $(SLIBCFLAGS) -D__DARWIN_UNIX03=1 -D__DARWIN_ONLY_UNIX_CONFORMANCE=1 -D__DARWIN_64_BIT_INO_T=1 -D__DARWIN_ONLY_64_BIT_INO_T=0 $< -o $@.inode64
 	$(CC) -c -I$(SRCINCDIR) $(ALLCFLAGS) $(SLIBCFLAGS) -D__DARWIN_UNIX03=1 -D__DARWIN_ONLY_UNIX_CONFORMANCE=0 -D__DARWIN_64_BIT_INO_T=1 -D__DARWIN_ONLY_64_BIT_INO_T=0 $< -o $@.inode64unix2003
 	# ... and split them up, because ld can only generate single-architecture files ...
-	$(call splitandfilterandmergemultiarch,$@,$(LIPO),$(RM),$(CP),$(LD),$(GREP),$(PLATFORM),$(FORCE_ARCH))
+	$(call splitandfilterandmergemultiarch,$@,$(LIPO),$(RM),$(CP),$(LDX),$(GREP),$(PLATFORM),$(FORCE_ARCH))
 
 # Generously marking all header files as potential dependencies
 $(DLIBOBJS): %$(DLIBOBJEXT): %.c $(ALLHEADERS)
@@ -354,7 +354,7 @@ $(BUILDSYSLIBPATH): $(ALLSYSLIBOBJS) | $(BUILDLIBDIR)
 
 $(BUILDSLIBPATH): $(SOBJLIST) | $(BUILDLIBDIR)
 	$(RM) $@
-	$(AR) $(BUILDSLIBFLAGS) $@ $$(cat $<)
+	$(ARX) $(BUILDSLIBFLAGS) $@ $$(cat $<)
 
 # To run tests with our syslib, we want to suppress linking with the OS syslib,
 # just to be certain that our replacement is an adequate substitute.
