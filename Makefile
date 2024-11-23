@@ -99,7 +99,7 @@ FIND_LIBHEADERS := find $(SRCINCDIR) -type f \( -name '*.h' -o \
 LIBHEADERS      := $(shell $(FIND_LIBHEADERS))
 ALLHEADERS      := $(LIBHEADERS) $(wildcard $(SRCDIR)/*.h)
 
-MULTISRCS       := $(SRCDIR)/fdopendir.c
+MULTISRCS       :=
 ADDSRCS         := $(SRCDIR)/add_symbols.c
 LIBSRCS         := $(filter-out $(MULTISRCS) $(ADDSRCS),$(wildcard $(SRCDIR)/*.c))
 
@@ -125,10 +125,16 @@ ALLSYSLIBOBJS   := $(ALLDLIBOBJS) $(ADDOBJS)
 # This not only reduces the size of the static library a bit, but also
 # avoids the "no symbols" warnings when creating it.
 #
+# A complication is that a completely empty static library is illegal,
+# so we provide a dummy object to be used when the library is logically
+# empty.
+#
 # This treatment is only applicable to the static library.
 EMPTY            = empty_source_content
 EMPTYSOBJ        = $(SRCDIR)/$(EMPTY)$(SLIBOBJEXT)
 SOBJLIST         = $(SRCDIR)/slibobjs.tmp
+DUMMYSRC         = $(SRCDIR)/dummylib.xxc
+DUMMYOBJ         = $(SRCDIR)/dummylib.o
 
 # Automatic tests that don't use the library, and are OK with -fno-builtin
 XTESTDIR          = xtest
@@ -337,9 +343,13 @@ slibobjs: $(ALLSLIBOBJS)
 allobjs: dlibobjs slibobjs syslibobjs
 
 # Create a list of nonempty static object files.
+# Since completely empty archives are illegal, we use our dummy if there
+# would otherwise be no objects.
 $(SOBJLIST): $(ALLSLIBOBJS)
 	$(CC) -c $(ALLCFLAGS) $(SLIBCFLAGS) -xc /dev/null -o $(EMPTYSOBJ)
+	$(CC) -c $(ALLCFLAGS) $(SLIBCFLAGS) -xc $(DUMMYSRC) -o $(DUMMYOBJ)
 	for f in $^; do cmp -s $(EMPTYSOBJ) $$f || echo $$f; done > $@
+	if [ ! -s $@ ]; then echo $(DUMMYOBJ) > $@; fi
 
 # Make the directories separate targets to avoid collisions in parallel builds.
 $(BUILDLIBDIR) $(DESTDIR)$(LIBDIR):
