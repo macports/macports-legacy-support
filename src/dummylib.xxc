@@ -1,0 +1,13 @@
+/* dummylib - mostly empty item containing one global definition. */
+/*
+ * When the legacy-support library becomes logically empty, it still needs
+ * to contain at least one object to keep the tools happy.  It also needs
+ * to define at least one global to avoid "no symbols" warnings.  This
+ * source is used to provide such an object.  Currently this happens on
+ * 10.15+.
+ *
+ * This source is actually C, but uses a different extension to defend
+ * against wildcarding in the Makefile.
+ */
+
+int __LEGACY_SUPPORT_LIBRARY_IS_INTENTIONALLY_LEFT_BLANK__ = 0;
