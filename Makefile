@@ -62,7 +62,6 @@ POSTINSTALL     ?= /usr/bin/install_name_tool
 # Note: Overriding CC or CXX with ?= doesn't work, since they're "defined".
 FORCE_ARCH      ?=
 ARCHFLAGS       ?=
-LIPO            ?= lipo
 DEBUG           ?=
 OPT             ?= -Os
 XCFLAGS         ?= $(DEBUG) $(OPT) -Wall -Wno-deprecated-declarations
@@ -71,7 +70,6 @@ DLIBCFLAGS      ?= -fPIC
 SLIBCFLAGS      ?=
 XCXXFLAGS       ?= $(DEBUG) $(OPT) -Wall
 ALLCXXFLAGS     := $(ARCHFLAGS) $(XCXXFLAGS) $(CXXFLAGS)
-LDX             ?= /usr/bin/ld
 LDFLAGS         ?= $(DEBUG)
 ALLLDFLAGS      := $(ARCHFLAGS) $(LDFLAGS)
 TEST_ARGS       ?=
@@ -88,8 +86,6 @@ INSTALL_DATA     = install -c -m 644
 INSTALL_MAN      = install -c -m 444
 RM               = rm -f
 RMDIR            = sh -c 'for d; do test ! -d "$$d" || rmdir -p "$$d"; done' rmdir
-
-PLATFORM        ?= $(shell $(UNAME) -r | $(SED) -ne 's/\([0-9][0-9]*\)\..*/\1/p')
 
 SRCDIR           = src
 SRCINCDIR        = include
@@ -202,127 +198,10 @@ TIGERMAN1S      := $(wildcard $(TIGERSRCDIR)/*.1)
 TOOLDIR          = tools
 ARCHTOOL         = $(TOOLDIR)/binarchs.sh
 
-define splitandfilterandmergemultiarch
-	output='$(1)' && \
-	lipo='$(2)' && \
-	rm='$(3)' && \
-	cp='$(4)' && \
-	ld='$(5)' && \
-	grep='$(6)' && \
-	platform='$(7)' && \
-	force_arch='$(8)' && \
-	objectlist="$${output}".* && \
-	archlist='' && \
-	fatness='' && \
-	for object in $${objectlist}; do \
-		if [ -z "$${force_arch}" ]; then \
-			archlist_new="$$($${lipo} -archs "$${object}")"; \
-		else \
-			archlist_new="$${force_arch}"; \
-		fi && \
-		if [ -n "$${archlist}" ] && [ "$${archlist}" != "$${archlist_new}" ]; then \
-			printf 'Old/previous architecture list "%s" does not match new one "%s", this is unsupported.\n' "$${archlist}" "$${archlist_new}" >&2 && \
-			exit '1'; \
-		else \
-			archlist="$${archlist_new}"; \
-		fi && \
-		( $${lipo} -info "$${object}" | grep -qs '^Non-fat file:' ); \
-		fatness_new="$${?}" && \
-		if [ -n "$${fatness}" ] && [ "$${fatness}" != "$${fatness_new}" ]; then \
-			printf 'Old/previous fatness value "%d" does not match new one "%d", this is unsupported.\n' "$${fatness}" "$${fatness_new}" >&2 && \
-			exit '2'; \
-		else \
-			fatness="$${fatness_new}"; \
-		fi && \
-		if [ -n "$${force_arch}" ] && [ '0' -ne "$${fatness}" ]; then \
-			printf 'Architecture forced to "%s", but object file "%s" is a multi-architecture (fat) object file, this is unsupported.\n' "$${force_arch}" "$${object}" >&2 && \
-			exit '3'; \
-		fi && \
-		$$(: 'Check for unknown architectures.') && \
-		for arch in $${archlist}; do \
-			case "$${arch}" in \
-				(unknown*) \
-					printf 'Unknown architecture "%s" encountered, this is unsupported.\n' "$${arch}" >&2 && \
-					exit '4'; \
-					;; \
-				(*) \
-					;; \
-			esac && \
-			if [ '0' -eq "$${fatness}" ]; then \
-				$${cp} "$${object}" "$${object}.$${arch}" && \
-				$$(: 'A non-fat file cannot have more than one architecture, but breaking out sounds weird.'); \
-			else \
-				$${lipo} "$${object}" -thin "$${arch}" -output "$${object}.$${arch}"; \
-			fi; \
-		done && \
-		$${rm} "$${object}"; \
-	done && \
-	$$(: '... and use ld to merge each variant into a single-architecture object file ...') && \
-	for arch in $${archlist}; do \
-		$$(: 'Filter out variants not applicable to certain architectures.') && \
-		$$(: 'For instance, the x86_64 architecture is fully UNIX2003-compliant and thus does not have $$UNIX2003-compat functons.') && \
-		$$(: 'On the contrary, the i386 architecture has only $$UNIX2003-compat functions for the $$INODE64 feature set.') && \
-		$$(: '10.4 is so old that it does not even have the $$INODE64 feature.') && \
-		case "$${arch}" in \
-			('x86_64'|'ppc64') \
-				if [ '9' -gt "$${platform}" ]; then \
-					$${ld} -r "$${output}.inode32.$${arch}" -o "$${output}.$${arch}"; \
-				else \
-					$${ld} -r "$${output}.inode32.$${arch}" "$${output}.inode64.$${arch}" -o "$${output}.$${arch}"; \
-				fi; \
-				;; \
-			('i386'|'ppc'|'ppc7400') \
-				if [ '9' -gt "$${platform}" ]; then \
-					$${ld} -r "$${output}.inode32.$${arch}" "$${output}.inode32unix2003.$${arch}" -o "$${output}.$${arch}"; \
-				else \
-					$${ld} -r "$${output}.inode32.$${arch}" "$${output}.inode32unix2003.$${arch}" "$${output}.inode64unix2003.$${arch}" -o "$${output}.$${arch}"; \
-				fi; \
-				;; \
-			(*) \
-				$${ld} -r "$${output}.inode32.$${arch}" "$${output}.inode32unix2003.$${arch}" "$${output}.inode64.$${arch}" "$${output}.inode64unix2003.$${arch}" -o "$${output}.$${arch}"; \
-				;; \
-		esac; \
-	done && \
-	$$(: '... build list of single-architecture merged object files ...') && \
-	objectarchlist='' && \
-	for arch in $${archlist}; do \
-		objectarchlist="$${objectarchlist} $${output}.$${arch}"; \
-	done && \
-	if [ '0' -eq "$${fatness}" ]; then \
-		$$(: 'Thin files can just be copied directly, assuming that the list will only contain one element.') && \
-		$${cp} $${objectarchlist} "$${output}"; \
-	else \
-		$$(: '... and eventually use lipo to merge them all together!') && \
-		$${lipo} $${objectarchlist} -create -output "$${output}"; \
-	fi
-endef
-
 all: dlib slib syslib
 dlib: $(BUILDDLIBPATH)
 slib: $(BUILDSLIBPATH)
 syslib: $(BUILDSYSLIBPATH)
-
-# Special rules for special implementations.
-# For instance, functions using struct stat need to be implemented multiple
-# times with different stat structs - a 32-bit-inode based one and a 64-bit-
-# inode-based one.
-$(MULTIDLIBOBJS): %$(DLIBOBJEXT): %.c $(ALLHEADERS)
-	# Generate possibly multi-architecture object files ...
-	$(CC) -c -I$(SRCINCDIR) $(ALLCFLAGS) $(DLIBCFLAGS) -D__DARWIN_UNIX03=0 -D__DARWIN_64_BIT_INO_T=0 -D__DARWIN_ONLY_64_BIT_INO_T=0 $< -o $@.inode32
-	$(CC) -c -I$(SRCINCDIR) $(ALLCFLAGS) $(DLIBCFLAGS) -D__DARWIN_UNIX03=1 -D__DARWIN_ONLY_UNIX_CONFORMANCE=0 -D__DARWIN_64_BIT_INO_T=0 -D__DARWIN_ONLY_64_BIT_INO_T=0 $< -o $@.inode32unix2003
-	$(CC) -c -I$(SRCINCDIR) $(ALLCFLAGS) $(DLIBCFLAGS) -D__DARWIN_UNIX03=1 -D__DARWIN_ONLY_UNIX_CONFORMANCE=1 -D__DARWIN_64_BIT_INO_T=1 -D__DARWIN_ONLY_64_BIT_INO_T=0 $< -o $@.inode64
-	$(CC) -c -I$(SRCINCDIR) $(ALLCFLAGS) $(DLIBCFLAGS) -D__DARWIN_UNIX03=1 -D__DARWIN_ONLY_UNIX_CONFORMANCE=0 -D__DARWIN_64_BIT_INO_T=1 -D__DARWIN_ONLY_64_BIT_INO_T=0 $< -o $@.inode64unix2003
-	# ... and split them up, because ld can only generate single-architecture files ...
-	$(call splitandfilterandmergemultiarch,$@,$(LIPO),$(RM),$(CP),$(LDX),$(GREP),$(PLATFORM),$(FORCE_ARCH))
-
-$(MULTISLIBOBJS): %$(SLIBOBJEXT): %.c $(ALLHEADERS)
-	# Generate possibly multi-architecture object files ...
-	$(CC) -c -I$(SRCINCDIR) $(ALLCFLAGS) $(SLIBCFLAGS) -D__DARWIN_UNIX03=0 -D__DARWIN_64_BIT_INO_T=0 -D__DARWIN_ONLY_64_BIT_INO_T=0 $< -o $@.inode32
-	$(CC) -c -I$(SRCINCDIR) $(ALLCFLAGS) $(SLIBCFLAGS) -D__DARWIN_UNIX03=1 -D__DARWIN_ONLY_UNIX_CONFORMANCE=0 -D__DARWIN_64_BIT_INO_T=0 -D__DARWIN_ONLY_64_BIT_INO_T=0 $< -o $@.inode32unix2003
-	$(CC) -c -I$(SRCINCDIR) $(ALLCFLAGS) $(SLIBCFLAGS) -D__DARWIN_UNIX03=1 -D__DARWIN_ONLY_UNIX_CONFORMANCE=1 -D__DARWIN_64_BIT_INO_T=1 -D__DARWIN_ONLY_64_BIT_INO_T=0 $< -o $@.inode64
-	$(CC) -c -I$(SRCINCDIR) $(ALLCFLAGS) $(SLIBCFLAGS) -D__DARWIN_UNIX03=1 -D__DARWIN_ONLY_UNIX_CONFORMANCE=0 -D__DARWIN_64_BIT_INO_T=1 -D__DARWIN_ONLY_64_BIT_INO_T=0 $< -o $@.inode64unix2003
-	# ... and split them up, because ld can only generate single-architecture files ...
-	$(call splitandfilterandmergemultiarch,$@,$(LIPO),$(RM),$(CP),$(LDX),$(GREP),$(PLATFORM),$(FORCE_ARCH))
 
 # Generously marking all header files as potential dependencies
 $(DLIBOBJS): %$(DLIBOBJEXT): %.c $(ALLHEADERS)
