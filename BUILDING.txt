@@ -2,37 +2,56 @@
 
 Usual Makefile project. This project does not require a configure phase.
 
+The minimum required compiler is GCC 4.2.  On 10.6+ with Xcode 3.2+, the
+default Xcode compiler is adequate, and a simple 'make' is sufficient to
+build all three versions of the library for the default architecture.
+
+On 10.5 with Xcode 3.1, GCC 4.2 is provided, but the default is usually
+GCC 4.0, so overriding the default may be needed.  On 10.4 with Xcode
+2.5, only GCC 4.0 is provided, so it's necessary to use the MacPorts
+apple-gcc42 compiler (or better).
+
+Cross-builds and/or universal builds may be specified in the usual way,
+either via the usual CFLAGS/CXXFLAGS/LDFLAGS, or via ARCHFLAGS.
+
+Note that the 'ar' tool may generate spurious warnings when creating a
+universal static library, but it still produces the correct result.
+
+## Optional variables
+
+# `CFLAGS`
+# `CXXFLAGS`
+# `LDFLAGS`
+
+Applied as usual to C compiles, C++ compiles, and linking, respectively. Note
+that CFLAGS and CXXFLAGS are applied in addition to the defaults included in
+the Makefile.  To override the defaults, see below.
+
+# `XCFLAGS`
+# `XCXXFLAGS`
+
+Overridable default values for CFLAGS and CXXFLAGS, respectively.  Merged with
+any supplied CFLAGS and/or CXXFLAGS.  Note that the only C++ builds are a few
+tests not included in the standard test suite, so [X]CXXFLAGS usually has no
+effect.
+
+# `ARCHFLAGS`
+
+Merged into CFLAGS/CXXFLAGS/LDFLAGS, normally to specify arch-related options.
+
+# `DEBUG`
+
+Merged into CFLAGS/CXXFLAGS/LDFLAGS, normally to specify a debug option
+such as `-g3`.
+
+# `OPT`
+
+The optimization setting (defaulting to `-Os`), which is merged into the
+compile flags but not the linker flags.
+
 ### Special optional variables
 
 # `PLATFORM`
-
-Darwin version to target against. Detected automatically, but can also 
-be overridden manually to test builds for other OS versions.
-(This is not the macOS version.)
-
 # `FORCE_ARCH`
 
-Architecture to build for. Accepts a single value, not a list.
-
-If your `lipo` binary is new enough and supports the `-archs` flag, you will
-not need to use this variable. Instead, directly build the software
-universally in one pass using the usual `-arch` compiler flags. The
-autodetection, split and merge features will then handle the different
-architectures automatically.
-
-Older versions of `lipo` do not support the `-archs` flag, so automatic
-architecture detection via binary/object file inspection is not be possible
-on older platforms.
-
-In order to avoid an additional dependency on the `cctools` port 
-to provide a newer `lipo` version, this variable was introduced. 
-It disables the automatic architecture detection feature and instead 
-hardcodes the contained value as the target architecture.
-
-Within `MacPorts`, we use it in multi-architecture builds with one
-pass per architecture. Finally, the `MacPorts ``muniversal` PortGroup
-will merge the resulting binaries into one fat/universal binary automatically.
-
-Some symbols must be built multiple times. Each variant will use a different
-data layout and have a special postfix appended to it. The data layouts
-supported and needed depend upon the architecture and (target) OS version.
+Obsolete.  No longer used.
