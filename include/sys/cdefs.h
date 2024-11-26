@@ -121,4 +121,21 @@
 
 #endif /* __DARWIN_C_LEVEL undef */
 
+/*
+ * Without help from legacy-support, 64-bit-inode functions are unavailable
+ * in 10.4, and the 10.4 SDK has no means to generate references to them.
+ * However, builds with a 10.5+ SDK and _DARWIN_USE_64_BIT_INODE set will
+ * set __DARWIN_64_BIT_INO_T, even on 10.4.  But 32-bit 10.4 builds default
+ * to __DARWIN_UNIX03=0, which clears __DARWIN_SUF_64_BIT_INO_T without
+ * disabling __DARWIN_64_BIT_INO_T, leading to a mismatch in expected
+ * struct stat formats.  To fix this, we disable __DARWIN_64_BIT_INO_T
+ * in this particular case.
+ *
+ * This does not affect 64-bit builds, 10.5+ builds, or builds that
+ * set any of the flags enabling Unix compliance.
+ */
+#if !__DARWIN_UNIX03 && defined(__DARWIN_64_BIT_INO_T) && __DARWIN_64_BIT_INO_T
+#undef __DARWIN_64_BIT_INO_T
+#endif
+
 #endif /* _MACPORTS_SYS_CDEFS_H_ */
