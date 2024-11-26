@@ -12,7 +12,7 @@ Three different libraries are provided
 
 To use this library within [MacPorts](https://github.com/macports)
 add the `legacysupport` PortGroup to the Portfile. This will add the
-required include paths and libraries to allow the library to do it's
+required include paths and libraries to allow the library to do its
 magic with most build systems.
 
 Wrapped headers and replaced functions are:
