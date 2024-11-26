@@ -26,6 +26,7 @@
 int printf(const char *format, ...);
 
 #define PRINT_VAR(x) printf("%s = %lld\n", #x, (long long) x)
+#define PRINT_SVAR(x) printf("%s = \"%s\"\n", #x, "" x)
 #define PRINT_UNDEF(x) printf(#x " is undefined\n")
 
 static void
@@ -72,6 +73,61 @@ print_before_cdefs(void)
   PRINT_VAR(__DARWIN_C_LEVEL);
   #else
   PRINT_UNDEF(__DARWIN_C_LEVEL);
+  #endif
+  #ifdef __LP64__
+  PRINT_VAR(__LP64__);
+  #else
+  PRINT_UNDEF(__LP64__);
+  #endif
+  #ifdef __DARWIN_ONLY_UNIX_CONFORMANCE
+  PRINT_VAR(__DARWIN_ONLY_UNIX_CONFORMANCE);
+  #else
+  PRINT_UNDEF(__DARWIN_ONLY_UNIX_CONFORMANCE);
+  #endif
+  #ifdef __DARWIN_UNIX03
+  PRINT_VAR(__DARWIN_UNIX03);
+  #else
+  PRINT_UNDEF(__DARWIN_UNIX03);
+  #endif
+  #ifdef __DARWIN_SUF_UNIX03
+  PRINT_SVAR(__DARWIN_SUF_UNIX03);
+  #else
+  PRINT_UNDEF(__DARWIN_SUF_UNIX03);
+  #endif
+  #ifdef _DARWIN_NO_64_BIT_INODE
+  PRINT_VAR(_DARWIN_NO_64_BIT_INODE);
+  #else
+  PRINT_UNDEF(_DARWIN_NO_64_BIT_INODE);
+  #endif
+  #ifdef _DARWIN_USE_64_BIT_INODE
+  PRINT_VAR(_DARWIN_USE_64_BIT_INODE);
+  #else
+  PRINT_UNDEF(_DARWIN_USE_64_BIT_INODE);
+  #endif
+  #ifdef _DARWIN_FEATURE_64_BIT_INODE
+  PRINT_VAR(_DARWIN_FEATURE_64_BIT_INODE);
+  #else
+  PRINT_UNDEF(_DARWIN_FEATURE_64_BIT_INODE);
+  #endif
+  #ifdef _DARWIN_FEATURE_ONLY_64_BIT_INODE
+  PRINT_VAR(_DARWIN_FEATURE_ONLY_64_BIT_INODE);
+  #else
+  PRINT_UNDEF(_DARWIN_FEATURE_ONLY_64_BIT_INODE);
+  #endif
+  #ifdef __DARWIN_64_BIT_INO_T
+  PRINT_VAR(__DARWIN_64_BIT_INO_T);
+  #else
+  PRINT_UNDEF(__DARWIN_64_BIT_INO_T);
+  #endif
+  #ifdef __DARWIN_ONLY_64_BIT_INODE
+  PRINT_VAR(__DARWIN_ONLY_64_BIT_INODE);
+  #else
+  PRINT_UNDEF(__DARWIN_ONLY_64_BIT_INODE);
+  #endif
+  #ifdef __DARWIN_SUF_64_BIT_INO_T
+  PRINT_SVAR(__DARWIN_SUF_64_BIT_INO_T);
+  #else
+  PRINT_UNDEF(__DARWIN_SUF_64_BIT_INO_T);
   #endif
 }
 
@@ -122,6 +178,61 @@ print_after_cdefs(void)
   #else
   PRINT_UNDEF(__DARWIN_C_LEVEL);
   #endif
+  #ifdef __LP64__
+  PRINT_VAR(__LP64__);
+  #else
+  PRINT_UNDEF(__LP64__);
+  #endif
+  #ifdef __DARWIN_ONLY_UNIX_CONFORMANCE
+  PRINT_VAR(__DARWIN_ONLY_UNIX_CONFORMANCE);
+  #else
+  PRINT_UNDEF(__DARWIN_ONLY_UNIX_CONFORMANCE);
+  #endif
+  #ifdef __DARWIN_UNIX03
+  PRINT_VAR(__DARWIN_UNIX03);
+  #else
+  PRINT_UNDEF(__DARWIN_UNIX03);
+  #endif
+  #ifdef __DARWIN_SUF_UNIX03
+  PRINT_SVAR(__DARWIN_SUF_UNIX03);
+  #else
+  PRINT_UNDEF(__DARWIN_SUF_UNIX03);
+  #endif
+  #ifdef _DARWIN_NO_64_BIT_INODE
+  PRINT_VAR(_DARWIN_NO_64_BIT_INODE);
+  #else
+  PRINT_UNDEF(_DARWIN_NO_64_BIT_INODE);
+  #endif
+  #ifdef _DARWIN_USE_64_BIT_INODE
+  PRINT_VAR(_DARWIN_USE_64_BIT_INODE);
+  #else
+  PRINT_UNDEF(_DARWIN_USE_64_BIT_INODE);
+  #endif
+  #ifdef _DARWIN_FEATURE_64_BIT_INODE
+  PRINT_VAR(_DARWIN_FEATURE_64_BIT_INODE);
+  #else
+  PRINT_UNDEF(_DARWIN_FEATURE_64_BIT_INODE);
+  #endif
+  #ifdef _DARWIN_FEATURE_ONLY_64_BIT_INODE
+  PRINT_VAR(_DARWIN_FEATURE_ONLY_64_BIT_INODE);
+  #else
+  PRINT_UNDEF(_DARWIN_FEATURE_ONLY_64_BIT_INODE);
+  #endif
+  #ifdef __DARWIN_64_BIT_INO_T
+  PRINT_VAR(__DARWIN_64_BIT_INO_T);
+  #else
+  PRINT_UNDEF(__DARWIN_64_BIT_INO_T);
+  #endif
+  #ifdef __DARWIN_ONLY_64_BIT_INODE
+  PRINT_VAR(__DARWIN_ONLY_64_BIT_INODE);
+  #else
+  PRINT_UNDEF(__DARWIN_ONLY_64_BIT_INODE);
+  #endif
+  #ifdef __DARWIN_SUF_64_BIT_INO_T
+  PRINT_SVAR(__DARWIN_SUF_64_BIT_INO_T);
+  #else
+  PRINT_UNDEF(__DARWIN_SUF_64_BIT_INO_T);
+  #endif
 }
 
 /* Include stdio afterward, since it might influence the definitions. */
@@ -135,6 +246,8 @@ main(int argc, char *argv[])
 {
   (void) argc; (void) argv;
 
+  printf("\n");
+  PRINT_VAR(__MPLS_SDK_MAJOR);
   printf("\n");
   print_before_cdefs();
   printf("\n");
