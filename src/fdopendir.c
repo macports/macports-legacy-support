@@ -65,23 +65,20 @@
 #endif /* __MPLS_SDK_MAJOR < 1050
 */
 
-/* Define an ino64 struct stat if possible, else fall back to standard. */
-#ifdef __DARWIN_STRUCT_STAT64
-  struct local_stat64 __DARWIN_STRUCT_STAT64;
-  typedef struct local_stat64 local_stat64_t;
-#else
-  typedef struct stat local_stat64_t;
-#endif
+/* Make sure we have "struct sta64" */
+#if !__MPLS_HAVE_STAT64
+struct stat64 __DARWIN_STRUCT_STAT64;
+#endif /* !__MPLS_HAVE_STAT64 */
 
 /* Universal stat buffer, accommodating both formats */
 union stat_u {
   struct stat s;
-  local_stat64_t s64;
+  struct stat64 s64;
 };
 
 /* Type declarations for external functions */
 typedef int (stat_fn_t)(int fd, struct stat *buf);
-typedef int (stat64_fn_t)(int fd, local_stat64_t *buf);
+typedef int (stat64_fn_t)(int fd, struct stat64 *buf);
 typedef DIR * (opn_fn_t)(const char *dirname);
 typedef void (rwd_fn_t)(DIR *dirp);
 
