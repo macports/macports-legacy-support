@@ -321,6 +321,10 @@
 #define __MPLS_SDK_SUPPORT_PTHREAD_SETNAME_NP__   (__MPLS_SDK_MAJOR < 1060)
 #define __MPLS_LIB_SUPPORT_PTHREAD_SETNAME_NP__   (__MPLS_TARGET_OSVER < 1060)
 
+/* *stat() functions for 64-bit-inode variants (missing in 10.4) */
+#define __MPLS_SDK_SUPPORT_STAT64__      (__MPLS_SDK_MAJOR < 1050)
+#define __MPLS_LIB_SUPPORT_STAT64__      (__MPLS_TARGET_OSVER < 1050)
+
 /* Compound macros, bundling functionality needed by multiple single features. */
 #define __MPLS_SDK_NEED_ATCALL_MACROS__  (__MPLS_SDK_SUPPORT_ATCALLS__ \
                                           || __MPLS_SDK_SUPPORT_SETATTRLISTAT__)
