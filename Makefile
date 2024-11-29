@@ -173,6 +173,9 @@ REALPATHRUNS    := $(patsubst \
 FDOPENDIRSRCS_C := $(wildcard $(TESTNAMEPREFIX)fdopendir*.c)
 FDOPENDIRRUNS   := $(patsubst \
                      $(TESTNAMEPREFIX)%.c,$(TESTRUNPREFIX)%,$(FDOPENDIRSRCS_C))
+STATXXSRCS_C    := $(wildcard $(TESTNAMEPREFIX)stat*.c)
+STATXXRUNS      := $(patsubst \
+                     $(TESTNAMEPREFIX)%.c,$(TESTRUNPREFIX)%,$(STATXXSRCS_C))
 
 # Tests that are only run manually
 MANTESTDIR       = manual_tests
@@ -370,6 +373,12 @@ $(TESTNAMEPREFIX)realpath_compat.o: $(TESTNAMEPREFIX)realpath.c
 $(TESTNAMEPREFIX)fdopendir_ino32.o: $(TESTNAMEPREFIX)fdopendir.c
 $(TESTNAMEPREFIX)fdopendir_ino64.o: $(TESTNAMEPREFIX)fdopendir.c
 
+# The stat_ino?? tests include the stat source
+$(TESTNAMEPREFIX)stat_darwin.o: $(TESTNAMEPREFIX)stat.c
+$(TESTNAMEPREFIX)stat_ino32.o: $(TESTNAMEPREFIX)stat.c
+$(TESTNAMEPREFIX)stat_ino64.o: $(TESTNAMEPREFIX)stat.c
+$(TESTNAMEPREFIX)stat_ino64_darwin.o: $(TESTNAMEPREFIX)stat.c
+
 # Provide a target for all "darwin_c" tests
 $(XTESTRUNPREFIX)darwin_c_all: $(DARWINRUNS)
 
@@ -381,6 +390,9 @@ $(TESTRUNPREFIX)realpath_all: $(REALPATHRUNS)
 
 # Provide a target for all "fdopendir" tests
 $(TESTRUNPREFIX)fdopendir_all: $(FDOPENDIRRUNS)
+
+# Provide a target for all "stat" tests
+$(TESTRUNPREFIX)stat_all: $(STATXXRUNS)
 
 $(MANTESTRUNS): $(MANRUNPREFIX)%: $(MANTESTPREFIX)%
 	$< $(TEST_ARGS)
@@ -443,6 +455,7 @@ clean: $(MANRUNPREFIX)clean test_clean
 .PHONY: $(MANRUNPREFIX)clean test_clean xtest_clean
 .PHONY: $(XTESTRUNPREFIX)scandir_all
 .PHONY: $(TESTRUNPREFIX)fdopendir_all
+.PHONY: $(TESTRUNPREFIX)stat_all
 .PHONY: install install-headers install-lib install-dlib install-slib
 .PHONY: tiger-bins install-tiger
 .PHONY: allobjs dlibobjs slibobjs syslibobjs
