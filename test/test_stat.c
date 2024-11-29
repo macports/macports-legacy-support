@@ -23,6 +23,7 @@
 #include <string.h>
 #include <unistd.h>
 
+#include <sys/fcntl.h>
 #include <sys/param.h>
 #include <sys/stat.h>
 
@@ -51,6 +52,7 @@ static const uint64_t pad_val = 0xDEADBEEFDEADBEEFULL;
 
 static const char *source = __FILE__;
 static const char *source_link = __FILE__ "_link";
+static char dir[MAXPATHLEN], rel_base[MAXPATHLEN], rel_link[MAXPATHLEN];
 
 static void
 stat_init(int ino64)
@@ -175,17 +177,60 @@ get_mode(int ino64)
   }
 }
 
+static void
+setup_names(void)
+{
+  char *cp;
+  char temp[MAXPATHLEN];
+
+  /* Don't assume non-clobbering dirname() */
+  (void) strncpy(temp, source, sizeof(temp));
+  cp = dirname(temp);
+  assert(cp && "dirname failed");
+  (void) strncpy(dir, cp, sizeof(dir));
+
+  (void) strncpy(temp, source_link, sizeof(temp));
+  cp = dirname(temp);
+  assert(cp && "dirname failed");
+  do {
+    if (strncmp(cp, dir, sizeof(dir))) break;
+
+    (void) strncpy(temp, source, sizeof(temp));
+    cp = basename(temp);
+    if (!cp) break;
+    (void) strncpy(rel_base, cp, sizeof(rel_base));
+
+    (void) strncpy(temp, source_link, sizeof(temp));
+    cp = basename(temp);
+    if (!cp) break;
+    (void) strncpy(rel_link, cp, sizeof(rel_link));
+
+    return;
+  } while(0);
+
+  (void) strncpy(dir, ".", sizeof(dir));
+  (void) strncpy(rel_base, source, sizeof(rel_base));
+  (void) strncpy(rel_link, source_link, sizeof(rel_link));
+}
+
 int
 main(int argc, char *argv[])
 {
   int verbose = 0;
-  FILE *fp;
+  FILE *fp; int fd;
 
   if (argc > 1 && !strcmp(argv[1], "-v")) verbose = 1;
 
   if (verbose) {
     printf("%s starting.\n", basename(argv[0]));
-    printf(" source = %s, link = %s\n", source, source_link);
+    printf(" source = %s, source_link = %s\n", source, source_link);
+  }
+
+  setup_names();
+
+  if (verbose) {
+    printf(" dir = %s, rel_base = %s, rel_link = %s\n",
+           dir, rel_base, rel_link);
     printf(" struct stat has %d-bit st_ino\n",
            (int) sizeof(stat_buf.s.s.st_ino) * 8);
     printf(" struct stat64 has %d-bit st_ino\n",
@@ -257,6 +302,120 @@ main(int argc, char *argv[])
   (void) fclose(fp);
 
 #endif /* __MPLS_HAVE_STAT64 */
+
+  /* Use fopen() to steer clear of open()/close() variant issues. */
+  assert((fp = fopen(dir, "r")) != NULL && "open of source failed");
+  fd = fileno(fp);
+
+  if (verbose) printf("  testing 'fstatat' (AT_FDCWD)\n");
+  stat_init(0);
+  stat_err = fstatat(AT_FDCWD, source, &stat_buf.s.s, 0);
+  if (check_err("fstatat (AT_FDCWD)")) return 1;
+  assert(S_ISREG(get_mode(0)) && "fstatat (AT_FDCWD) expected regular file");
+  check_copy(0, 0);
+
+  if (verbose) printf("  testing 'fstatat' (AT_FDCWD) of link\n");
+  stat_init(0);
+  stat_err = fstatat(AT_FDCWD, source_link, &stat_buf.s.s, 0);
+  if (check_err("fstatat (AT_FDCWD) of link")) return 1;
+  assert(S_ISREG(get_mode(0))
+         && "fstatat (AT_FDCWD) of link expected regular file");
+  check_copy(0, 0);
+
+  if (verbose) printf("  testing 'fstatat' (AT_FDCWD) of link (NOFOLLOW)\n");
+  stat_init(0);
+  stat_err = fstatat(AT_FDCWD, source_link, &stat_buf.s.s,
+                     AT_SYMLINK_NOFOLLOW);
+  if (check_err("fstatat (AT_FDCWD) (NOFOLLOW)")) return 1;
+  assert(S_ISLNK(get_mode(0))
+         && "fstatat (AT_FDCWD) (NOFOLLOW) expected symlink");
+  check_copy(0, 1);
+
+
+  if (verbose) printf("  testing 'fstatat' (dir)\n");
+  stat_init(0);
+  stat_err = fstatat(fd, rel_base, &stat_buf.s.s, 0);
+  if (check_err("fstatat (dir)")) return 1;
+  assert(S_ISREG(get_mode(0)) && "fstatat (dir) expected regular file");
+  check_copy(0, 0);
+
+  if (verbose) printf("  testing 'fstatat' (dir) of link\n");
+  stat_init(0);
+  stat_err = fstatat(fd, rel_link, &stat_buf.s.s, 0);
+  if (check_err("fstatat (dir) of link")) return 1;
+  assert(S_ISREG(get_mode(0)) && "fstatat (dir) of link expected regular file");
+  check_copy(0, 0);
+
+  if (verbose) printf("  testing 'fstatat' (dir) of link (NOFOLLOW)\n");
+  stat_init(0);
+  stat_err = fstatat(fd, rel_link, &stat_buf.s.s,
+                     AT_SYMLINK_NOFOLLOW);
+  if (check_err("fstatat (dir) (NOFOLLOW)")) return 1;
+  assert(S_ISLNK(get_mode(0)) && "fstatat (dir) (NOFOLLOW) expected symlink");
+  check_copy(0, 1);
+
+#if __MPLS_HAVE_STAT64
+
+/*
+ * The fstatat64 function is not expected to be accessed directly (though many
+ * system libraries provide it as a convenience synonym for fstatat$INODE64),
+ * so no SDK provide a prototype for it.  We do so here.
+ */
+
+  extern int fstatat64(int fd, const char *path,
+                       struct stat64 *buf, int flag);
+
+  if (verbose) printf("  testing 'fstatat64' (AT_FDCWD)\n");
+  stat_init(1);
+  stat_err = fstatat64(AT_FDCWD, source, &stat_buf.s64.s, 0);
+  if (check_err("fstatat64 (AT_FDCWD)")) return 1;
+  assert(S_ISREG(get_mode(1)) && "fstatat64 (AT_FDCWD) expected regular file");
+  check_copy(1, 0);
+
+  if (verbose) printf("  testing 'fstatat64' (AT_FDCWD) of link\n");
+  stat_init(1);
+  stat_err = fstatat64(AT_FDCWD, source_link, &stat_buf.s64.s, 0);
+  if (check_err("fstatat64 (AT_FDCWD) of link")) return 1;
+  assert(S_ISREG(get_mode(1))
+         && "fstatat64 (AT_FDCWD) of link expected regular file");
+  check_copy(1, 0);
+
+  if (verbose) printf("  testing 'fstatat64' (AT_FDCWD) of link (NOFOLLOW)\n");
+  stat_init(1);
+  stat_err = fstatat64(AT_FDCWD, source_link, &stat_buf.s64.s,
+                       AT_SYMLINK_NOFOLLOW);
+  if (check_err("fstatat64 (AT_FDCWD) (NOFOLLOW)")) return 1;
+  assert(S_ISLNK(get_mode(1))
+         && "fstatat64 (AT_FDCWD) (NOFOLLOW) expected symlink");
+  check_copy(1, 1);
+
+
+  if (verbose) printf("  testing 'fstatat64' (dir)'\n");
+  stat_init(1);
+  stat_err = fstatat64(fd, rel_base, &stat_buf.s64.s, 0);
+  if (check_err("fstatat64 (dir)")) return 1;
+  assert(S_ISREG(get_mode(1)) && "fstatat64 (dir) expected regular file");
+  check_copy(1, 0);
+
+  if (verbose) printf("  testing 'fstatat64' (dir) of link\n");
+  stat_init(1);
+  stat_err = fstatat64(fd, rel_link, &stat_buf.s64.s, 0);
+  if (check_err("fstatat64 (dir) of link")) return 1;
+  assert(S_ISREG(get_mode(1))
+         && "fstatat64 (dir) of link expected regular file");
+  check_copy(1, 0);
+
+  if (verbose) printf("  testing 'fstatat64' (dir) of link (NOFOLLOW)\n");
+  stat_init(1);
+  stat_err = fstatat64(fd, rel_link, &stat_buf.s64.s,
+                       AT_SYMLINK_NOFOLLOW);
+  if (check_err("fstatat64 (dir) (NOFOLLOW)")) return 1;
+  assert(S_ISLNK(get_mode(1)) && "fstatat64 (dir) (NOFOLLOW) expected symlink");
+  check_copy(1, 1);
+
+#endif /* __MPLS_HAVE_STAT64 */
+
+  (void) fclose(fp);
 
   printf("%s succeeded.\n", basename(argv[0]));
   return 0;
