@@ -18,6 +18,19 @@
 #define _MACPORTS_SYS_CDEFS_H_
 
 /*
+ * Apple renamed _APPLE_C_SOURCE to _DARWIN_C_SOURCE in the 10.5 SDK.
+ * Arrange to accept either.
+ *
+ * Do this before processing cdefs.
+ */
+#if !defined(_APPLE_C_SOURCE) && defined(_DARWIN_C_SOURCE)
+#define _APPLE_C_SOURCE _DARWIN_C_SOURCE
+#endif
+#if !defined(_DARWIN_C_SOURCE) && defined(_APPLE_C_SOURCE)
+#define _DARWIN_C_SOURCE _APPLE_C_SOURCE
+#endif
+
+/*
  * Work around bug in some versions of clang (e.g. Xcode 7.2 clang 7).
  * See: https://bugs.llvm.org/show_bug.cgi?id=23435
  *
@@ -120,6 +133,18 @@
 #endif
 
 #endif /* __DARWIN_C_LEVEL undef */
+
+/* Provide any needed and missing symbol versioning (10.4) */
+#ifndef __DARWIN_SUF_64_BIT_INO_T
+#if __DARWIN_64_BIT_INO_T
+#define __DARWIN_SUF_64_BIT_INO_T "$INODE64"
+#else
+#define __DARWIN_SUF_64_BIT_INO_T
+#endif
+#endif /* __DARWIN_SUF_64_BIT_INO_T undef */
+#ifndef __DARWIN_INODE64
+#define __DARWIN_INODE64(sym) __asm("_" __STRING(sym) __DARWIN_SUF_64_BIT_INO_T)
+#endif
 
 /*
  * Without help from legacy-support, 64-bit-inode functions are unavailable

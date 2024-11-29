@@ -173,13 +173,17 @@ Wrapped headers and replaced functions are:
     <td>OSX10.9</td>
   </tr>
   <tr>
-    <td rowspan="2"><code>sys/stat.h</code></td>
+    <td rowspan="3"><code>sys/stat.h</code></td>
     <td>Adds <code>fchmodat</code>, <code>fstatat</code>, <code>fstatat64</code> (if required, and on 10.5+),
         and <code>mkdirat</code> functions</td>
     <td>OSX10.9</td>
   </tr>
   <tr>
     <td>Adds <code>lchmod</code> function</td>
+    <td>OSX10.4</td>
+  </tr>
+  <tr>
+    <td>Adds limited <code>stat64</code> support</td>
     <td>OSX10.4</td>
   </tr>
   <tr>

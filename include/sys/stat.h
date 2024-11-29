@@ -26,6 +26,89 @@
 /* Include the primary system sys/stat.h */
 #include_next <sys/stat.h>
 
+#if __MPLS_SDK_SUPPORT_STAT64__
+
+/* In lieu of 10.5+ sys/_types.h + machine/_types.h: */
+typedef unsigned long long __darwin_ino64_t;
+
+/* The following section is a subset of the Apple 10.5 sys/stat.h. */
+
+#if !defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE)
+
+#define __DARWIN_STRUCT_STAT64_TIMES \
+	struct timespec st_atimespec;		/* time of last access */ \
+	struct timespec st_mtimespec;		/* time of last data modification */ \
+	struct timespec st_ctimespec;		/* time of last status change */ \
+	struct timespec st_birthtimespec;	/* time of file creation(birth) */
+
+#else /* (_POSIX_C_SOURCE && !_DARWIN_C_SOURCE) */
+
+#define __DARWIN_STRUCT_STAT64_TIMES \
+	time_t		st_atime;		/* [XSI] Time of last access */ \
+	long		st_atimensec;		/* nsec of last access */ \
+	time_t		st_mtime;		/* [XSI] Last data modification time */ \
+	long		st_mtimensec;		/* last data modification nsec */ \
+	time_t		st_ctime;		/* [XSI] Time of last status change */ \
+	long		st_ctimensec;		/* nsec of last status change */ \
+	time_t		st_birthtime;		/*  File creation time(birth)  */ \
+	long		st_birthtimensec;	/* nsec of File creation time */
+
+#endif /* (!_POSIX_C_SOURCE || _DARWIN_C_SOURCE) */
+
+/*
+ * This structure is used as the second parameter to the fstat64(),
+ * lstat64(), and stat64() functions, and for struct stat when
+ * __DARWIN_64_BIT_INO_T is set. __DARWIN_STRUCT_STAT64 is defined
+ * above, depending on whether we use struct timespec or the direct
+ * components.
+ *
+ * This is simillar to stat except for 64bit inode number
+ * number instead of 32bit ino_t and the addition of create(birth) time.
+ */
+#define __DARWIN_STRUCT_STAT64 { \
+	dev_t		st_dev;			/* [XSI] ID of device containing file */ \
+	mode_t		st_mode;		/* [XSI] Mode of file (see below) */ \
+	nlink_t		st_nlink;		/* [XSI] Number of hard links */ \
+	__darwin_ino64_t st_ino;		/* [XSI] File serial number */ \
+	uid_t		st_uid;			/* [XSI] User ID of the file */ \
+	gid_t		st_gid;			/* [XSI] Group ID of the file */ \
+	dev_t		st_rdev;		/* [XSI] Device ID */ \
+	__DARWIN_STRUCT_STAT64_TIMES \
+	off_t		st_size;		/* [XSI] file size, in bytes */ \
+	blkcnt_t	st_blocks;		/* [XSI] blocks allocated for file */ \
+	blksize_t	st_blksize;		/* [XSI] optimal blocksize for I/O */ \
+	__uint32_t	st_flags;		/* user defined flags for file */ \
+	__uint32_t	st_gen;			/* file generation number */ \
+	__int32_t	st_lspare;		/* RESERVED: DO NOT USE! */ \
+	__int64_t	st_qspare[2];		/* RESERVED: DO NOT USE! */ \
+}
+
+/* End of first grab from Apple 10.5 sys/stat.h */
+
+/* More from Apple 10.5 sys/stat.h */
+
+#if !defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE)
+
+struct stat64 __DARWIN_STRUCT_STAT64;
+
+int	fstat64(int, struct stat64 *);
+int	lstat64(const char *, struct stat64 *);
+int	stat64(const char *, struct stat64 *);
+
+#endif /* (!_POSIX_C_SOURCE || _DARWIN_C_SOURCE) */
+
+/* End of additional grabs from Apple 10.5 sys/stat.h */
+
+#endif /* __MPLS_SDK_SUPPORT_STAT64__ */
+
+/* Set up condition for having "struct stat64" defined by the SDK. */
+#if ((!defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE)) \
+     && (!defined(__DARWIN_ONLY_64_BIT_INO_T) || !__DARWIN_ONLY_64_BIT_INO_T))
+#define __MPLS_HAVE_STAT64 1
+#else
+#define __MPLS_HAVE_STAT64 0
+#endif
+
 #if __DARWIN_C_LEVEL >= 200809L
 
 #if __MPLS_SDK_SUPPORT_UTIMENSAT__
@@ -51,15 +134,10 @@ extern int fchmodat(int dirfd, const char *pathname, mode_t mode, int flags);
 extern int fstatat(int dirfd, const char *pathname,
                    struct stat *buf, int flags);
 
-/*
- * 64bit inode types appeared only on 10.5, and currently can't be replaced
- * on Tiger due to lack of kernel support for the underlying syscalls
- */
-#if !__DARWIN_ONLY_64_BIT_INO_T && __MPLS_TARGET_OSVER >= 1050
-struct stat64;
+#if __MPLS_HAVE_STAT64
 extern int fstatat64(int dirfd, const char *pathname,
                      struct stat64 *buf, int flags);
-#endif
+#endif /* __MPLS_HAVE_STAT64 */
 
 extern int mkdirat(int dirfd, const char *pathname, mode_t mode);
 
