@@ -153,14 +153,22 @@
  * set __DARWIN_64_BIT_INO_T, even on 10.4.  But 32-bit 10.4 builds default
  * to __DARWIN_UNIX03=0, which clears __DARWIN_SUF_64_BIT_INO_T without
  * disabling __DARWIN_64_BIT_INO_T, leading to a mismatch in expected
- * struct stat formats.  To fix this, we disable __DARWIN_64_BIT_INO_T
- * in this particular case.
+ * struct stat formats.
+ *
+ * Originally, we fixed this by disabling __DARWIN_64_BIT_INO_T in this
+ * particular case, since there was no support for 64-bit inodes on 10.4,
+ * anyway.  But now that limited such support exists, we leave that flag
+ * alone and reenable __DARWIN_SUF_64_BIT_INO_T instead.  This allows use
+ * of the available 64-bit-inode functions without being forced to
+ * enable __DARWIN_UNIX03, which causes many functions to expect nonexistent
+ * $UNIX2003 variants.
  *
  * This does not affect 64-bit builds, 10.5+ builds, or builds that
  * set any of the flags enabling Unix compliance.
  */
 #if !__DARWIN_UNIX03 && defined(__DARWIN_64_BIT_INO_T) && __DARWIN_64_BIT_INO_T
-#undef __DARWIN_64_BIT_INO_T
+#undef __DARWIN_SUF_64_BIT_INO_T
+#define __DARWIN_SUF_64_BIT_INO_T "$INODE64"
 #endif
 
 #endif /* _MACPORTS_SYS_CDEFS_H_ */
