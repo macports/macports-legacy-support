@@ -122,7 +122,6 @@ int openat = 0;
 #endif
 int futimens = 0;
 int fstatat = 0;
-int fstatat64 = 0;
 int mkdirat = 0;
 #endif /* __DARWIN_C_LEVEL < 200809L */
 

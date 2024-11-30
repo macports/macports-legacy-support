@@ -134,10 +134,16 @@ extern int fchmodat(int fd, const char *path, mode_t mode, int flag);
 extern int fstatat(int fd, const char *path,
                    struct stat *buf, int flag) __DARWIN_INODE64(fstatat);
 
-#if __MPLS_HAVE_STAT64
-extern int fstatat64(int dirfd, const char *pathname,
-                     struct stat64 *buf, int flags);
-#endif /* __MPLS_HAVE_STAT64 */
+/*
+ * Some versions of this header have included a prototype for fstatat64().
+ * This is inappropriate, since no SDK has ever directly provided that
+ * function.  The intent is that any use of 64-bit-inodes should be
+ * via symbol versioning, though many versions of the system library
+ * have made fstatat64 available as a convenience alias for fstatat$INODE64.
+ *
+ * For consistency, we don't provide fstatat64() here.  All our own
+ * internal references provide their own prototypes.
+ */
 
 extern int mkdirat(int fd, const char *path, mode_t mode);
 
