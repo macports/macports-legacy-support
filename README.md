@@ -174,7 +174,7 @@ Wrapped headers and replaced functions are:
   </tr>
   <tr>
     <td rowspan="3"><code>sys/stat.h</code></td>
-    <td>Adds <code>fchmodat</code>, <code>fstatat</code>, <code>fstatat64</code> (if required, and on 10.5+),
+    <td>Adds <code>fchmodat</code>, <code>fstatat</code>,
         and <code>mkdirat</code> functions</td>
     <td>OSX10.9</td>
   </tr>
