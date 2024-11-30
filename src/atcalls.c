@@ -147,31 +147,6 @@ int fchownat(int dirfd, const char *pathname, uid_t owner, gid_t group, int flag
     }
 }
 
-int fstatat(int dirfd, const char *pathname, struct stat *buf, int flags)
-{
-    ERR_ON(EINVAL, flags & ~AT_SYMLINK_NOFOLLOW);
-    if (flags & AT_SYMLINK_NOFOLLOW) {
-        return ATCALL(dirfd, pathname, lstat(pathname, buf));
-    } else {
-        return ATCALL(dirfd, pathname, stat(pathname, buf));
-    }
-}
-
-/* 64bit inode types appeared only on 10.5, and currently can't be replaced on Tiger */
-/* due to lack of kernel support for the underlying syscalls */
-
-#if !__DARWIN_ONLY_64_BIT_INO_T && __MPLS_TARGET_OSVER >= 1050
-int fstatat64(int dirfd, const char *pathname, struct stat64 *buf, int flags)
-{
-    ERR_ON(EINVAL, flags & ~AT_SYMLINK_NOFOLLOW);
-    if (flags & AT_SYMLINK_NOFOLLOW) {
-        return ATCALL(dirfd, pathname, lstat64(pathname, buf));
-    } else {
-        return ATCALL(dirfd, pathname, stat64(pathname, buf));
-    }
-}
-#endif
-
 int getattrlistat(int dirfd, const char *pathname, void *a,
                   void *buf, size_t size, unsigned long flags)
 {

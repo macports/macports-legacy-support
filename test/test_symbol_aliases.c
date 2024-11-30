@@ -33,18 +33,9 @@
 #define PTR2ULL(x) ((unsigned long long) (unsigned int) (x))
 #endif
 
-#define BASE_SYMS \
+#define CHECK_SYMS \
   SYM_MAC(__bzero) \
   SYM_MAC(dirfd)
-
-#if defined(__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__) \
-    && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ >= 1050 \
-    && !defined(__arm64__)
-  #define CHECK_SYMS BASE_SYMS \
-    SYM_MAC(fstatat$INODE64)
-#else
-  #define CHECK_SYMS BASE_SYMS
-#endif
 
 #define SYM_MAC(name) \
   extern void name(); \
