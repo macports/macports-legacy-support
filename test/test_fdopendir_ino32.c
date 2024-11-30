@@ -1,10 +1,12 @@
 /*
  * Version of test_fdopendir with 32-bit inodes (if possible).
  *
- * This doesn't work on arm64.
+ * This only works on ppc/x86.  Later platforms (e.g. arm64) only
+ * support 64-bit inodes.
  */
 
-#if defined(__arm64__) && __arm64__
+#if !defined(__ppc__) && !defined(__ppc64__) \
+    && !defined(__i386__) && !defined(__x86_64__)
 
 #include <libgen.h>
 #include <stdio.h>
@@ -13,14 +15,14 @@ int
 main(int argc, char *argv[])
 {
   (void) argc;
-  printf("%s doesn't work on arm64.\n", basename(argv[0]));
+  printf("%s is only supported on ppc/x86.\n", basename(argv[0]));
   return 0;
 }
 
-#else /* !arm64 */
+#else /* ppc/x86 */
 
 #define _DARWIN_NO_64_BIT_INODE 1
 
 #include "test_fdopendir.c"
 
-#endif /* !arm64 */
+#endif /* ppc/x86 */
