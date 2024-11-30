@@ -130,16 +130,16 @@ __MP__END_DECLS
 
 __MP__BEGIN_DECLS
 
-extern int fchmodat(int dirfd, const char *pathname, mode_t mode, int flags);
-extern int fstatat(int dirfd, const char *pathname,
-                   struct stat *buf, int flags);
+extern int fchmodat(int fd, const char *path, mode_t mode, int flag);
+extern int fstatat(int fd, const char *path,
+                   struct stat *buf, int flag) __DARWIN_INODE64(fstatat);
 
 #if __MPLS_HAVE_STAT64
 extern int fstatat64(int dirfd, const char *pathname,
                      struct stat64 *buf, int flags);
 #endif /* __MPLS_HAVE_STAT64 */
 
-extern int mkdirat(int dirfd, const char *pathname, mode_t mode);
+extern int mkdirat(int fd, const char *path, mode_t mode);
 
 __MP__END_DECLS
 

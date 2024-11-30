@@ -17,19 +17,9 @@
 /* MP support header */
 #include "MacportsLegacySupport.h"
 
-#if __MPLS_LIB_SUPPORT_STAT64__
+#if __MPLS_LIB_SUPPORT_STAT64__ || __MPLS_LIB_SUPPORT_ATCALLS__
 
-/*
- * This provides definitions for some 64-bit-inode function variants on 10.4.
- *
- * For the *stat() functions, this simply involves translating the result of
- * the 32-bit-inode variant.
- *
- * Providing a similar capability for directory-related functions would be
- * much more difficult, since the differently-formatted dirent struct is
- * provided via a pointer to an internal buffer, rather than one provided
- * by the caller.  Hence we don't do anything about those, for now.
- */
+/* Common setup for both kinds of *stat*() calls provided here */
 
 /*
  * Cause our own refs to always use the 32-bit-inode variants.  This
@@ -47,6 +37,22 @@
 #if !__MPLS_HAVE_STAT64
 struct stat64 __DARWIN_STRUCT_STAT64;
 #endif /* !__MPLS_HAVE_STAT64 */
+
+#endif /*__MPLS_LIB_SUPPORT_STAT64__ || __MPLS_LIB_SUPPORT_ATCALLS__*/
+
+#if __MPLS_LIB_SUPPORT_STAT64__
+
+/*
+ * This provides definitions for some 64-bit-inode function variants on 10.4.
+ *
+ * For the *stat() functions, this simply involves translating the result of
+ * the 32-bit-inode variant.
+ *
+ * Providing a similar capability for directory-related functions would be
+ * much more difficult, since the differently-formatted dirent struct is
+ * provided via a pointer to an internal buffer, rather than one provided
+ * by the caller.  Hence we don't do anything about those, for now.
+ */
 
 /* Do a field-by-field copy from ino32 stat to ino64 stat. */
 /* Also provide passthrough for return value. */
@@ -129,3 +135,61 @@ fstat64(int fildes, struct stat64 *buf)
 #endif /* __MPLS_HAVE_STAT64 */
 
 #endif /* __MPLS_LIB_SUPPORT_STAT64__*/
+
+#if __MPLS_LIB_SUPPORT_ATCALLS__
+
+/*
+ * Provide "at" versions of the *stat*() calls, on OS versions that don't
+ * provide them natively.
+ */
+
+int stat$INODE64(const char *__restrict path, struct stat64 *buf);
+int lstat$INODE64(const char *__restrict path, struct stat64 *buf);
+
+#include "common-priv.h"
+
+int fstatat(int fd, const char *__restrict path, struct stat *buf, int flag)
+{
+    ERR_ON(EINVAL, flag & ~AT_SYMLINK_NOFOLLOW);
+    if (flag & AT_SYMLINK_NOFOLLOW) {
+        return ATCALL(fd, path, lstat(path, buf));
+    } else {
+        return ATCALL(fd, path, stat(path, buf));
+    }
+}
+
+int fstatat$INODE64(int fd, const char *__restrict path, struct stat64 *buf,
+                    int flag)
+{
+    ERR_ON(EINVAL, flag & ~AT_SYMLINK_NOFOLLOW);
+    if (flag & AT_SYMLINK_NOFOLLOW) {
+        return ATCALL(fd, path, lstat$INODE64(path, buf));
+    } else {
+        return ATCALL(fd, path, stat$INODE64(path, buf));
+    }
+}
+
+#if __MPLS_HAVE_STAT64
+
+/*
+ * The fstatat64 function is not expected to be accessed directly (though many
+ * system libraries provide it as a convenience synonym for fstatat$INODE64),
+ * so no SDK provides a prototype for it.  We do so here.
+ */
+
+extern int fstatat64(int fd, const char *__restrict path,
+                     struct stat64 *buf, int flag);
+
+int fstatat64(int fd, const char *path, struct stat64 *buf, int flag)
+{
+    ERR_ON(EINVAL, flag & ~AT_SYMLINK_NOFOLLOW);
+    if (flag & AT_SYMLINK_NOFOLLOW) {
+        return ATCALL(fd, path, lstat64(path, buf));
+    } else {
+        return ATCALL(fd, path, stat64(path, buf));
+    }
+}
+
+#endif /* __MPLS_HAVE_STAT64 */
+
+#endif  /* __MPLS_LIB_SUPPORT_ATCALLS__ */
