@@ -47,16 +47,16 @@ __MP__END_DECLS
 #endif /* __MPLS_SDK_SUPPORT_FDOPENDIR__ */
 
 /* new signature for scandir and alphasort (optionally) */
-#if __MPLS_SDK_SUPPORT_NEW_SCANDIR__ \
-    && defined(_MACPORTS_LEGACY_COMPATIBLE_SCANDIR) \
-    && _MACPORTS_LEGACY_COMPATIBLE_SCANDIR
+#if __MPLS_SDK_SUPPORT_NEW_SCANDIR__
 
 /*
  * Here we provide compatibility wrappers so that scandir and alphasort
  * references based on the new function signatures can be used with the
  * old versions of the functions.  To avoid breaking code expecting the
- * normal behavior, these wrappers are only introduced conditionally,
- * based on _MACPORTS_LEGACY_COMPATIBLE_SCANDIR being nonzero.
+ * normal behavior, the wrapper macros are only introduced conditionally,
+ * based on _MACPORTS_LEGACY_COMPATIBLE_SCANDIR being nonzero.  The wrapper
+ * *functions* are defined unconditionally, since, by themselves, they don't
+ * introduce a conflict.
  *
  * The wrapper functions are defined as inlines, and then macros are
  * defined to make them replace the normal functions.  Since the sole
@@ -71,6 +71,24 @@ __MP__END_DECLS
  * directed as appropriate.  In the function pointer case, any local
  * callable instance is private to the compilation unit, and need only
  * handle the INODE64 case in effect there.
+ *
+ *
+ * It's possible that some clients will have issues with the wrapper macros,
+ * since they're defined as simple macros which could match other uses of
+ * the same identifiers (e.g. stucture elements).  This could be avoided by
+ * using function macros, but those wouldn't work in contexts where taking
+ * pointers to them is required.  Instead, we provide the following for
+ * alternative approaches:
+ *
+ * 1) The wrapper *functions* are defined for all SDK versions, so that they
+ * may be used without version tests.  With newer SDKs, they are simple
+ * transparent wrappers with no casts.
+ *
+ * 2) The macro _MACPORTS_LEGACY_OLD_SCANDIR is provided as the condition
+ * where the compatibility issue exists, to allow conditional workarounds
+ * without the need for (direct) awareness of SDK versions.  This macro
+ * is defined for all SDK versions, but only nonzero when the signature
+ * issue exists.
  */
 
 __MP__BEGIN_DECLS
@@ -97,11 +115,36 @@ __mpls_scandir(const char *dirname, struct dirent ***namelist,
 
 __MP__END_DECLS
 
+/* Define the wrapper macros if requested */
+#if defined(_MACPORTS_LEGACY_COMPATIBLE_SCANDIR) \
+    && _MACPORTS_LEGACY_COMPATIBLE_SCANDIR
 #define alphasort __mpls_alphasort
 #define scandir __mpls_scandir
+#endif
 
-#endif /* __MPLS_SDK_SUPPORT_NEW_SCANDIR__ && ... */
+#else /* !__MPLS_SDK_SUPPORT_NEW_SCANDIR__  */
+
+/* Dummy wrapper functions without unnecessary casts */
+
+static inline int
+__mpls_alphasort(const struct dirent **d1, const struct dirent **d2)
+{
+  return alphasort(d1, d2);
+}
+
+static inline int
+__mpls_scandir(const char *dirname, struct dirent ***namelist,
+               int (*select)(const struct dirent *),
+               int (*compar)(const struct dirent **, const struct dirent **))
+{
+  return scandir(dirname, namelist, select, compar);
+}
+
+#endif /* !__MPLS_SDK_SUPPORT_NEW_SCANDIR__  */
 
 #endif /* __DARWIN_C_LEVEL >= 200809L */
+
+/* Provide a testable condition for the scandir signature issue. */
+#define _MACPORTS_LEGACY_OLD_SCANDIR __MPLS_SDK_SUPPORT_NEW_SCANDIR__
 
 #endif /* _MACPORTS_DIRENT_H_ */
