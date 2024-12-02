@@ -37,6 +37,12 @@
 #include <libgen.h>
 #include <stddef.h>
 #include <stdio.h>
+/* Check the new public definition. */
+#ifndef _MACPORTS_LEGACY_OLD_SCANDIR
+#warning _MACPORTS_LEGACY_OLD_SCANDIR is undefined
+#elif _MACPORTS_LEGACY_OLD_SCANDIR != (__MPLS_SDK_MAJOR < 1080)
+#warning _MACPORTS_LEGACY_OLD_SCANDIR is incorrect
+#endif
 
 /* Determine whether the old or new type of the 'compar' func is in effect. */
 #if !_MACPORTS_LEGACY_COMPATIBLE_SCANDIR && __MPLS_SDK_MAJOR < 1080
@@ -75,6 +81,8 @@ test_scandir(void)
   struct dirent **names;
   if (scandir(".", &names, NULL, alphasort)) return -1;
   if (scandir(".", &names, NULL, mysort)) return -1;
+  /* Also check our functions, which are now unconditionally available. */
+  if (__mpls_scandir(".", &names, NULL, __mpls_alphasort)) return -1;
   return 0;
 }
 
