@@ -44,9 +44,17 @@
  * The first case where this arose was in using the 15.x SDK with the
  * Xcode 7.2 clang 7 compiler on OS 10.10.
  *
- * A similar bug exists in some versions of gcc, and a similar workaround
- * is applicable, except that suppressing the resulting warning doesn't
- * seem to work, for an unknown reason.
+ * A similar bug exists in gcc5+, and remained until gcc12, where it was
+ * fixed by tolerating the namespaced argument even in C mode, rather than
+ * removing __has_cpp_attribute().  The clang workaround is still applicable
+ * in principle, but the option to disable the redefinition warning doesn't
+ * work in GCC, apparently because it only applies to redefinitions of
+ * certain specific macros (not including __has_cpp_attribute).
+ *
+ * Because the warning is unavoidable in GCC, we only apply the workaround
+ * in cases where it's actually necessary, which means GCC < 12 and
+ * SDK >= 15.  This is the only case where we care about the SDK version
+ * in this header, so the include of sdkversion.h is limited to this case.
  *
  * Note that the case where __has_cpp_attribute is undefined is already
  * handled by the Apple include, so only the inappropriately defined case
@@ -59,12 +67,16 @@
     #pragma clang diagnostic ignored "-Wbuiltin-macro-redefined"
     #define __has_cpp_attribute(x) 0
     #pragma clang diagnostic pop
-  #elif defined(__GNUC__)
-    #pragma GCC diagnostic push
-    /* The following doesn't seem to work */
-    #pragma GCC diagnostic ignored "-Wbuiltin-macro-redefined"
-    #define __has_cpp_attribute(x) 0
-    #pragma GCC diagnostic pop
+  #elif defined(__GNUC__) && __GNUC__ < 12
+    /* Get the SDK version to see if we need the workaround. */
+    #include <_macports_extras/sdkversion.h>
+    #if __MPLS_SDK_MAJOR >= 150000
+      #pragma GCC diagnostic push
+      /* The following warning disable doesn't actually work. */
+      #pragma GCC diagnostic ignored "-Wbuiltin-macro-redefined"
+      #define __has_cpp_attribute(x) 0 /* Probably unavoidable warning here */
+      #pragma GCC diagnostic pop
+    #endif
   #endif
 #endif
 
