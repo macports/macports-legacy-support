@@ -30,6 +30,49 @@ int printf(const char *format, ...);
 #define PRINT_UNDEF(x) printf(#x " is undefined\n")
 
 static void
+print_compiler(void)
+{
+  #ifdef __cplusplus
+  PRINT_VAR(__cplusplus);
+  #else
+  PRINT_UNDEF(__cplusplus);
+  #endif
+
+  #ifdef __GNUC__
+  PRINT_VAR(__GNUC__);
+  #else
+  PRINT_UNDEF(__GNUC__);
+  #endif
+  #ifdef __GNUC_MINOR__
+  PRINT_VAR(__GNUC_MINOR__);
+  #else
+  PRINT_UNDEF(__GNUC_MINOR__);
+  #endif
+
+  #ifdef __clang_major__
+  PRINT_VAR(__clang_major__);
+  #else
+  PRINT_UNDEF(__clang_major__);
+  #endif
+  #ifdef __clang_minor__
+  PRINT_VAR(__clang_minor__);
+  #else
+  PRINT_UNDEF(__clang_minor__);
+  #endif
+
+  #ifdef __APPLE_CC__
+  PRINT_VAR(__APPLE_CC__);
+  #else
+  PRINT_UNDEF(__APPLE_CC__);
+  #endif
+  #ifdef __apple_build_version__
+  PRINT_VAR(__apple_build_version__);
+  #else
+  PRINT_UNDEF(__apple_build_version__);
+  #endif
+}
+
+static void
 print_before_cdefs(void)
 {
   printf("  Before <sys/cdefs.h>:\n");
@@ -246,6 +289,8 @@ main(int argc, char *argv[])
 {
   (void) argc; (void) argv;
 
+  printf("\n");
+  print_compiler();
   printf("\n");
   PRINT_VAR(__MPLS_SDK_MAJOR);
   printf("\n");
