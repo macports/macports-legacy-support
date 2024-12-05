@@ -154,13 +154,9 @@
 #define __MPLS_SDK_SUPPORT_TIMESPEC_GET__     (__MPLS_SDK_MAJOR < 101500)
 #define __MPLS_LIB_SUPPORT_TIMESPEC_GET__     (__MPLS_TARGET_OSVER < 101500)
 
-/* "at" calls */
+/* "at" calls, including fdopendir */
 #define __MPLS_SDK_SUPPORT_ATCALLS__          (__MPLS_SDK_MAJOR < 101000)
 #define __MPLS_LIB_SUPPORT_ATCALLS__          (__MPLS_TARGET_OSVER < 101000)
-
-/* fdopendir */
-#define __MPLS_SDK_SUPPORT_FDOPENDIR__        (__MPLS_SDK_MAJOR < 101000)
-#define __MPLS_LIB_SUPPORT_FDOPENDIR__        (__MPLS_TARGET_OSVER < 101000)
 
 /* new signature for scandir and alphasort */
 #define __MPLS_SDK_SUPPORT_NEW_SCANDIR__      (__MPLS_SDK_MAJOR < 1080)
@@ -326,8 +322,7 @@
 #define __MPLS_LIB_SUPPORT_STAT64__      (__MPLS_TARGET_OSVER < 1050)
 
 /* Compound macros, bundling functionality needed by multiple single features. */
-#define __MPLS_LIB_NEED_BEST_FCHDIR__    (__MPLS_LIB_SUPPORT_FDOPENDIR__ \
-                                          || __MPLS_LIB_SUPPORT_ATCALLS__ \
+#define __MPLS_LIB_NEED_BEST_FCHDIR__    (__MPLS_LIB_SUPPORT_ATCALLS__ \
                                           || __MPLS_LIB_SUPPORT_SETATTRLISTAT__)
 
 #define __MPLS_LIB_SUPPORT_REALPATH_WRAP__ (__MPLS_LIB_SUPPORT_REALPATH_ALLOC__ \

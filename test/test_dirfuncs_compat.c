@@ -26,7 +26,7 @@
 
 /* MP support header */
 #include "MacportsLegacySupport.h"
-#if __MPLS_LIB_SUPPORT_FDOPENDIR__
+#if __MPLS_LIB_SUPPORT_ATCALLS__
 
 #include "../src/dirfuncs_compat.h"
 
@@ -42,8 +42,8 @@
 
 #include "test_fdopendir.c"
 
-#else /* !__MPLS_LIB_SUPPORT_FDOPENDIR__ */
+#else /* !__MPLS_LIB_SUPPORT_ATCALLS__ */
 
 int main(){ return 0; }
 
-#endif /* !__MPLS_LIB_SUPPORT_FDOPENDIR__ */
+#endif /* !__MPLS_LIB_SUPPORT_ATCALLS__ */

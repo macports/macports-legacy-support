@@ -28,7 +28,7 @@
  * https://linux.die.net/man/3/fdopendir
  */
 
-#if __MPLS_LIB_SUPPORT_FDOPENDIR__
+#if __MPLS_LIB_SUPPORT_ATCALLS__
 
 /*
  * Set up to use ino32 variants where possible.  This results in generating
@@ -223,4 +223,4 @@ fdopendir##isfx##usfx(int fd) \
 ALL_VARIANTS
 #undef VARIANT_ENT
 
-#endif /* __MPLS_LIB_SUPPORT_FDOPENDIR__ */
+#endif /* __MPLS_LIB_SUPPORT_ATCALLS__ */
