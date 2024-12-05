@@ -32,7 +32,7 @@
 #if __DARWIN_C_LEVEL >= 200809L
 
 /* fdopendir */
-#if __MPLS_SDK_SUPPORT_FDOPENDIR__
+#if __MPLS_SDK_SUPPORT_ATCALLS__
 
 __MP__BEGIN_DECLS
 
@@ -44,7 +44,7 @@ extern DIR *fdopendir(int fd) __DARWIN_ALIAS_I(fdopendir);
 
 __MP__END_DECLS
 
-#endif /* __MPLS_SDK_SUPPORT_FDOPENDIR__ */
+#endif /* __MPLS_SDK_SUPPORT_ATCALLS__ */
 
 /* new signature for scandir and alphasort (optionally) */
 #if __MPLS_SDK_SUPPORT_NEW_SCANDIR__
