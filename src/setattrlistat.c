@@ -35,11 +35,12 @@
 
 #if __MPLS_LIB_SUPPORT_SETATTRLISTAT__
 
-#include "common-priv.h"
-
-#include <sys/attr.h>
 #include <assert.h>
 #include <stdint.h>
+
+#include <sys/attr.h>
+
+#include "atcalls.h"
 
 
 int setattrlistat(int dirfd, const char *pathname, void *a,

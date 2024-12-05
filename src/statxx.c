@@ -146,7 +146,7 @@ fstat64(int fildes, struct stat64 *buf)
 int stat$INODE64(const char *__restrict path, struct stat64 *buf);
 int lstat$INODE64(const char *__restrict path, struct stat64 *buf);
 
-#include "common-priv.h"
+#include "atcalls.h"
 
 int fstatat(int fd, const char *__restrict path, struct stat *buf, int flag)
 {

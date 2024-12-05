@@ -36,35 +36,33 @@
 #include "MacportsLegacySupport.h"
 #if __MPLS_LIB_SUPPORT_ATCALLS__
 
-#include "common-priv.h"
-
-#include <sys/attr.h>
-#include <sys/errno.h>
-#include <sys/fcntl.h>
-#include <sys/param.h>
-#include <sys/stat.h>
-#include <sys/mount.h>
-#include <sys/ucred.h>
-#include <sys/shm.h>
-#include <sys/stdio.h>  /* For renameat() */
-#include <sys/unistd.h>
-
 #include <assert.h>
+#include <dirent.h>
 #include <dlfcn.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <dirent.h>
 #include <string.h>
+#include <unistd.h>
 
+#include <sys/attr.h>
+#include <sys/errno.h>
+#include <sys/fcntl.h>
+#include <sys/mount.h>
+#include <sys/param.h>
+#include <sys/shm.h>
+#include <sys/stdio.h>  /* For renameat() */
+#include <sys/stat.h>
+#include <sys/ucred.h>
+#include <sys/unistd.h>
 
 /* this is some apple internal magic */
-#include <sys/syscall.h>
 #include <fcntl.h>
+#include <sys/syscall.h>
 
+#include "atcalls.h"
 
 // buf is a pointer to a buffer of PATH_MAX or larger size
 static int

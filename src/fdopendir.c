@@ -58,7 +58,7 @@
 
 #include <sys/stat.h>
 
-#include "common-priv.h"
+#include "atcalls.h"
 
 #if __MPLS_SDK_MAJOR < 1050
 #define __dd_fd dd_fd

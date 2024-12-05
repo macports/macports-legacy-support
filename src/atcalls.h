@@ -25,14 +25,14 @@
 
  /*
   * NOTICE: This chunk of header was refactored from the above Apple-supplied
-  * file, atcalls.c. The relevant part of that header was moved here.
-  * for use as a supporting file for MacPorts legacy support library. This notice
+  * file, atcalls.c.  The relevant part of that header was moved here for use
+  * as a supporting file for MacPorts legacy support library. This notice
   * is included in support of clause 2.2 (b) of the Apple Public License,
   * Version 2.0.
   */
 
-#ifndef _MACPORTS_COMMON_PRIV_H_
-#define _MACPORTS_COMMON_PRIV_H_
+#ifndef _MACPORTS_ATCALLS_H_
+#define _MACPORTS_ATCALLS_H_
 
 #include <fcntl.h>
 #include <unistd.h>
@@ -69,4 +69,4 @@ int best_fchdir(int dirfd);
 
 #define ATCALL(fd, p, what)  _ATCALL(fd, p, -1, what)
 
-#endif /* _MACPORTS_COMMON_PRIV_H_ */
+#endif /* _MACPORTS_ATCALLS_H_ */
