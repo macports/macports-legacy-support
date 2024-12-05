@@ -326,12 +326,6 @@
 #define __MPLS_LIB_SUPPORT_STAT64__      (__MPLS_TARGET_OSVER < 1050)
 
 /* Compound macros, bundling functionality needed by multiple single features. */
-#define __MPLS_SDK_NEED_ATCALL_MACROS__  (__MPLS_SDK_SUPPORT_ATCALLS__ \
-                                          || __MPLS_SDK_SUPPORT_SETATTRLISTAT__)
-
-#define __MPLS_SDK_NEED_BEST_FCHDIR__    (__MPLS_SDK_SUPPORT_FDOPENDIR__ \
-                                          || __MPLS_SDK_SUPPORT_ATCALLS__ \
-                                          || __MPLS_SDK_SUPPORT_SETATTRLISTAT__)
 #define __MPLS_LIB_NEED_BEST_FCHDIR__    (__MPLS_LIB_SUPPORT_FDOPENDIR__ \
                                           || __MPLS_LIB_SUPPORT_ATCALLS__ \
                                           || __MPLS_LIB_SUPPORT_SETATTRLISTAT__)
