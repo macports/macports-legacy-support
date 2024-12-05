@@ -21,10 +21,13 @@
 
 #if __MPLS_LIB_NEED_BEST_FCHDIR__
 
-#include "common-priv.h"
-
 #include <unistd.h>
+
 #include <sys/syscall.h>
+
+#ifndef SYS___pthread_fchdir
+#define SYS___pthread_fchdir 349
+#endif
 
 int best_fchdir(int dirfd)
 {

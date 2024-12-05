@@ -43,10 +43,6 @@
 #define PROTECT_ERRNO(what)  ({ int __err = (errno); what; errno = __err; })
 #define ERR_ON(code, what)   if (what) { errno = (code); return -1; }
 
-#ifndef SYS___pthread_fchdir
-# define SYS___pthread_fchdir 349
-#endif
-
 int best_fchdir(int dirfd);
 
 #define _ATCALL(fd, p, onerr, what)                             \
