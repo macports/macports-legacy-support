@@ -99,6 +99,16 @@ print_after(void)
 #include <unistd.h>
 #include <sys/wait.h>
 
+/* Try to disable warnings for things we're intentionally provoking */
+#if defined(__clang__)
+  #pragma clang diagnostic ignored "-Wunknown-pragmas"
+  #pragma clang diagnostic ignored "-Wbuiltin-memcpy-chk-size"
+#elif defined(__GNUC__)
+  #pragma GCC diagnostic ignored "-Wpragmas"
+  #pragma GCC diagnostic ignored "-Wstringop-overflow"
+  #pragma GCC diagnostic ignored "-Warray-bounds"
+#endif
+
 const char *test_str = "The Quick Brown Fox";
 
 #define BUF_LEN 128  /* Generously longer than test_str */
