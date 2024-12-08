@@ -79,6 +79,10 @@ SED             ?= /usr/bin/sed
 GREP            ?= /usr/bin/grep
 CP              ?= /bin/cp
 
+# Directory for temporary test files
+TEST_TEMP       ?= tst_data
+TESTCFLAGS       = $(ALLCFLAGS) '-DTEST_TEMP="$(TEST_TEMP)"'
+
 MKINSTALLDIRS    = install -d -m 755
 INSTALL_PROGRAM  = install -c -m 755
 INSTALL_DATA     = install -c -m 644
@@ -239,7 +243,7 @@ $(SOBJLIST): $(ALLSLIBOBJS)
 	if [ ! -s $@ ]; then echo $(DUMMYOBJ) > $@; fi
 
 # Make the directories separate targets to avoid collisions in parallel builds.
-$(BUILDLIBDIR) $(DESTDIR)$(LIBDIR):
+$(BUILDLIBDIR) $(DESTDIR)$(LIBDIR) $(TEST_TEMP):
 	$(MKINSTALLDIRS) $@
 
 $(BUILDDLIBPATH): $(ALLDLIBOBJS) | $(BUILDLIBDIR)
@@ -264,7 +268,7 @@ $(XLIBPATH): $(BUILDSYSLIBPATH)
 	cd $(XLIBDIR) && ln -sf ../$< ../$@
 
 $(TESTOBJS_C): %.o: %.c $(ALLHEADERS)
-	$(CC) -c -std=c99 -I$(SRCINCDIR) $(ALLCFLAGS) $< -o $@
+	$(CC) -c -std=c99 -I$(SRCINCDIR) $(TESTCFLAGS) $< -o $@
 
 $(TESTPRGS_C): %: %.o $(BUILDDLIBPATH)
 	$(CC) $(TESTLDFLAGS) $< $(TESTLIBS) -o $@
@@ -278,7 +282,7 @@ $(TESTSPRGS_C): %_static: %.o $(BUILDSLIBPATH)
 
 # The "darwin_c" tests need the -fno-builtin option with some compilers.
 $(XTESTOBJS_C): %.o: %.c $(ALLHEADERS)
-	$(CC) -c -std=c99 -fno-builtin -I$(SRCINCDIR) $(ALLCFLAGS) $< -o $@
+	$(CC) -c -std=c99 -fno-builtin -I$(SRCINCDIR) $(TESTCFLAGS) $< -o $@
 
 # The xtests don't require the library
 $(XTESTPRGS_C): %: %.o
@@ -287,7 +291,7 @@ $(XTESTPRGS_C): %: %.o
 # The "darwin_c" tests need the -fno-builtin option with some compilers.
 # It shouldn't hurt the other manual tests.
 $(MANTESTOBJS_C): %.o: %.c $(ALLHEADERS)
-	$(CC) -c -std=c99 -fno-builtin -I$(SRCINCDIR) $(ALLCFLAGS) $< -o $@
+	$(CC) -c -std=c99 -fno-builtin -I$(SRCINCDIR) $(TESTCFLAGS) $< -o $@
 
 # Currently, the manual C tests don't require the library
 $(MANTESTPRGS_C): %: %.o
@@ -337,16 +341,16 @@ test_faccessat_setuid: test/test_faccessat
 test_faccessat_setuid_msg:
 	@echo 'Run "sudo make test_faccessat_setuid" to test faccessat properly (Not on 10.4)'
 
-$(TESTRUNS): $(TESTRUNPREFIX)%: $(TESTNAMEPREFIX)%
+$(TESTRUNS): $(TESTRUNPREFIX)%: $(TESTNAMEPREFIX)% | $(TEST_TEMP)
 	$< $(TEST_ARGS)
 
-$(TESTSRUNS): $(TESTRUNPREFIX)%: $(TESTNAMEPREFIX)%
+$(TESTSRUNS): $(TESTRUNPREFIX)%: $(TESTNAMEPREFIX)% | $(TEST_TEMP)
 	$< $(TEST_ARGS)
 
-$(TESTSYSRUNS): $(TESTRUNPREFIX)%: $(TESTNAMEPREFIX)%
+$(TESTSYSRUNS): $(TESTRUNPREFIX)%: $(TESTNAMEPREFIX)% | $(TEST_TEMP)
 	$< $(TEST_ARGS)
 
-$(XTESTRUNS): $(XTESTRUNPREFIX)%: $(XTESTNAMEPREFIX)%
+$(XTESTRUNS): $(XTESTRUNPREFIX)%: $(XTESTNAMEPREFIX)% | $(TEST_TEMP)
 	$< $(TEST_ARGS)
 
 # The "dirfuncs_compat" test includes the fdopendir test source
@@ -406,7 +410,7 @@ $(TESTRUNPREFIX)stpncpy_chk_all: $(STPNCHKRUNS)
 # Provide a target for all "strncpy_chk" tests
 $(TESTRUNPREFIX)strncpy_chk_all: $(STRNCHKRUNS)
 
-$(MANTESTRUNS): $(MANRUNPREFIX)%: $(MANTESTPREFIX)%
+$(MANTESTRUNS): $(MANRUNPREFIX)%: $(MANTESTPREFIX)% | $(TEST_TEMP)
 	$< $(TEST_ARGS)
 
 install: install-headers install-lib
@@ -455,6 +459,7 @@ test_clean: xtest_clean $(MANRUNPREFIX)clean
 	$(RM) $(TESTDIR)/*.o $(ALLTESTPRGS) $(XLIBPATH)
 	$(RM) test/test_cmath_* test/test_faccessat_setuid
 	@$(RMDIR) $(XLIBDIR)
+	$(RM) -r $(TEST_TEMP)
 
 clean: $(MANRUNPREFIX)clean test_clean
 	$(RM) $(foreach D,$(SRCDIR),$D/*.o $D/*.o.* $D/*.d)
