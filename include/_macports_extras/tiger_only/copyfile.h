@@ -2,14 +2,14 @@
  * Copyright (c) 2004 Apple Computer, Inc. All rights reserved.
  *
  * @APPLE_LICENSE_HEADER_START@
- *
+ * 
  * This file contains Original Code and/or Modifications of Original Code
  * as defined in and that are subject to the Apple Public Source License
  * Version 2.0 (the 'License'). You may not use this file except in
  * compliance with the License. Please obtain a copy of the License at
  * http://www.opensource.apple.com/apsl/ and read it before using this
  * file.
- *
+ * 
  * The Original Code and all software distributed under the License are
  * distributed on an 'AS IS' basis, WITHOUT WARRANTY OF ANY KIND, EITHER
  * EXPRESS OR IMPLIED, AND APPLE HEREBY DISCLAIMS ALL SUCH WARRANTIES,
@@ -17,20 +17,31 @@
  * FITNESS FOR A PARTICULAR PURPOSE, QUIET ENJOYMENT OR NON-INFRINGEMENT.
  * Please see the License for the specific language governing rights and
  * limitations under the License.
- *
+ * 
  * @APPLE_LICENSE_HEADER_END@
  */
 #ifndef _COPYFILE_H_ /* version 0.1 */
 #define _COPYFILE_H_
 
 /*
- * this is an API to faciliatate copying of files and their
- * associated metadata.  There are several open source projects that
- * need modifications to support preserving extended attributes and
- * acls and this API collapses several hundred lines of modifications
- * into one or two calls.
+ * This is a slightly modified copy of the internal 10.4 copyfile.h,
+ * from the public sources.  Except for this comment block, it is intended
+ * to approximate what a copyfile.h would have looked like in a 10.4 SDK,
+ * if Apple hadn't neglected to publish it.  It does not reflect updates
+ * for newer OS versions.
  *
- * This implementation is incomplete and the interface may change in a
+ * The original file is taken from the Apple public sources at:
+ * https://github.com/apple-oss-distributions/Libc/blob/Libc-391/darwin/copyfile.h
+ */
+
+/*
+ * this is a proposed API to add to libSystem to faciliatate copying
+ * of files and their associated metadata.  There are several open
+ * source projects that need modifications to support preserving
+ * extended attributes and acls and this API collapses several hundred
+ * lines of modifications into one or two calls.
+ *
+ * This implementation is incomplete and the interface may change in a 
  * future release.
  */
 
@@ -56,25 +67,11 @@ typedef uint32_t copyfile_flags_t;
  */
 
 int copyfile(const char *from, const char *to, copyfile_state_t state, copyfile_flags_t flags);
-int fcopyfile(int from_fd, int to_fd, copyfile_state_t, copyfile_flags_t flags);
+int copyfile_free(copyfile_state_t);
+copyfile_state_t copyfile_init(void);
 
-int copyfile_state_free(copyfile_state_t);
-copyfile_state_t copyfile_state_alloc(void);
-
-
-int copyfile_state_get(copyfile_state_t s, uint32_t flag, void * dst);
-int copyfile_state_set(copyfile_state_t s, uint32_t flag, const void * src);
-
-#define COPYFILE_STATE_SRC_FD		1
-#define COPYFILE_STATE_SRC_FILENAME	2
-#define COPYFILE_STATE_DST_FD		3
-#define COPYFILE_STATE_DST_FILENAME	4
-#define COPYFILE_STATE_QUARANTINE	5
-#define COPYFILE_STATE_STATUS_CB	6
-#define COPYFILE_STATE_STATUS_CTX	7
-#define COPYFILE_STATE_COPIED		8
-
-#define	COPYFILE_DISABLE_VAR	"COPYFILE_DISABLE"
+/* Flag for clients to disable their use of copyfile() */
+#define COPYFILE_DISABLE_VAR	"COPY_EXTENDED_ATTRIBUTES_DISABLE"
 
 /* flags for copyfile */
 

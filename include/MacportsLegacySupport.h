@@ -335,6 +335,8 @@
 #define __MPLS_SDK_SUPPORT_CoreFoundation__  (__MPLS_SDK_MAJOR < 1060)
 
 /* copyfile and its associated functions have gained functionality over the years */
+#define __MPLS_SDK_SUPPORT_COPYFILE_TIGER__ (__MPLS_SDK_MAJOR < 1050)
+#define __MPLS_LIB_SUPPORT_COPYFILE_TIGER__ (__MPLS_TARGET_OSVER < 1050)
 #define __MPLS_SDK_SUPPORT_COPYFILE_WRAP__  (__MPLS_SDK_MAJOR < 1060)
 #define __MPLS_LIB_SUPPORT_COPYFILE_WRAP__  (__MPLS_TARGET_OSVER < 1060)
 
