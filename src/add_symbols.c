@@ -25,7 +25,7 @@ extern const char pthread_setname_np_tmp4 __asm("$ld$add$os10.4$_pthread_setname
 extern const char pthread_setname_np_tmp5 __asm("$ld$add$os10.5$_pthread_setname_np"); __attribute__((visibility("default"))) const char pthread_setname_np_tmp5 = 0;
 #endif
 
-#if !(__MPLS_LIB_SUPPORT_COPYFILE_WRAP__)
+#if !(__MPLS_LIB_SUPPORT_COPYFILE_10_6__)
 /* extern const char copyfile_state_get_tmp4 __asm("$ld$add$os10.4$_copyfile_state_get"); __attribute__((visibility("default"))) const char copyfile_state_get_tmp4 = 0; */
 extern const char copyfile_state_get_tmp5 __asm("$ld$add$os10.5$_copyfile_state_get"); __attribute__((visibility("default"))) const char copyfile_state_get_tmp5 = 0;
 #endif
