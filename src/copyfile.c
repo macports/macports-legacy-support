@@ -3457,3 +3457,25 @@ exit:
 }
 
 #endif /* defined(_COPYFILE_TEST) || __MPLS_LIB_SUPPORT_COPYFILE_10_6__ */
+
+#if !defined(_COPYFILE_TEST) && __MPLS_LIB_SUPPORT_COPYFILE_TIGER__
+
+/*
+ * 10.4 used different names for the state alloc/free functions.
+ * Since the structure layouts changed, we can't allow the old versions
+ * to be used, so we shadow them with wrappers around the new versions.
+ */
+
+int
+copyfile_free(copyfile_state_t state)
+{
+  return copyfile_state_free(state);
+}
+
+copyfile_state_t
+copyfile_init(void)
+{
+  return copyfile_state_alloc();
+}
+
+#endif /* !defined(_COPYFILE_TEST) && __MPLS_LIB_SUPPORT_COPYFILE_TIGER__ */
