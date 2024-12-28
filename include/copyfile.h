@@ -58,7 +58,7 @@ __MP__END_DECLS
 
 #endif /* !__MPLS_SDK_SUPPORT_COPYFILE_TIGER__ */
 
-#if __MPLS_SDK_SUPPORT_COPYFILE_WRAP__
+#if __MPLS_SDK_SUPPORT_COPYFILE_10_6__
 
 /* Additional defs from the 10.6 copyfile.h */
 
@@ -85,6 +85,6 @@ typedef int (*copyfile_callback_t)(int, int, copyfile_state_t, const char *, con
 #define	COPYFILE_SKIP	1
 #define	COPYFILE_QUIT	2
 
-#endif /* __MPLS_SDK_SUPPORT_COPYFILE_WRAP__ */
+#endif /* __MPLS_SDK_SUPPORT_COPYFILE_10_6__ */
 
 #endif /* _MACPORTS_COPYFILE_H_ */
