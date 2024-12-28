@@ -36,12 +36,15 @@
  *   Adding the legacy-support include and conditional
  *   Changing to a private quarantine.h, due to absence of a public version
  *   Fixing format warnings in debug messages
+ *   Adding missing O_SYMLINK definition for 10.4
+ *   Adding dummy quarantine operations for 10.4
  */
 
 /*
  * With _COPYFILE_TEST (Apple feature), it builds as a standalone program
  * for testing.  The legacy-support headers are optional in this case,
- * provided that the SDK is 10.6+.
+ * provided that the SDK is 10.6+.  Note that _COPYFILE_TEST builds on 10.4
+ * require _NO_QUARANTINE to build successfully.
  */
 #ifndef _COPYFILE_TEST
 /* MP support header */
@@ -74,8 +77,50 @@
 #include <fts.h>
 #include <libgen.h>
 
+/* Provide missing O_SYMLINK def for 10.4 (which may or may not work). */
+#ifndef O_SYMLINK
+#define O_SYMLINK	0x200000	/* allow open of a symlink */
+#endif
+
 #include "quarantine.h"
 #define	XATTR_QUARANTINE_NAME qtn_xattr_name
+
+#if !defined(_COPYFILE_TEST) && __MPLS_LIB_SUPPORT_COPYFILE_TIGER__ \
+    || defined(_NO_QUARANTINE)
+
+/* 10.4 lacks quarantine support, so we provide dummy macros here. */
+
+#undef qtn_file_alloc
+#define qtn_file_alloc() NULL
+
+#undef qtn_file_free
+#define qtn_file_free(x)
+
+#undef qtn_file_clone
+#define qtn_file_clone(x) NULL
+
+#undef qtn_file_init_with_fd
+#define qtn_file_init_with_fd(x,y) -1
+
+#undef qtn_file_apply_to_fd
+#define qtn_file_apply_to_fd(x,y) -1
+
+#undef qtn_file_init_with_path
+#define qtn_file_init_with_path(x,y) -1
+
+#undef qtn_file_init_with_data
+#define qtn_file_init_with_data(x,y,z) -1
+
+#undef qtn_file_to_data
+#define qtn_file_to_data(x,y,z) -1
+
+#undef qtn_error
+#define qtn_error(x) "Impossible"
+
+#undef qtn_xattr_name
+#define qtn_xattr_name "Not the xattr you're looking for"
+
+#endif /* ... __MPLS_LIB_SUPPORT_COPYFILE_TIGER__ ... */
 
 #include <copyfile.h>
 
