@@ -30,6 +30,22 @@
 #include <sys/param.h>
 #include <sys/stat.h>
 
+/* Set up condition for testing the compatibility wrappers. */
+#if !defined(__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__) \
+    || __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1050
+#define TEST_TIGER 1
+#else
+#define TEST_TIGER 0
+#endif
+
+#if TEST_TIGER
+/* Avoid problematic malloc.h by direct declaration of malloc_size(). */
+extern size_t malloc_size(const void *ptr);
+/* Prototypes in case we build with later SDK */
+int copyfile_free(copyfile_state_t);
+copyfile_state_t copyfile_init(void);
+#endif
+
 #ifndef TEST_TEMP
 #define TEST_TEMP "/dev/null"
 #endif
@@ -47,7 +63,7 @@ main(int argc, char *argv[])
 {
   int verbose = 0, debug = 0;
   char *debugenv;
-  copyfile_state_t state;
+  copyfile_state_t state, state_test;
   dummy_ctx_t ctx = {0}, *ctxp;
   pid_t pid = getpid();
   char *name = basename(argv[0]);
@@ -86,6 +102,24 @@ main(int argc, char *argv[])
     perror("copyfile_state_alloc() failed");
     return 1;
   }
+
+/* Verify that the old allocator is really wrapping the new one. */
+#if TEST_TIGER
+  state_test = copyfile_init();
+  if (!state_test) {
+    perror("copyfile_init() failed");
+    return 1;
+  }
+  if (malloc_size(state_test) != malloc_size(state)) {
+    fprintf(stderr, "copyfile_init() size %d mismatches"
+                    " copyfile_state_alloc() size %d\n",
+            (int) malloc_size(state_test), (int) malloc_size(state));
+    return 1;
+  }
+  copyfile_free(state_test);
+#else
+  (void) state_test;
+#endif
 
   /* Check that we can set the context pointer */
   if (copyfile_state_set(state, COPYFILE_STATE_STATUS_CTX, &ctx)) {
