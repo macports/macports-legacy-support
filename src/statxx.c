@@ -109,6 +109,29 @@ fstat$INODE64(int fildes, struct stat64 *buf)
   return convert_stat(&stbuf, buf, fstat(fildes, &stbuf));
 }
 
+int
+statx_np$INODE64(const char *__restrict path, struct stat64 *buf,
+                 filesec_t fsec)
+{
+  struct stat stbuf;
+  return convert_stat(&stbuf, buf, statx_np(path, &stbuf, fsec));
+}
+
+int
+lstatx_np$INODE64(const char *__restrict path, struct stat64 *buf,
+                  filesec_t fsec)
+{
+  struct stat stbuf;
+  return convert_stat(&stbuf, buf, lstatx_np(path, &stbuf, fsec));
+}
+
+int
+fstatx_np$INODE64(int fildes, struct stat64 *buf, filesec_t fsec)
+{
+  struct stat stbuf;
+  return convert_stat(&stbuf, buf, fstatx_np(fildes, &stbuf, fsec));
+}
+
 #if __MPLS_HAVE_STAT64
 
 int
@@ -130,6 +153,27 @@ fstat64(int fildes, struct stat64 *buf)
 {
   struct stat stbuf;
   return convert_stat(&stbuf, buf, fstat(fildes, &stbuf));
+}
+
+int
+statx64_np(const char *__restrict path, struct stat64 *buf, filesec_t fsec)
+{
+  struct stat stbuf;
+  return convert_stat(&stbuf, buf, statx_np(path, &stbuf, fsec));
+}
+
+int
+lstatx64_np(const char *__restrict path, struct stat64 *buf, filesec_t fsec)
+{
+  struct stat stbuf;
+  return convert_stat(&stbuf, buf, lstatx_np(path, &stbuf, fsec));
+}
+
+int
+fstatx64_np(int fildes, struct stat64 *buf, filesec_t fsec)
+{
+  struct stat stbuf;
+  return convert_stat(&stbuf, buf, fstatx_np(fildes, &stbuf, fsec));
 }
 
 #endif /* __MPLS_HAVE_STAT64 */
