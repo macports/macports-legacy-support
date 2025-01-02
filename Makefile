@@ -22,6 +22,7 @@ LIBDIR           = $(PREFIX)/lib
 BINDIR           = $(PREFIX)/bin
 MANDIR           = $(PREFIX)/share/man
 MAN1DIR          = $(MANDIR)/man1
+MAN3DIR          = $(MANDIR)/man3
 AREXT            = .a
 SOEXT            = .dylib
 LIBNAME          = MacportsLegacySupport
@@ -112,6 +113,9 @@ MULTISLIBOBJS   := $(patsubst %.c,%$(SLIBOBJEXT),$(MULTISRCS))
 ALLSLIBOBJS     := $(SLIBOBJS) $(MULTISLIBOBJS)
 ADDOBJS         := $(patsubst %.c,%$(SLIBOBJEXT),$(ADDSRCS))
 ALLSYSLIBOBJS   := $(ALLDLIBOBJS) $(ADDOBJS)
+
+# Man pages
+SRCMAN3S        := $(wildcard $(SRCDIR)/*.3)
 
 # Defs for filtering out empty object files
 #
@@ -243,7 +247,8 @@ $(SOBJLIST): $(ALLSLIBOBJS)
 	if [ ! -s $@ ]; then echo $(DUMMYOBJ) > $@; fi
 
 # Make the directories separate targets to avoid collisions in parallel builds.
-$(BUILDLIBDIR) $(DESTDIR)$(LIBDIR) $(TEST_TEMP):
+$(BUILDLIBDIR) $(DESTDIR)$(LIBDIR) $(DESTDIR)$(BINDIR) \
+    $(DESTDIR)$(MAN1DIR) $(DESTDIR)$(MAN3DIR) $(TEST_TEMP):
 	$(MKINSTALLDIRS) $@
 
 $(BUILDDLIBPATH): $(ALLDLIBOBJS) | $(BUILDLIBDIR)
@@ -308,6 +313,10 @@ $(TIGERPRGS): %: %.c
 	$(CC) $$($(ARCHTOOL)) $< -o $@
 
 tiger-bins: $(TIGERPRGS)
+
+# Dummy Leopard build target, so the Portfile can reference it in case
+# we need it later.
+leopard-bins:
 
 # Special clause for testing the cmath fix: Just need to verify that
 # building succeeds or fails, not that the executable runs or what it
@@ -435,9 +444,19 @@ install-syslib: $(BUILDSYSLIBPATH) | $(DESTDIR)$(LIBDIR)
 install-slib: $(BUILDSLIBPATH) | $(DESTDIR)$(LIBDIR)
 	$(INSTALL_DATA) $(BUILDSLIBPATH) $(DESTDIR)$(LIBDIR)
 
-install-tiger: $(TIGERPRGS)
+# We need a better way to handle OS-dependent manpage installs.
+# Currently, the only cases are the Tiger-specific which.1,
+# and copyfile.3 for Tiger and Leopard, so we add the Tiger
+# case to the existing Tiger install, and add a new Leopard install.
+
+install-tiger: $(TIGERPRGS) | $(DESTDIR)$(BINDIR) \
+    $(DESTDIR)$(MAN1DIR) $(DESTDIR)$(MAN3DIR)
 	$(INSTALL_PROGRAM) $(TIGERPRGS) $(DESTDIR)$(BINDIR)
 	$(INSTALL_MAN) $(TIGERMAN1S) $(DESTDIR)$(MAN1DIR)
+	$(INSTALL_MAN) $(SRCMAN3S) $(DESTDIR)$(MAN3DIR)
+
+install-leopard: | $(DESTDIR)$(MAN3DIR)
+	$(INSTALL_MAN) $(SRCMAN3S) $(DESTDIR)$(MAN3DIR)
 
 test check: $(TESTRUNS) $(XTESTRUNS) test_cmath test_faccessat_setuid_msg
 
@@ -475,4 +494,5 @@ clean: $(MANRUNPREFIX)clean test_clean
 .PHONY: $(TESTRUNPREFIX)stat_all
 .PHONY: install install-headers install-lib install-dlib install-slib
 .PHONY: tiger-bins install-tiger
+.PHONY: leopard-bins install-leopard
 .PHONY: allobjs dlibobjs slibobjs syslibobjs
