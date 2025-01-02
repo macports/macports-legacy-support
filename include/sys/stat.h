@@ -91,6 +91,9 @@ typedef unsigned long long __darwin_ino64_t;
 
 struct stat64 __DARWIN_STRUCT_STAT64;
 
+int	fstatx64_np(int, struct stat64 *, filesec_t);
+int	lstatx64_np(const char *, struct stat64 *, filesec_t);
+int	statx64_np(const char *, struct stat64 *, filesec_t);
 int	fstat64(int, struct stat64 *);
 int	lstat64(const char *, struct stat64 *);
 int	stat64(const char *, struct stat64 *);
