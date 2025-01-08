@@ -51,6 +51,11 @@
 #include "MacportsLegacySupport.h"
 #endif
 
+/* Let gdb see the filesec layout */
+#ifdef _COPYFILE_DEBUG
+#include "filesec_internal.h"
+#endif
+
 #if defined(_COPYFILE_TEST) || __MPLS_LIB_SUPPORT_COPYFILE_10_6__
 
 #include <err.h>
