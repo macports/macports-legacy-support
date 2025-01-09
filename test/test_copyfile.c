@@ -29,6 +29,11 @@
 
 #include <sys/param.h>
 #include <sys/stat.h>
+#include <sys/sysctl.h>
+#include <sys/types.h>
+
+/* sysctl to check whether we're running natively (not Rosetta) */
+#define SYSCTL_NATIVE "sysctl.proc_native"
 
 /* Set up condition for testing the compatibility wrappers. */
 #if !defined(__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__) \
@@ -58,10 +63,28 @@ typedef struct dummy_ctx_s {
   int dummy;
 } dummy_ctx_t;
 
+/*
+ * 10.4 Rosetta is unable to handle COPYFILE_ACL, so we need to check.
+ */
+#if TEST_TIGER && defined(__ppc__)
+static int
+arch_ok(void)
+{
+  int val = 0;
+  size_t vsiz = sizeof(val);
+
+  if (sysctlbyname(SYSCTL_NATIVE, &val, &vsiz, NULL, 0) < 0) return -1;
+  return val;
+}
+#else /* not possibly 10.4 Rosetta */
+static int arch_ok(void) { return 1;}
+#endif
+
 int
 main(int argc, char *argv[])
 {
-  int verbose = 0, debug = 0;
+  int verbose = 0;
+  copyfile_flags_t test_flags = COPYFILE_ALL;
   char *debugenv;
   copyfile_state_t state, state_test;
   dummy_ctx_t ctx = {0}, *ctxp;
@@ -74,7 +97,7 @@ main(int argc, char *argv[])
   if (argc > 1 && !strcmp(argv[1], "-v")) verbose = 1;
   if (argc > 1 && !strcmp(argv[1], "-d")) {
     verbose = 1;
-    debug = COPYFILE_DEBUG;
+    test_flags |= COPYFILE_DEBUG;
   }
 
   (void) snprintf(dest, sizeof(dest), "%s/%s-%u", TEST_TEMP, name, pid);
@@ -83,12 +106,17 @@ main(int argc, char *argv[])
     printf("%s starting.\n", name);
     printf("  %s -> %s\n", argv[0], dest);
   }
-  if (debug) {
+  if (test_flags & COPYFILE_DEBUG) {
     if ((debugenv = getenv("COPYFILE_DEBUG"))) {
       printf("    Debugging enabled, level (COPYFILE_DEBUG) = %s\n", debugenv);
     } else {
       printf("    Debugging enabled, COPYFILE_DEBUG env var not set\n");
     }
+  }
+
+  if (!arch_ok()) {
+    if (verbose) printf("    Avoiding COPYFILE_ACL due to Rosetta bug\n");
+    test_flags &= ~COPYFILE_ACL;
   }
 
   if (stat(argv[0], &ourstat)) {
@@ -127,7 +155,7 @@ main(int argc, char *argv[])
     return 1;
   }
 
-  if (copyfile(argv[0], dest, state, COPYFILE_ALL | debug)) {
+  if (copyfile(argv[0], dest, state, test_flags)) {
     perror("copyfile() failed");
     return 1;
   }
