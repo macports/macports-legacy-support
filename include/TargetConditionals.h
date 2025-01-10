@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021
+ * Copyright (c) 2025
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -14,39 +14,137 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-
-/*
- * TARGET_OS_SIMULATOR replaced TARGET_IPHONE_SIMULATOR and is not defined in older os versions
- */
-
 #include_next <TargetConditionals.h>
 
-#ifndef TARGET_OS_OSX
-#  define TARGET_OS_OSX               1
+#ifndef __MPLS_TARGETCONDITIONALS__
+#define __MPLS_TARGETCONDITIONALS__
+
+/*
+ * Provide defaults for target macros not defined in earlier SDKs.
+ * Defaulting to zero is OK in almost all cases, since anything which needs
+ * to be nonzero will have been defined nonzero.  The one exception is
+ * TARGET_OS_OSX, which is sometimes undefined, or even sometimes defined
+ * as 0, so we unconditionally define it as 1 here.
+ *
+ * This list is copied almost verbatim (except for the TARGET_OS_OSX definition
+ * as noted) from the SDK 15 TargetConditionals.h
+ */
+
+#ifndef TARGET_OS_MAC
+    #define TARGET_OS_MAC        0
 #endif
-/* We never support these OSes */
-#ifndef TARGET_OS_SIMULATOR
-#  define TARGET_OS_SIMULATOR         0
+
+#undef TARGET_OS_OSX
+    #define TARGET_OS_OSX        1
+
+#ifndef TARGET_OS_IPHONE
+    #define TARGET_OS_IPHONE     0
 #endif
+
 #ifndef TARGET_OS_IOS
-#  define TARGET_OS_IOS               0
+    #define TARGET_OS_IOS        0
 #endif
-#ifndef TARGET_OS_TV
-#  define TARGET_OS_TV                0
-#endif
+
 #ifndef TARGET_OS_WATCH
-#  define TARGET_OS_WATCH             0
+    #define TARGET_OS_WATCH      0
 #endif
-#ifndef TARGET_OS_DRIVERKIT
-#  define TARGET_OS_DRIVERKIT         0
+
+#ifndef TARGET_OS_TV
+    #define TARGET_OS_TV         0
 #endif
+
+#ifndef TARGET_OS_SIMULATOR
+    #define TARGET_OS_SIMULATOR  0
+#endif
+
+#ifndef TARGET_OS_EMBEDDED
+    #define TARGET_OS_EMBEDDED   0
+#endif
+
+#ifndef TARGET_OS_RTKIT
+    #define TARGET_OS_RTKIT      0
+#endif
+
 #ifndef TARGET_OS_MACCATALYST
-#  define TARGET_OS_MACCATALYST       0
+    #define TARGET_OS_MACCATALYST 0
 #endif
-/* If not defined, OS will never support ARM */
+
+#ifndef TARGET_OS_VISION
+    #define TARGET_OS_VISION     0
+#endif
+
+#ifndef TARGET_OS_UIKITFORMAC
+    #define TARGET_OS_UIKITFORMAC 0
+#endif
+
+#ifndef TARGET_OS_DRIVERKIT
+    #define TARGET_OS_DRIVERKIT 0
+#endif 
+
+#ifndef TARGET_OS_WIN32
+    #define TARGET_OS_WIN32     0
+#endif
+
+#ifndef TARGET_OS_WINDOWS
+    #define TARGET_OS_WINDOWS   0
+#endif
+
+
+
+#ifndef TARGET_OS_LINUX
+    #define TARGET_OS_LINUX     0
+#endif
+
+#ifndef TARGET_CPU_PPC
+    #define TARGET_CPU_PPC      0
+#endif
+
+#ifndef TARGET_CPU_PPC64
+    #define TARGET_CPU_PPC64    0
+#endif
+
+#ifndef TARGET_CPU_68K
+    #define TARGET_CPU_68K      0
+#endif
+
+#ifndef TARGET_CPU_X86
+    #define TARGET_CPU_X86      0
+#endif
+
+#ifndef TARGET_CPU_X86_64
+    #define TARGET_CPU_X86_64   0
+#endif
+
 #ifndef TARGET_CPU_ARM
-#  define TARGET_CPU_ARM              0
+    #define TARGET_CPU_ARM      0
 #endif
+
 #ifndef TARGET_CPU_ARM64
-#  define TARGET_CPU_ARM64            0
+    #define TARGET_CPU_ARM64    0
 #endif
+
+#ifndef TARGET_CPU_MIPS
+    #define TARGET_CPU_MIPS     0
+#endif
+
+#ifndef TARGET_CPU_SPARC
+    #define TARGET_CPU_SPARC    0
+#endif
+
+#ifndef TARGET_CPU_ALPHA
+    #define TARGET_CPU_ALPHA    0
+#endif
+
+#ifndef TARGET_ABI_USES_IOS_VALUES
+    #define TARGET_ABI_USES_IOS_VALUES  (!TARGET_CPU_X86_64 || (TARGET_OS_IPHONE && !TARGET_OS_MACCATALYST))
+#endif
+
+#ifndef TARGET_IPHONE_SIMULATOR
+    #define TARGET_IPHONE_SIMULATOR     TARGET_OS_SIMULATOR /* deprecated */
+#endif
+
+#ifndef TARGET_OS_NANO
+    #define TARGET_OS_NANO              TARGET_OS_WATCH /* deprecated */
+#endif
+
+#endif /* __MPLS_TARGETCONDITIONALS__ */
