@@ -26,11 +26,16 @@
 #include <sys/fcntl.h>
 #include <sys/param.h>
 #include <sys/stat.h>
+#include <sys/sysctl.h>
+#include <sys/types.h>
 
 /* Make sure we always have a "struct stat64" */
 #if !__MPLS_HAVE_STAT64
 struct stat64 __DARWIN_STRUCT_STAT64;
 #endif
+
+/* sysctl to check whether we're running natively (not Rosetta) */
+#define SYSCTL_NATIVE "sysctl.proc_native"
 
 /* Structure accommodating both struct stat sizes, with padding for check */
 typedef struct safe_stat_s  {
@@ -53,6 +58,25 @@ static const uint64_t pad_val = 0xDEADBEEFDEADBEEFULL;
 static const char *source = __FILE__;
 static const char *source_link = __FILE__ "_link";
 static char dir[MAXPATHLEN], rel_base[MAXPATHLEN], rel_link[MAXPATHLEN];
+
+/*
+ * 10.4 Rosetta is unable to handle fstatx_np(), so we need to check.
+ */
+#if (!defined(__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__) \
+     || __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1050) \
+    && defined(__ppc__)
+static int
+arch_ok(void)
+{
+  int val = 0;
+  size_t vsiz = sizeof(val);
+
+  if (sysctlbyname(SYSCTL_NATIVE, &val, &vsiz, NULL, 0) < 0) return -1;
+  return val;
+}
+#else /* not possibly 10.4 Rosetta */
+static int arch_ok(void) { return 1;}
+#endif
 
 static void
 stat_init(int ino64)
@@ -446,14 +470,18 @@ main(int argc, char *argv[])
   assert(S_ISLNK(get_mode(0)) && "lstatx_np expected symlink");
   check_copy(0, 1);
 
-  if (verbose) printf("  testing 'fstatx_np'\n");
-  /* Use fopen() to steer clear of open()/close() variant issues. */
-  assert((fp = fopen(source_link, "r")) != NULL && "open of source failed");
-  stat_init(0);
-  stat_err = fstatx_np(fileno(fp), &stat_buf.s.s, fsec);
-  if (check_err("fstatx_np")) return 1;
-  assert(S_ISREG(get_mode(0)) && "fstat expected regular file");
-  check_copy(0, 0);
+  if (arch_ok()) {
+    if (verbose) printf("  testing 'fstatx_np'\n");
+    /* Use fopen() to steer clear of open()/close() variant issues. */
+    assert((fp = fopen(source_link, "r")) != NULL && "open of source failed");
+    stat_init(0);
+    stat_err = fstatx_np(fileno(fp), &stat_buf.s.s, fsec);
+    if (check_err("fstatx_np")) return 1;
+    assert(S_ISREG(get_mode(0)) && "fstat expected regular file");
+    check_copy(0, 0);
+  } else {
+    if (verbose) printf("  avoiding 'fstatx_np' due to Rosetta bug\n");
+  }
 
 #if __MPLS_HAVE_STAT64
 
@@ -478,14 +506,19 @@ main(int argc, char *argv[])
   assert(S_ISLNK(get_mode(1)) && "lstatx64_np expected symlink");
   check_copy(1, 1);
 
-  if (verbose) printf("  testing 'fstatx64_np'\n");
-  /* Use fopen() to steer clear of open()/close() variant issues. */
-  assert((fp = fopen(source_link, "r")) != NULL && "open of source failed");
-  stat_init(1);
-  stat_err = fstatx64_np(fileno(fp), &stat_buf.s64.s, fsec);
-  if (check_err("fstatx64_np")) return 1;
-  assert(S_ISREG(get_mode(1)) && "fstatx64_np expected regular file");
-  check_copy(1, 0);
+  if (arch_ok()) {
+    if (verbose) printf("  testing 'fstatx64_np'\n");
+    /* Use fopen() to steer clear of open()/close() variant issues. */
+    assert((fp = fopen(source_link, "r")) != NULL && "open of source failed");
+    stat_init(1);
+    stat_err = fstatx64_np(fileno(fp), &stat_buf.s64.s, fsec);
+    if (check_err("fstatx64_np")) return 1;
+    assert(S_ISREG(get_mode(1)) && "fstatx64_np expected regular file");
+    check_copy(1, 0);
+  } else {
+    if (verbose) printf("  avoiding 'fstatx64_np' due to Rosetta bug\n");
+  }
+
   (void) fclose(fp);
 
 #endif /* __MPLS_HAVE_STAT64 */
