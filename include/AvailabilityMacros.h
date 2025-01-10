@@ -25,6 +25,11 @@
  * is the "#define __IPHONE_COMPAT_VERSION  __IPHONE_NA", which is most
  * likely correct if it matters at all.
  *
+ * Now that we're providing a definition for TARGET_OS_OSX in our wrapper
+ * for TargetConditionals.h, we need to be sure that we don't undo that
+ * action here if it was included by this header.  So we include a condition
+ * for that.
+ *
  * We don't bother with a guard macro here, since repeating the extra wrapper
  * code is a NOP, anyway.
  */
@@ -37,8 +42,9 @@
 
 #include_next <AvailabilityMacros.h>
 
-/* Now restore the original TARGET_OS_OSX. */
-#ifdef __MPLS_TARGET_OS_OSX_UNDEF
+/* Now restore the original TARGET_OS_OSX, unless we overrode it. */
+#if defined(__MPLS_TARGET_OS_OSX_UNDEF) \
+    && !defined(__MPLS_TARGETCONDITIONALS__)
 #undef TARGET_OS_OSX
-#undef __MPLS_TARGET_OS_OSX_UNDEF
 #endif
+#undef __MPLS_TARGET_OS_OSX_UNDEF
