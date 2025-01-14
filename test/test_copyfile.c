@@ -29,11 +29,6 @@
 
 #include <sys/param.h>
 #include <sys/stat.h>
-#include <sys/sysctl.h>
-#include <sys/types.h>
-
-/* sysctl to check whether we're running natively (not Rosetta) */
-#define SYSCTL_NATIVE "sysctl.proc_native"
 
 /* Set up condition for testing the compatibility wrappers. */
 #if !defined(__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__) \
@@ -62,23 +57,6 @@ copyfile_state_t copyfile_init(void);
 typedef struct dummy_ctx_s {
   int dummy;
 } dummy_ctx_t;
-
-/*
- * 10.4 Rosetta is unable to handle COPYFILE_ACL, so we need to check.
- */
-#if TEST_TIGER && defined(__ppc__)
-static int
-arch_ok(void)
-{
-  int val = 0;
-  size_t vsiz = sizeof(val);
-
-  if (sysctlbyname(SYSCTL_NATIVE, &val, &vsiz, NULL, 0) < 0) return -1;
-  return val;
-}
-#else /* not possibly 10.4 Rosetta */
-static int arch_ok(void) { return 1;}
-#endif
 
 int
 main(int argc, char *argv[])
@@ -112,11 +90,6 @@ main(int argc, char *argv[])
     } else {
       printf("    Debugging enabled, COPYFILE_DEBUG env var not set\n");
     }
-  }
-
-  if (!arch_ok()) {
-    if (verbose) printf("    Avoiding COPYFILE_ACL due to Rosetta bug\n");
-    test_flags &= ~COPYFILE_ACL;
   }
 
   if (stat(argv[0], &ourstat)) {
