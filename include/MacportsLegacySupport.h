@@ -51,6 +51,13 @@
 #define __MPLS_64BIT 0
 #endif
 
+/* True for Apple-only ppc build */
+#if defined(__ppc__) && __APPLE__
+#define __MPLS_APPLE_PPC__            1
+#else
+#define __MPLS_APPLE_PPC__            0
+#endif
+
 /*
  * More concise and more comprehensive target OS definition, to simplify
  * many conditionals.
@@ -320,6 +327,10 @@
 /* *stat() functions for 64-bit-inode variants (missing in 10.4) */
 #define __MPLS_SDK_SUPPORT_STAT64__      (__MPLS_SDK_MAJOR < 1050)
 #define __MPLS_LIB_SUPPORT_STAT64__      (__MPLS_TARGET_OSVER < 1050)
+
+/* fstatx_np() malfunctions on 10.4 Rosetta */
+#define __MPLS_LIB_FIX_TIGER_ROSETTA__   (__MPLS_TARGET_OSVER < 1050 \
+                                          && __MPLS_APPLE_PPC__)
 
 /* Compound macros, bundling functionality needed by multiple single features. */
 #define __MPLS_LIB_NEED_BEST_FCHDIR__    (__MPLS_LIB_SUPPORT_ATCALLS__ \
