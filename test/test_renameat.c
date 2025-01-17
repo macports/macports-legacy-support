@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Frederick H. G. Wright II <fw@fwright.net>
+ * Copyright (c) 2025 Frederick H. G. Wright II <fw@fwright.net>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -18,12 +18,14 @@
  * Currently this is just an "almost dummy" test, just to verify that
  * renameat() is declared in the expected header and defined in the
  * library (if needed).
+ *
+ * The declaration of renameat() is actually in sys/stdio.h, but that's
+ * included by stdio.h, so we test it there.
  */
 
-#include <sys/stdio.h>  /* Where renameat() should be declared */
+#include <stdio.h>
 
 /*
- * Reference renameat() before other includes, to check proper include.
  * This is *not* static, to keep it from being optimized out, and thereby
  * forcing a reference to the library or system renameat().
  */
