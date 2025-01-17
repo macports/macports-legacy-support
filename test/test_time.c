@@ -172,6 +172,14 @@ main(int argc, char *argv[])
       printf("%llu\n", val);
     }
 
+    printf("Testing clock_gettime_nsec_np()\n");
+    for (c = 0; ++c < 10;) {
+      printf("CLOCK_MONOTONIC_RAW (%d) ", CLOCK_MONOTONIC_RAW);
+      assert((val = clock_gettime_nsec_np(CLOCK_MONOTONIC_RAW)) != 0
+             && "CLOCK_MONOTONIC_RAW failed");
+      printf("%llu\n", val);
+    }
+
   {
     pthread_t t1, t2, t3, t4;
     int sleep1 = 100;
