@@ -20,6 +20,8 @@
 
 #if __MPLS_LIB_SUPPORT_GETTIME__
 
+#include <errno.h>
+#include <stddef.h>
 #include <time.h>
 
 #include <sys/time.h>
@@ -137,6 +139,24 @@ int clock_getres( clockid_t clk_id, struct timespec *ts )
     }
   }
   return ret;
+}
+
+int
+clock_settime(clockid_t clk_id, const struct timespec *ts)
+{
+  struct timeval tv;
+
+  switch (clk_id) {
+
+  case CLOCK_REALTIME:
+    tv.tv_sec = ts->tv_sec;
+    tv.tv_usec = ts->tv_nsec / 1000;
+    return settimeofday(&tv, NULL);
+
+  default:
+    errno = EINVAL;
+    return -1;
+  }
 }
 
 #endif /* __MPLS_LIB_SUPPORT_GETTIME__ */
