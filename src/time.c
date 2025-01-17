@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018 Chris Jones <jonesc@macports.org>
+ * Copyright (c) 2025 Frederick H. G. Wright II <fw@fwright.net>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -14,9 +15,12 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include "time.h"
+/* MP support header */
+#include "MacportsLegacySupport.h"
 
 #if __MPLS_LIB_SUPPORT_GETTIME__
+
+#include <time.h>
 
 #include <sys/time.h>
 #include <sys/sysctl.h>
@@ -27,9 +31,17 @@
 #include <mach/mach_time.h>
 #include <mach/thread_act.h>
 
-#define BILLION  1000000000L
-#define MILLION  1000000L
-#define THOUSAND 1000L
+#define BILLION32 1000000000U
+#define BILLION64 1000000000ULL
+
+/* Interim implementation of clock_gettime_nsec_np() as wrapper */
+uint64_t
+clock_gettime_nsec_np(clockid_t clk_id)
+{
+  struct timespec ts;
+  if (clock_gettime(clk_id, &ts)) return 0;
+  return ts.tv_sec * BILLION64 + ts.tv_nsec;
+}
 
 int clock_gettime( clockid_t clk_id, struct timespec *ts )
 {
@@ -90,8 +102,8 @@ int clock_gettime( clockid_t clk_id, struct timespec *ts )
         if ( kr != KERN_SUCCESS ) { return kr; }
       }
       uint64_t tdiff =  mach_absolute_time() * ( timebase.numer / timebase.denom );
-      ts->tv_sec  = tdiff / BILLION;
-      ts->tv_nsec = tdiff % BILLION;
+      ts->tv_sec  = tdiff / BILLION32;
+      ts->tv_nsec = tdiff % BILLION32;
       ret = 0;
     }
   }
@@ -110,7 +122,7 @@ int clock_getres( clockid_t clk_id, struct timespec *ts )
     {
       // return 1us precision
       ts->tv_sec  = 0;
-      ts->tv_nsec = THOUSAND;
+      ts->tv_nsec = 1000;
       ret         = 0;
     }
     else if ( CLOCK_MONOTONIC_RAW == clk_id ||
@@ -130,6 +142,8 @@ int clock_getres( clockid_t clk_id, struct timespec *ts )
 #endif /* __MPLS_LIB_SUPPORT_GETTIME__ */
 
 #if __MPLS_LIB_SUPPORT_TIMESPEC_GET__
+
+#include <time.h>
 
 int timespec_get(struct timespec *ts, int base)
 {

@@ -80,6 +80,10 @@ __MP__BEGIN_DECLS
 extern int clock_gettime( clockid_t clk_id, struct timespec *ts );
 extern int clock_getres ( clockid_t clk_id, struct timespec *ts );
 
+#if !defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE)
+__uint64_t clock_gettime_nsec_np(clockid_t __clock_id);
+#endif
+
 __MP__END_DECLS
 
 #endif /* __MPLS_SDK_SUPPORT_GETTIME__ */
