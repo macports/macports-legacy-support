@@ -37,6 +37,11 @@
 /* Include the primary system stdio.h */
 #include_next <stdio.h>
 
+/* Extend Apple's 10.10+ include of sys/stdio.h to earlier versions. */
+#if __MPLS_SDK_MAJOR < 101000
+#include <sys/stdio.h>
+#endif /* __MPLS_SDK_MAJOR < 101000 */
+
 /* Additional functionality provided by:
  * POSIX.1-2008
  */
