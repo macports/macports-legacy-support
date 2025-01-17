@@ -59,6 +59,7 @@ _CLOCK_REALTIME = 0,
 #define CLOCK_REALTIME _CLOCK_REALTIME
 _CLOCK_MONOTONIC = 6,
 #define CLOCK_MONOTONIC _CLOCK_MONOTONIC
+
 #if !defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE)
 _CLOCK_MONOTONIC_RAW = 4,
 #define CLOCK_MONOTONIC_RAW _CLOCK_MONOTONIC_RAW
@@ -68,7 +69,8 @@ _CLOCK_UPTIME_RAW = 8,
 #define CLOCK_UPTIME_RAW _CLOCK_UPTIME_RAW
 _CLOCK_UPTIME_RAW_APPROX = 9,
 #define CLOCK_UPTIME_RAW_APPROX _CLOCK_UPTIME_RAW_APPROX
-#endif
+#endif /* !defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE) */
+
 _CLOCK_PROCESS_CPUTIME_ID = 12,
 #define CLOCK_PROCESS_CPUTIME_ID _CLOCK_PROCESS_CPUTIME_ID
 _CLOCK_THREAD_CPUTIME_ID = 16
@@ -83,6 +85,8 @@ extern int clock_getres ( clockid_t clk_id, struct timespec *ts );
 #if !defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE)
 __uint64_t clock_gettime_nsec_np(clockid_t __clock_id);
 #endif
+
+extern int clock_settime(clockid_t clk_id, const struct timespec *ts);
 
 __MP__END_DECLS
 
