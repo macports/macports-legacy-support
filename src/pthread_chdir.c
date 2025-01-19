@@ -85,7 +85,7 @@ pthread_fchdir_np(int fd)
 #include <pthread.h>
 
 int
-best_fchdir(int dirfd)
+__mpls_best_fchdir(int dirfd)
 {
   return pthread_fchdir_np(dirfd);
 }
@@ -95,7 +95,7 @@ best_fchdir(int dirfd)
 #include <unistd.h>
 
 int
-best_fchdir(int dirfd)
+__mpls_best_fchdir(int dirfd)
 {
 /*
  * Accept dirfd == -1 (return to process cwd in __pthread_fchdir),
