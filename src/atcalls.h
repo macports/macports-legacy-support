@@ -43,25 +43,25 @@
 #define PROTECT_ERRNO(what)  ({ int __err = (errno); what; errno = __err; })
 #define ERR_ON(code, what)   if (what) { errno = (code); return -1; }
 
-int best_fchdir(int dirfd);
+int __mpls_best_fchdir(int dirfd);
 
 #define _ATCALL(fd, p, onerr, what)                             \
     ({  typeof(what) __result;                                  \
         int oldCWD = -1;                                        \
         if (fd != AT_FDCWD && p[0] != '/') {                    \
             oldCWD = open(".", O_RDONLY);                       \
-            if (best_fchdir(-1) < 0 && oldCWD != -1) {          \
+            if (__mpls_best_fchdir(-1) < 0 && oldCWD != -1) {   \
                 close(oldCWD); oldCWD = -1;                     \
             }                                                   \
-            if (best_fchdir(fd) < 0) {                          \
-                PROTECT_ERRNO(best_fchdir(oldCWD));             \
+            if (__mpls_best_fchdir(fd) < 0) {                   \
+                PROTECT_ERRNO(__mpls_best_fchdir(oldCWD));      \
                 if (oldCWD != -1) PROTECT_ERRNO(close(oldCWD)); \
                 return onerr;                                   \
             }                                                   \
         }                                                       \
         __result = (what);                                      \
         if (fd != AT_FDCWD && p[0] != '/') {                    \
-            PROTECT_ERRNO(best_fchdir(oldCWD));                 \
+            PROTECT_ERRNO(__mpls_best_fchdir(oldCWD));          \
             if (oldCWD != -1) PROTECT_ERRNO(close(oldCWD));     \
         }                                                       \
         __result;                                               \
