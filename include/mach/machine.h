@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022
+ * Copyright (c) 2025
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -17,6 +17,10 @@
 /* Include the primary system mach/machine.h */
 #include_next <mach/machine.h>
 
+#ifndef CPU_TYPE_ARM
+#define CPU_TYPE_ARM            ((cpu_type_t) 12)
+#endif
+
 #ifndef CPU_SUBTYPE_ARM64E
-#define CPU_SUBTYPE_ARM64E              ((cpu_subtype_t) 2)
+#define CPU_SUBTYPE_ARM64E      ((cpu_subtype_t) 2)
 #endif
