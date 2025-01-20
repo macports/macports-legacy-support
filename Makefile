@@ -194,17 +194,24 @@ STRNCHKRUNS      := $(patsubst \
 # Tests that are only run manually
 MANTESTDIR       = manual_tests
 MANTESTPREFIX    = $(MANTESTDIR)/
+MANLIBTESTPFX    = $(MANTESTDIR)/libtest_
 MANRUNPREFIX     = mantest_
 MANTESTLDFLAGS   = $(ALLLDFLAGS)
-MANTESTSRCS_C   := $(wildcard $(MANTESTPREFIX)*.c)
+MANALLTESTSRCS_C := $(wildcard $(MANTESTPREFIX)*.c)
+MANLIBTESTSRCS_C := $(wildcard $(MANLIBTESTPFX)*.c)
+MANTESTSRCS_C   := $(filter-out $(MANLIBTESTSRCS_C),$(MANALLTESTSRCS_C))
 MANTESTSRCS_CPP := $(wildcard $(MANTESTPREFIX)*.cpp)
 MANTESTOBJS_C   := $(patsubst %.c,%.o,$(MANTESTSRCS_C))
+MANLIBTESTOBJS_C := $(patsubst %.c,%.o,$(MANLIBTESTSRCS_C))
 MANTESTOBJS_CPP := $(patsubst %.cpp,%.o,$(MANTESTSRCS_CPP))
 MANTESTPRGS_C   := $(patsubst %.c,%,$(MANTESTSRCS_C))
+MANLIBTESTPRGS_C := $(patsubst %.c,%,$(MANLIBTESTSRCS_C))
 MANTESTPRGS_CPP := $(patsubst %.cpp,%,$(MANTESTSRCS_CPP))
 MANTESTPRGS      = $(MANTESTPRGS_C) $(MANTESTPRGS_CPP)
 MANTESTRUNS     := $(patsubst \
                      $(MANTESTPREFIX)%,$(MANRUNPREFIX)%,$(MANTESTPRGS))
+MANLIBTESTRUNS  := $(patsubst \
+                     $(MANLIBTESTPFX)%,$(MANRUNPREFIX)%,$(MANLIBTESTPRGS_C))
 
 TIGERSRCDIR      = tiger_only/src
 TIGERSRCS       := $(wildcard $(TIGERSRCDIR)/*.c)
@@ -272,7 +279,7 @@ $(XLIBPATH): $(BUILDSYSLIBPATH)
 	$(MKINSTALLDIRS) $(XLIBDIR)
 	cd $(XLIBDIR) && ln -sf ../$< ../$@
 
-$(TESTOBJS_C): %.o: %.c $(ALLHEADERS)
+$(TESTOBJS_C) $(MANTESTOBJS_C) $(MANLIBTESTOBJS_C): %.o: %.c $(ALLHEADERS)
 	$(CC) -c -std=c99 -I$(SRCINCDIR) $(TESTCFLAGS) $< -o $@
 
 $(TESTPRGS_C): %: %.o $(BUILDDLIBPATH)
@@ -293,16 +300,15 @@ $(XTESTOBJS_C): %.o: %.c $(ALLHEADERS)
 $(XTESTPRGS_C): %: %.o
 	$(CC) $(XTESTLDFLAGS) $< -o $@
 
-# The "darwin_c" tests need the -fno-builtin option with some compilers.
-# It shouldn't hurt the other manual tests.
-$(MANTESTOBJS_C): %.o: %.c $(ALLHEADERS)
-	$(CC) -c -std=c99 -fno-builtin -I$(SRCINCDIR) $(TESTCFLAGS) $< -o $@
-
 # Currently, the manual C tests don't require the library
 $(MANTESTPRGS_C): %: %.o
 	$(CC) $(MANTESTLDFLAGS) $< -o $@
 
-# But the manual C++ tests *do* require the library
+# Except for the ones that do
+$(MANLIBTESTPRGS_C): %: %.o $(BUILDDLIBPATH)
+	$(CC) $(TESTLDFLAGS) $< $(TESTLIBS) -o $@
+
+# And the manual C++ tests *do* require the library
 $(MANTESTOBJS_CPP): %.o: %.cpp $(ALLHEADERS)
 	$(CXX) -c -I$(SRCINCDIR) $(ALLCXXFLAGS) $< -o $@
 
@@ -360,6 +366,9 @@ $(TESTSYSRUNS): $(TESTRUNPREFIX)%: $(TESTNAMEPREFIX)% | $(TEST_TEMP)
 	$< $(TEST_ARGS)
 
 $(XTESTRUNS): $(XTESTRUNPREFIX)%: $(XTESTNAMEPREFIX)% | $(TEST_TEMP)
+	$< $(TEST_ARGS)
+
+$(MANLIBTESTRUNS): $(MANRUNPREFIX)%: $(MANLIBTESTPFX)% | $(TEST_TEMP)
 	$< $(TEST_ARGS)
 
 # The "dirfuncs_compat" test includes the fdopendir test source
@@ -468,6 +477,19 @@ test_all: test test_static test_syslib
 
 xtest: $(XTESTRUNS)
 
+# Targets to build tests without running them
+
+build_tests: $(TESTPRGS_C) $(XTESTPRGS_C)
+
+build_tests_static: $(TESTSPRGS_C)
+
+build_tests_syslib: $(TESTSYSPRGS_C)
+
+build_tests_all: build_tests build_tests_static build_tests_syslib
+
+# Dummy target for placeholder in scripts
+dummy:
+
 xtest_clean:
 	$(RM) $(XTESTDIR)/*.o $(XTESTPRGS)
 
@@ -496,3 +518,4 @@ clean: $(MANRUNPREFIX)clean test_clean
 .PHONY: tiger-bins install-tiger
 .PHONY: leopard-bins install-leopard
 .PHONY: allobjs dlibobjs slibobjs syslibobjs
+.PHONY: build_tests build_tests_static build_tests_syslib build_tests_all dummy

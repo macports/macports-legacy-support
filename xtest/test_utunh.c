@@ -15,33 +15,26 @@
  */
 
 /*
- * Currently this is just an "almost dummy" test, just to verify that
- * renameat() is declared in the expected header and defined in the
- * library (if needed).
+ * This test is just a minimal test to verify the include of net/if_utun.h.
  *
- * The declaration of renameat() is actually in sys/stdio.h, but that's
- * included by stdio.h, so we test it there.
+ * It's a poorly written header that fails to include other headers that
+ * it needs, so we have to add them.  This has nothing to do with the
+ * pre-10.6 issue.
  */
 
 #include <stdio.h>
 
-/*
- * This is *not* static, to keep it from being optimized out, and thereby
- * forcing a reference to the library or system renameat().
- */
-int
-our_renameat(int olddirfd, const char *oldpath,
-             int newdirfd, const char *newpath)
-{
-  return renameat(olddirfd, oldpath, newdirfd, newpath);
-}
+#include <sys/socket.h>  /* For struct sockaddr_storage in 10.8 */
+#include <sys/types.h>   /* For u_int64_t */
 
+#include <net/if_utun.h>
+ 
 int
 main(int argc, char *argv[])
 {
   (void) argc; (void) argv;
 
-  (void) our_renameat;
+  printf("net/if_utun.h successfully included\n");
 
   return 0;
 }

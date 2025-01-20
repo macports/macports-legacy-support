@@ -172,7 +172,7 @@ int main(int argc, char **argv)
     if (!strcmp(cwdbuf1, cwdbuf2))
     {
         fprintf(stderr, "Post-traversal chdir(..) silently failed to change directory!\n");
-        fprintf(stderr, "Replacing best_fchdir() in fdopendir() with fchdir() fixes this badly.\n");
+        fprintf(stderr, "Replacing __mpls_best_fchdir() in fdopendir() with fchdir() fixes this badly.\n");
         fprintf(stderr, "Using _ATCALL for opendir fixes this properly.\n");
         rc = EXIT_FAILURE;
     }

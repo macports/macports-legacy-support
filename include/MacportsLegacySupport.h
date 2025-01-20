@@ -51,6 +51,13 @@
 #define __MPLS_64BIT 0
 #endif
 
+/* True for Apple-only ppc build */
+#if defined(__ppc__) && __APPLE__
+#define __MPLS_APPLE_PPC__            1
+#else
+#define __MPLS_APPLE_PPC__            0
+#endif
+
 /*
  * More concise and more comprehensive target OS definition, to simplify
  * many conditionals.
@@ -320,6 +327,21 @@
 /* *stat() functions for 64-bit-inode variants (missing in 10.4) */
 #define __MPLS_SDK_SUPPORT_STAT64__      (__MPLS_SDK_MAJOR < 1050)
 #define __MPLS_LIB_SUPPORT_STAT64__      (__MPLS_TARGET_OSVER < 1050)
+
+/* fstatx_np() malfunctions on 10.4 Rosetta */
+#define __MPLS_LIB_FIX_TIGER_ROSETTA__   (__MPLS_TARGET_OSVER < 1050 \
+                                          && __MPLS_APPLE_PPC__)
+
+/*
+ * pthread_[f]chdir_np(), avail as syscalls but not functions in 10.5-10.11
+ * No SDK provides prototypes for these functions, so the SDK flag here
+ * just indicates that it's plausible.
+ */
+#define __MPLS_SDK_ALLOW_PTHREAD_CHDIR__   (__MPLS_SDK_MAJOR >= 1050)
+#define __MPLS_LIB_SUPPORT_PTHREAD_CHDIR__ (__MPLS_TARGET_OSVER < 101200 \
+                                            && __MPLS_TARGET_OSVER >= 1050)
+/* Also provide dummy (failing) versions for 10.4 and 10.5+ SDK */
+#define __MPLS_LIB_DUMMY_PTHREAD_CHDIR__   (__MPLS_TARGET_OSVER < 1050)
 
 /* Compound macros, bundling functionality needed by multiple single features. */
 #define __MPLS_LIB_NEED_BEST_FCHDIR__    (__MPLS_LIB_SUPPORT_ATCALLS__ \

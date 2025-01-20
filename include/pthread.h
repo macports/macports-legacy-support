@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018
+ * Copyright (c) 2025
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -31,12 +31,20 @@
 #define PTHREAD_RWLOCK_INITIALIZER {_PTHREAD_RWLOCK_SIG_init, {0}}
 #endif
 
-
 __MP__BEGIN_DECLS
 
 #if __MPLS_SDK_SUPPORT_PTHREAD_SETNAME_NP__
 int pthread_setname_np(const char *);
 #endif /* __MPLS_SDK_SUPPORT_PTHREAD_SETNAME_NP__ */
+
+#if __MPLS_SDK_ALLOW_PTHREAD_CHDIR__ \
+    && defined(_MACPORTS_LEGACY_PTHREAD_CHDIR) \
+    && _MACPORTS_LEGACY_PTHREAD_CHDIR
+
+int pthread_chdir_np(const char* path);
+int pthread_fchdir_np(int fd);
+
+#endif /* __MPLS_SDK_ALLOW_PTHREAD_CHDIR__ && ... */
 
 __MP__END_DECLS
 

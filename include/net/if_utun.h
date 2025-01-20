@@ -15,33 +15,23 @@
  */
 
 /*
- * Currently this is just an "almost dummy" test, just to verify that
- * renameat() is declared in the expected header and defined in the
- * library (if needed).
+ * This is a wrapper header for net/if_utun.h, to handle its absence in
+ * the <10.6 SDKs.  In those cases, we provide a substitute; otherwise we
+ * just pass through the SDK header.
  *
- * The declaration of renameat() is actually in sys/stdio.h, but that's
- * included by stdio.h, so we test it there.
+ * This makes no representation as to whether the features referenced by
+ * the definitions in this header actually work in <10.6.
+ *
+ * We don't bother with a guard macro, since all we do here is include
+ * other headers which have their own guard macros, and we don't define
+ * anything here.
  */
 
-#include <stdio.h>
+/* Do our SDK-related setup */
+#include <_macports_extras/sdkversion.h>
 
-/*
- * This is *not* static, to keep it from being optimized out, and thereby
- * forcing a reference to the library or system renameat().
- */
-int
-our_renameat(int olddirfd, const char *oldpath,
-             int newdirfd, const char *newpath)
-{
-  return renameat(olddirfd, oldpath, newdirfd, newpath);
-}
-
-int
-main(int argc, char *argv[])
-{
-  (void) argc; (void) argv;
-
-  (void) our_renameat;
-
-  return 0;
-}
+#if defined(__MPLS_SDK_MAJOR) && __MPLS_SDK_MAJOR < 1060
+#include <_macports_extras/tiger_leopard/net/if_utun.h>
+#else
+#include_next <net/if_utun.h>
+#endif
