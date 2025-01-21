@@ -36,7 +36,7 @@ Wrapped headers and replaced functions are:
   </tr>
   <tr>
     <td><code>copyfile.h</code></td>
-    <td>Wraps <code>copyfile_state_get</code> to support <code>COPYFILE_STATE_COPIED</code></td>
+    <td>Completely redone to provide 10.6 version</td>
     <td>OSX10.5</td>
   </tr>
   <tr>
@@ -60,7 +60,7 @@ Wrapped headers and replaced functions are:
     <td>OSX10.5</td>
   </tr>
   <tr>
-    <td rowspan="2"><code>pthread.h</code></td>
+    <td rowspan="3"><code>pthread.h</code></td>
     <td>Adds <code>PTHREAD_RWLOCK_INITIALIZER</code></td>
     <td>OSX10.4</td>
   </tr>
@@ -69,10 +69,18 @@ Wrapped headers and replaced functions are:
     <td>OSX10.5</td>
   </tr>
   <tr>
-    <td><code>stdio.h</code></td>
+    <td>Adds <code>pthread_chdir_np</code> and <code>pthread_fchdir_np</code> functions</td>
+    <td>OSX10.11</td>
+  </tr>
+  <tr>
+    <td rowspan="2"><code>stdio.h</code></td>
     <td>Adds <code>dprintf</code>, <code>vdprintf</code>, <code>getline</code>, <code>getdelim</code>,
         <code>open_memstream</code>, and <code>fmemopen</code> functions</td>
     <td>OSX10.6, OSX10.12 (open_memstream)</td>
+  </tr>
+  <tr>
+    <td>Adds include of <code>sys/stdio.h</code.</td>
+    <td>OSX10.9</td>
   </tr>
   <tr>
     <td rowspan="4"><code>stdlib.h</code></td>
@@ -102,9 +110,17 @@ Wrapped headers and replaced functions are:
     <td>OSX10.4(8)</td>
   </tr>
   <tr>
-    <td><code>time.h</code></td>
-    <td>Adds functions <code>clock_gettime</code>(macOS10.11) and <code>timespec_get</code>(macOS10.14). Defines <code>TIME_UTC</code> (macOS10.14). Declares <code>asctime_r</code>, <code>ctime_r</code>, <code>gmtime_r</code>, and <code>localtime_r</code> functions that are otherwise hidden in the presence of <code>_ANSI_SOURCE</code>, <code>_POSIX_C_SOURCE</code>, or <code>_XOPEN_SOURCE</code> (OSX10.4)</td>
-    <td>OSX10.4(11,14)</td>
+    <td rowspan="3"><code>time.h</code></td>
+    <td>Declares <code>asctime_r</code>, <code>ctime_r</code>, <code>gmtime_r</code>, and <code>localtime_r</code> functions that are otherwise hidden in the presence of <code>_ANSI_SOURCE</code>, <code>_POSIX_C_SOURCE</code>, or <code>_XOPEN_SOURCE</code></td>
+    <td>OSX10.4</td>
+  </tr>
+  <tr>
+    <td>Adds functions <code>clock_gettime</code>, clock_gettime_nsec_np</code> and <code>clock_settime</code></td>
+    <td>OSX10.11</td>
+  </tr>
+  <tr>
+    <td>Adds function <code>timespec_get</code></td>
+    <td>OSX10.14</td>
   </tr>
   <tr>
     <td><code>wchar.h</code></td>
@@ -122,6 +138,11 @@ Wrapped headers and replaced functions are:
     <td><code>net/if.h</code></td>
     <td>Adds include <code>sys/socket.h</code>, expected on current macOS systems</td>
     <td>OSX10.8</td>
+  </tr>
+  <tr>
+    <td><code>net/if_utun.h</code></td>
+    <td>Added when missing</td>
+    <td>OSX10.5</td>
   </tr>
   <tr>
     <td><code>xlocale/_wchar.h</code></td>
@@ -241,10 +262,8 @@ Wrapped headers and replaced functions are:
   </tr>
   <tr>
     <td><code>TargetConditionals.h</code></td>
-    <td>Adds definitions for <code>TARGET_CPU_ARM</code>, <code>TARGET_CPU_ARM64</code>,
-        <code>TARGET_OS_SIMULATOR</code>, <code>TARGET_OS_IOS</code>, <code>TARGET_OS_TV</code>,
-        <code>TARGET_OS_WATCH</code> and <code>TARGET_OS_OSX</code> if needed.</td>
-    <td>OSX10.10</td>
+    <td>Adds definitions for all TARGET_* definitions as listed in 15.x SDK, if needed.</td>
+    <td>???</td>
   </tr>
   <tr>
     <td><code>-</code></td>
