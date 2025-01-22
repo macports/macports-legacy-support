@@ -315,6 +315,8 @@ $(MANTESTOBJS_CPP): %.o: %.cpp $(ALLHEADERS)
 $(MANTESTPRGS_CPP): %: %.o $(BUILDDLIBPATH)
 	$(CXX) $(TESTLDFLAGS) $< $(TESTLIBS) -o $@
 
+alltestobjs: $(TESTOBJS_C) $(XTESTOBJS_C) $(MANTESTOBJS_C) $(MANLIBTESTOBJS_C)
+
 $(TIGERPRGS): %: %.c
 	$(CC) $$($(ARCHTOOL)) $< -o $@
 
@@ -517,5 +519,5 @@ clean: $(MANRUNPREFIX)clean test_clean
 .PHONY: install install-headers install-lib install-dlib install-slib
 .PHONY: tiger-bins install-tiger
 .PHONY: leopard-bins install-leopard
-.PHONY: allobjs dlibobjs slibobjs syslibobjs
+.PHONY: allobjs dlibobjs slibobjs syslibobjs alltestobjs
 .PHONY: build_tests build_tests_static build_tests_syslib build_tests_all dummy
