@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Frederick H. G. Wright II <fw@fwright.net>
+ * Copyright (c) 2025 Frederick H. G. Wright II <fw@fwright.net>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -174,9 +174,65 @@ main(int argc, char *argv[])
 
     printf("Testing clock_gettime_nsec_np()\n");
     for (c = 0; ++c < 10;) {
+      printf("CLOCK_REALTIME (%d) ", CLOCK_REALTIME);
+      assert((val = clock_gettime_nsec_np(CLOCK_REALTIME)) != 0
+             && "CLOCK_REALTIME failed");
+      printf("%llu\n", val);
+    }
+
+    printf("Testing clock_gettime_nsec_np()\n");
+    for (c = 0; ++c < 10;) {
+      printf("CLOCK_MONOTONIC (%d) ", CLOCK_MONOTONIC);
+      assert((val = clock_gettime_nsec_np(CLOCK_MONOTONIC)) != 0
+             && "CLOCK_MONOTONIC failed");
+      printf("%llu\n", val);
+    }
+
+    printf("Testing clock_gettime_nsec_np()\n");
+    for (c = 0; ++c < 10;) {
       printf("CLOCK_MONOTONIC_RAW (%d) ", CLOCK_MONOTONIC_RAW);
       assert((val = clock_gettime_nsec_np(CLOCK_MONOTONIC_RAW)) != 0
              && "CLOCK_MONOTONIC_RAW failed");
+      printf("%llu\n", val);
+    }
+
+    printf("Testing clock_gettime_nsec_np()\n");
+    for (c = 0; ++c < 10;) {
+      printf("CLOCK_MONOTONIC_RAW_APPROX (%d) ", CLOCK_MONOTONIC_RAW_APPROX);
+      assert((val = clock_gettime_nsec_np(CLOCK_MONOTONIC_RAW_APPROX)) != 0
+             && "CLOCK_MONOTONIC_RAW_APPROX failed");
+      printf("%llu\n", val);
+    }
+
+    printf("Testing clock_gettime_nsec_np()\n");
+    for (c = 0; ++c < 10;) {
+      printf("CLOCK_UPTIME_RAW (%d) ", CLOCK_UPTIME_RAW);
+      assert((val = clock_gettime_nsec_np(CLOCK_UPTIME_RAW)) != 0
+             && "CLOCK_UPTIME_RAW failed");
+      printf("%llu\n", val);
+    }
+
+    printf("Testing clock_gettime_nsec_np()\n");
+    for (c = 0; ++c < 10;) {
+      printf("CLOCK_UPTIME_RAW_APPROX (%d) ", CLOCK_UPTIME_RAW_APPROX);
+      assert((val = clock_gettime_nsec_np(CLOCK_UPTIME_RAW_APPROX)) != 0
+             && "CLOCK_UPTIME_RAW_APPROX failed");
+      printf("%llu\n", val);
+    }
+
+    printf("Testing clock_gettime_nsec_np()\n");
+    for (c = 0; ++c < 10;) {
+      printf("CLOCK_PROCESS_CPUTIME_ID (%d) ", CLOCK_PROCESS_CPUTIME_ID);
+      assert((val = clock_gettime_nsec_np(CLOCK_PROCESS_CPUTIME_ID)) != 0
+             && "CLOCK_PROCESS_CPUTIME_ID failed");
+      printf("%llu\n", val);
+    }
+
+    printf("Testing clock_gettime_nsec_np()\n");
+    for (c = 0; ++c < 10;) {
+      printf("CLOCK_THREAD_CPUTIME_ID (%d) ", CLOCK_THREAD_CPUTIME_ID);
+      assert((val = clock_gettime_nsec_np(CLOCK_THREAD_CPUTIME_ID)) != 0
+             && "CLOCK_THREAD_CPUTIME_ID failed");
       printf("%llu\n", val);
     }
 
