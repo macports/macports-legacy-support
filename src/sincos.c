@@ -19,7 +19,7 @@
 
 #include <math.h>
 
-#if __MPLS_LIB_SUPPORT_COSSIN__
+#if __MPLS_LIB_SUPPORT_SINCOS__
 
 /* Following is borrowed from math.h on macOS 10.9+ */
 
@@ -64,4 +64,4 @@ struct __double2 __sincos_stret(double __x)
     return __stret;
 }
 
-#endif /* __MPLS_LIB_SUPPORT_COSSIN__ */
+#endif /* __MPLS_LIB_SUPPORT_SINCOS__ */

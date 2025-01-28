@@ -199,7 +199,7 @@ __MP__END_DECLS
 
 #include_next <math.h>
 
-#if __MPLS_SDK_SUPPORT_COSSIN__
+#if __MPLS_SDK_SUPPORT_SINCOS__
 
 /* Following is borrowed from math.h on macOS 10.9+ */
 
@@ -212,7 +212,7 @@ extern void __sincosf(float __x, float *__sinp, float *__cosp);
 extern void __sincos(double __x, double *__sinp, double *__cosp);
 __MP__END_DECLS
 
-#endif /* __MPLS_SDK_SUPPORT_COSSIN__ */
+#endif /* __MPLS_SDK_SUPPORT_SINCOS__ */
 
 #if __MPLS_SDK_SUPPORT_LLROUND__
 
