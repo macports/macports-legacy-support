@@ -291,9 +291,9 @@
 #define __MP_LEGACY_SUPPORT_CXX11_CMATH__ 0
 #endif
 
-/* cossin */
-#define __MPLS_SDK_SUPPORT_COSSIN__   (__MPLS_SDK_MAJOR < 1090)
-#define __MPLS_LIB_SUPPORT_COSSIN__   (__MPLS_TARGET_OSVER < 1090)
+/* sincos */
+#define __MPLS_SDK_SUPPORT_SINCOS__   (__MPLS_SDK_MAJOR < 1090)
+#define __MPLS_LIB_SUPPORT_SINCOS__   (__MPLS_TARGET_OSVER < 1090)
 
 /* ffsl */
 #define __MPLS_SDK_SUPPORT_FFSL__     (__MPLS_SDK_MAJOR < 1050)
