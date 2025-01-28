@@ -151,100 +151,113 @@ clock_gettime_nsec_np(clockid_t clk_id)
   return mach_time * (tbinfo.numer / tbinfo.denom);
 }
 
-int clock_gettime( clockid_t clk_id, struct timespec *ts )
+int
+clock_gettime(clockid_t clk_id, struct timespec *ts)
 {
-  int ret = -1;
-  if ( ts )
-  {
-    if      ( CLOCK_REALTIME == clk_id )
-    {
-      struct timeval tv;
-      ret = gettimeofday(&tv, NULL);
-      ts->tv_sec  = tv.tv_sec;
-      ts->tv_nsec = tv.tv_usec * 1000;
-    }
-    else if ( CLOCK_MONOTONIC == clk_id )
-    {
-      struct timeval boottime;
-      size_t boottime_len = sizeof(boottime);
-      int bt_mib[] = {CTL_KERN, KERN_BOOTTIME};
-      size_t bt_miblen = sizeof(bt_mib) / sizeof(bt_mib[0]);
-      ret = sysctl(bt_mib, bt_miblen, &boottime, &boottime_len, NULL, 0);
-      if (ret != KERN_SUCCESS) { return ret; }
-      struct timeval tv;
-      ret = gettimeofday(&tv, NULL);
-      timersub(&tv, &boottime, &tv);
-      ts->tv_sec  = tv.tv_sec;
-      ts->tv_nsec = tv.tv_usec * 1000;
-      ret = 0;
-    }
-    else if ( CLOCK_PROCESS_CPUTIME_ID == clk_id )
-    {
-      struct rusage ru;
-      ret = getrusage(RUSAGE_SELF, &ru);
-      timeradd(&ru.ru_utime, &ru.ru_stime, &ru.ru_utime);
-      ts->tv_sec  = ru.ru_utime.tv_sec;
-      ts->tv_nsec = ru.ru_utime.tv_usec * 1000;
-    }
-    else if ( CLOCK_THREAD_CPUTIME_ID == clk_id )
-    {
-      mach_msg_type_number_t count = THREAD_BASIC_INFO_COUNT;
-      thread_basic_info_data_t info;
+  int ret;
+  uint64_t mach_time;
+  struct timeval tod, bt;
+  struct rusage ru;
+  time_value_t ut, st;
+  static mach_timebase_info_data_t tbinfo;
 
-      thread_port_t thread = mach_thread_self();
-      ret = thread_info(thread, THREAD_BASIC_INFO, (thread_info_t) &info, &count);
-      mach_port_deallocate(mach_task_self(), thread);
+  switch (clk_id) {
 
-      time_value_add(&info.user_time, &info.system_time);
-      ts->tv_sec  = info.user_time.seconds;
-      ts->tv_nsec = info.user_time.microseconds * 1000;
+  case CLOCK_REALTIME:
+    ret = gettimeofday(&tod, NULL);
+    ts->tv_sec = tod.tv_sec; ts->tv_nsec = tod.tv_usec * 1000;
+    return ret;
+
+  case CLOCK_MONOTONIC:
+    ret = get_boot_and_tod(&bt, &tod);
+    timersub(&tod, &bt, &tod);
+    TIMEVAL_TO_TIMESPEC(&tod, ts);
+    return ret;
+
+  case CLOCK_PROCESS_CPUTIME_ID:
+    ret = getrusage(RUSAGE_SELF, &ru);
+    timeradd(&ru.ru_utime, &ru.ru_stime, &ru.ru_utime);
+    TIMEVAL_TO_TIMESPEC(&ru.ru_utime, ts);
+    return ret;
+
+  case CLOCK_THREAD_CPUTIME_ID:
+    ret = get_thread_usage(&ut, &st);
+    ts->tv_sec = ut.seconds + st.seconds;
+    ts->tv_nsec = (ut.microseconds + st.microseconds) * 1000;
+    if (ts->tv_nsec >= BILLION32) {
+      ++ts->tv_sec;
+      ts->tv_nsec -= BILLION32;
     }
-    else if ( CLOCK_MONOTONIC_RAW == clk_id ||
-              CLOCK_MONOTONIC_RAW_APPROX == clk_id ||
-              CLOCK_UPTIME_RAW == clk_id ||
-              CLOCK_UPTIME_RAW_APPROX == clk_id )
-    {
-      static mach_timebase_info_data_t timebase;
-      if ( 0 == timebase.numer || 0 == timebase.denom ) {
-        const kern_return_t kr = mach_timebase_info( &timebase );
-        if ( kr != KERN_SUCCESS ) { return kr; }
-      }
-      uint64_t tdiff =  mach_absolute_time() * ( timebase.numer / timebase.denom );
-      ts->tv_sec  = tdiff / BILLION32;
-      ts->tv_nsec = tdiff % BILLION32;
-      ret = 0;
-    }
+    return ret;
+
+  /* For now these are all the same, matching CLOCK_UPTIME_RAW */
+  case CLOCK_MONOTONIC_RAW:
+  case CLOCK_MONOTONIC_RAW_APPROX:
+  case CLOCK_UPTIME_RAW:
+  case CLOCK_UPTIME_RAW_APPROX:
+    mach_time = mach_absolute_time();
+    break;
+
+  default:
+    errno = EINVAL;
+    return -1;
   }
-  return ret;
+
+  /* Obtain and cache mach_time scale factor (as a rational) */
+  if (!tbinfo.numer || !tbinfo.denom) {
+    if (mach_timebase_info(&tbinfo)) return -1;
+  }
+
+  /* Scale mach_time to nanoseconds and return it as a timespec */
+
+  /* Note that 1/1 is a common case worth special-casing */
+  if (tbinfo.numer != tbinfo.denom) {
+    /* Temporary low-accuracy conversion */
+    /* Multiplying first overflows on some old platforms */
+    mach_time *= tbinfo.numer / tbinfo.denom;
+  }
+  ts->tv_sec = mach_time / BILLION32;
+  ts->tv_nsec = mach_time % BILLION32;
+  return 0;
 }
 
-int clock_getres( clockid_t clk_id, struct timespec *ts )
+int
+clock_getres(clockid_t clk_id, struct timespec *res)
 {
-  int ret = -1;
-  if ( ts )
-  {
-    if ( CLOCK_REALTIME  == clk_id ||
-         CLOCK_MONOTONIC == clk_id ||
-         CLOCK_PROCESS_CPUTIME_ID == clk_id ||
-         CLOCK_THREAD_CPUTIME_ID == clk_id)
-    {
-      // return 1us precision
-      ts->tv_sec  = 0;
-      ts->tv_nsec = 1000;
-      ret         = 0;
-    }
-    else if ( CLOCK_MONOTONIC_RAW == clk_id ||
-              CLOCK_MONOTONIC_RAW_APPROX == clk_id ||
-              CLOCK_UPTIME_RAW == clk_id ||
-              CLOCK_UPTIME_RAW_APPROX == clk_id )
-    {
-      // return 1ns precision
-      ts->tv_sec  = 0;
-      ts->tv_nsec = 1;
-      ret         = 0;
-    }
+  static mach_timebase_info_data_t tbinfo;
+
+  /* All results are less than one second. */
+  res->tv_sec = 0;
+
+  switch (clk_id) {
+
+  /* Everything based on timeval has microsecond resolution. */
+  case CLOCK_REALTIME:
+  case CLOCK_MONOTONIC:
+  case CLOCK_PROCESS_CPUTIME_ID:
+  case CLOCK_THREAD_CPUTIME_ID:
+    res->tv_nsec = 1000;
+    return 0;
+
+  /* Everything based on mach_time has scale-dependent resolution. */
+  case CLOCK_MONOTONIC_RAW:
+  case CLOCK_MONOTONIC_RAW_APPROX:
+  case CLOCK_UPTIME_RAW:
+  case CLOCK_UPTIME_RAW_APPROX:
+    break;
+
+  default:
+    errno = EINVAL;
+    return -1;
   }
-  return ret;
+
+  /* Obtain and cache mach_time scale factor (as a rational) */
+  if (!tbinfo.numer || !tbinfo.denom) {
+    if (mach_timebase_info(&tbinfo)) return -1;
+  }
+  /* Compute nanoseconds per unit, rounding up */
+  res->tv_nsec = (tbinfo.numer + tbinfo.denom - 1) / tbinfo.denom;
+  return 0;
 }
 
 int
