@@ -21,6 +21,7 @@
 #if __MPLS_LIB_SUPPORT_GETTIME__
 
 #include <errno.h>
+#include <math.h>
 #include <stddef.h>
 #include <time.h>
 
@@ -33,6 +34,7 @@
 #include <mach/mach_time.h>
 #include <mach/thread_act.h>
 
+/* Constants for scaling time values */
 #define BILLION32 1000000000U
 #define BILLION64 1000000000ULL
 
@@ -93,6 +95,240 @@ get_thread_usage(time_value_t *ut, time_value_t *st)
   return 0;
 }
 
+/*
+ * Mach timebase scaling
+ *
+ * Many time types use "mach_time", which is a timescale based on arbitrary
+ * units that can be converted to nanoseconds via a separately provided
+ * scale factor.  Nothing in the Apple documentation of this function
+ * indicates that this scale factor should be constant, and Apple's own
+ * code for these functions fetches it on every call, but in 10.12+, that
+ * function itself caches the scale factor.  Because it's 10.12+, it's
+ * known not to be applied to PowerPC, but if the scale factor for PowerPC
+ * is ever updated at all after the initial boot (which is highly unlikely),
+ * it would only change it by a small amount due to thermal variations, so we
+ * assume that cacheing it is safe.
+ *
+ * The scale factor is provided as a rational number for maximum accuracy,
+ * with a 32-bit numerator and a 32-bit denominator.  The observed values
+ * on a few systems are:
+ *   PowerPC:  1000000000 / <frequency in Hz>
+ *   x86:               1 / 1
+ *   arm64 (M1):      125 / 3
+ * In the x86 case, the true scaling happens at a lower level, with mach_time
+ * always being in nanoseconds.  The numbers in the arm64 case are sufficiently
+ * "round" that it's clear that they're based on a nominal value, rather than a
+ * measured value.  Only PowerPC actually measures the frequency, with a
+ * value that changes slightly (on the order of 2ppm) based on temperature.
+ *
+ * To actually realize the full accuracy of the rational representation, it's
+ * necessary to compute nanoseconds as:
+ *   nanoseconds = (mach_time * numerator) / denominator
+ * However, with some scale-factor values (e.g., PowerPC), the intermediate
+ * result easily overflows 64 bits.  Overflow can be avoided by using:
+ *   nanoseconds = mach_time * (numerator / denominator)
+ * But this results in a significant inaccuracy in the PowerPC case.
+ * Apple's code takes the former approach, but it's only present in OS
+ * versions that don't support PowerPC, and neither the x86 nor the arm64
+ * values are overflow-prone.
+ *
+ * The only way to get maximum accuracy while avoiding overflow is to use
+ * double-precision arithmetic (or floating point, but that's currently being
+ * avoided).  The conceptually straightforward approach would be to do
+ * the same multiply-first calculation as above, but with double-precision
+ * multiply and divide.  But double-precision divide is messy and slow, so
+ * it's attractive to consider a multiply-only approach.
+ *
+ * Another possibility would be to scale the upper and lower halves of the
+ * mach time separately and combine the results, but this would require
+ * incorporating the remainder from the upper divide into the lower divide,
+ * again making things messy and slow, and again suggesting the multiply-only
+ * approach.
+ *
+ * With a 64-bit normalized multiplier and a corresponding shift (effectively
+ * software floating-point), the accuracy would be extreme, but that would
+ * require a variable double-precision shift in addition to the double-precision
+ * multiply.  If we instead use an unnormalized multiplier chosen for the
+ * desired result scale, then no shifting is needed (other than some 32-bit
+ * shifts that aren't really shifts).  With the actual observed scale factors,
+ * the maximum error from this approach is on the order of a couple of parts
+ * per trillion.
+ *
+ * In this approach, the most convenient scaling is with a 64-bit multiplier
+ * whose binary point is in the middle, i.e. a 32-bit integer part and a 32-bit
+ * fractional part.  Multiplying this by the 64-bit mach_time yields a 128-bit
+ * product whose middle 64 bits are the result in nanoseconds.  This scale
+ * factor is easily computed as:
+ *   scale = (numerator << 32) / denominator
+ * or, with rounding:
+ *   scale = ((numerator << 32) + denominator / 2) / denominator
+ * On x86, the scale becomes 1.0, which we check for when used to avoid the
+ * superfluous multiply.
+ *
+ * Although a fully-normalized multipler is inconvenient, we can improve the
+ * accuracy some with a small and simple tweak.  Since the maximum numerator
+ * fits in 30 bits, we can shift it left an additional two bits when computing
+ * the multiplier, producing a final nanosecond result shifted by two bits.
+ * To get the full 64-bit nanosecond result, we'd need to right shift the high
+ * 96 bits of the 128-bit product by two bits.  But since it takes over 143
+ * years of uptime to overflow 62 bits, we can skip the upper part and just
+ * right shift the middle 64 bits of the product.
+ *
+ * Out of maximum paranoia, we check for the case where the numerator doesn't
+ * fit in 30 bits, and apply the left shift *after* the divide, to get the
+ * expected scale.  We don't expect this code to be reached in practice.
+ *
+ * For the clock_gettime() case, the ultimate result is a timespec, with
+ * separate seconds and nanoseconds.  The straightforward mutiply-only
+ * approach doesn't work out so well in this case, either in range or in
+ * error magnitude, so we just compute nanoseconds as in the former case,
+ * and then divide to get seconds.  To get the nanosecond remainder, we
+ * multiply back and subtract, which is faster than using the modulo operator,
+ * and none of the *div() functions provdes the needed mixed-precision
+ * operation needed here.
+ *
+ * The other use of mach_time scaling is for clock_getres(), where the
+ * scale factor actually represents the resolution of all clocks based on
+ * mach time.  This function isn't time-critical, but for consistency
+ * we just use the same flow as the other cases, with cacheing.
+ *
+ * The primary cached scale factors in all cases are the derived factors,
+ * not the OS-provided mach scale.  But for maximum consistency, we also
+ * share a single cached copy of the mach scale across all uses.
+ *
+ * Apple's code has a somewhat convoluted structure in order to do the
+ * mach scaling setup prior to obtaining the mach time value, presumably
+ * to ensure that the time obtained is as close as possible to the function's
+ * return, even though the scale factor is cached.  It also avoids obtaining
+ * the scale factor for clocks that don't need it, in spite of the cacheing.
+ * Here we just always do the setup first, regardless of clock type, but
+ * defer the reporting of any related error until the need is known.
+ */
+
+#define EXTRA_SHIFT 2
+#define HIGH_SHIFT (32 + EXTRA_SHIFT)
+#define HIGH_BITS (64 - HIGH_SHIFT)
+#define NUMERATOR_MASK (~0U << HIGH_BITS)
+#define NULL_SCALE (1ULL << HIGH_SHIFT)
+
+/* The cached mach_time scale factors */
+static mach_timebase_info_data_t mach_scale = {0};
+static uint64_t mach_mult = 0;
+static struct timespec res_mach = {0, 0};
+
+/* And the fixed microsecond resolution for timeval-based clocks */
+static struct timespec res_micros = {0, 1000};
+
+/* Obtain the mach_time scale factor if needed, or return an error */
+static int
+get_mach_scale(void)
+{
+  if (mach_scale.numer) return 0;
+  if (mach_timebase_info(&mach_scale) != KERN_SUCCESS) {
+    /* On failure, make sure resulting scale is 0 */
+    mach_scale.numer = 0;
+    mach_scale.denom = 1;
+    return -1;
+  }
+  return 0;
+}
+
+/* Set up the mach->nanoseconds multiplier, or return an error */
+static int
+setup_mach_mult(void)
+{
+  int ret = get_mach_scale();
+
+  /* Set up main multiplier (0 if error getting scale) */
+  if (!(mach_scale.numer & NUMERATOR_MASK)) {
+    mach_mult = (((uint64_t) mach_scale.numer << HIGH_SHIFT)
+                 + mach_scale.denom / 2) / mach_scale.denom;
+  } else {
+    mach_mult = ((((uint64_t) mach_scale.numer << 32)
+                 + mach_scale.denom / 2) / mach_scale.denom) << EXTRA_SHIFT;
+  }
+
+  /* Also set up resolution as nanos/count rounded up */
+  res_mach.tv_nsec = (mach_mult + (NULL_SCALE - 1)) >> HIGH_SHIFT;
+
+  return ret;
+}
+
+#define MASK64LOW 0xFFFFFFFFULL
+
+/*
+ * 64x64->128 multiply, returning middle 64
+ *
+ * This code has been verified with a floating-zeroes/ones test, comparing
+ * the results to Python's built-in multiprecision arithmetic.
+ */
+static inline uint64_t
+mmul64(uint64_t a, uint64_t b)
+{
+  /* Split the operands into halves */
+  uint32_t a_hi = a >> 32, a_lo = a;
+  uint32_t b_hi = b >> 32, b_lo = b;
+  uint64_t high, mid1, mid2, low;
+
+  /* Compute the four cross products */
+  low = (uint64_t) a_lo * b_lo;
+  mid1 = (uint64_t) a_lo * b_hi;
+  mid2 = (uint64_t) a_hi * b_lo;
+  high = (uint64_t) a_hi * b_hi;
+
+  /* Fold the results (must be in carry-propagation order) */
+  mid1 += (mid2 & MASK64LOW) + (low >> 32);
+  high += (mid1 >> 32) + (mid2 >> 32);  /* Shifts must precede add */
+
+  /* Combine and return the two middle chunks */
+  return (high << 32) + (mid1 & MASK64LOW);
+}
+
+/* Convert mach units to nanoseconds */
+static inline uint64_t
+mach2nanos(uint64_t mach_time)
+{
+  /* If 1:1 scaling (x86), return as is */
+  if (mach_mult == NULL_SCALE) return mach_time;
+
+  /* Otherwise, return appropriately scaled value */
+  return mmul64(mach_time, mach_mult) >> EXTRA_SHIFT;
+}
+
+/* Convert nanoseconds to timespec */
+static inline void
+nanos2timespec(uint64_t nanos, struct timespec *ts)
+{
+  uint64_t secs;
+  uint32_t lownanos, lowsecs, nanorem;
+
+  /* Divide nanoseconds to get seconds */
+  secs = nanos / BILLION32;
+
+  /*
+   * Multiply & subtract (all 32-bit) to get nanosecond remainder.
+   *
+   * This is more efficient than using the '%' operator on all platforms,
+   * and there's no version of *div() for a 64-bit dividend and 32-bit
+   * divisor.  Since the divisor, and hence the remainder, are known to
+   * fit in 32 bits, the entire computation can be done in 32 bits.
+   */
+  lownanos = nanos; lowsecs = secs;
+  nanorem = lownanos - lowsecs * BILLION32;
+
+  /* Return values as a timespec */
+  ts->tv_sec = secs; ts->tv_nsec = nanorem;
+}
+
+/* Convert mach units to timespec */
+static inline void
+mach2timespec(uint64_t mach_time, struct timespec *ts)
+{
+  nanos2timespec(mach2nanos(mach_time), ts);
+}
+
+/* Now the actual public functions */
+
 uint64_t
 clock_gettime_nsec_np(clockid_t clk_id)
 {
@@ -100,7 +336,9 @@ clock_gettime_nsec_np(clockid_t clk_id)
   struct timeval tod, bt;
   struct rusage ru;
   time_value_t ut, st;
-  static mach_timebase_info_data_t tbinfo;
+
+  /* Set up mach scaling early, whether we need it or not. */
+  if (!mach_mult) setup_mach_mult();
 
   switch (clk_id) {
 
@@ -136,30 +374,21 @@ clock_gettime_nsec_np(clockid_t clk_id)
     return 0;
   }
 
-  /* Obtain and cache mach_time scale factor (as a rational) */
-  if (!tbinfo.numer || !tbinfo.denom) {
-    if (mach_timebase_info(&tbinfo)) return 0;
-  }
-
-  /* Scale mach_time to nanoseconds and return it */
-
-  /* Note that 1/1 is a common case worth special-casing */
-  if (tbinfo.numer == tbinfo.denom) return mach_time;
-
-  /* Temporary low-accuracy conversion */
-  /* Multiplying first overflows on some old platforms */
-  return mach_time * (tbinfo.numer / tbinfo.denom);
+  /* Return scaled mach_time (0 if scale unobtained) */
+  return mach2nanos(mach_time);
 }
 
 int
 clock_gettime(clockid_t clk_id, struct timespec *ts)
 {
-  int ret;
-  uint64_t mach_time;
+  int ret, mserr = 0;
   struct timeval tod, bt;
   struct rusage ru;
   time_value_t ut, st;
-  static mach_timebase_info_data_t tbinfo;
+  uint64_t mach_time;
+
+  /* Set up mach scaling early, whether we need it or not. */
+  if (!mach_mult) mserr = setup_mach_mult();
 
   switch (clk_id) {
 
@@ -203,31 +432,18 @@ clock_gettime(clockid_t clk_id, struct timespec *ts)
     return -1;
   }
 
-  /* Obtain and cache mach_time scale factor (as a rational) */
-  if (!tbinfo.numer || !tbinfo.denom) {
-    if (mach_timebase_info(&tbinfo)) return -1;
-  }
-
-  /* Scale mach_time to nanoseconds and return it as a timespec */
-
-  /* Note that 1/1 is a common case worth special-casing */
-  if (tbinfo.numer != tbinfo.denom) {
-    /* Temporary low-accuracy conversion */
-    /* Multiplying first overflows on some old platforms */
-    mach_time *= tbinfo.numer / tbinfo.denom;
-  }
-  ts->tv_sec = mach_time / BILLION32;
-  ts->tv_nsec = mach_time % BILLION32;
-  return 0;
+  /* Convert to timespec & return (error if scale couldn't be obtained) */
+  mach2timespec(mach_time, ts);
+  return mserr;
 }
 
 int
 clock_getres(clockid_t clk_id, struct timespec *res)
 {
-  static mach_timebase_info_data_t tbinfo;
+  int mserr = 0;
 
-  /* All results are less than one second. */
-  res->tv_sec = 0;
+  /* Set up mach scale factor, whether we need it or not. */
+  if (!res_mach.tv_nsec) mserr = setup_mach_mult();
 
   switch (clk_id) {
 
@@ -236,10 +452,10 @@ clock_getres(clockid_t clk_id, struct timespec *res)
   case CLOCK_MONOTONIC:
   case CLOCK_PROCESS_CPUTIME_ID:
   case CLOCK_THREAD_CPUTIME_ID:
-    res->tv_nsec = 1000;
+    *res = res_micros;
     return 0;
 
-  /* Everything based on mach_time has scale-dependent resolution. */
+  /* Everything based on mach_time has mach resolution. */
   case CLOCK_MONOTONIC_RAW:
   case CLOCK_MONOTONIC_RAW_APPROX:
   case CLOCK_UPTIME_RAW:
@@ -251,13 +467,9 @@ clock_getres(clockid_t clk_id, struct timespec *res)
     return -1;
   }
 
-  /* Obtain and cache mach_time scale factor (as a rational) */
-  if (!tbinfo.numer || !tbinfo.denom) {
-    if (mach_timebase_info(&tbinfo)) return -1;
-  }
-  /* Compute nanoseconds per unit, rounding up */
-  res->tv_nsec = (tbinfo.numer + tbinfo.denom - 1) / tbinfo.denom;
-  return 0;
+  /* Return proper scale (error if scale couldn't be obtained  */
+  *res = res_mach;
+  return mserr;
 }
 
 int
