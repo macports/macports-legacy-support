@@ -171,8 +171,9 @@
 /* <net/if.h> include <sys/socket.h> */
 #define __MPLS_SDK_NETIF_SOCKET_FIX__         (__MPLS_SDK_MAJOR < 1090)
 
-/* CMSG_DATA definition in <sys/socket.h> */
-#define __MPLS_SDK_CMSG_DATA_FIX__            (__MPLS_SDK_MAJOR < 1060)
+/* Bad CMSG_DATA definition in 10.5 <sys/socket.h> */
+#define __MPLS_SDK_CMSG_DATA_FIX__            (__MPLS_SDK_MAJOR < 1060 \
+                                               && __MPLS_SDK_MAJOR >= 1050)
 
 /* stpncpy */
 #define __MPLS_SDK_SUPPORT_STPNCPY__          (__MPLS_SDK_MAJOR < 1070)
