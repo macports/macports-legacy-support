@@ -47,11 +47,11 @@
 #ifndef SSIZE_MAX
 # define SSIZE_MAX ((ssize_t) (SIZE_MAX / 2))
 #endif
-#if !HAVE_FLOCKFILE
+#if !defined(HAVE_FLOCKFILE) || !HAVE_FLOCKFILE
 # undef flockfile
 # define flockfile(x) ((void) 0)
 #endif
-#if !HAVE_FUNLOCKFILE
+#if !defined(HAVE_FUNLOCKFILE) || !HAVE_FUNLOCKFILE
 # undef funlockfile
 # define funlockfile(x) ((void) 0)
 #endif

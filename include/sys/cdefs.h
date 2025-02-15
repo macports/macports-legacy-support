@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Frederick H. G. Wright II <fw@fwright.net>
+ * Copyright (c) 2025 Frederick H. G. Wright II <fw@fwright.net>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -148,7 +148,7 @@
 
 /* Provide any needed and missing symbol versioning (10.4) */
 #ifndef __DARWIN_SUF_64_BIT_INO_T
-#if __DARWIN_64_BIT_INO_T
+#if defined(__DARWIN_64_BIT_INO_T) && __DARWIN_64_BIT_INO_T
 #define __DARWIN_SUF_64_BIT_INO_T "$INODE64"
 #else
 #define __DARWIN_SUF_64_BIT_INO_T

@@ -69,7 +69,7 @@ struct memstream
     size_t  *sizeloc;
 };
 
-#if MEMSTREAM_DEBUG
+#if defined(MEMSTREAM_DEBUG) && MEMSTREAM_DEBUG
   static void memstream_print(struct memstream *ms)
   {
       printf("memstream %p {", ms);
