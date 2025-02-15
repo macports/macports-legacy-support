@@ -36,9 +36,9 @@ __MP__BEGIN_DECLS
 
 /*
  * this is the same condition that defines the function prototypes in
- * the GCC <math.h>.
+ * the GCC <math.h>, except for the added defined() check to avoid warnings.
  */
-#if !(__DARWIN_NO_LONG_LONG)
+#if !defined(__DARWIN_NO_LONG_LONG) || !__DARWIN_NO_LONG_LONG
 extern long long int llrint   ( double );
 extern long long int llrintf  ( float );
 extern long long int llrintl  ( long double );

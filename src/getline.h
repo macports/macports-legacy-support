@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) Ian F. Darwin 1986-1995.
  * Software written by Ian F. Darwin and others;
@@ -32,6 +31,6 @@
 # include <stdio.h>
 # include <sys/types.h>
 
-#if !HAVE_DECL_GETLINE
+#if !defined(HAVE_DECL_GETLINE) || !HAVE_DECL_GETLINE
 ssize_t getline(char **dst, size_t *len, FILE *fp);
 #endif /* !HAVE_GETLINE */

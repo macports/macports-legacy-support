@@ -109,7 +109,7 @@ check_copy_std(int link)
   /* Don't check atime, since this test may change it. */
   assert(ts_equal(&stat_buf.s.s.st_mtimespec, &copy->s.s.st_mtimespec));
   assert(ts_equal(&stat_buf.s.s.st_ctimespec, &copy->s.s.st_ctimespec));
-#if __DARWIN_64_BIT_INO_T
+#if defined(__DARWIN_64_BIT_INO_T) && __DARWIN_64_BIT_INO_T
   assert(ts_equal(&stat_buf.s.s.st_birthtimespec,
                   &copy->s.s.st_birthtimespec));
 #endif /* __DARWIN_64_BIT_INO_T */
