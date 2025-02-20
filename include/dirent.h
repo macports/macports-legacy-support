@@ -93,6 +93,9 @@ __MP__END_DECLS
  * without the need for (direct) awareness of SDK versions.  This macro
  * is defined for all SDK versions, but only nonzero when the signature
  * issue exists.
+ *
+ * NOTE:  We need to avoid using 'dirname' as a parameter name, since some
+ * compilers may complain about "shadowing" the 'dirname' function.
  */
 
 __MP__BEGIN_DECLS
@@ -108,12 +111,12 @@ __mpls_alphasort(const struct dirent **d1, const struct dirent **d2)
 }
 
 static inline int
-__mpls_scandir(const char *dirname, struct dirent ***namelist,
-               int (*select)(const struct dirent *),
+__mpls_scandir(const char *dirnam, struct dirent ***namelist,
+               int (*selector)(const struct dirent *),
                int (*compar)(const struct dirent **, const struct dirent **))
 {
-  return scandir(dirname, namelist,
-                 (int (*)(struct dirent *)) select,
+  return scandir(dirnam, namelist,
+                 (int (*)(struct dirent *)) selector,
                  (int (*)(const void *, const void *)) compar);
 }
 
@@ -137,11 +140,11 @@ __mpls_alphasort(const struct dirent **d1, const struct dirent **d2)
 }
 
 static inline int
-__mpls_scandir(const char *dirname, struct dirent ***namelist,
-               int (*select)(const struct dirent *),
+__mpls_scandir(const char *dirnam, struct dirent ***namelist,
+               int (*selector)(const struct dirent *),
                int (*compar)(const struct dirent **, const struct dirent **))
 {
-  return scandir(dirname, namelist, select, compar);
+  return scandir(dirnam, namelist, selector, compar);
 }
 
 #endif /* !__MPLS_SDK_SUPPORT_NEW_SCANDIR__  */
