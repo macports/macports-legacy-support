@@ -33,8 +33,8 @@
 #define _MACPORTS_LEGACY_COMPATIBLE_SCANDIR 1
 #endif
 
+#include <libgen.h>  /* Include this before dirent to check "shadowing" */
 #include <dirent.h>
-#include <libgen.h>
 #include <stddef.h>
 #include <stdio.h>
 /* Check the new public definition. */
