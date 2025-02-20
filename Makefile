@@ -82,7 +82,7 @@ CP              ?= /bin/cp
 
 # Directory for temporary test files
 TEST_TEMP       ?= tst_data
-TESTCFLAGS       = $(ALLCFLAGS) '-DTEST_TEMP="$(TEST_TEMP)"'
+TESTCFLAGS       = -Wshadow $(ALLCFLAGS) '-DTEST_TEMP="$(TEST_TEMP)"'
 
 MKINSTALLDIRS    = install -d -m 755
 INSTALL_PROGRAM  = install -c -m 755
