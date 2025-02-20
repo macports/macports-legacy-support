@@ -65,26 +65,26 @@ stat_init(int ino64)
 }
 
 static void
-copy_stat_std(int link)
+copy_stat_std(int uselink)
 {
-  safe_stat_t *dest = link ? &stat_link_copy : &stat_copy;
+  safe_stat_t *dest = uselink ? &stat_link_copy : &stat_copy;
   dest->s = stat_buf.s;
 }
 
 static void
-copy_stat_64(int link)
+copy_stat_64(int uselink)
 {
-  safe_stat_t *dest = link ? &stat_link_copy : &stat_copy;
+  safe_stat_t *dest = uselink ? &stat_link_copy : &stat_copy;
   dest->s64 = stat_buf.s64;
 }
 
 static void
-copy_stat(int ino64, int link)
+copy_stat(int ino64, int uselink)
 {
   if (!ino64) {
-    copy_stat_std(link);
+    copy_stat_std(uselink);
   } else {
-    copy_stat_64(link);
+    copy_stat_64(uselink);
   }
 }
 
@@ -95,9 +95,9 @@ ts_equal(const struct timespec *a, const struct timespec *b)
 }
 
 static void
-check_copy_std(int link)
+check_copy_std(int uselink)
 {
-  const safe_stat_t *copy = link ? &stat_link_copy : &stat_copy;
+  const safe_stat_t *copy = uselink ? &stat_link_copy : &stat_copy;
 
   assert(stat_buf.s.s.st_dev == copy->s.s.st_dev);
   assert(stat_buf.s.s.st_ino == copy->s.s.st_ino);
@@ -121,9 +121,9 @@ check_copy_std(int link)
 }
 
 static void
-check_copy_64(int link)
+check_copy_64(int uselink)
 {
-  const safe_stat_t *copy = link ? &stat_link_copy : &stat_copy;
+  const safe_stat_t *copy = uselink ? &stat_link_copy : &stat_copy;
 
   assert(stat_buf.s64.s.st_dev == copy->s64.s.st_dev);
   assert(stat_buf.s64.s.st_mode == copy->s64.s.st_mode);
@@ -146,12 +146,12 @@ check_copy_64(int link)
 }
 
 static void
-check_copy(int ino64, int link)
+check_copy(int ino64, int uselink)
 {
   if (!ino64) {
-    check_copy_std(link);
+    check_copy_std(uselink);
   } else {
-    check_copy_64(link);
+    check_copy_64(uselink);
   }
 }
 
@@ -245,11 +245,11 @@ main(int argc, char *argv[])
   assert(S_ISREG(get_mode(0)) && "stat expected regular file");
   copy_stat(0, 0);
 
-  if (verbose) printf("  testing 'stat' of link\n");
+  if (verbose) printf("  testing 'stat' of uselink\n");
   stat_init(0);
   stat_err = stat(source_link, &stat_buf.s.s);
-  if (check_err("stat of link")) return 1;
-  assert(S_ISREG(get_mode(0)) && "stat of link expected regular file");
+  if (check_err("stat of uselink")) return 1;
+  assert(S_ISREG(get_mode(0)) && "stat of uselink expected regular file");
   check_copy(0, 0);
 
   if (verbose) printf("  testing 'lstat'\n");
@@ -278,11 +278,11 @@ main(int argc, char *argv[])
   assert(S_ISREG(get_mode(1)) && "stat64 expected regular file");
   copy_stat(1, 0);
 
-  if (verbose) printf("  testing 'stat64' of link\n");
+  if (verbose) printf("  testing 'stat64' of uselink\n");
   stat_init(1);
   stat_err = stat64(source_link, &stat_buf.s64.s);
-  if (check_err("stat64 of link")) return 1;
-  assert(S_ISREG(get_mode(1)) && "stat64 of link expected regular file");
+  if (check_err("stat64 of uselink")) return 1;
+  assert(S_ISREG(get_mode(1)) && "stat64 of uselink expected regular file");
   check_copy(1, 0);
 
   if (verbose) printf("  testing 'lstat64'\n");
@@ -315,15 +315,15 @@ main(int argc, char *argv[])
   assert(S_ISREG(get_mode(0)) && "fstatat (AT_FDCWD) expected regular file");
   check_copy(0, 0);
 
-  if (verbose) printf("  testing 'fstatat' (AT_FDCWD) of link\n");
+  if (verbose) printf("  testing 'fstatat' (AT_FDCWD) of uselink\n");
   stat_init(0);
   stat_err = fstatat(AT_FDCWD, source_link, &stat_buf.s.s, 0);
-  if (check_err("fstatat (AT_FDCWD) of link")) return 1;
+  if (check_err("fstatat (AT_FDCWD) of uselink")) return 1;
   assert(S_ISREG(get_mode(0))
-         && "fstatat (AT_FDCWD) of link expected regular file");
+         && "fstatat (AT_FDCWD) of uselink expected regular file");
   check_copy(0, 0);
 
-  if (verbose) printf("  testing 'fstatat' (AT_FDCWD) of link (NOFOLLOW)\n");
+  if (verbose) printf("  testing 'fstatat' (AT_FDCWD) of uselink (NOFOLLOW)\n");
   stat_init(0);
   stat_err = fstatat(AT_FDCWD, source_link, &stat_buf.s.s,
                      AT_SYMLINK_NOFOLLOW);
@@ -340,14 +340,14 @@ main(int argc, char *argv[])
   assert(S_ISREG(get_mode(0)) && "fstatat (dir) expected regular file");
   check_copy(0, 0);
 
-  if (verbose) printf("  testing 'fstatat' (dir) of link\n");
+  if (verbose) printf("  testing 'fstatat' (dir) of uselink\n");
   stat_init(0);
   stat_err = fstatat(fd, rel_link, &stat_buf.s.s, 0);
-  if (check_err("fstatat (dir) of link")) return 1;
-  assert(S_ISREG(get_mode(0)) && "fstatat (dir) of link expected regular file");
+  if (check_err("fstatat (dir) of uselink")) return 1;
+  assert(S_ISREG(get_mode(0)) && "fstatat (dir) of uselink expected regular file");
   check_copy(0, 0);
 
-  if (verbose) printf("  testing 'fstatat' (dir) of link (NOFOLLOW)\n");
+  if (verbose) printf("  testing 'fstatat' (dir) of uselink (NOFOLLOW)\n");
   stat_init(0);
   stat_err = fstatat(fd, rel_link, &stat_buf.s.s,
                      AT_SYMLINK_NOFOLLOW);
@@ -373,15 +373,15 @@ main(int argc, char *argv[])
   assert(S_ISREG(get_mode(1)) && "fstatat64 (AT_FDCWD) expected regular file");
   check_copy(1, 0);
 
-  if (verbose) printf("  testing 'fstatat64' (AT_FDCWD) of link\n");
+  if (verbose) printf("  testing 'fstatat64' (AT_FDCWD) of uselink\n");
   stat_init(1);
   stat_err = fstatat64(AT_FDCWD, source_link, &stat_buf.s64.s, 0);
-  if (check_err("fstatat64 (AT_FDCWD) of link")) return 1;
+  if (check_err("fstatat64 (AT_FDCWD) of uselink")) return 1;
   assert(S_ISREG(get_mode(1))
-         && "fstatat64 (AT_FDCWD) of link expected regular file");
+         && "fstatat64 (AT_FDCWD) of uselink expected regular file");
   check_copy(1, 0);
 
-  if (verbose) printf("  testing 'fstatat64' (AT_FDCWD) of link (NOFOLLOW)\n");
+  if (verbose) printf("  testing 'fstatat64' (AT_FDCWD) of uselink (NOFOLLOW)\n");
   stat_init(1);
   stat_err = fstatat64(AT_FDCWD, source_link, &stat_buf.s64.s,
                        AT_SYMLINK_NOFOLLOW);
@@ -398,15 +398,15 @@ main(int argc, char *argv[])
   assert(S_ISREG(get_mode(1)) && "fstatat64 (dir) expected regular file");
   check_copy(1, 0);
 
-  if (verbose) printf("  testing 'fstatat64' (dir) of link\n");
+  if (verbose) printf("  testing 'fstatat64' (dir) of uselink\n");
   stat_init(1);
   stat_err = fstatat64(fd, rel_link, &stat_buf.s64.s, 0);
-  if (check_err("fstatat64 (dir) of link")) return 1;
+  if (check_err("fstatat64 (dir) of uselink")) return 1;
   assert(S_ISREG(get_mode(1))
-         && "fstatat64 (dir) of link expected regular file");
+         && "fstatat64 (dir) of uselink expected regular file");
   check_copy(1, 0);
 
-  if (verbose) printf("  testing 'fstatat64' (dir) of link (NOFOLLOW)\n");
+  if (verbose) printf("  testing 'fstatat64' (dir) of uselink (NOFOLLOW)\n");
   stat_init(1);
   stat_err = fstatat64(fd, rel_link, &stat_buf.s64.s,
                        AT_SYMLINK_NOFOLLOW);
@@ -432,11 +432,11 @@ main(int argc, char *argv[])
   assert(S_ISREG(get_mode(0)) && "statx_np expected regular file");
   check_copy(0, 0);
 
-  if (verbose) printf("  testing 'statx_np' of link\n");
+  if (verbose) printf("  testing 'statx_np' of uselink\n");
   stat_init(0);
   stat_err = statx_np(source_link, &stat_buf.s.s, fsec);
-  if (check_err("statx_np of link")) return 1;
-  assert(S_ISREG(get_mode(0)) && "statx_np of link expected regular file");
+  if (check_err("statx_np of uselink")) return 1;
+  assert(S_ISREG(get_mode(0)) && "statx_np of uselink expected regular file");
   check_copy(0, 0);
 
   if (verbose) printf("  testing 'lstatx_np'\n");
@@ -475,11 +475,11 @@ main(int argc, char *argv[])
   assert(S_ISREG(get_mode(1)) && "statx64_np expected regular file");
   check_copy(1, 0);
 
-  if (verbose) printf("  testing 'statx64_np' of link\n");
+  if (verbose) printf("  testing 'statx64_np' of uselink\n");
   stat_init(1);
   stat_err = statx64_np(source_link, &stat_buf.s64.s, fsec);
-  if (check_err("statx64_np of link")) return 1;
-  assert(S_ISREG(get_mode(1)) && "statx64_np of link expected regular file");
+  if (check_err("statx64_np of uselink")) return 1;
+  assert(S_ISREG(get_mode(1)) && "statx64_np of uselink expected regular file");
   check_copy(1, 0);
 
   if (verbose) printf("  testing 'lstatx64_np'\n");
