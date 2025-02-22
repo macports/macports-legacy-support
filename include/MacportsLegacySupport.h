@@ -157,7 +157,11 @@
 #define __MPLS_SDK_SUPPORT_APPROX_TIME__      (__MPLS_SDK_MAJOR < 101000)
 #define __MPLS_LIB_SUPPORT_APPROX_TIME__      (__MPLS_TARGET_OSVER < 101000)
 
-/* clock_gettime */
+/* mach_continuous_time */
+#define __MPLS_SDK_SUPPORT_CONTINUOUS_TIME__  (__MPLS_SDK_MAJOR < 101200)
+#define __MPLS_LIB_SUPPORT_CONTINUOUS_TIME__  (__MPLS_TARGET_OSVER < 101200)
+
+/* clock_gettime, clock_gettime_nsec_np */
 #define __MPLS_SDK_SUPPORT_GETTIME__          (__MPLS_SDK_MAJOR < 101200)
 #define __MPLS_LIB_SUPPORT_GETTIME__          (__MPLS_TARGET_OSVER < 101200)
 

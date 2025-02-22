@@ -37,6 +37,30 @@ uint64_t mach_approximate_time(void)
 
 #endif /* __MPLS_LIB_SUPPORT_APPROX_TIME__ */
 
+#if __MPLS_LIB_SUPPORT_CONTINUOUS_TIME__
+
+#include <mach/mach_time.h>
+
+/*
+ * Here we provide versions of mach_continuous_time() which are just wrappers
+ * around the non-continuous versions.  This isn't strictly functionally
+ * correct, but permits programs to build and run (correctly if they don't
+ * care about sleep time).  A later version may add proper accounting for
+ * sleep time, if some means can be found to obtain it.
+ */
+
+uint64_t mach_continuous_time(void)
+{
+  return mach_absolute_time();
+}
+
+uint64_t mach_continuous_approximate_time(void)
+{
+  return mach_approximate_time();
+}
+
+#endif /* __MPLS_LIB_SUPPORT_CONTINUOUS_TIME__ */
+
 #if __MPLS_LIB_SUPPORT_GETTIME__
 
 #include <errno.h>
@@ -380,14 +404,18 @@ clock_gettime_nsec_np(clockid_t clk_id)
     return (ut.seconds + st.seconds) * BILLION64
            + (ut.microseconds + st.microseconds) * 1000;
 
-  /* For now these are both the same, matching CLOCK_UPTIME_RAW */
   case CLOCK_MONOTONIC_RAW:
+    mach_time = mach_continuous_time();
+    break;
+
+  case CLOCK_MONOTONIC_RAW_APPROX:
+    mach_time = mach_continuous_approximate_time();
+    break;
+
   case CLOCK_UPTIME_RAW:
     mach_time = mach_absolute_time();
     break;
 
-  /* For now these are both the same, matching CLOCK_UPTIME_RAW_APPROX */
-  case CLOCK_MONOTONIC_RAW_APPROX:
   case CLOCK_UPTIME_RAW_APPROX:
     mach_time = mach_approximate_time();
     break;
@@ -442,14 +470,18 @@ clock_gettime(clockid_t clk_id, struct timespec *ts)
     }
     return ret;
 
-  /* For now these are both the same, matching CLOCK_UPTIME_RAW */
   case CLOCK_MONOTONIC_RAW:
+    mach_time = mach_continuous_time();
+    break;
+
+  case CLOCK_MONOTONIC_RAW_APPROX:
+    mach_time = mach_continuous_approximate_time();
+    break;
+
   case CLOCK_UPTIME_RAW:
     mach_time = mach_absolute_time();
     break;
 
-  /* For now these are both the same, matching CLOCK_UPTIME_RAW_APPROX */
-  case CLOCK_MONOTONIC_RAW_APPROX:
   case CLOCK_UPTIME_RAW_APPROX:
     mach_time = mach_approximate_time();
     break;

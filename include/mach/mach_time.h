@@ -26,14 +26,21 @@
 /* Include the primary system mach/mach_time.h */
 #include_next <mach/mach_time.h>
 
-#if __MPLS_SDK_SUPPORT_APPROX_TIME__
-
 __MP__BEGIN_DECLS
+
+#if __MPLS_SDK_SUPPORT_APPROX_TIME__
 
 uint64_t mach_approximate_time(void);
 
-__MP__END_DECLS
-
 #endif /* __MPLS_SDK_SUPPORT_APPROX_TIME__ */
+
+#if __MPLS_SDK_SUPPORT_CONTINUOUS_TIME__
+
+uint64_t mach_continuous_time(void);
+uint64_t mach_continuous_approximate_time(void);
+
+#endif /* __MPLS_SDK_SUPPORT_CONTINUOUS_TIME__ */
+
+__MP__END_DECLS
 
 #endif /* _MACPORTS_MACH_TIME_H_ */
