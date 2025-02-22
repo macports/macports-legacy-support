@@ -67,8 +67,10 @@ uint64_t mach_continuous_approximate_time(void)
 #include <math.h>
 #include <stddef.h>
 #include <time.h>
+#include <unistd.h>
 
 #include <sys/time.h>
+#include <sys/syscall.h>
 #include <sys/sysctl.h>
 #include <sys/resource.h>
 
@@ -117,24 +119,6 @@ get_boot_and_tod(struct timeval *bt, struct timeval *tod)
     if ((ret = get_boottime(&tv2))) return ret;
   } while (tv1.tv_sec != tv2.tv_sec || tv1.tv_usec != tv2.tv_usec);
   *bt = tv1;
-  return 0;
-}
-
-/* Get the CPU usage of the current thread into user/system timevals. */
-static int
-get_thread_usage(time_value_t *ut, time_value_t *st)
-{
-  int ret;
-  mach_msg_type_number_t count = THREAD_BASIC_INFO_COUNT;
-  thread_basic_info_data_t info;
-
-  thread_port_t thread = mach_thread_self();
-  ret = thread_info(thread, THREAD_BASIC_INFO, (thread_info_t) &info, &count);
-  mach_port_deallocate(mach_task_self(), thread);
-  if (ret) return ret;
-
-  *ut = info.user_time;
-  *st = info.system_time;
   return 0;
 }
 
@@ -370,6 +354,83 @@ mach2timespec(uint64_t mach_time, struct timespec *ts)
   nanos2timespec(mach2nanos(mach_time), ts);
 }
 
+/*
+ * Get the best available thread time, using the syscall on 10.10+,
+ * but falling back to thread_info() on <10.10.
+ */
+
+#if __MPLS_TARGET_OSVER < 101000
+
+/* Common thread usage code */
+static int
+get_thread_usage(thread_basic_info_data_t *info)
+{
+  int ret;
+  mach_msg_type_number_t count = THREAD_BASIC_INFO_COUNT;
+  thread_port_t thread = mach_thread_self();
+
+  ret = thread_info(thread, THREAD_BASIC_INFO, (thread_info_t) info, &count);
+  mach_port_deallocate(mach_task_self(), thread);
+  return ret;
+}
+
+/* Get the CPU usage of the current thread, in nanoseconds */
+static inline uint64_t
+get_thread_usage_ns(void)
+{
+  thread_basic_info_data_t info;
+
+  if (get_thread_usage(&info)) return 0;
+
+  return (info.user_time.seconds + info.system_time.seconds) * BILLION64
+         + (info.user_time.microseconds + info.system_time.microseconds) * 1000;
+}
+
+/* Same but returning as timespec */
+static inline int
+get_thread_usage_ts(struct timespec *ts)
+{
+  thread_basic_info_data_t info;
+
+  if (get_thread_usage(&info)) return -1;
+
+  ts->tv_sec = info.user_time.seconds + info.system_time.seconds;
+  ts->tv_nsec = (info.user_time.microseconds + info.system_time.microseconds)
+                * 1000;
+  if (ts->tv_nsec >= BILLION32) {
+    ++ts->tv_sec;
+    ts->tv_nsec -= BILLION32;
+  }
+  return 0;
+}
+
+#define HIRES_THREAD_TIME 0
+
+#else /* __MPLS_TARGET_OSVER >= 101000 */
+
+/* Get the CPU usage of the current thread via syscall, in nanoseconds. */
+static inline uint64_t
+get_thread_usage_ns(void)
+{
+  uint64_t mach_time = syscall(SYS_thread_selfusage);
+
+  return mach2nanos(mach_time);
+}
+
+/* Same but returning as timespec */
+static inline int
+get_thread_usage_ts(struct timespec *ts)
+{
+  uint64_t mach_time = syscall(SYS_thread_selfusage);
+
+  mach2timespec(mach_time, ts);
+  return mach_time ? 0 : -1;
+}
+
+#define HIRES_THREAD_TIME 1
+
+#endif /* __MPLS_TARGET_OSVER >= 101000 */
+
 /* Now the actual public functions */
 
 uint64_t
@@ -378,7 +439,6 @@ clock_gettime_nsec_np(clockid_t clk_id)
   uint64_t mach_time;
   struct timeval tod, bt;
   struct rusage ru;
-  time_value_t ut, st;
 
   /* Set up mach scaling early, whether we need it or not. */
   if (!mach_mult) setup_mach_mult();
@@ -400,9 +460,7 @@ clock_gettime_nsec_np(clockid_t clk_id)
            + (ru.ru_utime.tv_usec + ru.ru_stime.tv_usec) * 1000;
 
   case CLOCK_THREAD_CPUTIME_ID:
-    if (get_thread_usage(&ut, &st)) return 0;
-    return (ut.seconds + st.seconds) * BILLION64
-           + (ut.microseconds + st.microseconds) * 1000;
+    return get_thread_usage_ns();
 
   case CLOCK_MONOTONIC_RAW:
     mach_time = mach_continuous_time();
@@ -435,7 +493,6 @@ clock_gettime(clockid_t clk_id, struct timespec *ts)
   int ret, mserr = 0;
   struct timeval tod, bt;
   struct rusage ru;
-  time_value_t ut, st;
   uint64_t mach_time;
 
   /* Set up mach scaling early, whether we need it or not. */
@@ -461,14 +518,7 @@ clock_gettime(clockid_t clk_id, struct timespec *ts)
     return ret;
 
   case CLOCK_THREAD_CPUTIME_ID:
-    ret = get_thread_usage(&ut, &st);
-    ts->tv_sec = ut.seconds + st.seconds;
-    ts->tv_nsec = (ut.microseconds + st.microseconds) * 1000;
-    if (ts->tv_nsec >= BILLION32) {
-      ++ts->tv_sec;
-      ts->tv_nsec -= BILLION32;
-    }
-    return ret;
+    return get_thread_usage_ts(ts);
 
   case CLOCK_MONOTONIC_RAW:
     mach_time = mach_continuous_time();
@@ -510,7 +560,9 @@ clock_getres(clockid_t clk_id, struct timespec *res)
   case CLOCK_REALTIME:
   case CLOCK_MONOTONIC:
   case CLOCK_PROCESS_CPUTIME_ID:
+#if !HIRES_THREAD_TIME
   case CLOCK_THREAD_CPUTIME_ID:
+#endif
     *res = res_micros;
     return 0;
 
@@ -519,6 +571,9 @@ clock_getres(clockid_t clk_id, struct timespec *res)
   case CLOCK_MONOTONIC_RAW_APPROX:
   case CLOCK_UPTIME_RAW:
   case CLOCK_UPTIME_RAW_APPROX:
+#if HIRES_THREAD_TIME
+  case CLOCK_THREAD_CPUTIME_ID:
+#endif
     break;
 
   default:
