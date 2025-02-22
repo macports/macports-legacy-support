@@ -18,6 +18,25 @@
 /* MP support header */
 #include "MacportsLegacySupport.h"
 
+#if __MPLS_LIB_SUPPORT_APPROX_TIME__
+
+#include <mach/mach_time.h>
+
+/*
+ * Here we provide a version of mach_approximate_time() which is just a
+ * wrapper around the non-approximate version.  Since the only purpose of
+ * the "approximate" version is to sacrifice accuracy for greater speed,
+ * it's highly unlikely that we could come up with a reasonable way to do
+ * better than the fallback approach.
+ */
+
+uint64_t mach_approximate_time(void)
+{
+  return mach_absolute_time();
+}
+
+#endif /* __MPLS_LIB_SUPPORT_APPROX_TIME__ */
+
 #if __MPLS_LIB_SUPPORT_GETTIME__
 
 #include <errno.h>
@@ -361,12 +380,16 @@ clock_gettime_nsec_np(clockid_t clk_id)
     return (ut.seconds + st.seconds) * BILLION64
            + (ut.microseconds + st.microseconds) * 1000;
 
-  /* For now these are all the same, matching CLOCK_UPTIME_RAW */
+  /* For now these are both the same, matching CLOCK_UPTIME_RAW */
   case CLOCK_MONOTONIC_RAW:
-  case CLOCK_MONOTONIC_RAW_APPROX:
   case CLOCK_UPTIME_RAW:
-  case CLOCK_UPTIME_RAW_APPROX:
     mach_time = mach_absolute_time();
+    break;
+
+  /* For now these are both the same, matching CLOCK_UPTIME_RAW_APPROX */
+  case CLOCK_MONOTONIC_RAW_APPROX:
+  case CLOCK_UPTIME_RAW_APPROX:
+    mach_time = mach_approximate_time();
     break;
 
   default:
@@ -419,12 +442,16 @@ clock_gettime(clockid_t clk_id, struct timespec *ts)
     }
     return ret;
 
-  /* For now these are all the same, matching CLOCK_UPTIME_RAW */
+  /* For now these are both the same, matching CLOCK_UPTIME_RAW */
   case CLOCK_MONOTONIC_RAW:
-  case CLOCK_MONOTONIC_RAW_APPROX:
   case CLOCK_UPTIME_RAW:
-  case CLOCK_UPTIME_RAW_APPROX:
     mach_time = mach_absolute_time();
+    break;
+
+  /* For now these are both the same, matching CLOCK_UPTIME_RAW_APPROX */
+  case CLOCK_MONOTONIC_RAW_APPROX:
+  case CLOCK_UPTIME_RAW_APPROX:
+    mach_time = mach_approximate_time();
     break;
 
   default:

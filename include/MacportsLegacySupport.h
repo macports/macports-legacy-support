@@ -153,6 +153,10 @@
 #define __MPLS_SDK_SUPPORT_UTIMENSAT__        (__MPLS_SDK_MAJOR < 101300)
 #define __MPLS_LIB_SUPPORT_UTIMENSAT__        (__MPLS_TARGET_OSVER < 101300)
 
+/* mach_approximate_time */
+#define __MPLS_SDK_SUPPORT_APPROX_TIME__      (__MPLS_SDK_MAJOR < 101000)
+#define __MPLS_LIB_SUPPORT_APPROX_TIME__      (__MPLS_TARGET_OSVER < 101000)
+
 /* clock_gettime */
 #define __MPLS_SDK_SUPPORT_GETTIME__          (__MPLS_SDK_MAJOR < 101200)
 #define __MPLS_LIB_SUPPORT_GETTIME__          (__MPLS_TARGET_OSVER < 101200)
