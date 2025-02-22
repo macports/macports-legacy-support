@@ -24,10 +24,10 @@
  *  NTP threshold for making step adjustments.
  *   2) We attempt to almost immediately undo the adjustment.
  *   3) The adjustment is first forward and then backward, so if the test
- *  dies in midstream, we're left with the less troublesome forard step.
+ *  dies in midstream, we're left with the less troublesome forward step.
  *   4) We set our priority to the maximum, and launch as many threads
  *  as there are CPUs, to mostly lock out other programs (briefly).
- *   5) We begin with 100ms sleep, to start with a fresh quantum and
+ *   5) We begin with 500ms sleep, to start with a fresh quantum and
  *  minimize the chance of a reschedule in midstream.
  */
 
@@ -61,21 +61,18 @@ typedef long long nstime_t;
 
 typedef struct info_s {
   nstime_t init_raw;
+  nstime_t init_mono;
   nstime_t init_real;
   nstime_t first_set;
   nstime_t first_real;
   nstime_t middle_raw;
+  nstime_t middle_mono;
   nstime_t middle_real;
   nstime_t second_set;
   nstime_t second_real;
+  nstime_t final_mono;
   nstime_t final_raw;
 } info_t;
-
-static nstime_t
-timespec2ns(const struct timespec *ts)
-{
-  return ts->tv_sec * BILLION + ts->tv_nsec;
-}
 
 static struct timespec
 ns2timespec(nstime_t nsec)
@@ -90,11 +87,8 @@ ns2timespec(nstime_t nsec)
 static int
 clock_getns(clockid_t clock_id, nstime_t *nsp)
 {
-  struct timespec ts;
-
-  if (clock_gettime(clock_id, &ts) < 0) return errno;
-  *nsp = timespec2ns(&ts);
-  return 0;
+  *nsp = clock_gettime_nsec_np(clock_id);
+  return *nsp ? 0 : errno;
 }
 
 static int
@@ -110,12 +104,13 @@ static int
 do_test(info_t *tp)
 {
   int err, tverr;
-  nstime_t delta;
+  nstime_t delta, scratch;
   struct timeval orig_tv;
 
   /* First warm up the clocks */
-  (void) clock_getns(CLOCK_MONOTONIC_RAW, &tp->init_raw);
-  (void) clock_getns(CLOCK_REALTIME, &tp->init_raw);
+  (void) clock_getns(CLOCK_MONOTONIC_RAW, &scratch);
+  (void) clock_getns(CLOCK_MONOTONIC, &scratch);
+  (void) clock_getns(CLOCK_REALTIME, &scratch);
 
   /* Get us a fresh quantum */
   (void) usleep(SLEEP_MS * 1000);
@@ -123,8 +118,9 @@ do_test(info_t *tp)
   /* Save original gettimeofday() time */
   tverr = gettimeofday(&orig_tv, NULL);
 
-  /* Get both real and raw times */
+  /* Get both real and raw times, plus monotonic */
   if (clock_getns(CLOCK_MONOTONIC_RAW, &tp->init_raw)) return errno;
+  if (clock_getns(CLOCK_MONOTONIC, &tp->init_mono)) return errno;
   if (clock_getns(CLOCK_REALTIME, &tp->init_real)) return errno;
 
   /* Adjust clock forward */
@@ -137,6 +133,7 @@ do_test(info_t *tp)
     /* Capture times from the middle */
     if ((err = clock_getns(CLOCK_REALTIME, &tp->first_real))) break;
     if ((err = clock_getns(CLOCK_MONOTONIC_RAW, &tp->middle_raw))) break;
+    if ((err = clock_getns(CLOCK_MONOTONIC, &tp->middle_mono))) break;
     if ((err = clock_getns(CLOCK_REALTIME, &tp->middle_real))) break;
 
     /* Adjust clock backward, can't fix it if it doesn't work */
@@ -154,6 +151,7 @@ do_test(info_t *tp)
 
   /* Otherwise, finish up with a couple more captures */
   if (clock_getns(CLOCK_REALTIME, &tp->second_real)) return errno;
+  if (clock_getns(CLOCK_MONOTONIC, &tp->final_mono)) return errno;
   if (clock_getns(CLOCK_MONOTONIC_RAW, &tp->final_raw)) return errno;
 
   /* Just to be safe, restore the time via settimeofday() */
@@ -177,13 +175,16 @@ do_test(info_t *tp)
 static void
 print_times(info_t *tp) {
   PRINT_TIME(tp, init_raw);
+  PRINT_TIME(tp, init_mono);
   PRINT_TIME(tp, init_real);
   PRINT_TIME(tp, first_set);
   PRINT_TIME(tp, first_real);
   PRINT_TIME(tp, middle_raw);
+  PRINT_TIME(tp, middle_mono);
   PRINT_TIME(tp, middle_real);
   PRINT_TIME(tp, second_set);
   PRINT_TIME(tp, second_real);
+  PRINT_TIME(tp, final_mono);
   PRINT_TIME(tp, final_raw);
 }
 
@@ -258,6 +259,8 @@ main(int argc, char *argv[])
   if (setpriority(PRIO_PROCESS, 0, TARGET_PRIO) < 0) {
     perror("Unable to set priority");
     fprintf(stderr, "Continuing anyway (will probably fail)\n");
+  } else {
+    printf("Priority set to %d\n", TARGET_PRIO);
   }
 
   /* Try to lock out everyone else while we screw with the clock */
@@ -292,13 +295,27 @@ main(int argc, char *argv[])
 
   /* First check raw monotonicity (very unlikely wrong) */
   if (dur1 < 0) {
-    printf("Middle raw %lld < init raw %lld\n",
-           info.middle_raw, info.init_raw);
+    printf("Middle raw %lld < init raw %lld, diff = %lld\n",
+           info.middle_raw, info.init_raw, dur1);
     err = 1;
   }
   if (dur2 < 0) {
-    printf("Final raw %lld < middle raw %lld\n",
-           info.final_raw, info.middle_raw);
+    printf("Final raw %lld < middle raw %lld, diff = %lld\n",
+           info.final_raw, info.middle_raw, dur2);
+    err = 1;
+  }
+
+  /* Also check non-raw monotonicity */
+  if (info.middle_mono < info.init_mono) {
+    printf("Middle mono %lld < init mono %lld, diff = %lld\n",
+           info.middle_mono, info.init_mono,
+           info.middle_mono - info.init_mono);
+    err = 1;
+  }
+  if (info.final_mono < info.middle_mono) {
+    printf("Final mono %lld < middle mono %lld, diff = %lld\n",
+           info.final_mono, info.middle_mono,
+           info.final_mono - info.middle_mono);
     err = 1;
   }
 
