@@ -46,6 +46,10 @@
 #include <sys/time.h>
 #include <sys/types.h>
 
+#include <mach/clock.h>
+#include <mach/mach.h>
+#include <mach/mach_time.h>
+
 #define SLEEP_MS 500
 #define TIME_BUMP_MS 100
 
@@ -62,15 +66,21 @@ typedef long long nstime_t;
 typedef struct info_s {
   nstime_t init_raw;
   nstime_t init_mono;
+  nstime_t init_boot;
+  nstime_t init_mach;
   nstime_t init_real;
   nstime_t first_set;
   nstime_t first_real;
   nstime_t middle_raw;
   nstime_t middle_mono;
+  nstime_t middle_boot;
+  nstime_t middle_mach;
   nstime_t middle_real;
   nstime_t second_set;
   nstime_t second_real;
   nstime_t final_mono;
+  nstime_t final_boot;
+  nstime_t final_mach;
   nstime_t final_raw;
 } info_t;
 
@@ -100,8 +110,45 @@ clock_setns(nstime_t nsec)
   return 0;
 }
 
+#define BILLION64 1000000000ULL
+
 static int
-do_test(info_t *tp)
+get_boottime_ns(nstime_t *nsp)
+{
+  int ret;
+  struct timeval bt;
+  size_t boottime_len = sizeof(bt);
+  int bt_mib[] = {CTL_KERN, KERN_BOOTTIME};
+  size_t bt_miblen = sizeof(bt_mib) / sizeof(bt_mib[0]);
+
+  ret = sysctl(bt_mib, bt_miblen, &bt, &boottime_len, NULL, 0);
+  *nsp = bt.tv_sec * BILLION64 + bt.tv_usec * 1000;
+  return ret;
+}
+
+static clock_serv_t mclock = 0;
+
+static void
+init_mach_clock(void)
+{
+  mach_port_t mach_host;
+
+	mach_host = mach_host_self();
+	host_get_clock_service(mach_host, SYSTEM_CLOCK, &mclock);
+	mach_port_deallocate(mach_task_self(), mach_host);
+}
+
+static nstime_t
+get_mach_clock_ns(void)
+{
+  mach_timespec_t mts;
+
+  clock_get_time(mclock, &mts);
+  return mts.tv_sec * BILLION64 + mts.tv_nsec;
+}
+
+static int
+do_test(info_t *tp, int extra)
 {
   int err, tverr;
   nstime_t delta, scratch;
@@ -110,6 +157,9 @@ do_test(info_t *tp)
   /* First warm up the clocks */
   (void) clock_getns(CLOCK_MONOTONIC_RAW, &scratch);
   (void) clock_getns(CLOCK_MONOTONIC, &scratch);
+  (void) get_boottime_ns(&scratch);
+  init_mach_clock();
+  (void) get_mach_clock_ns();
   (void) clock_getns(CLOCK_REALTIME, &scratch);
 
   /* Get us a fresh quantum */
@@ -118,9 +168,13 @@ do_test(info_t *tp)
   /* Save original gettimeofday() time */
   tverr = gettimeofday(&orig_tv, NULL);
 
-  /* Get both real and raw times, plus monotonic */
+  /* Get both real and raw times, plus monotonic and extras */
   if (clock_getns(CLOCK_MONOTONIC_RAW, &tp->init_raw)) return errno;
   if (clock_getns(CLOCK_MONOTONIC, &tp->init_mono)) return errno;
+  if (extra) {
+    if (get_boottime_ns(&tp->init_boot)) return errno;
+    tp->init_mach = get_mach_clock_ns();
+  }
   if (clock_getns(CLOCK_REALTIME, &tp->init_real)) return errno;
 
   /* Adjust clock forward */
@@ -134,6 +188,10 @@ do_test(info_t *tp)
     if ((err = clock_getns(CLOCK_REALTIME, &tp->first_real))) break;
     if ((err = clock_getns(CLOCK_MONOTONIC_RAW, &tp->middle_raw))) break;
     if ((err = clock_getns(CLOCK_MONOTONIC, &tp->middle_mono))) break;
+    if (extra) {
+      if (get_boottime_ns(&tp->middle_boot)) return errno;
+      tp->middle_mach = get_mach_clock_ns();
+    }
     if ((err = clock_getns(CLOCK_REALTIME, &tp->middle_real))) break;
 
     /* Adjust clock backward, can't fix it if it doesn't work */
@@ -152,6 +210,10 @@ do_test(info_t *tp)
   /* Otherwise, finish up with a couple more captures */
   if (clock_getns(CLOCK_REALTIME, &tp->second_real)) return errno;
   if (clock_getns(CLOCK_MONOTONIC, &tp->final_mono)) return errno;
+  if (extra) {
+    if (get_boottime_ns(&tp->final_boot)) return errno;
+    tp->final_mach = get_mach_clock_ns();
+  }
   if (clock_getns(CLOCK_MONOTONIC_RAW, &tp->final_raw)) return errno;
 
   /* Just to be safe, restore the time via settimeofday() */
@@ -173,18 +235,30 @@ do_test(info_t *tp)
     (long long) ptr->name)
 
 static void
-print_times(info_t *tp) {
+print_times(info_t *tp, int extra) {
   PRINT_TIME(tp, init_raw);
   PRINT_TIME(tp, init_mono);
+  if (extra) {
+    PRINT_TIME(tp, init_boot);
+    PRINT_TIME(tp, init_mach);
+  }
   PRINT_TIME(tp, init_real);
   PRINT_TIME(tp, first_set);
   PRINT_TIME(tp, first_real);
   PRINT_TIME(tp, middle_raw);
   PRINT_TIME(tp, middle_mono);
+  if (extra) {
+    PRINT_TIME(tp, middle_boot);
+    PRINT_TIME(tp, middle_mach);
+  }
   PRINT_TIME(tp, middle_real);
   PRINT_TIME(tp, second_set);
   PRINT_TIME(tp, second_real);
   PRINT_TIME(tp, final_mono);
+  if (extra) {
+    PRINT_TIME(tp, final_boot);
+    PRINT_TIME(tp, final_mach);
+  }
   PRINT_TIME(tp, final_raw);
 }
 
@@ -233,6 +307,7 @@ main(int argc, char *argv[])
   info_t info = {0};
 
   if (argc > 1 && !strcmp(argv[1], "-v")) verbose = 1;
+  if (argc > 1 && !strcmp(argv[1], "-vv")) verbose = 2;
 
   if (verbose) printf("%s starting.\n", basename(argv[0]));
 
@@ -271,7 +346,7 @@ main(int argc, char *argv[])
   }
 
   /* Do the test */
-  err = do_test(&info);
+  err = do_test(&info, verbose >=2);
 
   /* Undo our hogging */
   unhog_cpus(threads, ncpus);
@@ -283,7 +358,7 @@ main(int argc, char *argv[])
   if (err) {
     printf("Error encountered: %s\n", strerror(err));
     printf("Dumping partial results:\n");
-    print_times(&info);
+    print_times(&info, verbose >= 2);
     return 1;
   }
 
@@ -319,6 +394,22 @@ main(int argc, char *argv[])
     err = 1;
   }
 
+  /* Also check mach monotonicity */
+  if (verbose >= 2) {
+    if (info.middle_mach < info.init_mach) {
+      printf("Middle mach %lld < init mach %lld, diff = %lld\n",
+             info.middle_mach, info.init_mach,
+             info.middle_mach - info.init_mach);
+      err = 1;
+    }
+    if (info.final_mach < info.middle_mach) {
+      printf("Final mach %lld < middle mach %lld, diff = %lld\n",
+             info.final_mach, info.middle_mach,
+             info.final_mach - info.middle_mach);
+      err = 1;
+    }
+  }
+
   /* Now see if clock setting had reasonable effect */
   if (llabs(diff1) > dur1 + FUDGE_NS) {
     printf("First set/read delta was %lld ns, bracketed by %lld ns\n",
@@ -332,7 +423,7 @@ main(int argc, char *argv[])
   }
 
   if (verbose) {
-    print_times(&info);
+    print_times(&info, verbose >= 2);
     printf("Total ns = %lld\n", info.final_raw - info.init_raw);
   }
 
