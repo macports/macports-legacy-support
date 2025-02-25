@@ -69,10 +69,9 @@ uint64_t mach_continuous_approximate_time(void)
 #include <time.h>
 #include <unistd.h>
 
-#include <sys/time.h>
-#include <sys/syscall.h>
-#include <sys/sysctl.h>
 #include <sys/resource.h>
+#include <sys/syscall.h>
+#include <sys/time.h>
 
 #include <mach/mach_init.h>
 #include <mach/mach_port.h>
@@ -84,43 +83,30 @@ uint64_t mach_continuous_approximate_time(void)
 #define BILLION64 1000000000ULL
 
 /*
- * Get the system boot time.  The faster means of doing this via a
- * communication page wasn't introduced until 10.12, where this code is
- * inapplicable, so we're stuck with doing it the slow way.
+ * CLOCK_MONOTONIC
  *
- * Apple's similar code uses sysctlbyname(), which not only is slower
- * but also doesn't work on 10.4.
+ * Apple's implementation of CLOCK_MONOTONIC involves subtracting boottime
+ * from the current time of day.  That relies on boottime's having step
+ * adjustments applied to it, so that they cancel out in the difference.
+ * But aside from the fact that corrupting boottime for this purpose is
+ * a kludge, this method doesn't even work at all prior to 10.12, since
+ * pre-10.12 kernels don't adjust boottime in settimeofday().  Also, prior
+ * to 10.12, boottime only had one-second resolution, so the scheme
+ * wouldn't work for adjustments less than one second.  Hence, the Apple
+ * algorithm for CLOCK_MONOTONIC is completely invalid prior to 10.12.
+ *
+ * Aside from the mach_absolute_time() variants used for the RAW & UPTIME
+ * clocks, the only other non-timeofday clock is the mach SYSTEM_CLOCK.
+ * But this is just a slow and more complicated wrapper around
+ * mach_absolute_time(), with scaling to nanoseconds, so it's not helpful
+ * for this purpose.
+ *
+ * The net result is that CLOCK_MONOTONIC on pre-10.12 systems can't be made
+ * any different from CLOCK_MONOTONIC_RAW without losing the mandatory
+ * monotonicity property.  Note that neither following adjtime() slewing
+ * nor counting during sleeps are mandatory properties of CLOCK_MONOTONIC
+ * in general, though they happen to be true of the 10.12+ Apple version.
  */
-static int
-get_boottime(struct timeval *bt)
-{
-  size_t boottime_len = sizeof(*bt);
-  int bt_mib[] = {CTL_KERN, KERN_BOOTTIME};
-  size_t bt_miblen = sizeof(bt_mib) / sizeof(bt_mib[0]);
-
-  return sysctl(bt_mib, bt_miblen, bt, &boottime_len, NULL, 0);
-}
-
-/* Get a consistent boot time / time of day pair. */
-static int
-get_boot_and_tod(struct timeval *bt, struct timeval *tod)
-{
-  int ret;
-  /*
-   * Note that older systems that only have one-second resolution on boottime
-   * don't store the tv_usec field at all, making initialization mandatory.
-   * Otherwise, infinite loops may result.
-   */
-  struct timeval tv1 = {0, 0}, tv2 = {0, 0};
-
-  do {
-    if ((ret = get_boottime(&tv1))) return ret;
-    if ((ret = gettimeofday(tod, NULL))) return ret;
-    if ((ret = get_boottime(&tv2))) return ret;
-  } while (tv1.tv_sec != tv2.tv_sec || tv1.tv_usec != tv2.tv_usec);
-  *bt = tv1;
-  return 0;
-}
 
 /*
  * Mach timebase scaling
@@ -436,9 +422,9 @@ get_thread_usage_ts(struct timespec *ts)
 uint64_t
 clock_gettime_nsec_np(clockid_t clk_id)
 {
-  uint64_t mach_time;
-  struct timeval tod, bt;
+  struct timeval tod;
   struct rusage ru;
+  uint64_t mach_time;
 
   /* Set up mach scaling early, whether we need it or not. */
   if (!mach_mult) setup_mach_mult();
@@ -449,11 +435,6 @@ clock_gettime_nsec_np(clockid_t clk_id)
     if (gettimeofday(&tod, NULL)) return 0;
     return tod.tv_sec * BILLION64 + tod.tv_usec * 1000;
 
-  case CLOCK_MONOTONIC:
-    if (get_boot_and_tod(&bt, &tod)) return 0;
-    return (tod.tv_sec - bt.tv_sec) * BILLION64
-           + (tod.tv_usec - bt.tv_usec) * 1000;
-
   case CLOCK_PROCESS_CPUTIME_ID:
     if (getrusage(RUSAGE_SELF, &ru)) return 0;
     return (ru.ru_utime.tv_sec + ru.ru_stime.tv_sec) * BILLION64
@@ -462,6 +443,7 @@ clock_gettime_nsec_np(clockid_t clk_id)
   case CLOCK_THREAD_CPUTIME_ID:
     return get_thread_usage_ns();
 
+  case CLOCK_MONOTONIC:  /* See CLOCK_MONOTONIC comment above */
   case CLOCK_MONOTONIC_RAW:
     mach_time = mach_continuous_time();
     break;
@@ -491,7 +473,7 @@ int
 clock_gettime(clockid_t clk_id, struct timespec *ts)
 {
   int ret, mserr = 0;
-  struct timeval tod, bt;
+  struct timeval tod;
   struct rusage ru;
   uint64_t mach_time;
 
@@ -505,12 +487,6 @@ clock_gettime(clockid_t clk_id, struct timespec *ts)
     ts->tv_sec = tod.tv_sec; ts->tv_nsec = tod.tv_usec * 1000;
     return ret;
 
-  case CLOCK_MONOTONIC:
-    ret = get_boot_and_tod(&bt, &tod);
-    timersub(&tod, &bt, &tod);
-    TIMEVAL_TO_TIMESPEC(&tod, ts);
-    return ret;
-
   case CLOCK_PROCESS_CPUTIME_ID:
     ret = getrusage(RUSAGE_SELF, &ru);
     timeradd(&ru.ru_utime, &ru.ru_stime, &ru.ru_utime);
@@ -520,6 +496,7 @@ clock_gettime(clockid_t clk_id, struct timespec *ts)
   case CLOCK_THREAD_CPUTIME_ID:
     return get_thread_usage_ts(ts);
 
+  case CLOCK_MONOTONIC:  /* See CLOCK_MONOTONIC comment above */
   case CLOCK_MONOTONIC_RAW:
     mach_time = mach_continuous_time();
     break;
@@ -558,7 +535,6 @@ clock_getres(clockid_t clk_id, struct timespec *res)
 
   /* Everything based on timeval has microsecond resolution. */
   case CLOCK_REALTIME:
-  case CLOCK_MONOTONIC:
   case CLOCK_PROCESS_CPUTIME_ID:
 #if !HIRES_THREAD_TIME
   case CLOCK_THREAD_CPUTIME_ID:
@@ -567,6 +543,7 @@ clock_getres(clockid_t clk_id, struct timespec *res)
     return 0;
 
   /* Everything based on mach_time has mach resolution. */
+  case CLOCK_MONOTONIC:
   case CLOCK_MONOTONIC_RAW:
   case CLOCK_MONOTONIC_RAW_APPROX:
   case CLOCK_UPTIME_RAW:
