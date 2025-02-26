@@ -59,9 +59,17 @@
 #define TARGET_PRIO -20
 
 #define MILLION 1000000LL
+#define UMILLION 1000000ULL
 #define BILLION (MILLION * 1000)
+#define BILLION64 (UMILLION * 1000U)
 
-typedef long long nstime_t;
+#define ALIGN_CYCLE_NS BILLION64
+#define ALIGN_CYCLE_UNIT_NS (ALIGN_CYCLE_NS / 2)
+#define ALIGN_CYCLE_OFFSET_NS (-TIME_BUMP_MS * MILLION / 2)
+#define ALIGN_CYCLE_LIMIT_NS (TIME_BUMP_MS * MILLION / 10)
+
+typedef unsigned long long nstime_t;
+typedef long long snstime_t;
 
 typedef struct info_s {
   nstime_t init_raw;
@@ -101,6 +109,12 @@ clock_getns(clockid_t clock_id, nstime_t *nsp)
   return *nsp ? 0 : errno;
 }
 
+static nstime_t
+clock_gettodns(void)
+{
+  return clock_gettime_nsec_np(CLOCK_REALTIME);
+}
+
 static int
 clock_setns(nstime_t nsec)
 {
@@ -109,8 +123,6 @@ clock_setns(nstime_t nsec)
   if (clock_settime(CLOCK_REALTIME, &ts) < 0) return -1;
   return 0;
 }
-
-#define BILLION64 1000000000ULL
 
 static int
 get_boottime_ns(nstime_t *nsp)
@@ -151,7 +163,9 @@ static int
 do_test(info_t *tp, int extra)
 {
   int err, tverr;
-  nstime_t delta, scratch;
+  snstime_t delta, scratch;
+  nstime_t target, limit, tod, todmod, delay;
+  snstime_t todmin, todmax;
   struct timeval orig_tv;
 
   /* First warm up the clocks */
@@ -164,6 +178,22 @@ do_test(info_t *tp, int extra)
 
   /* Get us a fresh quantum */
   (void) usleep(SLEEP_MS * 1000);
+
+  /* In "extra" mode, align time to a suitable boundary */
+  if (extra) {
+    target = ((ALIGN_CYCLE_NS + (extra -1) * ALIGN_CYCLE_UNIT_NS)
+              + ALIGN_CYCLE_OFFSET_NS) % ALIGN_CYCLE_NS;
+    limit = (target + ALIGN_CYCLE_LIMIT_NS) % ALIGN_CYCLE_NS;
+    while (1) {
+      tod = clock_gettodns();
+      todmod = tod % ALIGN_CYCLE_NS;
+      todmin = todmod - target;
+      todmax = todmod - limit;
+      if (todmin >= 0 && todmax < 0 ) break;
+      delay = (target + ALIGN_CYCLE_NS - todmod) % ALIGN_CYCLE_NS;
+      (void) usleep(delay / 1000U);
+    }
+  }
 
   /* Save original gettimeofday() time */
   tverr = gettimeofday(&orig_tv, NULL);
@@ -231,8 +261,8 @@ do_test(info_t *tp, int extra)
   return 0;
 }
 
-#define PRINT_TIME(ptr,name) printf("  " #name " = %lld ns\n", \
-    (long long) ptr->name)
+#define PRINT_TIME(ptr,name) printf("  " #name " = %llu.%09llu s\n", \
+    ptr->name / BILLION64, ptr->name % BILLION64)
 
 static void
 print_times(info_t *tp, int extra) {
@@ -295,7 +325,9 @@ hog_cpus(pthread_t threads[], int nthreads)
 int
 main(int argc, char *argv[])
 {
-  int verbose = 0;
+  char *progname = basename(argv[0]);
+  int argn, verbose = 0, extra = 0;
+  char *cp;
   int nc_mib[] = {CTL_HW, HW_NCPU};
   size_t nc_miblen = sizeof(nc_mib) / sizeof(nc_mib[0]);
   int ncpus;
@@ -303,13 +335,21 @@ main(int argc, char *argv[])
   int orig_prio;
   pthread_t *threads;
   int err;
-  nstime_t dur1, dur2, diff1, diff2;
+  snstime_t dur1, dur2, diff1, diff2;
   info_t info = {0};
 
-  if (argc > 1 && !strcmp(argv[1], "-v")) verbose = 1;
-  if (argc > 1 && !strcmp(argv[1], "-vv")) verbose = 2;
+  for (argn = 1; argn < argc; ++argn) {
+    cp = argv[argn];
+    if (*cp++ != '-') continue;
+    while (*cp) {
+      switch (*cp++) {
+      case 'v': ++verbose; break;
+      case 'x': ++extra; break;
+      }
+    }
+  }
 
-  if (verbose) printf("%s starting.\n", basename(argv[0]));
+  if (verbose) printf("%s starting, extra = %d.\n", progname, extra);
 
   if (sysctl(nc_mib, nc_miblen, &ncpus, &ncpus_sz, NULL, 0) < 0) {
     perror("sysctl for ncpus failed");
@@ -346,7 +386,7 @@ main(int argc, char *argv[])
   }
 
   /* Do the test */
-  err = do_test(&info, verbose >=2);
+  err = do_test(&info, extra);
 
   /* Undo our hogging */
   unhog_cpus(threads, ncpus);
@@ -358,7 +398,7 @@ main(int argc, char *argv[])
   if (err) {
     printf("Error encountered: %s\n", strerror(err));
     printf("Dumping partial results:\n");
-    print_times(&info, verbose >= 2);
+    print_times(&info, extra);
     return 1;
   }
 
@@ -423,10 +463,22 @@ main(int argc, char *argv[])
   }
 
   if (verbose) {
-    print_times(&info, verbose >= 2);
+    print_times(&info, extra);
     printf("Total ns = %lld\n", info.final_raw - info.init_raw);
   }
 
-  printf("%s %s.\n", basename(argv[0]), err ? "failed" : "passed");
+  if (extra && !err) {
+    diff1 = info.middle_boot - info.init_boot;
+    diff2 = info.final_boot - info.middle_boot;
+    if (diff1 || diff2) {
+      printf("Boot time changed by %+.06f s, then %+.06f s\n",
+             (double) diff1 / 1E9,
+             (double) diff2 / 1E9);
+    } else {
+      printf("Boot time not changed by clock_settime()\n");
+    }
+  }
+
+  printf("%s %s.\n", progname, err ? "failed" : "passed");
   return err;
 }
