@@ -41,6 +41,18 @@
 #define SYSCTL_OSVER_CLASS CTL_KERN
 #define SYSCTL_OSVER_ITEM  KERN_OSRELEASE
 
+/*
+ * Temporary hack to avoid dependency on mach_continuous_time fallback
+ * for successful build on <10.12.  This function should never actually
+ * be executed on <10.14, anyway.
+ *
+ * This hack can be removed once the relevant time.c update is merged.
+ */
+#if defined(__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__) \
+    && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 101200
+#define mach_continuous_time mach_absolute_time
+#endif
+
 #define CMSG_DATALEN(cmsg) ((uint8_t *) (cmsg) + (cmsg)->cmsg_len \
 	                    - (uint8_t *) CMSG_DATA(cmsg))
 
@@ -55,6 +67,7 @@ typedef struct timeval timeval_t;
   TS_ONE(none,,0,NULL,0) \
   TS_ONE(tv,struct timeval,sizeof(timeval_t),get_timeval_ts,0) \
   TS_ONE(u64mach,uint64_t (mach),sizeof(uint64_t),get_mach_ts,11) \
+  TS_ONE(u64cont,uint64_t (mach cont),sizeof(uint64_t),get_mach_ts,18) \
 
 #define TS_ONE(name,str,size,get,minver) ts_##name,
 typedef enum ts_type {
@@ -334,6 +347,12 @@ test_packet(int sockopt, socklen_t *cbuflen, times_t *tp, ts_type_t tstype)
       }
       break;
 
+    case ts_u64cont:
+      if (!(tp->mt1 = mach_continuous_time())) {
+        err = "pre-send mach_continuous_time()";
+      }
+      break;
+
     default: break;
     }
     if (err) break;
@@ -350,6 +369,12 @@ test_packet(int sockopt, socklen_t *cbuflen, times_t *tp, ts_type_t tstype)
     case ts_u64mach:
       if (!(tp->mt2 = mach_absolute_time())) {
         err = "post-recv mach_absolute_time()";
+      }
+      break;
+
+    case ts_u64cont:
+      if (!(tp->mt2 = mach_continuous_time())) {
+        err = "post-recv mach_continuous_time()";
       }
       break;
 
@@ -427,6 +452,12 @@ test_timestamp(const char *name, ts_type_t tstype, int sockopt, int scmtype,
              mach2ns(times.mt2 - times.mt1));
       break;
 
+    case ts_u64cont:
+      printf("    Mach continuous times (ns) %llu, %llu, diff = %llu\n",
+             mach2ns(times.mt1), mach2ns(times.mt2),
+             mach2ns(times.mt2 - times.mt1));
+      break;
+
     default: break;
     }
   }
@@ -496,6 +527,10 @@ test_timestamp(const char *name, ts_type_t tstype, int sockopt, int scmtype,
         tslow = times.mt1; tshigh = times.mt2; tsvalns = mach2ns(tsval);
         break;
 
+      case ts_u64cont:
+        tslow = times.mt1; tshigh = times.mt2; tsvalns = mach2ns(tsval);
+        break;
+
       default:
         tslow = 0; tshigh = ~0ULL; tsvalns = tsval;
         break;
@@ -539,7 +574,7 @@ main(int argc, char *argv[])
   #endif
   /* The following is in macOS 10.14+ kernel sources, but not user headers. */
   #ifdef SO_TIMESTAMP_CONTINUOUS
-  err |= test_timestamp("SO_TIMESTAMP_CONTINUOUS", ts_u64mach,
+  err |= test_timestamp("SO_TIMESTAMP_CONTINUOUS", ts_u64cont,
                         SO_TIMESTAMP_CONTINUOUS, SCM_TIMESTAMP_CONTINUOUS,
                         verbose);
   #endif
