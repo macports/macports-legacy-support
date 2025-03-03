@@ -409,8 +409,9 @@ $(TESTNAMEPREFIX)stat_ino32.o: $(TESTNAMEPREFIX)stat.c
 $(TESTNAMEPREFIX)stat_ino64.o: $(TESTNAMEPREFIX)stat.c
 $(TESTNAMEPREFIX)stat_ino64_darwin.o: $(TESTNAMEPREFIX)stat.c
 
-# The manual packet test includes the packet source
+# The manual packet tests include the packet source
 $(MANTESTPREFIX)libtest_packet_cont.o: $(TESTNAMEPREFIX)packet.c
+$(MANTESTPREFIX)libtest_packet_nofix.o: $(TESTNAMEPREFIX)packet.c
 
 # Provide a target for all "darwin_c" tests
 $(XTESTRUNPREFIX)darwin_c_all: $(DARWINRUNS)
