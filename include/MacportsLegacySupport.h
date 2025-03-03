@@ -183,6 +183,9 @@
 #define __MPLS_SDK_CMSG_DATA_FIX__            (__MPLS_SDK_MAJOR < 1060 \
                                                && __MPLS_SDK_MAJOR >= 1050)
 
+/* Byte-swapping failure in CMSG data with Rosetta (any OS with PPC) */
+#define __MPLS_LIB_CMSG_ROSETTA_FIX__         __MPLS_APPLE_PPC__
+
 /* stpncpy */
 #define __MPLS_SDK_SUPPORT_STPNCPY__          (__MPLS_SDK_MAJOR < 1070)
 #define __MPLS_LIB_SUPPORT_STPNCPY__          (__MPLS_TARGET_OSVER < 1070)
