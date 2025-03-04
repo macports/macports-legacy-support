@@ -17,6 +17,37 @@
 /* MP support header */
 #include "MacportsLegacySupport.h"
 
+/*
+ * Handle the suffixed variants of recvmsg(), even if no fixes being applied.
+ *
+ * Define a macro listing all variants supported by the OS/arch.
+ * 10.4 lacks the NOCANCEL variant.
+ * 64-bit builds lack the UNIX2003 variant.
+ *
+ * The macro defined here only includes the non-basic variants, so that
+ * the inclusion of the basic case can be optional.
+ *
+ * Note that additional aliases appeared in 10.7+, but since this code
+ * doesn't currently apply there, we ignore that.
+ *
+ * Although 10.4 doesn't have NOCANCEL, builds with later SDKs may
+ * reference it, so we need to provide it anyway.  The runtime lookup
+ * falls back to the basic version if it's missing.
+ */
+
+#if !__MPLS_64BIT
+
+#define MOST_VARIANTS \
+  VARIANT_ENT(posix,$UNIX2003) \
+  VARIANT_ENT(nocancel,$NOCANCEL$UNIX2003)
+
+#else /* __MPLS_64BIT */
+
+#define MOST_VARIANTS \
+  VARIANT_ENT(nocancel,$NOCANCEL)
+
+#endif /* __MPLS_64BIT */
+
 #if __MPLS_LIB_CMSG_ROSETTA_FIX__
 
 /*
@@ -45,6 +76,16 @@
  * not known at this time whether issues #2 and/or #3 apply to other CMSG
  * types.  If so, the code could be extended appropriately.
  */
+
+/*
+ * The non-noncancelable variants are the default.  This results in
+ * generating the "unadorned" names, which we augment with explicit suffixes
+ * where needed.  Similarly, we use the non-POSIX form in 32-bit builds.
+ */
+
+#if !__MPLS_64BIT
+#define _NONSTD_SOURCE
+#endif
 
 #include <dlfcn.h>
 #include <stddef.h>
@@ -104,28 +145,67 @@ fix_cmsg_endianness(struct msghdr *msghdr)
   }
 }
 
-ssize_t
-recvmsg(int socket, struct msghdr *message, int flags)
+#define ALL_VARIANTS \
+  VARIANT_ENT(basic,) \
+  MOST_VARIANTS
+
+#define VARIANT_ENT(name,sfx) fv_##name,
+typedef enum fv_type {
+  ALL_VARIANTS
+} fv_type_t;
+#undef VARIANT_ENT
+
+#define VARIANT_ENT(name,sfx) "recvmsg" #sfx,
+static const char * const fv_names[] = {
+  ALL_VARIANTS
+};
+#undef VARIANT_ENT
+
+typedef __typeof__(recvmsg) recvmsg_fn_t;
+
+#define VARIANT_ENT(name,sfx) NULL,
+static recvmsg_fn_t *fv_adrs[] = {
+  ALL_VARIANTS
+};
+#undef VARIANT_ENT
+
+/* Function to get address of the OS function, with fallback for 10.4 */
+static recvmsg_fn_t *
+sys_recvmsg(fv_type_t fvtype)
 {
-  static __typeof__(recvmsg) *sys_recvmsg = NULL;
+  /* Return cached value if available */
+  if (fv_adrs[fvtype]) return fv_adrs[fvtype];
+
+  /* Or cache and return address of desired variant if available */
+  if ((fv_adrs[fvtype] = dlsym(RTLD_NEXT, fv_names[fvtype]))) {
+    return fv_adrs[fvtype];
+  }
+
+  /* If not, try for basic version (10.4) */
+  if ((fv_adrs[fvtype] = dlsym(RTLD_NEXT, fv_names[fv_basic]))) {
+    return fv_adrs[fvtype];
+  }
+
+  /* Something's badly wrong if we can't find the function at all */
+  abort();
+}
+
+/* Common internal function for all variants */
+static ssize_t
+recvmsg_internal(int socket, struct msghdr *message, int flags,
+                 fv_type_t fvtype)
+{
   static int is_rosetta = 0;
   ssize_t ret;
-
-  if (!sys_recvmsg) {
-    if (!(sys_recvmsg = dlsym(RTLD_NEXT, "recvmsg"))){
-      /* Something's badly wrong if we can't find the function */
-      abort();
-    }
-  }
 
   /* Determine Rosettaness, if not already known */
   if (!is_rosetta) is_rosetta = check_rosetta();
 
   /* Just pass through if not Rosetta */
-  if (is_rosetta < 0) return (*sys_recvmsg)(socket, message, flags);
+  if (is_rosetta < 0) return (*sys_recvmsg(fvtype))(socket, message, flags);
 
   /* Running under Rosetta - need to intercept return */
-  ret = (*sys_recvmsg)(socket, message, flags);
+  ret = (*sys_recvmsg(fvtype))(socket, message, flags);
 
   /* If error or no CMSG data, just return */
   if (ret < 0 || !message->msg_controllen) return ret;
@@ -135,5 +215,11 @@ recvmsg(int socket, struct msghdr *message, int flags)
 
   return ret;
 }
+
+#define VARIANT_ENT(name,sfx) \
+ssize_t recvmsg##sfx(int socket, struct msghdr *message, int flags) \
+  { return recvmsg_internal(socket, message, flags, fv_##name); }
+ALL_VARIANTS
+#undef VARIANT_ENT
 
 #endif /* __MPLS_LIB_CMSG_ROSETTA_FIX__ */
