@@ -38,6 +38,29 @@
 
 #include <mach/mach_time.h>
 
+/*
+ * If we're building for 10.4 with a later SDK, and testing an alternate
+ * variant of recvmsg(), we may reference that variant of various other
+ * functions.  This is only currently handled for recvmsg(), so we arrange
+ * to bypass the variant suffixes for the other functions that we use in
+ * this test.  We do this by defining a local version of each function,
+ * using the __asm() mechanism to point it to the basic version of the
+ * function, and then defining a macro to substitute it for the local use.
+ */
+#if defined(__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__) \
+    && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1050
+
+int	__connect(int, const struct sockaddr *, socklen_t) __asm("_connect");
+#define connect __connect
+
+ssize_t	__send(int, const void *, size_t, int) __asm("_send");
+#define send __send
+
+int __close(int) __asm("_close");
+#define close __close
+
+#endif /* 10.4 */
+
 #define SYSCTL_OSVER_CLASS CTL_KERN
 #define SYSCTL_OSVER_ITEM  KERN_OSRELEASE
 
