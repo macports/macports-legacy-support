@@ -190,6 +190,9 @@ STPNCHKRUNS      := $(patsubst \
 STRNCHKSRCS_C    := $(wildcard $(TESTNAMEPREFIX)strncpy_chk*.c)
 STRNCHKRUNS      := $(patsubst \
                      $(TESTNAMEPREFIX)%.c,$(TESTRUNPREFIX)%,$(STRNCHKSRCS_C))
+PACKETSRCS_C    := $(wildcard $(TESTNAMEPREFIX)packet*.c)
+PACKETRUNS      := $(patsubst \
+                     $(TESTNAMEPREFIX)%.c,$(TESTRUNPREFIX)%,$(PACKETSRCS_C))
 
 # Tests that are only run manually
 MANTESTDIR       = manual_tests
@@ -409,9 +412,15 @@ $(TESTNAMEPREFIX)stat_ino32.o: $(TESTNAMEPREFIX)stat.c
 $(TESTNAMEPREFIX)stat_ino64.o: $(TESTNAMEPREFIX)stat.c
 $(TESTNAMEPREFIX)stat_ino64_darwin.o: $(TESTNAMEPREFIX)stat.c
 
+# The packet_* tests include the packet source
+$(TESTNAMEPREFIX)packet_nocancel.o: $(TESTNAMEPREFIX)packet.c
+$(TESTNAMEPREFIX)packet_nonposix.o: $(TESTNAMEPREFIX)packet.c
+
 # The manual packet tests include the packet source
 $(MANTESTPREFIX)libtest_packet_cont.o: $(TESTNAMEPREFIX)packet.c
 $(MANTESTPREFIX)libtest_packet_nofix.o: $(TESTNAMEPREFIX)packet.c
+$(MANTESTPREFIX)libtest_packet_nofix_nocancel.o: $(TESTNAMEPREFIX)packet.c
+$(MANTESTPREFIX)libtest_packet_nofix_nonposix.o: $(TESTNAMEPREFIX)packet.c
 
 # Provide a target for all "darwin_c" tests
 $(XTESTRUNPREFIX)darwin_c_all: $(DARWINRUNS)
@@ -433,6 +442,9 @@ $(TESTRUNPREFIX)stpncpy_chk_all: $(STPNCHKRUNS)
 
 # Provide a target for all "strncpy_chk" tests
 $(TESTRUNPREFIX)strncpy_chk_all: $(STRNCHKRUNS)
+
+# Provide a target for all non-manual "packet" tests
+$(TESTRUNPREFIX)packet_all: $(PACKETRUNS)
 
 $(MANTESTRUNS): $(MANRUNPREFIX)%: $(MANTESTPREFIX)% | $(TEST_TEMP)
 	$< $(TEST_ARGS)
