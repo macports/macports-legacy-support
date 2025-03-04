@@ -27,11 +27,45 @@
 #include_next <sys/socket.h>
 
 /*
+ * There's a tiny chance that some client may expect the misbehaviors
+ * of CMSG_DATA and/or packet timestamps, so we make it possible to
+ * disable our fixes.  Since this is extremely unlikely, disabling
+ * is not the default.  Defining _MACPORTS_LEGACY_DISABLE_CMSG_FIXES
+ * nonzero causes this disabling.  This both avoids the fix for the
+ * CMSG_DATA definition, and (if appropriate) defines 'recvmsg' as
+ * a macro pointing to a dummy wrapper function.  Note that the latter
+ * behavior is based on the library OS version, not the SDK version.
+ */
+
+#if defined(_MACPORTS_LEGACY_DISABLE_CMSG_FIXES) \
+    && _MACPORTS_LEGACY_DISABLE_CMSG_FIXES
+
+/* On 10.4 we may get here with __DARWIN_ALIAS_C undefined. */
+/* If so, fix that temporarily. */
+#ifndef __DARWIN_ALIAS_C
+#define __MPLS_DARWIN_C_UNDEF
+#define __DARWIN_ALIAS_C(x)
+#endif
+
+#if __MPLS_LIB_CMSG_ROSETTA_FIX__
+#define recvmsg __mpls_standard_recvmsg
+ssize_t recvmsg(int, struct msghdr *, int) __DARWIN_ALIAS_C(recvmsg);
+#endif
+
+/* Now undo the temporary hack. */
+#ifdef __MPLS_DARWIN_C_UNDEF
+#undef __DARWIN_ALIAS_C
+#undef __MPLS_DARWIN_C_UNDEF
+#endif
+
+#else /* !_MACPORTS_LEGACY_DISABLE_CMSG_FIXES */
+
+/*
  * OSX prior to 10.6 defines CMSG_DATA without properly considering 64-bit
  * builds, due to bad alignment assumptions, though it happens to work in
  * the 10.4 case and only actually fails in the 10.5 64-bit case.
  *
- * In those OS versions we substitute a version of the definition from 10.6.
+ * In that OS version we substitute a version of the definition from 10.6.
  */
 
 #if __MPLS_SDK_CMSG_DATA_FIX__
@@ -47,5 +81,7 @@
 	__DARWIN_ALIGN32(sizeof(struct cmsghdr)))
 
 #endif /* __MPLS_SDK_CMSG_DATA_FIX__ */
+
+#endif /* !_MACPORTS_LEGACY_DISABLE_CMSG_FIXES */
 
 #endif /* _MACPORTS_SYS_SOCKET_H_ */

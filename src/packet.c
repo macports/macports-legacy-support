@@ -222,4 +222,32 @@ ssize_t recvmsg##sfx(int socket, struct msghdr *message, int flags) \
 ALL_VARIANTS
 #undef VARIANT_ENT
 
-#endif /* __MPLS_LIB_CMSG_ROSETTA_FIX__ */
+/* Dummy wrapper for avoiding fixes */
+static ssize_t
+recvmsg_dummy(int socket, struct msghdr *message, int flags, fv_type_t fvtype)
+{
+  return (*sys_recvmsg(fvtype))(socket, message, flags);
+}
+
+#define VARIANT_ENT(name,sfx) \
+ssize_t __mpls_standard_recvmsg##sfx( \
+    int socket, struct msghdr *message, int flags) \
+  { return recvmsg_dummy(socket, message, flags, fv_##name); }
+ALL_VARIANTS
+#undef VARIANT_ENT
+
+#elif __MPLS_TARGET_OSVER < 1050 /* 10.4 with no fixes */
+
+/* If we're not applying the fix on 10.4, provide dummy wrappers */
+
+#include <sys/types.h>
+struct msghdr;
+ssize_t recvmsg(int socket, struct msghdr *message, int flags);
+
+#define VARIANT_ENT(name,sfx) \
+ssize_t recvmsg##sfx(int socket, struct msghdr *message, int flags) \
+  { return recvmsg(socket, message, flags); }
+MOST_VARIANTS
+#undef VARIANT_ENT
+
+#endif /* 10.4 with no fixes */
