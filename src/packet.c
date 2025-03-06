@@ -48,7 +48,7 @@
 
 #endif /* __MPLS_64BIT */
 
-#if __MPLS_LIB_CMSG_ROSETTA_FIX__
+#if __MPLS_LIB_CMSG_ROSETTA_FIX__ || __MPLS_LIB_CMSG_FORMAT_FIX__
 
 /*
  * There are at least three known issues related to packet timestamps in
@@ -59,18 +59,22 @@
  * resulting in an incorrect payload address.  This is fixed in our wrapper
  * header.
  *
- *   2) In 64-bit builds running on a 32-bit 10.4-10.5 kernel,
- * the struct timeval supplied by the kernel is based on a 32-bit time_t,
- * while userspace expects a version based on a 64-bit time_t.  This is
- * not currently fixed here, but ntpsec has its own workaround for it.
- * A future version might fix this, which would involve recopying the entire
- * CMSG stream to adjust any lengths that need it.
+ *   2) In 64-bit builds running on a 32-bit <10.6 kernel, the struct timeval
+ * supplied by the kernel is based on a 32-bit time_t, while userspace expects
+ * a version based on a 64-bit time_t.  This is fixed here, by reformatting
+ * the relevant payloads.
  *
- *   3) Although Rosetta correctly byte-swaps the CMSG header, it fails
- * to byte-swap the payload, resulting in garbled timestamps.  That is
- * the issue addressed here.  The fix is only applied when the payload
- * length is as expected, but since issue #2 only applies to 64-bit builds
- * and Rosetta doesn't support ppc64, that's not a problem.
+ *   3) Although Rosetta correctly byte-swaps CMSG headers, it fails
+ * to byte-swap the payloads, resulting in garbled timestamps.  This is
+ * fixed here, by applying the missing byte swaps.
+ *
+ * The fix for #2 is applied before the fix for #3, so that the latter need
+ * only concern itself with the expected format.  But in practice, the two
+ * issues never occur simultaneously, since #2 only applies to 64-bit builds,
+ * and Rosetta doesn't support ppc64.  In fact, at present, the two fixes
+ * aren't simultaneously present in the code, since the Rosetta fix is only
+ * present in ppc builds, and the format fix is only present in pre-10.6
+ * 64-bit builds.  But the code design doesn't rely on that.
  *
  * Issue #1 applies to all CMSG types, and is fixed for all types.  It is
  * not known at this time whether issues #2 and/or #3 apply to other CMSG
@@ -90,6 +94,7 @@
 #include <dlfcn.h>
 #include <stddef.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <sys/socket.h>
 #include <sys/sysctl.h>
@@ -101,49 +106,8 @@
 #define CMSG_DATALEN(cmsg) ((uint8_t *) (cmsg) + (cmsg)->cmsg_len \
 	                    - (uint8_t *) CMSG_DATA(cmsg))
 
-/* sysctl to check whether we're running natively (non-ppc only) */
-#define SYSCTL_NATIVE "sysctl.proc_native"
-
-/* Test whether it's Rosetta */
-/* -1 no, 1 yes */
-static int
-check_rosetta(void)
-{
-  int native;
-  size_t native_sz = sizeof(native);
-
-  if (sysctlbyname(SYSCTL_NATIVE, &native, &native_sz, NULL, 0) < 0) {
-    /* If sysctl failed, must be real ppc. */
-    return -1;
-  }
-  return native ? -1 : 1;
-}
-
-/* Fix endianness of CMSG payloads */
-static void
-fix_cmsg_endianness(struct msghdr *msghdr)
-{
-	struct cmsghdr *cmsghdr;
-	struct timeval *tvp;
-
-  cmsghdr = CMSG_FIRSTHDR(msghdr);
-
-  while (cmsghdr) {
-    if (cmsghdr->cmsg_level == SOL_SOCKET) {
-
-      switch (cmsghdr->cmsg_type) {
-
-      case SCM_TIMESTAMP:
-        if (CMSG_DATALEN(cmsghdr) != sizeof(*tvp)) break;
-        tvp = (struct timeval *) CMSG_DATA(cmsghdr);
-        BYTE_SWAP_INPLACE(tvp->tv_sec);
-        BYTE_SWAP_INPLACE(tvp->tv_usec);
-        break;
-      }
-    }
-    cmsghdr = CMSG_NXTHDR(msghdr, cmsghdr);
-  }
-}
+#define FORMAT_FIX   __MPLS_LIB_CMSG_FORMAT_FIX__
+#define ROSETTA_FIX  __MPLS_LIB_CMSG_ROSETTA_FIX__
 
 #define ALL_VARIANTS \
   VARIANT_ENT(basic,) \
@@ -190,28 +154,273 @@ sys_recvmsg(fv_type_t fvtype)
   abort();
 }
 
+#if FORMAT_FIX
+
+/*
+ * Handling for mismatched timestamp formats, adapted from similar code
+ * developed for ntpsec's ntpd.
+ *
+ * This covers payload sizes of 8, 12, and 16 bytes, though only the 8-byte
+ * case is expected to occur in practice in macOS (32-bit kernel with 64-bit
+ * userspace in <10.6).
+ *
+ * For more details, see:
+ * https://gitlab.com/NTPsec/ntpsec/-/commit/7c238744b4eb1990ed1135b93fc6fbfc6c576a05
+ */
+
+#if defined(__ppc__) || defined(__ppc64__)
+#define IS_LITTLE_ENDIAN 0
+#else
+#define IS_LITTLE_ENDIAN 1
+#endif
+
+#define MAX_TV_USEC 1000000
+
+static void
+fetch_cmsg_timeval(struct cmsghdr *cmsghdr, struct timeval *tvp)
+{
+	struct timeval_3232 {
+		uint32_t	tv_sec;  /* Unsigned to get past 2038 */
+		int32_t		tv_usec;
+	} *tv3232p;
+	struct timeval_6432 {
+		int64_t		tv_sec;
+		int32_t		tv_usec;
+	} *tv6432p;
+	#define SIZEOF_PACKED_TIMEVAL6432 (sizeof(int64_t) + sizeof(int32_t))
+	struct timeval_6464 {
+		int64_t		tv_sec;
+		uint32_t	tv_usec[2];  /* Unsigned for compares */
+	} *tv6464p;
+	int datalen = CMSG_DATALEN(cmsghdr);
+
+	if (datalen == sizeof(struct timeval)) {
+		*tvp = *((struct timeval *) CMSG_DATA(cmsghdr));
+		return;
+	}
+
+	switch (datalen) {
+
+	case sizeof(struct timeval_3232):
+		tv3232p = (struct timeval_3232 *) CMSG_DATA(cmsghdr);
+		tvp->tv_sec = tv3232p->tv_sec;
+		tvp->tv_usec = tv3232p->tv_usec;
+		return;
+
+	case SIZEOF_PACKED_TIMEVAL6432:
+		tv6432p = (struct timeval_6432 *) CMSG_DATA(cmsghdr);
+		tvp->tv_sec = tv6432p->tv_sec;
+		tvp->tv_usec = tv6432p->tv_usec;
+		return;
+
+	case sizeof(struct timeval_6464):
+		tv6464p = (struct timeval_6464 *) CMSG_DATA(cmsghdr);
+		tvp->tv_sec = tv6464p->tv_sec;
+		if (IS_LITTLE_ENDIAN) {
+			tvp->tv_usec = tv6464p->tv_usec[0];
+			return;
+		} else if (tv6464p->tv_usec[0] == 0) {
+			if (tv6464p->tv_usec[1] < MAX_TV_USEC) {
+				tvp->tv_usec = tv6464p->tv_usec[1];
+			} else {
+				tvp->tv_usec = tv6464p->tv_usec[0];
+			}
+			return;
+		} else if (tv6464p->tv_usec[0] < MAX_TV_USEC) {
+			tvp->tv_usec = tv6464p->tv_usec[0];
+			return;
+		}
+		/* FALLTHRU to default (invalid timestamp) */
+
+	default:
+		memset(tvp, 0, sizeof(*tvp));
+	}
+}
+
+/* Check message lengths, to see if format adjustments are needed */
+static int
+check_cmsg_lengths(struct msghdr *msghdr, socklen_t *new_controllen)
+{
+	struct cmsghdr *cmsghdr;
+	int lenadj;
+	int needadj = 0;
+
+  cmsghdr = CMSG_FIRSTHDR(msghdr);
+  *new_controllen = 0;
+
+  while (cmsghdr) {
+    if (cmsghdr->cmsg_level == SOL_SOCKET) {
+
+      lenadj = 0;
+
+      switch (cmsghdr->cmsg_type) {
+
+      case SCM_TIMESTAMP:
+        lenadj = sizeof(struct timeval) - CMSG_DATALEN(cmsghdr);
+        break;
+      }
+
+      *new_controllen += cmsghdr->cmsg_len + lenadj;
+      if (lenadj) needadj = 1;
+    }
+    cmsghdr = CMSG_NXTHDR(msghdr, cmsghdr);
+  }
+  return needadj;
+}
+
+/* Reformat any messages that need it */
+static void
+fix_cmsg_formats(struct msghdr *msghdr, socklen_t new_controllen)
+{
+	struct cmsghdr *cmsghdr, *newhdr;
+	struct timeval *tvp;
+	uint8_t *newcmsg, cbuf[1024];
+
+  /* If our local buffer won't hold the new contents, punt */
+  if (new_controllen > sizeof(cbuf)) return;
+  newcmsg = &cbuf[0];
+
+  cmsghdr = CMSG_FIRSTHDR(msghdr);
+
+  while (cmsghdr) {
+    if (cmsghdr->cmsg_level != SOL_SOCKET) {
+      memcpy(newcmsg, cmsghdr, cmsghdr->cmsg_len);
+      newcmsg += cmsghdr->cmsg_len;
+    } else {
+
+      switch (cmsghdr->cmsg_type) {
+
+      case SCM_TIMESTAMP:
+        newhdr = (struct cmsghdr *) newcmsg;
+        *newhdr = *cmsghdr;
+        newhdr->cmsg_len = sizeof(*cmsghdr) + sizeof(*tvp);
+        tvp = (struct timeval *) (newcmsg + sizeof(*cmsghdr));
+        fetch_cmsg_timeval(cmsghdr, tvp);
+        newcmsg += newhdr->cmsg_len;
+        break;
+
+      default:
+        memcpy(newcmsg, cmsghdr, cmsghdr->cmsg_len);
+        newcmsg += cmsghdr->cmsg_len;
+        break;
+      }
+    }
+    cmsghdr = CMSG_NXTHDR(msghdr, cmsghdr);
+  }
+  /* Punt if new total length isn't as expected */
+  if (newcmsg != &cbuf[new_controllen]) return;
+
+  /* Else replace the cmsg stream with the new one */
+  memcpy(msghdr->msg_control, cbuf, new_controllen);
+  msghdr->msg_controllen = new_controllen;
+}
+
+#else /* !FORMAT_FIX */
+
+static int
+check_cmsg_lengths(struct msghdr *msghdr, socklen_t *new_controllen)
+{
+  (void) msghdr; (void) new_controllen;
+  return 0;
+}
+
+static void
+fix_cmsg_formats(struct msghdr *msghdr, socklen_t new_controllen)
+{
+  (void) msghdr; (void) new_controllen;
+}
+
+#endif /* !FORMAT_FIX */
+
+#if ROSETTA_FIX
+
+/* sysctl to check whether we're running natively (non-ppc only) */
+#define SYSCTL_NATIVE "sysctl.proc_native"
+
+/* Test whether it's Rosetta */
+/* -1 no, 1 yes */
+static int
+check_rosetta(void)
+{
+  int native;
+  size_t native_sz = sizeof(native);
+
+  if (sysctlbyname(SYSCTL_NATIVE, &native, &native_sz, NULL, 0) < 0) {
+    /* If sysctl failed, must be real ppc. */
+    return -1;
+  }
+  return native ? -1 : 1;
+}
+
+/* Fix endianness of CMSG payloads */
+static void
+fix_cmsg_endianness(struct msghdr *msghdr)
+{
+	struct cmsghdr *cmsghdr;
+	struct timeval *tvp;
+
+  cmsghdr = CMSG_FIRSTHDR(msghdr);
+
+  while (cmsghdr) {
+    if (cmsghdr->cmsg_level == SOL_SOCKET) {
+
+      switch (cmsghdr->cmsg_type) {
+
+      case SCM_TIMESTAMP:
+        if (CMSG_DATALEN(cmsghdr) != sizeof(*tvp)) break;
+        tvp = (struct timeval *) CMSG_DATA(cmsghdr);
+        BYTE_SWAP_INPLACE(tvp->tv_sec);
+        BYTE_SWAP_INPLACE(tvp->tv_usec);
+        break;
+      }
+    }
+    cmsghdr = CMSG_NXTHDR(msghdr, cmsghdr);
+  }
+}
+
+#else /* !ROSETTA_FIX */
+
+static int check_rosetta(void) { return -1; }
+static void fix_cmsg_endianness(struct msghdr *msghdr) { (void) msghdr; }
+
+#endif /* !ROSETTA_FIX */
+
 /* Common internal function for all variants */
 static ssize_t
 recvmsg_internal(int socket, struct msghdr *message, int flags,
                  fv_type_t fvtype)
 {
   static int is_rosetta = 0;
+  socklen_t init_controllen, new_controllen;
   ssize_t ret;
 
   /* Determine Rosettaness, if not already known */
   if (!is_rosetta) is_rosetta = check_rosetta();
 
-  /* Just pass through if not Rosetta */
-  if (is_rosetta < 0) return (*sys_recvmsg(fvtype))(socket, message, flags);
+  /* Just pass through if Rosetta-only and not Rosetta */
+  if (!FORMAT_FIX && is_rosetta < 0) {
+    return (*sys_recvmsg(fvtype))(socket, message, flags);
+  }
 
-  /* Running under Rosetta - need to intercept return */
+  /* Need to intercept return (first capturing initial controllen) */
+  init_controllen = message->msg_control ? message->msg_controllen : 0;
   ret = (*sys_recvmsg(fvtype))(socket, message, flags);
 
   /* If error or no CMSG data, just return */
   if (ret < 0 || !message->msg_controllen) return ret;
 
-  /* Otherwise, fix the data */
-  fix_cmsg_endianness(message);
+  /* Otherwise, fix the data as needed */
+
+  /* First see if any formats need adjusting (by checking lengths) */
+  if (check_cmsg_lengths(message, &new_controllen)) {
+    /* Reformat as needed, if the result will still fit */
+    if (new_controllen <= init_controllen) {
+      fix_cmsg_formats(message, new_controllen);
+    }
+  }
+
+  /* Now, if Rosetta, do any needed byte-swapping */
+  if (is_rosetta > 0) fix_cmsg_endianness(message);
 
   return ret;
 }

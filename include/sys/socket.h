@@ -47,7 +47,7 @@
 #define __DARWIN_ALIAS_C(x)
 #endif
 
-#if __MPLS_LIB_CMSG_ROSETTA_FIX__
+#if __MPLS_LIB_CMSG_ROSETTA_FIX__ || __MPLS_LIB_CMSG_FORMAT_FIX__
 #define recvmsg __mpls_standard_recvmsg
 ssize_t recvmsg(int, struct msghdr *, int) __DARWIN_ALIAS_C(recvmsg);
 #endif
