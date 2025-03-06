@@ -82,8 +82,8 @@ int __close(int) __asm("_close");
 typedef struct timeval timeval_t;
 
 #define BILLION64 1000000000ULL
+
 #define MAX_TV_USEC 1000000
-#define MAX_TV_NSEC 1000000000
 #define MAX_MACH_TIME (1ULL << 60) /* Arbitrary >36-year uptime limit */
 
 #define TS_TYPES \
@@ -116,85 +116,6 @@ static const int ts_min_darwin[] = {
 };
 #undef TS_ONE
 
-/*
- * Handling for mismatched timestamp formats, copied from ntpsec
- *
- * Since this particular bug is not currently fixed here, we duplicate
- * the ntpsec workaround to avoid a test failure.  This is just a verbatim
- * copy, and handles more issues than we'll see here.
- */
-
-static const union {
-	uint8_t c[8];
-	uint64_t i;
-} endian_test = {{1, 2, 3, 4, 5, 6, 7, 8}};
-#define ENDIAN_LITTLE 0x0807060504030201ULL
-#define IS_LITTLE_ENDIAN (endian_test.i == ENDIAN_LITTLE)
-
-static struct timeval *
-access_cmsg_timeval(struct cmsghdr *cmsghdr, struct timeval *temp)
-{
-	struct timeval_3232 {
-		uint32_t	tv_sec;  /* Unsigned to get past 2038 */
-		int32_t		tv_usec;
-	} *tv3232p;
-	struct timeval_6432 {
-		int64_t		tv_sec;
-		int32_t		tv_usec;
-	} *tv6432p;
-	#define SIZEOF_PACKED_TIMEVAL6432 (sizeof(int64_t) + sizeof(int32_t))
-	struct timeval_6464 {
-		int64_t		tv_sec;
-		uint32_t	tv_usec[2];  /* Unsigned for compares */
-	} *tv6464p;
-	int datalen = CMSG_DATALEN(cmsghdr);
-
-	(void) access_cmsg_timeval;
-
-	if (datalen == sizeof(struct timeval)) {
-		return (struct timeval *) CMSG_DATA(cmsghdr);
-	}
-
-	switch (datalen) {
-
-	case sizeof(struct timeval_3232):
-		tv3232p = (struct timeval_3232 *) CMSG_DATA(cmsghdr);
-		temp->tv_sec = tv3232p->tv_sec;
-		temp->tv_usec = tv3232p->tv_usec;
-		break;
-
-	case SIZEOF_PACKED_TIMEVAL6432:
-		tv6432p = (struct timeval_6432 *) CMSG_DATA(cmsghdr);
-		temp->tv_sec = tv6432p->tv_sec;
-		temp->tv_usec = tv6432p->tv_usec;
-		break;
-
-	case sizeof(struct timeval_6464):
-		tv6464p = (struct timeval_6464 *) CMSG_DATA(cmsghdr);
-		temp->tv_sec = tv6464p->tv_sec;
-		if (IS_LITTLE_ENDIAN) {
-			temp->tv_usec = tv6464p->tv_usec[0];
-			break;
-		} else if (tv6464p->tv_usec[0] == 0) {
-			if (tv6464p->tv_usec[1] < MAX_TV_USEC) {
-				temp->tv_usec = tv6464p->tv_usec[1];
-			} else {
-				temp->tv_usec = tv6464p->tv_usec[0];
-			}
-			break;
-		} else if (tv6464p->tv_usec[0] < MAX_TV_USEC) {
-			temp->tv_usec = tv6464p->tv_usec[0];
-			break;
-		}
-		/* FALLTHRU to default (invalid timestamp) */
-
-	default:
-		memset(temp, 0, sizeof(struct timeval));
-	}
-
-	return temp;
-}
-
 /* Timestamp checks & conversions to uint64 */
 
 static uint64_t
@@ -208,8 +129,7 @@ typedef uint64_t ts_func_t(struct cmsghdr *cmsghdr);
 static uint64_t
 get_timeval_ts(struct cmsghdr *cmsghdr)
 {
-  timeval_t tvtemp;
-  timeval_t *tvp = access_cmsg_timeval(cmsghdr, &tvtemp);
+  timeval_t *tvp = (struct timeval *) CMSG_DATA(cmsghdr);
 
   if ((uint64_t) tvp->tv_usec >= MAX_TV_USEC) return 0;
   return timeval2nanos(tvp);
@@ -502,6 +422,7 @@ test_timestamp(const char *name, ts_type_t tstype, int sockopt, int scmtype,
   if (ts_sizes[tstype] && datalen != ts_sizes[tstype]) {
     printf("    %s payload length %d != expected sizeof(%s) = %d\n",
            name, datalen, tsname, ts_sizes[tstype]);
+    ret = 1;
   }
   if (hdrlen > (int) sizeof(*cmsg)) {
     xdatap = (uint32_t *) (cbuf + sizeof(*cmsg));
