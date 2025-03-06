@@ -186,6 +186,10 @@
 /* Byte-swapping failure in CMSG data with Rosetta (any OS with PPC) */
 #define __MPLS_LIB_CMSG_ROSETTA_FIX__         __MPLS_APPLE_PPC__
 
+/* Format confusion in CMSG timestamps, due to kernel bitness mismatch */
+#define __MPLS_LIB_CMSG_FORMAT_FIX__          (__MPLS_TARGET_OSVER < 1060 \
+                                               && __MPLS_64BIT)
+
 /* stpncpy */
 #define __MPLS_SDK_SUPPORT_STPNCPY__          (__MPLS_SDK_MAJOR < 1070)
 #define __MPLS_LIB_SUPPORT_STPNCPY__          (__MPLS_TARGET_OSVER < 1070)
