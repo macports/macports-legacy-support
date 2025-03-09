@@ -6,3 +6,4 @@ lib
 *~
 *.dSYM
 *.tmp
+tst_data/*
