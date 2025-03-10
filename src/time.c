@@ -106,6 +106,12 @@ uint64_t mach_continuous_approximate_time(void)
  * monotonicity property.  Note that neither following adjtime() slewing
  * nor counting during sleeps are mandatory properties of CLOCK_MONOTONIC
  * in general, though they happen to be true of the 10.12+ Apple version.
+ *
+ * For maximum consistency with Apple's microsecond-resolution implementation,
+ * we limit the resolution of our implementation to microseconds.  Although
+ * we could use an alternate scale factor to get microseconds directly, this
+ * reduces accuracy, and it isn't worth worrying too much about the speed of
+ * this function, which is almost never the appropriate choice anyway.
  */
 
 /*
@@ -443,7 +449,10 @@ clock_gettime_nsec_np(clockid_t clk_id)
   case CLOCK_THREAD_CPUTIME_ID:
     return get_thread_usage_ns();
 
-  case CLOCK_MONOTONIC:  /* See CLOCK_MONOTONIC comment above */
+  case CLOCK_MONOTONIC:
+    mach_time = mach_continuous_time();
+    return mach2nanos(mach_time) / 1000 * 1000;  /* Quantize to microseconds */
+
   case CLOCK_MONOTONIC_RAW:
     mach_time = mach_continuous_time();
     break;
@@ -475,7 +484,7 @@ clock_gettime(clockid_t clk_id, struct timespec *ts)
   int ret, mserr = 0;
   struct timeval tod;
   struct rusage ru;
-  uint64_t mach_time;
+  uint64_t mach_time, nanos;
 
   /* Set up mach scaling early, whether we need it or not. */
   if (!mach_mult) mserr = setup_mach_mult();
@@ -496,7 +505,12 @@ clock_gettime(clockid_t clk_id, struct timespec *ts)
   case CLOCK_THREAD_CPUTIME_ID:
     return get_thread_usage_ts(ts);
 
-  case CLOCK_MONOTONIC:  /* See CLOCK_MONOTONIC comment above */
+  case CLOCK_MONOTONIC:
+    mach_time = mach_continuous_time();
+    nanos = mach2nanos(mach_time) / 1000 * 1000;  /* Quantize to microseconds */
+    nanos2timespec(nanos, ts);
+    return mserr;
+
   case CLOCK_MONOTONIC_RAW:
     mach_time = mach_continuous_time();
     break;
@@ -539,11 +553,11 @@ clock_getres(clockid_t clk_id, struct timespec *res)
 #if !HIRES_THREAD_TIME
   case CLOCK_THREAD_CPUTIME_ID:
 #endif
+  case CLOCK_MONOTONIC:  /* Forced microsecond resolution */
     *res = res_micros;
     return 0;
 
   /* Everything based on mach_time has mach resolution. */
-  case CLOCK_MONOTONIC:
   case CLOCK_MONOTONIC_RAW:
   case CLOCK_MONOTONIC_RAW_APPROX:
   case CLOCK_UPTIME_RAW:
