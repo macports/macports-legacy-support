@@ -273,6 +273,19 @@ typedef struct cstats_s {
   int maxsame;
 } cstats_t;
 
+/* Struct for info on clock comparisons */
+typedef struct dstats_s {
+  ns_time_t refdiff;
+  ns_time_t refmean;
+  ns_time_t testdiff;
+  ns_time_t testmean;
+  sns_time_t offset;
+  double slope;
+  double sqmin;
+  double sqmax;
+  double sqmean;
+} dstats_t;
+
 /* Struct for info on clock errors */
 typedef struct errinfo_s {
   ns_time_t first;
@@ -298,6 +311,10 @@ static timespec_t tsbuf[NUM_SAMPLES];
 static ns_time_t tvnsbuf[NUM_SAMPLES];
 static ns_time_t mtnsbuf[NUM_SAMPLES];
 static ns_time_t tsnsbuf[NUM_SAMPLES];
+
+/* Additional buffers for mach time as a comparison basis */
+static mach_time_t refbuf[NUM_SAMPLES];
+static ns_time_t refnsbuf[NUM_SAMPLES];
 
 /* Pointers to buffers, by clock type */
 #define CLOCK_TYPE(name,buf) &buf[0],
@@ -583,13 +600,14 @@ getres(clock_idx_t clkidx, ns_time_t *np)
 
 /* Check collected samples (nanosecond version) */
 static int
-check_samples(clock_idx_t clkidx, errinfo_t *ei)
+check_samples(clock_idx_t clkidx, const ns_time_t buf[],
+              int mode, errinfo_t *ei)
 {
   int ret, maxsame, cursame = 0;
   ns_time_t last, cur = 0, res = 0, nzmin = ~0ULL;
-  const ns_time_t *buf = nsbufp[clock_types[clkidx]];
   const ns_time_t *nsp = buf;
   sns_time_t diff;
+  int numitems = mode ? NUM_DIFFS : NUM_SAMPLES;
 
   /* Determine maximum consecutive repeated values */
   if ((ret = getres(clkidx, &res))) return ret;
@@ -598,7 +616,7 @@ check_samples(clock_idx_t clkidx, errinfo_t *ei)
   ei->errnum = 0;
 
   last = *nsp++;
-  while (nsp < &buf[NUM_SAMPLES]) {
+  while (nsp < &buf[numitems]) {
     cur = *nsp++;
     diff = cur - last;
     if (diff < 0) {
@@ -620,7 +638,7 @@ check_samples(clock_idx_t clkidx, errinfo_t *ei)
     last = cur;
   }
 
-  ei->first = buf[0]; ei->last = buf[NUM_SAMPLES - 1];
+  ei->first = buf[0]; ei->last = buf[numitems - 1];
   ei->index = ret ? nsp - buf : -1;
   ei->prev = last; ei->cur = cur;
   ei->nzmin = nzmin < ~0ULL ? nzmin : 0;
@@ -669,7 +687,8 @@ check_clock(clock_idx_t clkidx, cstats_t *sp, errinfo_t *ei)
   do {
     usleepx(sleepus);
     if ((ret = collect_samples(clkidx, ei))) break;
-    if ((ret = check_samples(clkidx, ei)) <= 0) break;
+    ret = check_samples(clkidx, nsbufp[clock_types[clkidx]], 0, ei);
+    if (ret <= 0) break;
     sleepus = MIN(sleepus * 2, MAX_SLEEP_US);
   } while (++tries < MAX_STEP_TRIES);
 
@@ -680,12 +699,14 @@ check_clock(clock_idx_t clkidx, cstats_t *sp, errinfo_t *ei)
 
 /* Report error getting time */
 static void
-report_clock_err(clock_idx_t clkidx, const errinfo_t *ei, int verbose)
+report_clock_err(clock_idx_t clkidx, const errinfo_t *ei,
+                 int mode, int verbose)
 {
   const char *indent = verbose ? "    " : "";
+  const char *modestr = mode < 0 ? "" : mode ? "test " : "ref ";
 
-  printf("%s*** clock %s failed (%d): %s\n",
-         indent, clock_names[clkidx],
+  printf("%s*** %sclock %s failed (%d): %s\n",
+         indent, modestr, clock_names[clkidx],
          ei->errnum, get_errstr(ei->errnum));
   if (!verbose) {
     printf("  @%d: %llu->%llu(%llu), numsame = %d/%d, retries = %d\n",
@@ -803,7 +824,7 @@ report_clock(clock_idx_t clkidx, int dump, int verbose, int quiet)
   if (vnq) printf(" (resolution = %d ns)\n", (int) clock_res[clkidx]);
 
   if ((err = check_clock(clkidx, &stats, &info))) {
-    report_clock_err(clkidx, &info, verbose);
+    report_clock_err(clkidx, &info, -1, verbose);
     ret = 1;
   }
   if (vnq && !ret) print_stats(&stats, &info);
@@ -820,6 +841,364 @@ report_all_clocks(int dump, int verbose, int quiet)
 
   while (clkidx < (clock_idx_t) clock_idx_max) {
     ret |= report_clock(clkidx, dump, verbose, quiet);
+    ++clkidx;
+  }
+  return ret;
+}
+
+/* Cross-checking other clocks against mach clock */
+
+/*
+ * Functions to collect samples of target clock, interleaved with samples
+ * of the basic mach clock.
+ */
+
+static int
+sandwich_mach(void *arg, errinfo_t *ei)
+{
+  mach_time_fn_t *func = (mach_time_fn_t *) arg;
+  mach_time_t *mtp = &mtbuf[0];
+  ns_time_t *nsp = &mtnsbuf[0];
+  mach_time_t *mtrp = &refbuf[0];
+  ns_time_t *nsrp = &refnsbuf[0];
+
+  (void) ei;
+
+  /* Throwaways as cache warmup */
+  time_scratch.mach = mach_absolute_time();
+  time_scratch.mach = (*func)();
+
+  *mtrp++ = mach_absolute_time();
+  while (mtp < &mtbuf[NUM_DIFFS]) {
+    *mtp++ = (*func)();
+    *mtrp++ = mach_absolute_time();
+  }
+
+  mtp = &mtbuf[0];
+  mtrp = &refbuf[0];
+
+  *nsrp++ = mt2nsec(*mtrp++);
+  while (nsp < &mtnsbuf[NUM_DIFFS]) {
+    *nsp++ = mt2nsec(*mtp++);
+    *nsrp++ = mt2nsec(*mtrp++);
+  }
+  return 0;
+}
+
+static int
+sandwich_timeofday(void *arg, errinfo_t *ei)
+{
+  int ret;
+  timeval_t *tvp = &tvbuf[0];
+  ns_time_t *nsp = &tvnsbuf[0];
+  mach_time_t *mtrp = &refbuf[0];
+  ns_time_t *nsrp = &refnsbuf[0];
+
+  (void) arg;
+
+  /* Throwaways as cache warmup */
+  time_scratch.mach = mach_absolute_time();
+  (void) gettimeofday(tvp, NULL);
+
+  *mtrp++ = mach_absolute_time();
+  while (tvp < &tvbuf[NUM_DIFFS]) {
+    if ((ret = gettimeofday(tvp++, NULL))) {
+      ei->errnum = errno; return ret;
+    }
+    *mtrp++ = mach_absolute_time();
+  }
+
+  tvp = &tvbuf[0];
+  mtrp = &refbuf[0];
+
+  *nsrp++ = mt2nsec(*mtrp++);
+  while (nsp < &tvnsbuf[NUM_DIFFS]) {
+    if ((unsigned int) tvp->tv_usec >= MILLION) {
+      ei->errnum = -err_badmicros;
+      ei->badtv = *tvp;
+      ret = -1;
+    }
+    *nsp++ = tv2nsec(tvp++);
+    *nsrp++ = mt2nsec(*mtrp++);
+  }
+  return 0;
+}
+
+static int
+sandwich_gettime(void *arg, errinfo_t *ei)
+{
+  int ret;
+  clockid_t clkid = (clockid_t) (pointer_int_t) arg;
+  timespec_t *tsp = &tsbuf[0];
+  ns_time_t *nsp = &tsnsbuf[0];
+  mach_time_t *mtrp = &refbuf[0];
+  ns_time_t *nsrp = &refnsbuf[0];
+
+  /* Throwaways as cache warmup */
+  time_scratch.mach = mach_absolute_time();
+  (void) clock_gettime(clkid, tsp);
+
+  *mtrp++ = mach_absolute_time();
+  while (tsp < &tsbuf[NUM_DIFFS]) {
+    if ((ret = clock_gettime(clkid, tsp++))) {
+      ei->errnum = errno; return ret;
+    }
+    *mtrp++ = mach_absolute_time();
+  }
+
+  tsp = &tsbuf[0];
+  mtrp = &refbuf[0];
+
+  *nsrp++ = mt2nsec(*mtrp++);
+  while (nsp < &tsnsbuf[NUM_DIFFS]) {
+    if ((unsigned int) tsp->tv_nsec >= BILLION) {
+      ei->errnum = -err_badnanos;
+      ei->badts = *tsp;
+      ret = -1;
+    }
+    *nsp++ = ts2nsec(tsp++);
+    *nsrp++ = mt2nsec(*mtrp++);
+  }
+  return 0;
+}
+
+static int
+sandwich_gettime_ns(void *arg, errinfo_t *ei)
+{
+  clockid_t clkid = (clockid_t) (pointer_int_t) arg;
+  ns_time_t *nsp = &tsnsbuf[0];
+  mach_time_t *mtrp = &refbuf[0];
+  ns_time_t *nsrp = &refnsbuf[0];
+
+  /* Throwaways as cache warmup */
+  time_scratch.mach = mach_absolute_time();
+  time_scratch.ns_time = clock_gettime_nsec_np(clkid);
+
+  *mtrp++ = mach_absolute_time();
+  while (nsp < &tsnsbuf[NUM_DIFFS]) {
+    if (!(*nsp++ = clock_gettime_nsec_np(clkid))) {
+      ei->errnum = errno; return -1;
+    }
+    *mtrp++ = mach_absolute_time();
+  }
+
+  mtrp = &refbuf[0];
+
+  while (nsrp < &refnsbuf[NUM_SAMPLES]) {
+    *nsrp++ = mt2nsec(*mtrp++);
+  }
+  return 0;
+}
+
+static int
+sandwich_samples(clock_idx_t clkidx, errinfo_t *ei)
+{
+  int ret = -1;
+
+  ei->errnum = errno = 0;
+
+#define CLOCK_TYPE(name,buf) \
+    case clock_type_##name: \
+      ret = sandwich_##name(clock_args[clkidx], ei); break;
+  switch (clock_types[clkidx]) {
+    CLOCK_TYPES
+  }
+#undef CLOCK_TYPE
+
+  return ret;
+}
+
+/* Get and check one clock and reference */
+static int
+check_clock_sandwich(clock_idx_t clkidx, errinfo_t *ei, errinfo_t *eir)
+{
+  int ret, tries = 0;
+  useconds_t sleepus = STD_SLEEP_US;
+
+  do {
+    ei->errnum = eir->errnum = errno = 0;
+    usleepx(sleepus);
+    if ((ret = sandwich_samples(clkidx, ei))) break;
+    sleepus = MIN(sleepus * 2, MAX_SLEEP_US);
+
+    ret = check_samples(clock_idx_mach_absolute, refnsbuf, 0, eir);
+    if (ret) { if (ret < 0) break; continue; }
+
+    ret = check_samples(clkidx, nsbufp[clock_types[clkidx]], 1, ei);
+    if (ret <= 0) break;
+  } while (++tries < MAX_STEP_TRIES);
+
+  ei->retries = eir->retries = tries;
+  return ret;
+}
+
+/* Compare clocks */
+static int
+compare_clocks(clock_idx_t clkidx, dstats_t *dp)
+{
+  const ns_time_t *refbp = &refnsbuf[0];
+  const ns_time_t *testbp = nsbufp[clock_types[clkidx]];
+  const ns_time_t *refp = refbp, *testp = testbp;
+  sns_time_t last, cur, mean, tstcur, expected;
+  sns_time_t refofs, diff;
+  int numdiffs = 0;
+  long double slope, diffsqr, difftot;
+
+  /* Use mean values of straddling reference pairs as comparison reference */
+  dp->refdiff = (refbp[NUM_SAMPLES - 1] + refbp[NUM_SAMPLES - 2]
+                 - refbp[0] - refbp[1]) / 2;
+  dp->refmean = (refbp[NUM_SAMPLES - 1] + refbp[NUM_SAMPLES - 2]
+                 + refbp[0] + refbp[1]) / 4;
+  dp->testdiff = testbp[NUM_DIFFS - 1] - testbp[0];
+  dp->testmean = (testbp[NUM_DIFFS - 1] + testbp[0]) / 2;
+  dp->offset = dp->testmean - dp->refmean;
+  dp->slope = slope = (long double) dp->testdiff / dp->refdiff;
+
+  dp->sqmin = HUGE_VAL; dp->sqmax = 0.0; difftot = 0.0;
+
+  last = *refp++;
+  while (testp < &testbp[NUM_DIFFS]) {
+    tstcur = *testp++; cur = *refp++; mean = (last + cur) / 2;
+    last = cur;
+    refofs = mean - (sns_time_t) dp->refmean;
+    expected = (sns_time_t) (refofs * slope) + dp->testmean;
+    diff = tstcur - expected; diffsqr = (long double) diff * diff;
+    if (diffsqr < dp->sqmin) dp->sqmin = diffsqr;
+    if (diffsqr > dp->sqmax) dp->sqmax = diffsqr;
+    difftot += diffsqr;
+    ++numdiffs;
+  }
+  dp->sqmean = difftot / numdiffs;
+
+  return 0;
+}
+
+/* Print comparison stats */
+static void
+print_dstats(clock_idx_t clkidx, dstats_t *dp)
+{
+  printf("    mach spread/mean = %llu/%llu\n",
+         ULL dp->refdiff, ULL dp->refmean);
+  printf("    test spread/mean = %llu/%llu\n",
+         ULL dp->testdiff, ULL dp->testmean);
+  if (!clock_approx[clkidx]) {
+    printf("    offset = %lld, slope = %f, err = %f ppm\n",
+           LL dp->offset, dp->slope, (dp->slope - 1.0) * 1E6);
+  } else {
+    printf("    offset = %lld, slope = %f\n",
+           LL dp->offset, dp->slope);
+  }
+  printf("    linear fit minerr/rmserr/maxerr = %.3f/%.3f/%.3f\n",
+         sqrt(dp->sqmin), sqrt(dp->sqmean), sqrt(dp->sqmax));
+}
+
+/* Dump all clock comparisons */
+static void
+clock_dump_dual_ns(clock_idx_t clkidx, errinfo_t *ei, errinfo_t *eir,
+                   int verbose, int quiet)
+{
+  int idx;
+  mach_time_t *rmp = refbuf;
+  ns_time_t cur, next, tstcur, *nsbuf = nsbufp[clock_types[clkidx]];
+  sns_time_t last = refnsbuf[0], mean, diff;
+  sns_time_t ref_mean, tst_mean, mean_diff;
+  FILE *fp;
+
+  ref_mean = mt2nsec(rmp[0] + rmp[1] + rmp[NUM_DIFFS-1] + rmp[NUM_DIFFS]) / 4;
+  tst_mean = (nsbuf[0] + nsbuf[NUM_DIFFS-1]) / 2;
+  mean_diff = tst_mean - ref_mean;
+
+  if (!(fp = open_log(clkidx, "-vs-mach", quiet))) return;
+  if (verbose >= 2) {
+    fprintf(fp, "# Comparison of %d %s samples vs. mach (%s)\n",
+            NUM_DIFFS, clock_names[clkidx],
+            ei->errnum ? "error" : "no error");
+    fprintf(fp, "# Nonzero min ref delta = %d, min test delta = %d,"
+            " max consecutive same = %d\n",
+            (int) eir->nzmin, (int) ei->nzmin, ei->badsame);
+    fprintf(fp, "# First ref value = %llu, last = %llu, diff = %llu\n",
+            ULL eir->first, ULL eir->last, ULL (eir->last - eir->first));
+    fprintf(fp, "# First test value = %llu, last = %llu, diff = %llu\n",
+            ULL ei->first, ULL ei->last, ULL (ei->last - ei->first));
+    fprintf(fp, "# Average time per sample = %.1f ns, retries = %d\n",
+            (double) (ei->last - ei->first) / (NUM_DIFFS - 1), ei->retries);
+    fprintf(fp, "# Mean ref = %lld, mean test = %lld, diff = %lld\n",
+            LL ref_mean, LL tst_mean, LL mean_diff);
+    if (eir->errnum) {
+      fprintf(fp, "#\n");
+      fprintf(fp, "#   *** Reference Clock Error %d (%s)\n",
+              eir->errnum, get_errstr(eir->errnum));
+      fprintf(fp, "#   *** Failed @%d: %llu -> %llu (%lld)\n",
+              eir->index, ULL eir->prev, ULL eir->cur,
+              LL eir->cur - LL eir->prev);
+    }
+    if (ei->errnum) {
+      fprintf(fp, "#\n");
+      fprintf(fp, "#   *** Test Clock Error %d (%s)\n",
+              ei->errnum, get_errstr(ei->errnum));
+      fprintf(fp, "#   *** Failed @%d: %llu\n",
+              ei->index, ULL ei->cur);
+    }
+    fprintf(fp, "#\n");
+  }
+  if (verbose) fprintf(fp, "# Index         Reference   Delta"
+                       "        Test_Value         Adj_Ref_Mean     Ofs\n");
+  for (idx = 0; idx < NUM_DIFFS; ++idx) {
+    cur = refnsbuf[idx];
+    next = refnsbuf[idx+1];
+    mean = (cur + next) / 2 + mean_diff;
+    tstcur = nsbuf[idx];
+    diff = tstcur - mean;
+    fprintf(fp, "%7d %19llu %5d %19llu %+20lld %+5lld\n",
+            idx, ULL cur, (int) (cur - last),
+            ULL tstcur, LL mean, LL diff);
+    last = cur;
+  }
+  cur = refnsbuf[idx];
+  fprintf(fp, "%7d %19llu %5d\n",
+         idx, ULL cur, (int) (cur - last));
+  fclose(fp);
+}
+
+/* Report info about one clock comparison */
+static int
+report_clock_compare(clock_idx_t clkidx, int dump, int verbose, int quiet)
+{
+  int ret = 0, vnq = verbose && !quiet;
+  const char *name = clock_names[clkidx];
+  errinfo_t info = {0}, refinfo = {0};
+  dstats_t dstats;
+
+  if (vnq) printf("  Comparing %s to mach_absolute_time\n", name);
+
+  if (check_clock_sandwich(clkidx, &info, &refinfo)) {
+    if (refinfo.errnum) {
+      report_clock_err(clock_idx_mach_absolute, &refinfo, 0, verbose);
+    }
+    if (info.errnum) {
+      report_clock_err(clkidx, &info, 1, verbose);
+    }
+    ret = 1;
+  } else {
+    ret |= compare_clocks(clkidx, &dstats);
+    if (vnq & !ret) print_dstats(clkidx, &dstats);
+  }
+  if ((dump && ret) || dump > 1) {
+    clock_dump_dual_ns(clkidx, &info, &refinfo, verbose, quiet);
+  }
+  return ret;
+}
+
+/* Report info about all clock comparisons */
+static int
+report_all_clock_compares(int dump, int verbose, int quiet)
+{
+  int ret = 0;
+  clock_idx_t clkidx = 0;
+
+  while (clkidx < (clock_idx_t) clock_idx_max) {
+    /* As sanity check, don't exclude self-compare */
+    ret |= report_clock_compare(clkidx, dump, verbose, quiet);
     ++clkidx;
   }
   return ret;
@@ -856,6 +1235,7 @@ main(int argc, char *argv[])
 
   while (!err) {
     err |= report_all_clocks(dump, verbose, quiet);
+    err |= report_all_clock_compares(dump, verbose, quiet);
     if (!continuous) break;
   }
 
