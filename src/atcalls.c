@@ -204,7 +204,7 @@ int mknodat(int dirfd, const char *pathname, mode_t mode, dev_t dev)
 
 int openat(int dirfd, const char *pathname, int flags, ...)
 {
-    mode_t mode = 0;
+    mode_t mode;
     if (flags & O_CREAT) {
         va_list ap;
         va_start(ap, flags);
@@ -217,7 +217,7 @@ int openat(int dirfd, const char *pathname, int flags, ...)
 
 int openat$NOCANCEL(int dirfd, const char *pathname, int flags, ...)
 {
-    mode_t mode = 0;
+    mode_t mode;
     if (flags & O_CREAT) {
         va_list ap;
         va_start(ap, flags);
