@@ -14,10 +14,44 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include_next <TargetConditionals.h>
-
 #ifndef __MPLS_TARGETCONDITIONALS__
 #define __MPLS_TARGETCONDITIONALS__
+
+/*
+ * There are instances in the Apple header of the forms:
+ *   #if !defined(__has_extension) || !__has_extension(define_target_os_macros)
+ *   #if defined(__has_builtin) && __has_builtin(__is_target_arch)
+ * This doesn't work when the first macro is undefined, since the second
+ * macro is only correctly parseable when the first macro is defined.
+ * This causes failures when building with GCC 4.2.  We get around it
+ * by temporarily defining the first macro as a dummy during the include_next
+ * in this situation.
+ *
+ * Since TargetConditionals.h doesn't include any other headers, this hack
+ * only applies to its own processing.
+ */
+
+#ifndef __has_extension
+#define __MPLS_HAS_EXTENSION_UNDEF
+#define __has_extension(x) 0
+#endif
+
+#ifndef __has_builtin
+#define __MPLS_HAS_BUILTIN_UNDEF
+#define __has_builtin(x) 0
+#endif
+
+#include_next <TargetConditionals.h>
+
+#ifdef __MPLS_HAS_EXTENSION_UNDEF
+#undef __MPLS_HAS_EXTENSION_UNDEF
+#undef __has_extension
+#endif
+
+#ifdef __MPLS_HAS_BUILTIN_UNDEF
+#undef __MPLS_HAS_BUILTIN_UNDEF
+#undef __has_builtin
+#endif
 
 /*
  * Provide defaults for target macros not defined in earlier SDKs.
