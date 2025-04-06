@@ -184,12 +184,6 @@ FDOPENDIRRUNS   := $(patsubst \
 STATXXSRCS_C    := $(wildcard $(TESTNAMEPREFIX)stat*.c)
 STATXXRUNS      := $(patsubst \
                      $(TESTNAMEPREFIX)%.c,$(TESTRUNPREFIX)%,$(STATXXSRCS_C))
-STPNCHKSRCS_C    := $(wildcard $(TESTNAMEPREFIX)stpncpy_chk*.c)
-STPNCHKRUNS      := $(patsubst \
-                     $(TESTNAMEPREFIX)%.c,$(TESTRUNPREFIX)%,$(STPNCHKSRCS_C))
-STRNCHKSRCS_C    := $(wildcard $(TESTNAMEPREFIX)strncpy_chk*.c)
-STRNCHKRUNS      := $(patsubst \
-                     $(TESTNAMEPREFIX)%.c,$(TESTRUNPREFIX)%,$(STRNCHKSRCS_C))
 PACKETSRCS_C    := $(wildcard $(TESTNAMEPREFIX)packet*.c)
 PACKETRUNS      := $(patsubst \
                      $(TESTNAMEPREFIX)%.c,$(TESTRUNPREFIX)%,$(PACKETSRCS_C))
@@ -215,6 +209,12 @@ MANTESTRUNS     := $(patsubst \
                      $(MANTESTPREFIX)%,$(MANRUNPREFIX)%,$(MANTESTPRGS))
 MANLIBTESTRUNS  := $(patsubst \
                      $(MANLIBTESTPFX)%,$(MANRUNPREFIX)%,$(MANLIBTESTPRGS_C))
+STPNCHKSRCS_C    := $(wildcard $(MANTESTPREFIX)stpncpy_chk*.c)
+STPNCHKRUNS      := $(patsubst \
+                     $(MANTESTPREFIX)%.c,$(MANRUNPREFIX)%,$(STPNCHKSRCS_C))
+STRNCHKSRCS_C    := $(wildcard $(MANTESTPREFIX)strncpy_chk*.c)
+STRNCHKRUNS      := $(patsubst \
+                     $(MANTESTPREFIX)%.c,$(MANRUNPREFIX)%,$(STRNCHKSRCS_C))
 
 TIGERSRCDIR      = tiger_only/src
 TIGERSRCS       := $(wildcard $(TIGERSRCDIR)/*.c)
@@ -438,10 +438,10 @@ $(TESTRUNPREFIX)fdopendir_all: $(FDOPENDIRRUNS)
 $(TESTRUNPREFIX)stat_all: $(STATXXRUNS)
 
 # Provide a target for all "stpncpy_chk" tests
-$(TESTRUNPREFIX)stpncpy_chk_all: $(STPNCHKRUNS)
+$(MANRUNPREFIX)stpncpy_chk_all: $(STPNCHKRUNS)
 
 # Provide a target for all "strncpy_chk" tests
-$(TESTRUNPREFIX)strncpy_chk_all: $(STRNCHKRUNS)
+$(MANRUNPREFIX)strncpy_chk_all: $(STRNCHKRUNS)
 
 # Provide a target for all non-manual "packet" tests
 $(TESTRUNPREFIX)packet_all: $(PACKETRUNS)
