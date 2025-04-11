@@ -67,10 +67,13 @@ typedef int64_t sns_time_t;
 #define BILLION64  1000000000ULL
 
 /* Parameters for collection sequence */
-#define MAX_STEP_NS 700000    /* Maximum delta not considered a step */
-#define MAX_STEP_TRIES 50     /* Maximum tries to avoid a step */
-#define STD_SLEEP_US 1000     /* Standard sleep before collecting */
-#define MAX_SLEEP_US 100000   /* Maximum sleep when retrying */
+#define MAX_STEP_NS     700000  /* Maximum delta not considered a step */
+#define MAX_STEP_TRIES      50  /* Maximum tries to avoid a step */
+#define STD_SLEEP_US      1000  /* Standard sleep before collecting */
+#define MAX_SLEEP_US    100000  /* Maximum sleep when retrying */
+
+/* Mach_time scaling tolerance */
+#define MACH_SCALE_TOLER 10E-6
 
 #ifndef TEST_TEMP
 #define TEST_TEMP "/dev/null"
@@ -1297,6 +1300,81 @@ report_all_clock_compares(int dump, int verbose, int quiet)
   return ret;
 }
 
+/*
+ * Check mach_time scaling
+ *
+ * This checks the computation that scales mach_time to nanoseconds.  It
+ * only checks the accuracy of applying the scale factor reported by the OS;
+ * it does *not* check the scale factor itself.  See the comment titled
+ * "Mach timebase scaling" in src/time.c for details of right and wrong ways
+ * to do this.
+ *
+ * The basic approach is to grab a "sandwich" of CLOCK_UPTIME_RAW (ns)
+ * between samples of mach_absolute_time(), and check the ratio of values.
+ * With any uptime of more than about a second, the inaccuracy of the
+ * "divide first" approach on PowerPC is reliably observable, and with any
+ * uptime of more than about 7.4 minutes, the overflow and wraparound of the
+ * "multiply first" approach on PowerPC can be observed.
+ *
+ * If and when the overflow occurs from using the "multiply first" approach
+ * on PowrerPC, the computed nanosecond value wraps around, after which its
+ * value is never more than half the correct value.  Thus, it can be detected
+ * on the basis of a very large negative error in the scale (at least 0.5).
+ */
+static int
+check_mach_scaling(int verbose)
+{
+  int ret = 0, idx, best = 0;
+  mach_time_t mt[4];
+  ns_time_t nst[3];
+  double nslo, nshi, nsmean, nstoler, nscur, nserr, err_mult;
+  const char *err_units, *msg;
+
+  if (verbose) printf("  Checking mach_time scaling\n");
+
+  /* Get tightest "sandwich" out of 4/3 */
+  mt[0] = mach_absolute_time();
+  nst[0] = clock_gettime_nsec_np(CLOCK_UPTIME_RAW);
+  mt[1] = mach_absolute_time();
+  nst[1] = clock_gettime_nsec_np(CLOCK_UPTIME_RAW);
+  mt[2] = mach_absolute_time();
+  nst[2] = clock_gettime_nsec_np(CLOCK_UPTIME_RAW);
+  mt[3] = mach_absolute_time();
+
+  for(idx = 1; idx < 3; ++idx) {
+    if (mt[idx+1] - mt[idx] < mt[best+1] - mt[best]) best = idx;
+  }
+
+  nslo = mt[best] * mach2nanos; nshi = mt[best+1] * mach2nanos;
+  nscur = nst[best];
+
+  nsmean = (nslo + nshi) / 2.0;
+  nstoler = (nshi - nslo) / 2.0 / nsmean;
+  nserr = (nscur - nsmean) / nsmean;
+
+  if (nserr < -0.499) {
+    printf("    *** Mach scaling wraparound, mach = %llu->%llu, ns = %llu\n",
+           ULL mt[best], ULL mt[best+1], ULL nst[best]);
+    return 1;
+  }
+
+  if (fabs(nserr) >= 1E-6) {
+    err_mult = 1E6; err_units = "ppm";
+  } else {
+    err_mult = 1E9; err_units = "ppb";
+  }
+  if (fabs(nserr) >= MACH_SCALE_TOLER) ret = 1;
+
+  if (verbose || ret) {
+    msg = ret ? "*** Excessive mach scaling error"
+              : "Measured mach scaling error";
+    printf("    %s = %+.6f %s +/- %.6f %s\n", msg,
+           nserr * err_mult, err_units, nstoler * err_mult, err_units);
+  }
+
+  return ret;
+}
+
 /* Main function */
 int
 main(int argc, char *argv[])
@@ -1329,6 +1407,7 @@ main(int argc, char *argv[])
   while (!err) {
     err |= report_all_clocks(dump, verbose, quiet);
     err |= report_all_clock_compares(dump, verbose, quiet);
+    err |= check_mach_scaling(verbose && !quiet);
     if (!continuous) break;
   }
 
