@@ -65,7 +65,6 @@ typedef int64_t sns_time_t;
 #define MILLION    1000000U
 #define BILLION    1000000000U
 #define BILLION64  1000000000ULL
-#define BILLIONDBL 1000000000.0
 
 /* Parameters for collection sequence */
 #define MAX_STEP_NS 700000    /* Maximum delta not considered a step */
@@ -73,13 +72,17 @@ typedef int64_t sns_time_t;
 #define STD_SLEEP_US 1000     /* Standard sleep before collecting */
 #define MAX_SLEEP_US 100000   /* Maximum sleep when retrying */
 
+#ifndef TEST_TEMP
+#define TEST_TEMP "/dev/null"
+#endif
+
 #define LL (long long)
 #define ULL (unsigned long long)
 
 typedef unsigned long pointer_int_t;
 
 static mach_timebase_info_data_t tbinfo;
-static long double mach2nanos, mach2usecs, mach2secs;
+static long double mach2nanos, mach2usecs;
 static ns_time_t mach_res;
 
 /* Bit bucket for cache warmup calls */
@@ -102,6 +105,8 @@ static volatile union scratch_u {
   ONE_ERROR(zerostep,"Too many consecutive unchanged samples") \
   ONE_ERROR(step,"Too many retries to avoid step") \
   ONE_ERROR(noerrno,"Error with errno not set") \
+  ONE_ERROR(early,"Test clock too early") \
+  ONE_ERROR(late,"Test clock too late") \
 
 #define ONE_ERROR(name,text) err_##name,
 typedef enum errs { err_dummy,  /* Avoid zero */
@@ -175,7 +180,6 @@ typedef enum clock_type {
   NP_CLOCK(UPTIME_RAW_APPROX,type,0,0,1) \
 
 #define CALLMAC(a,b,c) a##b(c)
-#define CONC(a,b) a##b
 
 /* Clock type codes */
 #define CLOCK_IDX_timeofday(name) clock_idx_##name
@@ -222,6 +226,12 @@ static const clock_type_t clock_types[] = {
 
 #define NP_CLOCK(name,type,okstep,okadj,approx) okstep,
 static const int clock_okstep[] = {
+  NP_CLOCKS
+};
+#undef NP_CLOCK
+
+#define NP_CLOCK(name,type,okstep,okadj,approx) okadj,
+static const int clock_okadj[] = {
   NP_CLOCKS
 };
 #undef NP_CLOCK
@@ -286,14 +296,19 @@ typedef struct dstats_s {
   double sqmean;
 } dstats_t;
 
-/* Struct for info on clock errors */
+/* Struct for info on (possible) clock errors */
 typedef struct errinfo_s {
   ns_time_t first;
   ns_time_t last;
+  sns_time_t difflim;
   int index;
   ns_time_t prev;
   ns_time_t cur;
   ns_time_t nzmin;
+  sns_time_t lastmin;
+  sns_time_t lastmax;
+  sns_time_t curmin;
+  sns_time_t curmax;
   int badsame;
   int maxsame;
   int retries;
@@ -336,7 +351,6 @@ setup(int verbose)
   }
   mach2nanos = (long double) tbinfo.numer / tbinfo.denom;
   mach2usecs = mach2nanos / 1000.0;
-  mach2secs = mach2nanos / BILLIONDBL;
   mach_res = (tbinfo.numer + tbinfo.denom - 1) / tbinfo.denom;
   if (verbose) {
     printf("  Scale for mach_time (nanoseconds per unit) is %u/%u = %.3f\n",
@@ -718,6 +732,8 @@ report_clock_err(clock_idx_t clkidx, const errinfo_t *ei,
            ULL ei->first, ULL ei->last, ei->index,
            ULL ei->prev, ULL ei->cur, ULL (ei->cur - ei->prev),
            ei->badsame, ei->maxsame, ei->retries);
+    printf("      last min/max = %lld/%lld, cur min/max = %lld/%lld\n",
+           LL ei->lastmin, LL ei->lastmax, LL ei->curmin, LL ei->curmax);
   }
 }
 
@@ -1008,40 +1024,86 @@ sandwich_samples(clock_idx_t clkidx, errinfo_t *ei)
   return ret;
 }
 
-/* Get and check one clock and reference */
+/*
+ * Check test clock against reference.
+ *
+ * In general there is a potentially large offset between the two clocks,
+ * but we check the offset behavior for consistency.  The general idea is
+ * to compute minimum and maximum differences, based on the previous and
+ * subsequent reference values, adjusted by a tolerance value.  The behavior
+ * is considered correct when each min/max interval overlaps the preceding
+ * min/max interval.
+ *
+ * Steerable clocks complicate this.  Not only do explicit step adjustments
+ * (which are mostly but not completely filtered out earlier) violate this
+ * criterion, but even "slewing" adjustments involve periodic small step
+ * adjustments which break things as well.  To allow for this, we make
+ * the overlap failure a retriable error on steerable clocks; otherwise
+ * it's fatal.
+ *
+ * In principle, at most one such step should be allowed within a given
+ * sample set, but we don't bother to check for that.
+ *
+ * A similar issue exists with approximate clocks, which stay at the same
+ * value for a long time and then jump.  While it might be possible to
+ * come up with a more finely-tuned exception for those, for simplicity
+ * we just give them a treatment similar to steerable clocks, except for
+ * limiting it to the "late" case.
+ */
 static int
-check_clock_sandwich(clock_idx_t clkidx, errinfo_t *ei, errinfo_t *eir)
+compare_clocks(clock_idx_t clkidx, errinfo_t *ei, errinfo_t *eir, dstats_t *dp)
 {
-  int ret, tries = 0;
-  useconds_t sleepus = STD_SLEEP_US;
+  const ns_time_t *refbp = &refnsbuf[0];
+  const ns_time_t *testbp = nsbufp[clock_types[clkidx]];
+  const ns_time_t *refp = refbp, *testp = testbp;
+  sns_time_t last, cur, tstcur = 0;
+  int ret = 0;
+  sns_time_t minref = 0, maxref = 0, difflim;
+  sns_time_t lastmin = INT64_MIN, lastmax = INT64_MAX, curmin = 0, curmax = 0;
 
-  do {
-    ei->errnum = eir->errnum = errno = 0;
-    usleepx(sleepus);
-    if ((ret = sandwich_samples(clkidx, ei))) break;
-    sleepus = MIN(sleepus * 2, MAX_SLEEP_US);
+  /*
+   * The maximum discrepancy between clocks (after accounting for the offset)
+   * is the sum of the resolutions of the clocks.  But since the resolution
+   * is reported overoptimistically on some platforms (x86), we use the larger
+   * of the reported resolution and the observed minimum nonzero difference.
+   */
+  difflim = MAX(clock_res[clkidx], ei->nzmin)
+            + MAX(clock_res[clock_idx_mach_absolute], eir->nzmin);
 
-    ret = check_samples(clock_idx_mach_absolute, refnsbuf, 0, eir);
-    if (ret) { if (ret < 0) break; continue; }
+  last = *refp++;
+  while (testp < &testbp[NUM_DIFFS]) {
+    tstcur = *testp++; cur = *refp++;
+    minref = last - difflim; maxref = cur + difflim;
+    curmin = tstcur - maxref; curmax = tstcur - minref;
+    if (curmax < lastmin || curmin > lastmax) {
+      ei->errnum = curmax < lastmin ? -err_early : -err_late;
+      ret = clock_okadj[clkidx]
+            || (clock_approx[clkidx] && curmin > lastmax) ? 1 : -1;
+      break;
+    }
+    last = cur; lastmin = curmin; lastmax = curmax;
+  }
 
-    ret = check_samples(clkidx, nsbufp[clock_types[clkidx]], 1, ei);
-    if (ret <= 0) break;
-  } while (++tries < MAX_STEP_TRIES);
+  ei->first = testbp[0]; ei->last = testbp[NUM_DIFFS - 1];
+  ei->difflim = difflim;
+  ei->index = ret ? testp - testbp - 1 : -2;
+  ei->prev = ei->cur = tstcur;
+  ei->lastmin = lastmin; ei->lastmax = lastmax;
+  ei->curmin = curmin; ei->curmax = curmax;
+  ei->retries = -1;
 
-  ei->retries = eir->retries = tries;
   return ret;
 }
 
-/* Compare clocks */
-static int
-compare_clocks(clock_idx_t clkidx, dstats_t *dp)
+/* Get stats on comparison */
+static void
+get_dstats(clock_idx_t clkidx, dstats_t *dp)
 {
   const ns_time_t *refbp = &refnsbuf[0];
   const ns_time_t *testbp = nsbufp[clock_types[clkidx]];
   const ns_time_t *refp = refbp, *testp = testbp;
   sns_time_t last, cur, mean, tstcur, expected;
   sns_time_t refofs, diff;
-  int numdiffs = 0;
   long double slope, diffsqr, difftot;
 
   /* Use mean values of straddling reference pairs as comparison reference */
@@ -1058,19 +1120,44 @@ compare_clocks(clock_idx_t clkidx, dstats_t *dp)
 
   last = *refp++;
   while (testp < &testbp[NUM_DIFFS]) {
-    tstcur = *testp++; cur = *refp++; mean = (last + cur) / 2;
-    last = cur;
+    tstcur = *testp++; cur = *refp++;
+    mean = (last + cur) / 2;
     refofs = mean - (sns_time_t) dp->refmean;
     expected = (sns_time_t) (refofs * slope) + dp->testmean;
     diff = tstcur - expected; diffsqr = (long double) diff * diff;
     if (diffsqr < dp->sqmin) dp->sqmin = diffsqr;
     if (diffsqr > dp->sqmax) dp->sqmax = diffsqr;
     difftot += diffsqr;
-    ++numdiffs;
   }
-  dp->sqmean = difftot / numdiffs;
 
-  return 0;
+  dp->sqmean = difftot / NUM_DIFFS;
+}
+
+/* Get and check one clock and reference */
+static int
+check_clock_sandwich(clock_idx_t clkidx,
+                     errinfo_t *ei, errinfo_t *eir, dstats_t *dp)
+{
+  int ret, tries = 0;
+  useconds_t sleepus = STD_SLEEP_US;
+
+  do {
+    ei->errnum = eir->errnum = errno = 0;
+    usleepx(sleepus);
+    if ((ret = sandwich_samples(clkidx, ei))) break;
+    sleepus = MIN(sleepus * 2, MAX_SLEEP_US);
+
+    ret = check_samples(clock_idx_mach_absolute, refnsbuf, 0, eir);
+    if (ret) { if (ret < 0) break; continue; }
+
+    ret = check_samples(clkidx, nsbufp[clock_types[clkidx]], 1, ei);
+    if (ret) { if (ret < 0) break; continue; }
+    ret = compare_clocks(clkidx, ei, eir, dp);
+    if (ret <= 0) break;
+  } while (++tries < MAX_STEP_TRIES);
+
+  ei->retries = eir->retries = tries;
+  return ret;
 }
 
 /* Print comparison stats */
@@ -1098,15 +1185,11 @@ clock_dump_dual_ns(clock_idx_t clkidx, errinfo_t *ei, errinfo_t *eir,
                    int verbose, int quiet)
 {
   int idx;
-  mach_time_t *rmp = refbuf;
   ns_time_t cur, next, tstcur, *nsbuf = nsbufp[clock_types[clkidx]];
-  sns_time_t last = refnsbuf[0], mean, diff;
-  sns_time_t ref_mean, tst_mean, mean_diff;
+  sns_time_t last = refnsbuf[0], meanofs, tstmin, tstmax, mean, diff;
   FILE *fp;
 
-  ref_mean = mt2nsec(rmp[0] + rmp[1] + rmp[NUM_DIFFS-1] + rmp[NUM_DIFFS]) / 4;
-  tst_mean = (nsbuf[0] + nsbuf[NUM_DIFFS-1]) / 2;
-  mean_diff = tst_mean - ref_mean;
+  meanofs = (sns_time_t) (ei->first + ei->last - eir->first - eir->last) / 2;
 
   if (!(fp = open_log(clkidx, "-vs-mach", quiet))) return;
   if (verbose >= 2) {
@@ -1116,14 +1199,16 @@ clock_dump_dual_ns(clock_idx_t clkidx, errinfo_t *ei, errinfo_t *eir,
     fprintf(fp, "# Nonzero min ref delta = %d, min test delta = %d,"
             " max consecutive same = %d\n",
             (int) eir->nzmin, (int) ei->nzmin, ei->badsame);
+    fprintf(fp, "# Average time per sample = %.1f ns, diff tolerance = %lld,"
+            " retries = %d\n",
+            (double) (ei->last - ei->first) / (NUM_DIFFS - 1),
+            LL ei->difflim, ei->retries);
     fprintf(fp, "# First ref value = %llu, last = %llu, diff = %llu\n",
             ULL eir->first, ULL eir->last, ULL (eir->last - eir->first));
     fprintf(fp, "# First test value = %llu, last = %llu, diff = %llu\n",
             ULL ei->first, ULL ei->last, ULL (ei->last - ei->first));
-    fprintf(fp, "# Average time per sample = %.1f ns, retries = %d\n",
-            (double) (ei->last - ei->first) / (NUM_DIFFS - 1), ei->retries);
-    fprintf(fp, "# Mean ref = %lld, mean test = %lld, diff = %lld\n",
-            LL ref_mean, LL tst_mean, LL mean_diff);
+    fprintf(fp, "# Mean diff = %lld (subtracted from Diff, Rmin, Rmax)\n",
+            LL meanofs);
     if (eir->errnum) {
       fprintf(fp, "#\n");
       fprintf(fp, "#   *** Reference Clock Error %d (%s)\n",
@@ -1138,20 +1223,26 @@ clock_dump_dual_ns(clock_idx_t clkidx, errinfo_t *ei, errinfo_t *eir,
               ei->errnum, get_errstr(ei->errnum));
       fprintf(fp, "#   *** Failed @%d: %llu\n",
               ei->index, ULL ei->cur);
+      fprintf(fp, "#   *** Last min/max = %lld/%lld\n",
+              LL ei->lastmin, LL ei->lastmax);
+      fprintf(fp, "#   *** Current min/max = %lld/%lld\n",
+              LL ei->curmin, LL ei->curmax);
     }
     fprintf(fp, "#\n");
   }
   if (verbose) fprintf(fp, "# Index         Reference   Delta"
-                       "        Test_Value         Adj_Ref_Mean     Ofs\n");
+                       "        Test_Value     Diff"
+                       "   Rmin   Rmax\n");
   for (idx = 0; idx < NUM_DIFFS; ++idx) {
     cur = refnsbuf[idx];
     next = refnsbuf[idx+1];
-    mean = (cur + next) / 2 + mean_diff;
     tstcur = nsbuf[idx];
-    diff = tstcur - mean;
-    fprintf(fp, "%7d %19llu %5d %19llu %+20lld %+5lld\n",
+    mean = (cur + next) / 2;  diff = (sns_time_t) tstcur - mean - meanofs;
+    tstmin = tstcur - (next + ei->difflim);
+    tstmax = tstcur - (cur - ei->difflim);
+    fprintf(fp, "%7d %19llu %5d %19llu %+5lld %+5lld %+5lld\n",
             idx, ULL cur, (int) (cur - last),
-            ULL tstcur, LL mean, LL diff);
+            ULL tstcur, LL diff, LL tstmin - meanofs, LL tstmax - meanofs);
     last = cur;
   }
   cur = refnsbuf[idx];
@@ -1171,7 +1262,7 @@ report_clock_compare(clock_idx_t clkidx, int dump, int verbose, int quiet)
 
   if (vnq) printf("  Comparing %s to mach_absolute_time\n", name);
 
-  if (check_clock_sandwich(clkidx, &info, &refinfo)) {
+  if (check_clock_sandwich(clkidx, &info, &refinfo, &dstats)) {
     if (refinfo.errnum) {
       report_clock_err(clock_idx_mach_absolute, &refinfo, 0, verbose);
     }
@@ -1180,8 +1271,10 @@ report_clock_compare(clock_idx_t clkidx, int dump, int verbose, int quiet)
     }
     ret = 1;
   } else {
-    ret |= compare_clocks(clkidx, &dstats);
-    if (vnq & !ret) print_dstats(clkidx, &dstats);
+    if (vnq) {
+      get_dstats(clkidx, &dstats);
+      print_dstats(clkidx, &dstats);
+    }
   }
   if ((dump && ret) || dump > 1) {
     clock_dump_dual_ns(clkidx, &info, &refinfo, verbose, quiet);
