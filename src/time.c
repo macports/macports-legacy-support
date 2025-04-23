@@ -349,6 +349,17 @@ mach2timespec(uint64_t mach_time, struct timespec *ts)
 /*
  * Get the best available thread time, using the syscall on 10.10+,
  * but falling back to thread_info() on <10.10.
+ *
+ * In the latter case, a thread which has just started may not yet have
+ * nonzero usage (in microsecond resolution).  This is not a problem in
+ * the timespec case, but is a problem in the nanosecond case, since a zero
+ * value indicates an error.  To get around this, we report a non-error
+ * zero nanosecond result as one nanosecond.  It's impossible for this to
+ * exceed any later non-error result, hence it's monotonic.
+ *
+ * Out of extreme paranoia, we apply the same treatment to the timespec
+ * case, so that using it after using the nanosecond version can't show
+ * a backstep.
  */
 
 #if __MPLS_TARGET_OSVER < 101000
@@ -371,11 +382,14 @@ static inline uint64_t
 get_thread_usage_ns(void)
 {
   thread_basic_info_data_t info;
+  uint64_t nanos;
 
   if (get_thread_usage(&info)) return 0;
 
-  return (info.user_time.seconds + info.system_time.seconds) * BILLION64
-         + (info.user_time.microseconds + info.system_time.microseconds) * 1000;
+  nanos = (info.user_time.seconds + info.system_time.seconds) * BILLION64
+          + (info.user_time.microseconds + info.system_time.microseconds)
+            * 1000;
+  return nanos ? nanos : 1;
 }
 
 /* Same but returning as timespec */
@@ -393,6 +407,8 @@ get_thread_usage_ts(struct timespec *ts)
     ++ts->tv_sec;
     ts->tv_nsec -= BILLION32;
   }
+
+  if (!ts->tv_sec && !ts->tv_nsec) ts->tv_nsec = 1;
   return 0;
 }
 
