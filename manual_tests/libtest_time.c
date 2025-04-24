@@ -14,7 +14,12 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-/* This is a rewrite of the C++ version in C, to avoid some Apple SDK issues. */
+/*
+ * This is a rewrite of the C++ version in C, to avoid some Apple SDK issues.
+ *
+ * It's now been replaced by the new fully automated test, but is retained as
+ * a manual test (which it always was, anyway).
+ */
 
 #include <assert.h>
 #include <pthread.h>
