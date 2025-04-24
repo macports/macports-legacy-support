@@ -27,6 +27,7 @@
 #include <errno.h>
 #include <libgen.h>
 #include <math.h>
+#include <pthread.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -75,6 +76,13 @@ typedef int64_t sns_time_t;
 /* Mach_time scaling tolerance */
 #define MACH_SCALE_TOLER 10E-6
 
+/* Parameters (microseconds) for process/thread time test */
+#define THREAD_RUN_TIME     100000  /* Wall clock time for thread runs */
+#define PROCESS_SLEEP_TIME  250000  /* Overall sleep delay during test */
+#define THREAD_SLEEP_MAX_CPU 10000  /* Max CPU time for sleeping thread */
+#define TIME_SUM_TOLERANCE   20E-2  /* Tolerance on CPU time ratio */
+#define THREAD_TEST_TRIES       10  /* Number of tries for thread time test */
+
 #ifndef TEST_TEMP
 #define TEST_TEMP "/dev/null"
 #endif
@@ -110,6 +118,7 @@ static volatile union scratch_u {
   ONE_ERROR(noerrno,"Error with errno not set") \
   ONE_ERROR(early,"Test clock too early") \
   ONE_ERROR(late,"Test clock too late") \
+  ONE_ERROR(badptime,"Process/thread time inconsistent") \
 
 #define ONE_ERROR(name,text) err_##name,
 typedef enum errs { err_dummy,  /* Avoid zero */
@@ -411,30 +420,19 @@ ts2nsec(timespec_t *ts)
   return ts->tv_sec * BILLION64 + ts->tv_nsec;
 }
 
-/* Plus a microsecond conversion */
-static useconds_t
-mt2usec(mach_time_t mach_time)
-{
-  return mach_time * mach2usecs;
-}
-
-/* Mach time in microseconds */
-static useconds_t
-mach_usec(void)
-{
-  return mt2usec(mach_absolute_time());
-}
-
 /* Version of usleep() that defends against signals */
 static void
 usleepx(useconds_t usecs)
 {
-  useconds_t now = mach_usec();
-  useconds_t target = now + usecs;
+  int ret;
+  timespec_t ts;
+
+  ts.tv_sec = usecs / MILLION;
+  ts.tv_nsec = (usecs - ts.tv_sec * MILLION) * 1000;
 
   do {
-    (void) usleep(target - now);
-  } while ((now = mach_usec()) < target);
+    ret = nanosleep(&ts, &ts);
+  } while (ret && errno == EINTR);
 }
 
 /*
@@ -1375,13 +1373,347 @@ check_mach_scaling(int verbose)
   return ret;
 }
 
+/*
+ * Check process and thread clocks
+ *
+ * This launches three subthreads, two spinning and one sleeping, letting
+ * them run for PROCESS_SLEEP_TIME, and then checking the reported times
+ * for consistency, where "consistency" means:
+ *
+ *   1) Neither spinning thread time exceeds wall-clock time.
+ *   2) The sleeping thread time doesn't exceed THREAD_SLEEP_MAX_CPU.
+ *   3) The total thread time matches the process's within TIME_SUM_TOLERANCE.
+ *
+ * In addition, each time capture sandwiches a timespec version between
+ * two nanosecond versions, and checks the triplet for consistency.
+ */
+
+typedef void * (pthread_fn_t)(void *);
+
+/* Struct for both nsec and timespec captures */
+typedef struct ptime_s {
+  volatile ns_time_t before;
+  volatile ns_time_t middle;
+  volatile ns_time_t after;
+  volatile timespec_t ts;
+  volatile int ret;
+  volatile int errnum;
+} ptime_t;
+
+/* Struct with start and end times, plus other info */
+typedef struct dptime_s {
+  ptime_t start;
+  ptime_t end;
+  pthread_t id;
+  volatile int ret;
+  volatile int errnum;
+  pthread_fn_t *func;
+  const char *name;
+} dptime_t;
+
+/* Get specified time two ways, and compare */
+static int
+get_ptime(clockid_t clkid, ptime_t *pt)
+{
+  int ret = 0;
+  timespec_t ts;
+
+  pt->errnum = 0;
+  do {
+    errno = -err_noerrno;
+    if (!(pt->before = clock_gettime_nsec_np(clkid))) {
+      pt->errnum = errno;
+      ret = -2; break;
+    }
+    errno = -err_noerrno;
+    if ((ret = clock_gettime(clkid, &ts))) {
+      pt->errnum = errno;
+      break;
+    }
+    errno = -err_noerrno;
+    if (!(pt->after = clock_gettime_nsec_np(clkid))) {
+      pt->errnum = errno;
+      ret = -3; break;
+    }
+
+    if ((unsigned int) ts.tv_nsec >= BILLION) {
+      pt->errnum = -err_badnanos;
+      ret = -4; break;
+    }
+
+    pt->ts = ts;
+    pt->middle = ts2nsec(&ts);
+    if (pt->before > pt->middle || pt->middle > pt->after) {
+      pt->errnum = -err_badptime;
+      ret = -5; break;
+    }
+  } while (0);
+
+  pt->ret = ret;
+
+  return ret;
+}
+
+/* Start a given thread */
+static int
+start_thread(dptime_t *dpt)
+{
+  int ret;
+
+  dpt->ret = dpt->errnum = 0;
+  if ((ret = pthread_create(&dpt->id, NULL, dpt->func, (void *)dpt))) {
+    dpt->ret = ret;
+    dpt->errnum = errno;
+  }
+
+  return ret;
+}
+
+/* Stop multiple threads */
+static void
+stop_threads(dptime_t *threads[], int numthreads)
+{
+  while (--numthreads >= 0) {
+    (void) pthread_cancel(threads[numthreads]->id);
+  }
+}
+
+/* Start multiple threads */
+static dptime_t *
+start_threads(dptime_t *threads[], int numthreads)
+{
+  int thread, ret = 0;
+
+  for (thread = 0; thread < numthreads; ++thread) {
+    ret = start_thread(threads[thread]);
+    if (ret) {
+      stop_threads(threads, thread);
+      return threads[thread];
+    }
+  }
+  return NULL;
+}
+
+/* Wait for threads to stop */
+static int
+wait_threads(dptime_t *threads[], int numthreads)
+{
+  int ret = 0;
+  dptime_t *dpt;
+
+  while (--numthreads >= 0) {
+    dpt = threads[numthreads];
+    if ((dpt->ret = pthread_join(dpt->id, NULL))) {
+      dpt->errnum = errno;
+      ret = 1;
+    }
+  }
+  return ret;
+}
+
+/* Report errors from threads */
+static int
+report_thread_errs(dptime_t *threads[], int numthreads)
+{
+  int ret = 0, thread;
+  dptime_t *dpt;
+
+  for (thread = 0; thread < numthreads; ++thread) {
+    dpt = threads[thread];
+    if (dpt->start.ret) {
+      printf("    *** Error (%d) getting thread %s start time (%d): %s\n",
+             dpt->start.ret, dpt->name,
+             dpt->start.errnum, get_errstr(dpt->start.errnum));
+      ret = 1;
+    }
+    if (dpt->end.ret) {
+      printf("    *** Error (%d) getting thread %s end time (%d): %s\n",
+             dpt->end.ret, dpt->name,
+             dpt->end.errnum, get_errstr(dpt->end.errnum));
+      ret = 1;
+    }
+  }
+  return ret;
+}
+
+/* Report time range for one process or thread */
+static void
+report_times(dptime_t *dpt, int verbose)
+{
+  const char *tp = dpt->name ? "Thread" : "Process";
+  const char *tn = dpt->name ? dpt->name : "";
+
+  if (verbose < 2) {
+    printf("    %s %s times %llu -> %llu, = %.6f ms\n",
+           tp, tn, ULL dpt->start.middle, ULL dpt->end.middle,
+           (dpt->end.middle - dpt->start.middle) / 1E6);
+  } else {
+    printf("    %s %s times %llu/%llu/%llu -> %llu/%llu/%llu,"
+           " = %.6f/%.6f/%.6f ms\n",
+           tp, tn,
+           ULL dpt->start.before, ULL dpt->start.middle, ULL dpt->start.after,
+           ULL dpt->end.before, ULL dpt->end.middle, ULL dpt->end.after,
+           (dpt->end.before - dpt->start.after) / 1E6,
+           (dpt->end.middle - dpt->start.middle) / 1E6,
+           (dpt->end.after - dpt->start.before) / 1E6);
+  }
+}
+
+/* Report times from all threads */
+static void
+report_thread_times(dptime_t *threads[], int numthreads, int verbose)
+{
+  int thread;
+
+  for (thread = 0; thread < numthreads; ++thread) {
+    report_times(threads[thread], verbose);
+  }
+}
+
+/* Spinning thread */
+static void *
+thread_spin(void *arg)
+{
+  dptime_t *dpt = (dptime_t *) arg;
+  mach_time_t stop_time;
+
+  if (get_ptime(CLOCK_THREAD_CPUTIME_ID, &dpt->start)) return NULL;
+  stop_time = mach_absolute_time() + THREAD_RUN_TIME / mach2usecs;
+  while (mach_absolute_time() < stop_time) ;
+  (void) get_ptime(CLOCK_THREAD_CPUTIME_ID, &dpt->end);
+  return NULL;
+}
+
+/* Sleeping thread */
+static void *
+thread_sleep(void *arg)
+{
+  dptime_t *dpt = (dptime_t *) arg;
+
+  if (get_ptime(CLOCK_THREAD_CPUTIME_ID, &dpt->start)) return NULL;
+  usleepx(THREAD_RUN_TIME);
+  (void) get_ptime(CLOCK_THREAD_CPUTIME_ID, &dpt->end);
+  return NULL;
+}
+
+/* Main checking function */
+static int
+check_thread_times(int verbose, int quiet)
+{
+  int ret = 0, wret = 0, eret = 0;
+  ns_time_t start, end, wall, difflo, diffhi;
+  dptime_t spin1 = {.func = thread_spin, .name = "spin1"};
+  dptime_t spin2 = {.func = thread_spin, .name = "spin2"};
+  dptime_t sleeper = {.func = thread_sleep, .name = "sleeper"};
+  dptime_t top = {.func = NULL};
+  dptime_t *threads[] = {&spin1, &spin2, &sleeper};
+  const int numthreads = sizeof(threads) / sizeof(threads[0]);
+  dptime_t *failed;
+  double proclo, prochi, threadlo = 0.0, threadhi = 0.0;
+
+  if (verbose && !quiet) printf("  Checking thread times.\n");
+
+  start = clock_gettime_nsec_np(CLOCK_UPTIME_RAW);
+
+  if (get_ptime(CLOCK_PROCESS_CPUTIME_ID, &top.start)) {
+    printf("    *** Error getting process starting time (%d): %s\n",
+           top.errnum, get_errstr(top.errnum));
+    return -1;
+  }
+
+  if ((failed = start_threads(threads, numthreads))) {
+    printf("    *** Error starting threads (%d): %s\n",
+           failed->errnum, get_errstr(failed->errnum));
+    return -1;
+  }
+
+  usleepx(PROCESS_SLEEP_TIME);
+
+  wret = wait_threads(threads, numthreads); 
+
+  eret = get_ptime(CLOCK_PROCESS_CPUTIME_ID, &top.end);
+
+  end = clock_gettime_nsec_np(CLOCK_UPTIME_RAW);
+  wall = end - start;
+
+  if (wret) {
+    stop_threads(threads, numthreads);
+  }
+
+  if (wret) {
+    printf("    *** Error waiting for threads, running = %d\n", wret);
+    ret = -1;
+  }
+  if (eret) {
+    printf("    *** Error getting process ending time (%d): %s\n",
+           top.errnum, get_errstr(top.errnum));
+    ret = -1;
+  }
+  
+  ret |= report_thread_errs(threads, numthreads);
+
+  if (verbose && !quiet && !ret) {
+    printf("    Total wall clock time = %.3f ms\n", wall / 1E6);
+    report_thread_times(threads, numthreads, verbose);
+    report_times(&top, verbose);
+  }
+
+  if (!ret) {
+  
+    difflo = spin1.end.before - spin1.start.after;
+    diffhi = spin1.end.after - spin1.start.before;
+    threadlo += difflo / 1E6; threadhi += diffhi / 1E6;
+    if (diffhi > wall) {
+      printf("    *** Spin1 CPU %llu/%llu exceeds wall time %llu\n",
+             ULL difflo, ULL diffhi, ULL wall);
+      ret = 1;
+    }
+  
+    difflo = spin2.end.before - spin2.start.after;
+    diffhi = spin2.end.after - spin2.start.before;
+    threadlo += difflo / 1E6; threadhi += diffhi / 1E6;
+    if (diffhi > wall) {
+      printf("    *** Spin2 CPU %llu/%llu exceeds wall time %llu\n",
+             ULL difflo, ULL diffhi, ULL wall);
+      ret = 1;
+    }
+  
+    difflo = sleeper.end.before - sleeper.start.after;
+    diffhi = sleeper.end.after - sleeper.start.before;
+    threadlo += difflo / 1E6; threadhi += diffhi / 1E6;
+    if (diffhi > THREAD_SLEEP_MAX_CPU * 1000) {
+      printf("    *** Sleeper CPU %llu/%llu exceeds limit %llu\n",
+             ULL difflo, ULL diffhi, ULL THREAD_SLEEP_MAX_CPU * 1000);
+      ret = 1;
+    }
+
+    proclo = (top.end.before - top.start.after) / 1E6;
+    prochi = (top.end.after - top.start.before) / 1E6;
+    if (fabs(threadlo / prochi - 1.0) > TIME_SUM_TOLERANCE
+        || fabs(threadhi / proclo - 1.0) > TIME_SUM_TOLERANCE) {
+      printf("    *** Total thread time %.6f/%.6f ms"
+             " mismatches process time %.6f/%.6f ms\n",
+             threadlo, threadhi, proclo, prochi);
+      ret = 1;
+    }
+
+    if (verbose && !quiet) {
+      printf("    Total thread time = process time %+.2f%%/%.2f%%\n",
+             (threadlo / prochi - 1.0) * 100.0,
+             (threadhi / proclo - 1.0) * 100.0);
+    }
+  }
+
+  return ret;
+}
+
 /* Main function */
 int
 main(int argc, char *argv[])
 {
   int argn = 1;
   int continuous = 0, dump = 0, quiet = 0, verbose = 0;
-  int err = 0;
+  int err = 0, tterr, ttries;
   const char *cp;
   char chr;
 
@@ -1408,6 +1740,20 @@ main(int argc, char *argv[])
     err |= report_all_clocks(dump, verbose, quiet);
     err |= report_all_clock_compares(dump, verbose, quiet);
     err |= check_mach_scaling(verbose && !quiet);
+
+    /*
+     * Even with relaxed margins, the thread time test occasionally fails
+     * (including with Apple's functions), particularly on a heavily loaded
+     * system.  So we do a few retries of the retriable errors (designated by
+     * the positive return value).  Since this is a fairly rare case, we don't
+     * bother to suppress the error messages.
+     */
+    ttries = THREAD_TEST_TRIES;
+    do {
+      tterr = check_thread_times(verbose, quiet);
+    } while (tterr > 0 && --ttries);
+    err |= tterr;
+
     if (!continuous) break;
   }
 
