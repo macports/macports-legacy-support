@@ -160,6 +160,64 @@ mach2ns(uint64_t mach_time)
   return (double) mach_time * mach_scale.numer / mach_scale.denom;
 }
 
+/*
+ * Rosetta 2 bug
+ *
+ * There is a bug in all current versions of Rosetta 2 that badly screws up
+ * mach-based packet times.  Rosetta 2 pretends to have a 1GHz mach clock,
+ * to be more like real x86 systems, and appropriately compensates for this
+ * in most clock computations.  But mach-based packet timestamps fail to do
+ * this, resulting in values that are off by a factor of the true mach-time
+ * ratio.  E.g., on the M1 (mach ratio 125/3), the packet time is underreported
+ * by a factor of ~41.7.
+ *
+ * Note that this is not a legacy-support bug, since it only applies to OS
+ * versions that don't use the legacy-support implementations of the clock
+ * functions.  Nevertheless, the test is expected to pass on all OS versions,
+ * so we need to disable the failures in this case.  In the interests of full
+ * disclosure, we don't disable the error messages; we only disable the
+ * failures.
+ *
+ * Although it might be possible to compensate for the error, this would be
+ * an unnecessary complication for a test primarily intended to test the
+ * legacy-support code, not work around Apple's bugs.  It also might be
+ * nontrivial to obtain the true mach-time scale factor when running under
+ * Rosetta 2.
+ */
+
+#if defined(__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__) \
+    && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ >= 110000 \
+    && defined(__x86_64__)
+
+#include <sys/sysctl.h>
+
+/* sysctl to check whether we're running in Rosetta 2 */
+#define SYSCTL_TRANSLATED "sysctl.proc_translated"
+
+/* Test whether running under Rosetta */
+/* 0 no, 1 yes */
+static int
+check_rosetta(void)
+{
+  int translated;
+  size_t translated_sz = sizeof(translated);
+
+  if (sysctlbyname(SYSCTL_TRANSLATED, &translated, &translated_sz,
+                   NULL, 0) < 0) {
+    /* If sysctl failed, must be really native. */
+    return 0;
+  }
+  return translated ? 1 : 0;
+}
+
+#else /* Not OS 11.x+ x86_64 */
+
+static int check_rosetta(void) { return 0;}
+
+#endif /* Not OS 11.x+ x86_64 */
+
+/* Now back to our regularly scheduled packet tests */
+
 /* Data for tests */
 
 static const char sample[] = "The Quick Brown Fox";
@@ -346,7 +404,7 @@ static int
 test_timestamp(const char *name, ts_type_t tstype, int sockopt, int scmtype,
                int verbose)
 {
-  int ret = 0;
+  int ret = 0, rret = 0;
   const char *tsname = ts_type_names[tstype];
   const char *err = NULL;
   times_t times;
@@ -355,6 +413,7 @@ test_timestamp(const char *name, ts_type_t tstype, int sockopt, int scmtype,
   struct cmsghdr *cmsg;
   int cmsglvl, cmsgtype, hdrlen, datalen, xdatalen;
   uint32_t *datap, *xdatap;
+  int rosetta = check_rosetta();
 
   if (verbose) printf("  Testing %s:\n", name);
   cbuflen = sizeof(cbuf);
@@ -482,11 +541,14 @@ test_timestamp(const char *name, ts_type_t tstype, int sockopt, int scmtype,
       if (tsval < tslow || tsval > tshigh) {
         printf("    %s %s value %llu is not between %llu and %llu\n",
                name, tsname, tsval, tslow, tshigh);
-        ret = 1;
+        if (rosetta) rret = 1; else ret = 1;
       }
     }
     if (verbose && !ret) printf("    %s value (ns) is %llu\n",
                                 tsname, tsvalns);
+  }
+  if (rret && !ret) {
+    printf("      Ignoring errors caused by Rosetta 2 bug\n");
   }
 
   return ret;
