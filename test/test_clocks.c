@@ -1388,6 +1388,64 @@ check_mach_scaling(int verbose)
  * two nanosecond versions, and checks the triplet for consistency.
  */
 
+/*
+ * Rosetta 2 bug
+ *
+ * There is a bug in all current versions of Rosetta 2 that badly screws up
+ * thread times.  Rosetta 2 pretends to have a 1GHz mach clock, to be more
+ * like real x86 systems, and appropriately compensates for this in most
+ * clock computations.  But the thread CPU-time calculation fails to do this,
+ * resulting in values that are off by a factor of the true mach-time ratio.
+ * E.g., on the M1 (mach ratio 125/3), the thread time is underreported by a
+ * factor of ~41.7.
+ *
+ * Note that this is not a legacy-support bug, since it only applies to OS
+ * versions that don't use the legacy-support implementations of the clock
+ * functions.  Nevertheless, the test is expected to pass on all OS versions,
+ * so we need to disable the failures in this case.  In the interests of full
+ * disclosure, we don't disable the error messages; we only disable the
+ * failures.
+ *
+ * Although it might be possible to compensate for the error, this would be
+ * an unnecessary complication for a test primarily intended to test the
+ * legacy-support code, not work around Apple's bugs.  It also might be
+ * nontrivial to obtain the true mach-time scale factor when running under
+ * Rosetta 2.
+ */
+
+#if defined(__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__) \
+    && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ >= 110000 \
+    && defined(__x86_64__)
+
+#include <sys/sysctl.h>
+
+/* sysctl to check whether we're running in Rosetta 2 */
+#define SYSCTL_TRANSLATED "sysctl.proc_translated"
+
+/* Test whether running under Rosetta */
+/* 0 no, 1 yes */
+static int
+check_rosetta(void)
+{
+  int translated;
+  size_t translated_sz = sizeof(translated);
+
+  if (sysctlbyname(SYSCTL_TRANSLATED, &translated, &translated_sz,
+                   NULL, 0) < 0) {
+    /* If sysctl failed, must be really native. */
+    return 0;
+  }
+  return translated ? 1 : 0;
+}
+
+#else /* Not OS 11.x+ x86_64 */
+
+static int check_rosetta(void) { return 0;}
+
+#endif /* Not OS 11.x+ x86_64 */
+
+/* Now back to our regularly scheduled clock tests */
+
 typedef void * (pthread_fn_t)(void *);
 
 /* Struct for both nsec and timespec captures */
@@ -1600,7 +1658,7 @@ thread_sleep(void *arg)
 static int
 check_thread_times(int verbose, int quiet)
 {
-  int ret = 0, wret = 0, eret = 0;
+  int ret = 0, rret = 0, wret = 0, eret = 0;
   ns_time_t start, end, wall, difflo, diffhi;
   dptime_t spin1 = {.func = thread_spin, .name = "spin1"};
   dptime_t spin2 = {.func = thread_spin, .name = "spin2"};
@@ -1610,6 +1668,8 @@ check_thread_times(int verbose, int quiet)
   const int numthreads = sizeof(threads) / sizeof(threads[0]);
   dptime_t *failed;
   double proclo, prochi, threadlo = 0.0, threadhi = 0.0;
+  int rosetta = check_rosetta();
+  int rquiet = rosetta && quiet;
 
   if (verbose && !quiet) printf("  Checking thread times.\n");
 
@@ -1664,43 +1724,55 @@ check_thread_times(int verbose, int quiet)
     diffhi = spin1.end.after - spin1.start.before;
     threadlo += difflo / 1E6; threadhi += diffhi / 1E6;
     if (diffhi > wall) {
-      printf("    *** Spin1 CPU %llu/%llu exceeds wall time %llu\n",
-             ULL difflo, ULL diffhi, ULL wall);
-      ret = 1;
+      if (!rquiet) {
+        printf("    *** Spin1 CPU %llu/%llu exceeds wall time %llu\n",
+               ULL difflo, ULL diffhi, ULL wall);
+      }
+      if (rosetta) rret = 1; else ret = 1;
     }
   
     difflo = spin2.end.before - spin2.start.after;
     diffhi = spin2.end.after - spin2.start.before;
     threadlo += difflo / 1E6; threadhi += diffhi / 1E6;
     if (diffhi > wall) {
-      printf("    *** Spin2 CPU %llu/%llu exceeds wall time %llu\n",
-             ULL difflo, ULL diffhi, ULL wall);
-      ret = 1;
+      if (!rquiet) {
+        printf("    *** Spin2 CPU %llu/%llu exceeds wall time %llu\n",
+               ULL difflo, ULL diffhi, ULL wall);
+      }
+      if (rosetta) rret = 1; else ret = 1;
     }
   
     difflo = sleeper.end.before - sleeper.start.after;
     diffhi = sleeper.end.after - sleeper.start.before;
     threadlo += difflo / 1E6; threadhi += diffhi / 1E6;
     if (diffhi > THREAD_SLEEP_MAX_CPU * 1000) {
-      printf("    *** Sleeper CPU %llu/%llu exceeds limit %llu\n",
-             ULL difflo, ULL diffhi, ULL THREAD_SLEEP_MAX_CPU * 1000);
-      ret = 1;
+      if (!rquiet) {
+        printf("    *** Sleeper CPU %llu/%llu exceeds limit %llu\n",
+               ULL difflo, ULL diffhi, ULL THREAD_SLEEP_MAX_CPU * 1000);
+      }
+      if (rosetta) rret = 1; else ret = 1;
     }
 
     proclo = (top.end.before - top.start.after) / 1E6;
     prochi = (top.end.after - top.start.before) / 1E6;
     if (fabs(threadlo / prochi - 1.0) > TIME_SUM_TOLERANCE
         || fabs(threadhi / proclo - 1.0) > TIME_SUM_TOLERANCE) {
-      printf("    *** Total thread time %.6f/%.6f ms"
-             " mismatches process time %.6f/%.6f ms\n",
-             threadlo, threadhi, proclo, prochi);
-      ret = 1;
+      if (!rquiet) {
+        printf("    *** Total thread time %.6f/%.6f ms"
+               " mismatches process time %.6f/%.6f ms\n",
+               threadlo, threadhi, proclo, prochi);
+      }
+      if (rosetta) rret = 1; else ret = 1;
     }
 
     if (verbose && !quiet) {
       printf("    Total thread time = process time %+.2f%%/%.2f%%\n",
              (threadlo / prochi - 1.0) * 100.0,
              (threadhi / proclo - 1.0) * 100.0);
+    }
+
+    if (rret && !ret && !quiet) {
+      printf("      Ignoring errors caused by Rosetta 2 bug\n");
     }
   }
 
