@@ -22,6 +22,19 @@
  * calculations may be done in floating-point, but its range may not be
  * sufficient for absolute (1970-relative) values in nanoseconds.  We sometimes
  * use long doubles, but they're not always better than doubles.
+ *
+ * Since clock values are inherently nonreproducible, the challenge in clock
+ * tests is to have criteria which are tight enough to detect genuine problems,
+ * while being loose enough to tolerate normal variations.  In many cases, we
+ * rely on retries for the latter aspect.
+ *
+ * To facilitate debugging, we provide both a means to capture clock samples
+ * into logfiles (either conditionally on errors or unconditionally), and a
+ * means to replay previously captured logs into the tests.  Note that certain
+ * parameters, such as the mach_time scale and the clock resolutions, are not
+ * captured in the logfiles, so it's assumed that values from the current
+ * system are acceptable.  Since the replayed clocks are always the nanosecond
+ * versions, matching the mach_time scale is unimportant.
  */
 
 #include <errno.h>
@@ -88,7 +101,9 @@ typedef int64_t sns_time_t;
 #endif
 
 #define LL (long long)
+#define LLP (long long *)
 #define ULL (unsigned long long)
+#define ULLP (unsigned long long *)
 
 typedef unsigned long pointer_int_t;
 
@@ -686,26 +701,34 @@ get_stats(clock_idx_t clkidx, cstats_t *sp)
     if (!diff) {
       if (++cursame > sp->maxsame) sp->maxsame = cursame;
     } else {
-      cursame =0;
+      cursame = 0;
     }
   }
   sp->stddev = sqrt(sqsum / (NUM_DIFFS - 1));
 }
 
 /* Get and check one clock */
+static int clock_replay_ns(clock_idx_t clkidx, int quiet);
+
 static int
-check_clock(clock_idx_t clkidx, cstats_t *sp, errinfo_t *ei)
+check_clock(clock_idx_t clkidx, cstats_t *sp, errinfo_t *ei,
+            int quiet, int replay)
 {
   int ret, tries = 0;
   useconds_t sleepus = STD_SLEEP_US;
 
   do {
-    usleepx(sleepus);
-    if ((ret = collect_samples(clkidx, ei))) break;
+    if (!replay) {
+      usleepx(sleepus);
+      if ((ret = collect_samples(clkidx, ei))) break;
+    } else {
+      ei->retries = -1;
+      if ((ret = clock_replay_ns(clkidx, quiet))) return ret;
+    }
     ret = check_samples(clkidx, nsbufp[clock_types[clkidx]], 0, ei);
     if (ret <= 0) break;
     sleepus = MIN(sleepus * 2, MAX_SLEEP_US);
-  } while (++tries < MAX_STEP_TRIES);
+  } while (!replay && ++tries < MAX_STEP_TRIES);
 
   ei->retries = tries;
   if (!ret && sp) get_stats(clkidx, sp);
@@ -760,7 +783,7 @@ print_stats(const cstats_t *sp, const errinfo_t *ei)
 
 /* Open logfile for writing */
 static FILE *
-open_log(clock_idx_t clkidx, const char *extra, int quiet)
+open_log(clock_idx_t clkidx, const char *extra, int quiet, int replay)
 {
   FILE *fp;
   const char *name = clock_names[clkidx];
@@ -768,11 +791,16 @@ open_log(clock_idx_t clkidx, const char *extra, int quiet)
 
   snprintf(fname, sizeof(fname), TEST_TEMP "/%s-%s%s.log",
            progname, name, extra);
-  if(!(fp = fopen(fname, "w"))) {
+  if(!(fp = fopen(fname, replay ? "r" : "w"))) {
+    if (replay && errno == ENOENT) {
+      if (!quiet) fprintf(stderr, "    Skipping nonexistent %s\n", fname);
+      return NULL;
+    }
     fprintf(stderr, "    Unable to open %s\n", fname);
     return NULL;
   }
-  if (!quiet) printf("      Logging to " TEST_TEMP "/\n");
+  if (!quiet) printf("      %s %s/\n",
+                     replay ? "Replaying from" : "Logging to", fname);
   return fp;
 }
 
@@ -785,7 +813,7 @@ clock_dump_ns(clock_idx_t clkidx, errinfo_t *ei, int verbose, int quiet)
   sns_time_t last = nsbuf[0];
   FILE *fp;
 
-  if (!(fp = open_log(clkidx, "", quiet))) return;
+  if (!(fp = open_log(clkidx, "", quiet, 0))) return;
   if (verbose >= 2) {
     fprintf(fp, "# Capture of %d %s samples (%s), retries = %d\n",
             NUM_SAMPLES, clock_names[clkidx],
@@ -808,15 +836,53 @@ clock_dump_ns(clock_idx_t clkidx, errinfo_t *ei, int verbose, int quiet)
   if (verbose) fprintf(fp, "# Index         Value       Delta\n");
   for (idx = 0; idx < NUM_SAMPLES; ++idx) {
     cur = nsbuf[idx];
-    fprintf(fp, "%7d %19llu %5d\n", idx, ULL cur, (int) (cur - last));
+    fprintf(fp, " %6d %19llu %5d\n", idx, ULL cur, (int) (cur - last));
     last = cur;
   }
   fclose(fp);
 }
 
+/* Replay data from prior dump */
+static int
+clock_replay_ns(clock_idx_t clkidx, int quiet)
+{
+  int ret = 0, count, idx = -1, diff;
+  char pfx, eol, buf[256];
+  ns_time_t cur, *nsbuf = nsbufp[clock_types[clkidx]];
+  FILE *fp;
+
+  if (!(fp = open_log(clkidx, "", quiet, 1))) return -1;
+  do {
+    if (!fgets(buf, sizeof(buf), fp)) {
+      ret = !feof(fp);
+      break;
+    }
+    count = sscanf(buf, "%c%d %llu %d%c",
+                   &pfx, &idx, ULLP &cur, &diff, &eol);
+    if (count < 0) {
+      ret = 1;
+      break;
+    }
+    if (pfx == '#') continue;
+    if (pfx != ' ' || eol != '\n' || count != 5) {
+      if (!quiet) fprintf(stderr, "    Bad line at/after index %d\n", idx);
+      ret = -1;
+      break;
+    }
+    if (idx < 0 || idx >= NUM_SAMPLES) {
+      if (!quiet) fprintf(stderr, "    Skipping bad index %d\n", idx);
+      continue;
+    }
+    nsbuf[idx] = cur;
+  } while (1);
+
+  fclose(fp);
+  return ret;
+}
+
 /* Report info about one clock */
 static int
-report_clock(clock_idx_t clkidx, int dump, int verbose, int quiet)
+report_clock(clock_idx_t clkidx, int dump, int verbose, int quiet, int replay)
 {
   int err, ret = 0, vnq = verbose && !quiet;
   const char *name = clock_names[clkidx];
@@ -825,6 +891,7 @@ report_clock(clock_idx_t clkidx, int dump, int verbose, int quiet)
 
   if (vnq) printf("  Checking %s", name);
 
+  /* In replay mode, assume that current resolutions are acceptable */
   if ((err = getres(clkidx, &clock_res[clkidx]))) {
     if (!vnq) {
       printf("*** Error getting resolution of clock %s (%d): %s\n",
@@ -840,7 +907,8 @@ report_clock(clock_idx_t clkidx, int dump, int verbose, int quiet)
   }
   if (vnq) printf(" (resolution = %d ns)\n", (int) clock_res[clkidx]);
 
-  if ((err = check_clock(clkidx, &stats, &info))) {
+  if ((err = check_clock(clkidx, &stats, &info, quiet, replay))) {
+    if (replay && info.retries < 0) return 0;  /* Just skip nonex replay */
     report_clock_err(clkidx, &info, -1, verbose);
     ret = 1;
   }
@@ -851,13 +919,13 @@ report_clock(clock_idx_t clkidx, int dump, int verbose, int quiet)
 
 /* Report info about all clocks (singly) */
 static int
-report_all_clocks(int dump, int verbose, int quiet)
+report_all_clocks(int dump, int verbose, int quiet, int replay)
 {
   int ret = 0;
   clock_idx_t clkidx = 0;
 
   while (clkidx < (clock_idx_t) clock_idx_max) {
-    ret |= report_clock(clkidx, dump, verbose, quiet);
+    ret |= report_clock(clkidx, dump, verbose, quiet, replay);
     ++clkidx;
   }
   return ret;
@@ -1135,17 +1203,25 @@ get_dstats(clock_idx_t clkidx, dstats_t *dp)
 }
 
 /* Get and check one clock and reference */
+static int clock_replay_dual_ns(clock_idx_t clkidx, int quiet);
+
 static int
 check_clock_sandwich(clock_idx_t clkidx,
-                     errinfo_t *ei, errinfo_t *eir, dstats_t *dp)
+                     errinfo_t *ei, errinfo_t *eir, dstats_t *dp,
+                     int quiet, int replay)
 {
   int ret, tries = 0;
   useconds_t sleepus = STD_SLEEP_US;
 
   do {
     ei->errnum = eir->errnum = errno = 0;
-    usleepx(sleepus);
-    if ((ret = sandwich_samples(clkidx, ei))) break;
+    if (!replay) {
+      usleepx(sleepus);
+      if ((ret = sandwich_samples(clkidx, ei))) break;
+    } else {
+      ei->retries = -1;
+      if ((ret = clock_replay_dual_ns(clkidx, quiet))) return ret;
+    }
     sleepus = MIN(sleepus * 2, MAX_SLEEP_US);
 
     ret = check_samples(clock_idx_mach_absolute, refnsbuf, 0, eir);
@@ -1155,7 +1231,7 @@ check_clock_sandwich(clock_idx_t clkidx,
     if (ret) { if (ret < 0) break; continue; }
     ret = compare_clocks(clkidx, ei, eir, dp);
     if (ret <= 0) break;
-  } while (++tries < MAX_STEP_TRIES);
+  } while (!replay && ++tries < MAX_STEP_TRIES);
 
   ei->retries = eir->retries = tries;
   return ret;
@@ -1192,7 +1268,7 @@ clock_dump_dual_ns(clock_idx_t clkidx, errinfo_t *ei, errinfo_t *eir,
 
   meanofs = (sns_time_t) (ei->first + ei->last - eir->first - eir->last) / 2;
 
-  if (!(fp = open_log(clkidx, "-vs-mach", quiet))) return;
+  if (!(fp = open_log(clkidx, "-vs-mach", quiet, 0))) return;
   if (verbose >= 2) {
     fprintf(fp, "# Comparison of %d %s samples vs. mach (%s)\n",
             NUM_DIFFS, clock_names[clkidx],
@@ -1241,20 +1317,64 @@ clock_dump_dual_ns(clock_idx_t clkidx, errinfo_t *ei, errinfo_t *eir,
     mean = (cur + next) / 2;  diff = (sns_time_t) tstcur - mean - meanofs;
     tstmin = tstcur - (next + ei->difflim);
     tstmax = tstcur - (cur - ei->difflim);
-    fprintf(fp, "%7d %19llu %5d %19llu %+5lld %+5lld %+5lld\n",
+    fprintf(fp, " %6d %19llu %5d %19llu %+5lld %+5lld %+5lld\n",
             idx, ULL cur, (int) (cur - last),
             ULL tstcur, LL diff, LL tstmin - meanofs, LL tstmax - meanofs);
     last = cur;
   }
   cur = refnsbuf[idx];
-  fprintf(fp, "%7d %19llu %5d\n",
+  fprintf(fp, " %6d %19llu %5d\n",
          idx, ULL cur, (int) (cur - last));
   fclose(fp);
 }
 
+/* Replay data from prior dump */
+static int
+clock_replay_dual_ns(clock_idx_t clkidx, int quiet)
+{
+  int ret = 0, count, idx = -1, diff1, diff2, ofs1, ofs2;
+  char pfx, sep, eol, buf[256];
+  ns_time_t cur, tstcur, *nsbuf = nsbufp[clock_types[clkidx]];
+  FILE *fp;
+
+  if (!(fp = open_log(clkidx, "-vs-mach", quiet, 1))) return -1;
+  do {
+    if (!fgets(buf, sizeof(buf), fp)) {
+      ret = !feof(fp);
+      break;
+    }
+    count = sscanf(buf, "%c%d %llu %d%c%llu %lld %lld %lld%c",
+                   &pfx, &idx, ULLP &cur, &diff1, &sep,
+                   ULLP &tstcur, LLP &diff2, LLP &ofs1, LLP &ofs2, &eol);
+    if (count < 0) {
+      ret = 1;
+      break;
+    }
+    if (pfx == '#') continue;
+    if (pfx != ' '
+        || !((count == 10 && sep == ' ' && eol == '\n')
+             || (count == 5 && sep == '\n'))) {
+      if (!quiet) fprintf(stderr, "    Bad line at/after index %d\n", idx);
+      ret = -1;
+      break;
+    }
+    if (idx < 0 || idx >= NUM_SAMPLES
+        || (idx >= NUM_DIFFS && sep == ' ')) {
+      if (!quiet) fprintf(stderr, "    Skipping bad index %d\n", idx);
+      continue;
+    }
+    if (sep == ' ') nsbuf[idx] = tstcur;
+    refnsbuf[idx] = cur;
+  } while (1);
+
+  fclose(fp);
+  return ret;
+}
+
 /* Report info about one clock comparison */
 static int
-report_clock_compare(clock_idx_t clkidx, int dump, int verbose, int quiet)
+report_clock_compare(clock_idx_t clkidx,
+                     int dump, int verbose, int quiet, int replay)
 {
   int ret = 0, vnq = verbose && !quiet;
   const char *name = clock_names[clkidx];
@@ -1263,7 +1383,8 @@ report_clock_compare(clock_idx_t clkidx, int dump, int verbose, int quiet)
 
   if (vnq) printf("  Comparing %s to mach_absolute_time\n", name);
 
-  if (check_clock_sandwich(clkidx, &info, &refinfo, &dstats)) {
+  if (check_clock_sandwich(clkidx, &info, &refinfo, &dstats, quiet, replay)) {
+    if (replay && info.retries < 0) return 0;  /* Just skip nonex replay */
     if (refinfo.errnum) {
       report_clock_err(clock_idx_mach_absolute, &refinfo, 0, verbose);
     }
@@ -1285,14 +1406,14 @@ report_clock_compare(clock_idx_t clkidx, int dump, int verbose, int quiet)
 
 /* Report info about all clock comparisons */
 static int
-report_all_clock_compares(int dump, int verbose, int quiet)
+report_all_clock_compares(int dump, int verbose, int quiet, int replay)
 {
   int ret = 0;
   clock_idx_t clkidx = 0;
 
   while (clkidx < (clock_idx_t) clock_idx_max) {
     /* As sanity check, don't exclude self-compare */
-    ret |= report_clock_compare(clkidx, dump, verbose, quiet);
+    ret |= report_clock_compare(clkidx, dump, verbose, quiet, replay);
     ++clkidx;
   }
   return ret;
@@ -1784,7 +1905,7 @@ int
 main(int argc, char *argv[])
 {
   int argn = 1;
-  int continuous = 0, dump = 0, quiet = 0, verbose = 0;
+  int continuous = 0, dump = 0, quiet = 0, replay = 0, verbose = 0;
   int err = 0, tterr, ttries;
   const char *cp;
   char chr;
@@ -1797,6 +1918,7 @@ main(int argc, char *argv[])
         case 'C': ++continuous; break;
         case 'd': ++dump; break;
         case 'q': ++quiet; break;
+        case 'R': ++replay; break;
         case 'v': ++verbose; break;
       }
     }
@@ -1809,8 +1931,8 @@ main(int argc, char *argv[])
   err |= check_invalid();
 
   while (!err) {
-    err |= report_all_clocks(dump, verbose, quiet);
-    err |= report_all_clock_compares(dump, verbose, quiet);
+    err |= report_all_clocks(dump, verbose, quiet, replay);
+    err |= report_all_clock_compares(dump, verbose, quiet, replay);
     err |= check_mach_scaling(verbose && !quiet);
 
     /*
