@@ -81,13 +81,14 @@ typedef int64_t sns_time_t;
 #define BILLION64  1000000000ULL
 
 /* Parameters for collection sequence */
-#define MAX_STEP_NS     700000  /* Maximum delta not considered a step */
-#define MAX_STEP_TRIES      50  /* Maximum tries to avoid a step */
-#define STD_SLEEP_US      1000  /* Standard sleep before collecting */
-#define MAX_SLEEP_US    100000  /* Maximum sleep when retrying */
+#define MAX_STEP_NS           700000  /* Maximum delta not considered a step */
+#define MAX_APPROX_STEP_NS  10000000  /* Maximum approximate-clock step */
+#define MAX_RETRIES               50  /* Maximum soft-error retries */
+#define STD_SLEEP_US            1000  /* Standard sleep before collecting */
+#define MAX_SLEEP_US          100000  /* Maximum sleep when retrying */
 
 /* Mach_time scaling tolerance */
-#define MACH_SCALE_TOLER 10E-6
+#define MACH_SCALE_TOLER 10E-6  /* 10 ppm */
 
 /* Parameters (microseconds) for process/thread time test */
 #define THREAD_RUN_TIME     100000  /* Wall clock time for thread runs */
@@ -636,12 +637,15 @@ check_samples(clock_idx_t clkidx, const ns_time_t buf[],
   int ret, maxsame, cursame = 0;
   ns_time_t last, cur = 0, res = 0, nzmin = ~0ULL;
   const ns_time_t *nsp = buf;
-  sns_time_t diff;
+  sns_time_t diff, maxstep;
   int numitems = mode ? NUM_DIFFS : NUM_SAMPLES;
 
   /* Determine maximum consecutive repeated values */
   if ((ret = getres(clkidx, &res))) return ret;
   maxsame = MAX(res, MIN_CLOCK_RES_NS) * 1000 / MIN_READ_TIME_PS;
+
+  /* Maximum allowable step */
+  maxstep = clock_approx[clkidx] ? MAX_APPROX_STEP_NS : MAX_STEP_NS;
 
   ei->errnum = 0;
 
@@ -656,7 +660,9 @@ check_samples(clock_idx_t clkidx, const ns_time_t buf[],
         ei->errnum = -err_illbackstep; ret = -1; break;
       }
     }
-    if (diff > MAX_STEP_NS) { ei->errnum = -err_step; ret = 1; break; }
+    if (diff > maxstep) {
+      ei->errnum = -err_step; ret = 1; break;
+    }
     if (!diff) {
       if (++cursame > maxsame && !clock_approx[clkidx]) {
         ei->errnum = -err_zerostep; ret = -1; break;
@@ -669,7 +675,7 @@ check_samples(clock_idx_t clkidx, const ns_time_t buf[],
   }
 
   ei->first = buf[0]; ei->last = buf[numitems - 1];
-  ei->index = ret ? nsp - buf : -1;
+  ei->index = ret ? nsp - buf - 1 : -1;
   ei->prev = last; ei->cur = cur;
   ei->nzmin = nzmin < ~0ULL ? nzmin : 0;
   ei->badsame = cursame; ei->maxsame = maxsame;
@@ -728,7 +734,7 @@ check_clock(clock_idx_t clkidx, cstats_t *sp, errinfo_t *ei,
     ret = check_samples(clkidx, nsbufp[clock_types[clkidx]], 0, ei);
     if (ret <= 0) break;
     sleepus = MIN(sleepus * 2, MAX_SLEEP_US);
-  } while (!replay && ++tries < MAX_STEP_TRIES);
+  } while (!replay && ++tries < MAX_RETRIES);
 
   ei->retries = tries;
   if (!ret && sp) get_stats(clkidx, sp);
@@ -1114,10 +1120,16 @@ sandwich_samples(clock_idx_t clkidx, errinfo_t *ei)
  * sample set, but we don't bother to check for that.
  *
  * A similar issue exists with approximate clocks, which stay at the same
- * value for a long time and then jump.  While it might be possible to
- * come up with a more finely-tuned exception for those, for simplicity
- * we just give them a treatment similar to steerable clocks, except for
- * limiting it to the "late" case.
+ * value for a long time and then jump significantly.  We do a few things
+ * to allow for this:
+ *   1) We don't start checking values until the first step occurs.  This
+ *   allows capturing the delay offset from the update.
+ *   2) Additionally, we use the one-step-earlier version of the reference
+ *   to compute the minimum, to allow for the earlier capture of the
+ *   approximate clock.
+ *   2) We keep the "lastmax" value unchnaged when the clock value is
+ *   unchanged, providing extra tolerance for the step.
+ * In addition to the above, the "late" case is considered retriable.
  */
 static int
 compare_clocks(clock_idx_t clkidx, errinfo_t *ei, errinfo_t *eir, dstats_t *dp)
@@ -1125,8 +1137,8 @@ compare_clocks(clock_idx_t clkidx, errinfo_t *ei, errinfo_t *eir, dstats_t *dp)
   const ns_time_t *refbp = &refnsbuf[0];
   const ns_time_t *testbp = nsbufp[clock_types[clkidx]];
   const ns_time_t *refp = refbp, *testp = testbp;
-  sns_time_t last, cur, tstcur = 0;
-  int ret = 0;
+  sns_time_t prev, last, cur, tstlast, tstcur = 0;
+  int ret = 0, steps = 0, adjret = clock_okadj[clkidx] ? 1 : -1;
   sns_time_t minref = 0, maxref = 0, difflim;
   sns_time_t lastmin = INT64_MIN, lastmax = INT64_MAX, curmin = 0, curmax = 0;
 
@@ -1139,18 +1151,43 @@ compare_clocks(clock_idx_t clkidx, errinfo_t *ei, errinfo_t *eir, dstats_t *dp)
   difflim = MAX(clock_res[clkidx], ei->nzmin)
             + MAX(clock_res[clock_idx_mach_absolute], eir->nzmin);
 
-  last = *refp++;
+  tstlast = *testp; prev = last = *refp++;
   while (testp < &testbp[NUM_DIFFS]) {
     tstcur = *testp++; cur = *refp++;
-    minref = last - difflim; maxref = cur + difflim;
+    minref = (clock_approx[clkidx] ? prev : last) - difflim;
+    maxref = cur + difflim;
     curmin = tstcur - maxref; curmax = tstcur - minref;
-    if (curmax < lastmin || curmin > lastmax) {
-      ei->errnum = curmax < lastmin ? -err_early : -err_late;
-      ret = clock_okadj[clkidx]
-            || (clock_approx[clkidx] && curmin > lastmax) ? 1 : -1;
-      break;
+    if (!clock_approx[clkidx]) {
+      if (curmax < lastmin) {
+        ei->errnum = -err_early;
+        ret = adjret;
+        break;
+      }
+      if (curmin > lastmax) {
+        ei->errnum = -err_late;
+        ret = adjret;
+        break;
+      }
+      lastmax = curmax;
+    } else {
+      if (tstcur != tstlast || steps) {
+        if (curmax < lastmin) {
+          ei->errnum = -err_early;
+          ret = -1;
+          break;
+        }
+        if (curmin > lastmax) {
+          ei->errnum = -err_late;
+          ret = 1;
+          break;
+        }
+      }
+      if (tstcur != tstlast) {
+        ++steps;
+        lastmax = curmax;
+      }
     }
-    last = cur; lastmin = curmin; lastmax = curmax;
+    tstlast = tstcur; prev = last; last = cur; lastmin = curmin;
   }
 
   ei->first = testbp[0]; ei->last = testbp[NUM_DIFFS - 1];
@@ -1231,7 +1268,7 @@ check_clock_sandwich(clock_idx_t clkidx,
     if (ret) { if (ret < 0) break; continue; }
     ret = compare_clocks(clkidx, ei, eir, dp);
     if (ret <= 0) break;
-  } while (!replay && ++tries < MAX_STEP_TRIES);
+  } while (!replay && ++tries < MAX_RETRIES);
 
   ei->retries = eir->retries = tries;
   return ret;
