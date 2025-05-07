@@ -41,6 +41,7 @@
 #include <libgen.h>
 #include <math.h>
 #include <pthread.h>
+#include <signal.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -368,7 +369,15 @@ static ns_time_t * const nsbufp[] = {
 
 static ns_time_t clock_res[clock_idx_max];
 
+static int iteration = 0, stopiter = 0;
 static char progname[PATH_MAX];
+
+static void
+intsig(int signum)
+{
+  (void) signum;
+  ++stopiter;
+}
 
 static int
 setup(int verbose)
@@ -795,8 +804,13 @@ open_log(clock_idx_t clkidx, const char *extra, int quiet, int replay)
   const char *name = clock_names[clkidx];
   char fname[PATH_MAX];
 
-  snprintf(fname, sizeof(fname), TEST_TEMP "/%s-%s%s.log",
-           progname, name, extra);
+  if (!iteration) {
+    snprintf(fname, sizeof(fname), TEST_TEMP "/%s-%s%s.log",
+             progname, name, extra);
+  } else {
+    snprintf(fname, sizeof(fname), TEST_TEMP "/%s-%s%s-%d.log",
+             progname, name, extra, iteration);
+  }
   if(!(fp = fopen(fname, replay ? "r" : "w"))) {
     if (replay && errno == ENOENT) {
       if (!quiet) fprintf(stderr, "    Skipping nonexistent %s\n", fname);
@@ -1942,7 +1956,8 @@ int
 main(int argc, char *argv[])
 {
   int argn = 1;
-  int continuous = 0, dump = 0, quiet = 0, replay = 0, verbose = 0;
+  int continuous = 0, dump = 0, keepgoing = 0;
+  int quiet = 0, replay = 0, verbose = 0;
   int err = 0, tterr, ttries;
   const char *cp;
   char chr;
@@ -1952,8 +1967,9 @@ main(int argc, char *argv[])
     cp = argv[argn];
     while ((chr = *++cp)) {
       switch (chr) {
-        case 'C': ++continuous; break;
+        case 'C': ++continuous; ++iteration; break;
         case 'd': ++dump; break;
+        case 'K': ++keepgoing; break;
         case 'q': ++quiet; break;
         case 'R': ++replay; break;
         case 'v': ++verbose; break;
@@ -1963,11 +1979,15 @@ main(int argc, char *argv[])
   }
 
   if (verbose && !quiet) printf("%s starting.\n", progname);
+
+  (void) signal(SIGHUP, intsig);
+  (void) signal(SIGQUIT, intsig);
+
   err = setup(verbose && !quiet);
 
   err |= check_invalid();
 
-  while (!err) {
+  while (!err || keepgoing) {
     err |= report_all_clocks(dump, verbose, quiet, replay);
     err |= report_all_clock_compares(dump, verbose, quiet, replay);
     err |= check_mach_scaling(verbose && !quiet);
@@ -1985,9 +2005,15 @@ main(int argc, char *argv[])
     } while (tterr > 0 && --ttries);
     err |= tterr;
 
-    if (!continuous) break;
+    if (!continuous || stopiter) break;
+    ++iteration;
   }
 
-  if (!quiet) printf("%s %s.\n", progname, err ? "failed" : "passed");
+  if (!iteration) {
+    if (!quiet) printf("%s %s.\n", progname, err ? "failed" : "passed");
+  } else {
+    printf("%s %s after %d iterations.\n",
+           progname, err ? "failed" : "passed", iteration);
+  }
   return err;
 }
