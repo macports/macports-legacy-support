@@ -35,7 +35,7 @@ typedef struct fsid fsid_t;
 extern ssize_t fsgetpath(char * __restrict buf, size_t bufsize, fsid_t* fsid, uint64_t objid);
 __MP__END_DECLS
 
-#if __MPLS_TARGET_OSVER < 1060
+#if __MPLS_TARGET_OSVER < 1060 && !defined(__MPLS_HEADER_TEST__)
 #error "No implementation of fsgetpath is presently available for MacOSX prior to 10.6"
 #endif
 
