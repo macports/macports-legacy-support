@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019
+ * Copyright (c) 2025
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -31,6 +31,7 @@
 #if __MPLS_SDK_SUPPORT_FSGETPATH__
 
 __MP__BEGIN_DECLS
+typedef struct fsid fsid_t;
 extern ssize_t fsgetpath(char * __restrict buf, size_t bufsize, fsid_t* fsid, uint64_t objid);
 __MP__END_DECLS
 
