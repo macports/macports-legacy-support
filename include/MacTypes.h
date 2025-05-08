@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Frederick H. G. Wright II <fw@fwright.net>
+ * Copyright (c) 2025 Frederick H. G. Wright II <fw@fwright.net>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -33,11 +33,11 @@
 /* Determine the true __has_include() status (if not already done) */
 #include <sys/cdefs.h>
 
-/* See if __has_include() is missing or lying */
-#if __MPLS_HAS_INCLUDE_STATUS <= 0
-
 /* Determine the SDK version */
 #include <_macports_extras/sdkversion.h>
+
+/* See if __has_include() is missing or lying */
+#if __MPLS_HAS_INCLUDE_STATUS <= 0
 
 #if __MPLS_SDK_MAJOR >= 150000 && __MPLS_SDK_MAJOR < 160000
   #undef __has_include
@@ -47,8 +47,10 @@
 
 #endif /* __has_include undef */
 
-/* Include the primary system MacTypes.h */
+/* Include the primary system MacTypes.h (non-system in <10.8) */
+#if __MPLS_SDK_MAJOR >= 1080 || !defined(__MPLS_HEADER_TEST__)
 #include_next <MacTypes.h>
+#endif
 
 #ifdef __MPLS_HAS_INCLUDE_CHANGED
   #undef __has_include
