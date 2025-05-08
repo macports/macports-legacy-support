@@ -100,7 +100,7 @@ __MP__END_DECLS
 
 __MP__BEGIN_DECLS
 
-static inline int
+static __inline__ int
 __mpls_alphasort(const struct dirent **d1, const struct dirent **d2)
 {
   /*
@@ -110,7 +110,7 @@ __mpls_alphasort(const struct dirent **d1, const struct dirent **d2)
   return alphasort((const void *) d1, (const void *) d2);
 }
 
-static inline int
+static __inline__ int
 __mpls_scandir(const char *dirnam, struct dirent ***namelist,
                int (*selector)(const struct dirent *),
                int (*compar)(const struct dirent **, const struct dirent **))
@@ -133,13 +133,13 @@ __MP__END_DECLS
 
 /* Dummy wrapper functions without unnecessary casts */
 
-static inline int
+static __inline__ int
 __mpls_alphasort(const struct dirent **d1, const struct dirent **d2)
 {
   return alphasort(d1, d2);
 }
 
-static inline int
+static __inline__ int
 __mpls_scandir(const char *dirnam, struct dirent ***namelist,
                int (*selector)(const struct dirent *),
                int (*compar)(const struct dirent **, const struct dirent **))
