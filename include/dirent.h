@@ -49,7 +49,8 @@ __MP__END_DECLS
 /* New signature for scandir and alphasort (optionally) */
 
 /* These functions are non-POSIX, so avoid broken refs. */
-#if !defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE)
+#if !defined(_POSIX_C_SOURCE) \
+    || (defined(_DARWIN_C_SOURCE) && __MPLS_SDK_MAJOR >= 1050)
 
 #if __MPLS_SDK_SUPPORT_NEW_SCANDIR__
 
@@ -149,7 +150,7 @@ __mpls_scandir(const char *dirnam, struct dirent ***namelist,
 
 #endif /* !__MPLS_SDK_SUPPORT_NEW_SCANDIR__  */
 
-#endif /* !defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE) */
+#endif /* (!_POSIX_C_SOURCE || (_DARWIN_C_SOURCE && >10.4)) */
 
 #endif /* __DARWIN_C_LEVEL >= 200809L */
 
