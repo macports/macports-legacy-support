@@ -24,7 +24,7 @@
         #define __IPHONE_OS_VERSION_MIN_REQUIRED __ENVIRONMENT_IPHONE_OS_VERSION_MIN_REQUIRED__
     #else
         // hack until compiler with -miphoneos-version-min is rolled out
-        #if __arm__
+        #if defined(__arm__) && __arm__
             #define __IPHONE_OS_VERSION_MIN_REQUIRED 20000
         #endif
     #endif
