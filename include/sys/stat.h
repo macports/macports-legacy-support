@@ -85,9 +85,10 @@ typedef unsigned long long __darwin_ino64_t;
 
 /* End of first grab from Apple 10.5 sys/stat.h */
 
-/* More from Apple 10.5 sys/stat.h */
+/* More from Apple 10.5 sys/stat.h (slightly tweaked) */
 
-#if !defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE)
+#if !defined(_POSIX_C_SOURCE) \
+    || (defined(_DARWIN_C_SOURCE) && __MPLS_SDK_MAJOR >= 1050)
 
 struct stat64 __DARWIN_STRUCT_STAT64;
 
@@ -98,7 +99,7 @@ int	fstat64(int, struct stat64 *);
 int	lstat64(const char *, struct stat64 *);
 int	stat64(const char *, struct stat64 *);
 
-#endif /* (!_POSIX_C_SOURCE || _DARWIN_C_SOURCE) */
+#endif /* (!_POSIX_C_SOURCE || (_DARWIN_C_SOURCE && >10.4)) */
 
 /* End of additional grabs from Apple 10.5 sys/stat.h */
 
