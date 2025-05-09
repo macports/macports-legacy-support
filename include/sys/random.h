@@ -23,17 +23,42 @@
 /* Do our SDK-related setup */
 #include <_macports_extras/sdkversion.h>
 
-/* Include the primary system sys/random.h */
-#include_next <sys/random.h>
+/*
+ * In the systems that need this, sys/random.h requires the u_int typedef,
+ * which not only depends on sys/types.h, but also may be blocked by POSIX
+ * settings.  In that case, we provide our own typedef if appropriate, or
+ * else we avoid the include_next that won't work.
+ *
+ * The OS versions with getentropy() don't appear to filter it based on
+ * POSIX settings, so we do the same here.
+ *
+ * In the later OSes that don't need our addition, sys/random.h is completely
+ * different and doesn't require u_int, and thus the include_next is
+ * unconditional.
+ */
 
 #if __MPLS_SDK_SUPPORT_GETENTROPY__
 
+#if !defined(_POSIX_C_SOURCE) \
+    || (defined(_DARWIN_C_SOURCE) && __MPLS_SDK_MAJOR >= 1050)
+
+/* Add the missing typedef (redundancy shouldn't hurt ). */
+typedef	unsigned int u_int;
+
+/* Include the primary system sys/random.h */
+#include_next <sys/random.h>
+
+#endif /* (!_POSIX_C_SOURCE || (_DARWIN_C_SOURCE && >10.4)) */
+
 __MP__BEGIN_DECLS
-
 extern int getentropy(void *buf, size_t buflen);
-
 __MP__END_DECLS
 
-#endif /* __MPLS_SDK_SUPPORT_GETENTROPY__ */
+#else /* !__MPLS_SDK_SUPPORT_GETENTROPY__ */
+
+/* Include the primary system sys/random.h */
+#include_next <sys/random.h>
+
+#endif /* !__MPLS_SDK_SUPPORT_GETENTROPY__ */
 
 #endif /* _MACPORTS_SYS_RANDOM_H_ */
