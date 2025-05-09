@@ -30,8 +30,13 @@
 /* Do our SDK-related setup */
 #include <_macports_extras/sdkversion.h>
 
-#if defined(__MPLS_SDK_MAJOR) && __MPLS_SDK_MAJOR < 1060
+#if __MPLS_SDK_MAJOR < 1060
+
+typedef unsigned long long u_int64_t;  /* From <arch>/types.h */
 #include <_macports_extras/tiger_leopard/net/if_utun.h>
-#else
+
+#else  /* >= 10.6 */
+
 #include_next <net/if_utun.h>
-#endif
+
+#endif  /* >= 10.6 */
