@@ -155,6 +155,10 @@ DARWINRUNS      := $(patsubst \
 SCANDIRSRCS_C   := $(wildcard $(XTESTNAMEPREFIX)scandir*.c)
 SCANDIRRUNS     := $(patsubst \
                      $(XTESTNAMEPREFIX)%.c,$(XTESTRUNPREFIX)%,$(SCANDIRSRCS_C))
+ALLHDRSRCS_C    := $(wildcard $(XTESTNAMEPREFIX)allheaders*.c)
+ALLHDRRUNS      := $(patsubst \
+                     $(XTESTNAMEPREFIX)%.c,$(XTESTRUNPREFIX)%,$(ALLHDRSRCS_C)) \
+                     $(XTESTRUNPREFIX)revheaders
 
 # Normal automatic tests
 TESTDIR          = test
@@ -422,6 +426,14 @@ $(MANTESTPREFIX)libtest_packet_nofix.o: $(TESTNAMEPREFIX)packet.c
 $(MANTESTPREFIX)libtest_packet_nofix_nocancel.o: $(TESTNAMEPREFIX)packet.c
 $(MANTESTPREFIX)libtest_packet_nofix_nonposix.o: $(TESTNAMEPREFIX)packet.c
 
+# The "allheaders" tests include the basic "allheaders" source
+$(XTESTNAMEPREFIX)allheaders_199309.o: $(XTESTNAMEPREFIX)allheaders.c
+$(XTESTNAMEPREFIX)allheaders_200809.o: $(XTESTNAMEPREFIX)allheaders.c
+$(XTESTNAMEPREFIX)allheaders_full.o: $(XTESTNAMEPREFIX)allheaders.c
+$(XTESTNAMEPREFIX)allheaders_199309_ds.o: $(XTESTNAMEPREFIX)allheaders.c
+$(XTESTNAMEPREFIX)allheaders_200809_ds.o: $(XTESTNAMEPREFIX)allheaders.c
+$(XTESTNAMEPREFIX)allheaders_full_ds.o: $(XTESTNAMEPREFIX)allheaders.c
+
 # Provide a target for all "darwin_c" tests
 $(XTESTRUNPREFIX)darwin_c_all: $(DARWINRUNS)
 
@@ -445,6 +457,9 @@ $(MANRUNPREFIX)strncpy_chk_all: $(STRNCHKRUNS)
 
 # Provide a target for all non-manual "packet" tests
 $(TESTRUNPREFIX)packet_all: $(PACKETRUNS)
+
+# Provide a target for all "allheaders" tests
+$(XTESTRUNPREFIX)allheaders_all: $(ALLHDRRUNS)
 
 $(MANTESTRUNS): $(MANRUNPREFIX)%: $(MANTESTPREFIX)% | $(TEST_TEMP)
 	$< $(TEST_ARGS)
