@@ -183,4 +183,21 @@
 #define __DARWIN_SUF_64_BIT_INO_T "$INODE64"
 #endif
 
+/*
+ * Non-Apple clang 5+ gives a warning when a macro expansion contains
+ * "defined()". Prior to 10.13, the SDK did this for __DARWIN_NO_LONG_LONG,
+ * so we convert it to a simple value, using the same condition as the
+ * 10.13+ sys/cdefs.h (except for allowing undefined __STDC_VERSION__).
+ */
+#if defined(__DARWIN_NO_LONG_LONG)
+  #undef __DARWIN_NO_LONG_LONG
+  #if (defined(__STRICT_ANSI__) \
+      && (!defined(__STDC_VERSION__) || __STDC_VERSION__-0 < 199901L) \
+      && !defined(__GNUG__))
+    #define __DARWIN_NO_LONG_LONG 1
+  #else
+    #define __DARWIN_NO_LONG_LONG 0
+  #endif
+#endif /* __DARWIN_NO_LONG_LONG defined */
+
 #endif /* _MACPORTS_SYS_CDEFS_H_ */
