@@ -88,6 +88,14 @@
 #ifndef __AVAILABILITY__
 #define __AVAILABILITY__
 
+/*
+ * This is a near-verbatim copy of Availability.h from the 10.5 SDK, to
+ * provide for its absence from the 10.4 SDK.  The only change is the
+ * replacement of the '//' comment at the end with the traditional form,
+ * to avoid warnings when building in C89 mode.  For some unknown reason,
+ * this same file does not provoke such warnings when built as part of
+ * the 10.5 SDK.
+ */
 
 #define __MAC_10_0      1000
 #define __MAC_10_1      1010
@@ -116,4 +124,4 @@
 #endif
 
 
-#endif // __AVAILABILITY__
+#endif /* __AVAILABILITY__ */
