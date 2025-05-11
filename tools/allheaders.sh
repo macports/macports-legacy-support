@@ -29,6 +29,8 @@ FILTERS+='|/_'
 FILTERS+='|MacportsLegacySupport.h'
 # Framework headers under CoreFoundation, IOKit, and OpenGL
 FILTERS+='|CoreFoundation/|IOKit/|OpenGL/'
+# The 10.5-internal-only available.h
+FILTERS+='|available.h'
 
 # Headers without .h are C++-only, and not legal in basic-C builds.
 CPPFILTER='[.]h$'
