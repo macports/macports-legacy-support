@@ -8,6 +8,7 @@
 #endif
 #include <copyfile.h>
 #include <dirent.h>
+#include <libkern/OSAtomic.h>
 #include <mach/mach_time.h>
 #include <mach/machine.h>
 #include <math.h>
