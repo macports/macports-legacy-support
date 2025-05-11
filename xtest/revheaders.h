@@ -29,6 +29,7 @@
 #include <math.h>
 #include <mach/machine.h>
 #include <mach/mach_time.h>
+#include <libkern/OSAtomic.h>
 #include <dirent.h>
 #include <copyfile.h>
 #ifdef __cplusplus
