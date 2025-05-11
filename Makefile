@@ -220,6 +220,9 @@ STRNCHKSRCS_C    := $(wildcard $(MANTESTPREFIX)strncpy_chk*.c)
 STRNCHKRUNS      := $(patsubst \
                      $(MANTESTPREFIX)%.c,$(MANRUNPREFIX)%,$(STRNCHKSRCS_C))
 
+# C standard for tests
+TESTCSTD         := c99
+
 TIGERSRCDIR      = tiger_only/src
 TIGERSRCS       := $(wildcard $(TIGERSRCDIR)/*.c)
 TIGERPRGS       := $(patsubst %.c,%,$(TIGERSRCS))
@@ -287,7 +290,7 @@ $(XLIBPATH): $(BUILDSYSLIBPATH)
 	cd $(XLIBDIR) && ln -sf ../$< ../$@
 
 $(TESTOBJS_C) $(MANTESTOBJS_C) $(MANLIBTESTOBJS_C): %.o: %.c $(ALLHEADERS)
-	$(CC) -c -std=c99 -I$(SRCINCDIR) $(TESTCFLAGS) $< -o $@
+	$(CC) -c -std=$(TESTCSTD) -I$(SRCINCDIR) $(TESTCFLAGS) $< -o $@
 
 $(TESTPRGS_C): %: %.o $(BUILDDLIBPATH)
 	$(CC) $(TESTLDFLAGS) $< $(TESTLIBS) -o $@
@@ -301,7 +304,7 @@ $(TESTSPRGS_C): %_static: %.o $(BUILDSLIBPATH)
 
 # The "darwin_c" tests need the -fno-builtin option with some compilers.
 $(XTESTOBJS_C): %.o: %.c $(ALLHEADERS)
-	$(CC) -c -std=c99 -fno-builtin -I$(SRCINCDIR) $(TESTCFLAGS) $< -o $@
+	$(CC) -c -std=$(TESTCSTD) -fno-builtin -I$(SRCINCDIR) $(TESTCFLAGS) $< -o $@
 
 # The xtests don't require the library
 $(XTESTPRGS_C): %: %.o
