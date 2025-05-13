@@ -20,6 +20,33 @@
 /* Include the primary system sys/queue.h */
 #include_next <sys/queue.h>
 
+/*
+ * When SDK 10.15+ versions are built with clang, they define a pair of
+ * macros to disable "nullability completeness" warnings.  See the comment
+ * for details.  But attempting to disable this warning in compilers that
+ * don't have it provokes a warning of its own.  So we nuke those macros
+ * in such cases.
+ *
+ * This is complicated by the fact that the clang version threshold for
+ * implementing nullability completeness differs between Xcode and MacPorts
+ * clangs.  MacPorts clang has it as of 3.7, but Xcode clang doesn't have
+ * it until 7.x.
+ *
+ * Note that the SDK's example of where the workaround is needed doesn't
+ * actually work, so we don't have a test that this works correctly, beyond
+ * getting rid of the warnings with older clangs.
+ */
+#if defined(__NULLABILITY_COMPLETENESS_PUSH) && defined(__clang__)
+  #if (__clang_major__ < 4 || __clang_minor__ < 7) \
+      || (defined(__apple_build_version__) && __clang_major__ < 7)
+    #undef __NULLABILITY_COMPLETENESS_PUSH
+    #undef __NULLABILITY_COMPLETENESS_POP
+    #define __NULLABILITY_COMPLETENESS_PUSH
+    #define __NULLABILITY_COMPLETENESS_POP
+  #endif /* Early clang */
+#endif /* __NULLABILITY_COMPLETENESS_PUSH */
+
+
 /* SLIST functions missing from earlier SDK versions */
 
 /* Missing until 10.5 */
