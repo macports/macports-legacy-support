@@ -20,8 +20,10 @@
  *    SLIST_REMOVE_AFTER
  */
 
-#include <assert.h>
+#include <libgen.h>
 #include <stddef.h>  /* For NULL */
+#include <stdio.h>
+#include <string.h>
 #include <sys/queue.h>
 
 
@@ -52,10 +54,13 @@ static slist_entry_t slist_entries[] = {
 };
 #define SLIST_NUM (sizeof(slist_entries) / sizeof(slist_entries[0]))
 
-static void
-test_slist(void)
+static int
+test_slist(int verbose)
 {
+  int ret = 0;
   slist_entry_t *ep, *tp;
+
+  if (verbose) printf("  Testing SLIST_REMOVE_AFTER\n");
 
   /* Fill the queue with the sample entries (reversed) */
   for (ep = &slist_entries[0]; ep < &slist_entries[SLIST_NUM]; ++ep) {
@@ -65,13 +70,21 @@ test_slist(void)
   /* Get and check the first entry */
   ep = &slist_entries[SLIST_NUM - 1];
   tp = SLIST_FIRST(&slist_head);
-  assert(tp->value == ep->value);
+  if (tp->value != ep->value) {
+    printf("    *** SLIST_FIRST got wrong entry\n");
+    ret = 1;
+  }
 
   /* Remove the following entry, then check the one after */
   SLIST_REMOVE_AFTER(tp, next);
   ep = &slist_entries[SLIST_NUM - 1 - 2];
   tp = SLIST_NEXT(tp, next);
-  assert(tp->value == ep->value);
+  if (tp->value != ep->value) {
+    printf("    *** SLIST_REMOVE_AFTER got wrong entry\n");
+    ret = 1;
+  }
+
+  return ret;
 }
 
 
@@ -98,10 +111,13 @@ static stailq_entry_t stailq_entries[] = {
 };
 #define STAILQ_NUM (sizeof(stailq_entries) / sizeof(stailq_entries[0]))
 
-static void
-test_stailq(void)
+static int
+test_stailq(int verbose)
 {
+  int ret = 0;
   stailq_entry_t *ep, *tp;
+
+  if (verbose) printf("  Testing STAILQ_FOREACH\n");
 
   /* Fill the queue with the sample entries */
   for (ep = &stailq_entries[0]; ep < &stailq_entries[STAILQ_NUM]; ++ep) {
@@ -111,21 +127,35 @@ test_stailq(void)
   /* See if STAILQ_FOREACH returns expected sequence */
   ep = &stailq_entries[0];
   STAILQ_FOREACH(tp, &stailq_head, next) {
-    assert(tp->value == ep++->value);
+    if (tp->value != ep++->value) {
+      printf("    *** STAILQ_FOREACH got wrong entry\n");
+      ret = 1;
+    }
   }
 
   /* Check expected end */
-  assert(ep == &stailq_entries[STAILQ_NUM]);
+  if (ep != &stailq_entries[STAILQ_NUM]) {
+    printf("    *** STAILQ_FOREACH ended at wrong entry\n");
+    ret = 1;
+  }
+
+  return ret;
 }
 
 
 int
 main(int argc, char *argv[])
 {
-  (void) argc; (void) argv;
+  int ret = 0, verbose = 0;
+  char *progname = basename(argv[0]);
 
-  test_slist();
-  test_stailq();
+  if (argc > 1 && !strcmp(argv[1], "-v")) verbose = 1;
 
-  return 0;
+  if (verbose) printf("%s starting.\n", progname);
+
+  ret |= test_slist(verbose);
+  ret |= test_stailq(verbose);
+
+  printf("%s %s.\n", progname, ret ? "failed" : "passed");
+  return ret;
 }
