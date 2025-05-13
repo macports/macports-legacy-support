@@ -1,6 +1,6 @@
-
 /*
  * Copyright (c) 2020 Chris Jones
+ * Copyright (c) 2025 Frederick H. G. Wright II <fw@fwright.net>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -15,40 +15,48 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#include <libgen.h>
 #include <stdio.h>
+#include <string.h>
 #include <strings.h>
 
-int main() {
-
+int
+main(int argc, char *argv[])
+{
+  int ret = 0, verbose = 0;
   const int offset = 4;
 
-  printf( "testing fls :-\n" );
+  if (argc > 1 && !strcmp(argv[1], "-v")) verbose = 1;
+
+  /* FIXME: Actually check the results for correctness */
+
+  if (verbose) printf( "testing fls :-\n" );
   for ( int i = 0; i <= 8*sizeof(int)-offset; i+=offset ) {
     const int ii = i+offset;
     int test = ( i>0  ? 1UL << (i-1)  : 0 );
     test |=    ( ii>0 ? 1UL << (ii-1) : 0 );
     const int j = fls(test);
-    printf( "  Set bits %i,%i - Found bit %i\n", i, ii, j );
+    if (verbose) printf( "  Set bits %i,%i - Found bit %i\n", i, ii, j );
   }
 
-  printf( "testing flsl :-\n" );
+  if (verbose) printf( "testing flsl :-\n" );
   for ( int i = 0; i <= 8*sizeof(long int)-offset; i+=offset ) {
     const int ii = i+offset;
     long int test = ( i>0  ? 1UL << (i-1)  : 0 );
     test |=         ( ii>0 ? 1UL << (ii-1) : 0 );
     const int j = flsl(test);
-    printf( "  Set bits %i,%i - Found bit %i\n", i, ii, j );
+    if (verbose) printf( "  Set bits %i,%i - Found bit %i\n", i, ii, j );
   }
 
-  printf( "testing flsll :-\n" );
+  if (verbose) printf( "testing flsll :-\n" );
   for ( int i = 0; i <= 8*sizeof(long long int)-offset; i+=offset ) {
     const int ii = i+offset;
     long long int test = ( i>0  ? 1UL << (i-1)  : 0 );
     test |=              ( ii>0 ? 1UL << (ii-1) : 0 );
     const int j = flsll(test);
-    printf( "  Set bits %i,%i - Found bit %i\n", i, ii, j );
+    if (verbose) printf( "  Set bits %i,%i - Found bit %i\n", i, ii, j );
   }
   
-  return 0;
+  printf("%s %s.\n", basename(argv[0]), ret ? "failed" : "succeeded");
+  return ret;
 }
-
