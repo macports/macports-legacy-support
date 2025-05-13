@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2019
+ * Copyright (c) 2025 Frederick H. G. Wright II <fw@fwright.net>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -14,26 +15,38 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include <stdio.h>
+#include <libgen.h>
 #include <pthread.h>
+#include <stdio.h>
+#include <string.h>
 
 int
-main (void)
+main(int argc, char *argv[])
 {
-    printf("\nTesting PTHREAD_RWLOCK_INITIALIZER\n");
+    int ret = 0, verbose = 0;
+
+    if (argc > 1 && !strcmp(argv[1], "-v")) verbose = 1;
+
+    /*
+     * Note that this doesn't actually test anything, besides surviving
+     * the calls.
+     */
+
+    if (verbose) printf("Testing PTHREAD_RWLOCK_INITIALIZER\n");
     pthread_rwlock_t  aLock = PTHREAD_RWLOCK_INITIALIZER;
     pthread_rwlock_rdlock(&aLock);
     pthread_rwlock_unlock(&aLock);
     pthread_rwlock_destroy(&aLock);
-    printf("Success testing PTHREAD_RWLOCK_INITIALIZER\n\n");
+    if (verbose) printf("  Success testing PTHREAD_RWLOCK_INITIALIZER\n");
 
-    printf("Testing pthread_rwlock_init\n");
+    if (verbose) printf("Testing pthread_rwlock_init\n");
     pthread_rwlock_t  myLock;
     pthread_rwlock_init(&myLock, NULL);
     pthread_rwlock_rdlock(&myLock);
     pthread_rwlock_unlock(&myLock);
     pthread_rwlock_destroy(&myLock);
-    printf("Success testing pthread_rwlock_init\n\n");
+    if (verbose) printf("  Success testing pthread_rwlock_init\n");
 
-    return 0;
+    printf("%s %s.\n", basename(argv[0]), ret ? "failed" : "passed");
+    return ret;
 }
