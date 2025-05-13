@@ -1,6 +1,6 @@
-
 /*
  * Copyright (c) 2019 Christian Cornelssen
+ * Copyright (c) 2025 Frederick H. G. Wright II <fw@fwright.net>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -27,44 +27,56 @@ typedef long (*itol_t)(int);
 typedef struct { long sysconf; } scv_t;
 typedef struct { itol_t sysconf; } scf_t;
 
-#include <unistd.h>
-#include <stdio.h>
 #include <assert.h>
+#include <libgen.h>
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
 
-int main() {
-    printf("***sysconf wrapper tests started\n\n");
+int
+main(int argc, char *argv[])
+{
+    int ret = 0, verbose = 0;
+    char *progname = basename(argv[0]);
+
+    if (argc > 1 && !strcmp(argv[1], "-v")) verbose = 1;
+
+    if (verbose) printf("%s started\n", progname);
     /* Test with direct function call */
     long nconf = sysconf(_SC_NPROCESSORS_CONF);
     long nonln = sysconf(_SC_NPROCESSORS_ONLN);
     long nphyspages = sysconf(_SC_PHYS_PAGES);
-    printf("nconf = %ld; nonln = %ld;\n", nconf, nonln);
+    if (verbose) printf("  nconf = %ld; nonln = %ld;\n", nconf, nonln);
     assert (nconf > 0);
     assert (nonln > 0);
-    printf("sysconf(_SC_NPROCESSORS_XXXX) supported.\n");
+    if (verbose) printf("  sysconf(_SC_NPROCESSORS_XXXX) supported.\n");
 
-    printf("nphyspages = %ld\n", nphyspages);
+    if (verbose) printf("  nphyspages = %ld\n", nphyspages);
     assert (nphyspages > 0);
-    printf("sysconf(_SC_PHYS_PAGES) supported.\n\n");
-    printf("Total system memory = %f GB\n", ((double)sysconf(_SC_PHYS_PAGES)) * ((double)sysconf(_SC_PAGESIZE)/(1024*1024*1024)));
+    if (verbose) printf("    sysconf(_SC_PHYS_PAGES) supported.\n");
+    if (verbose) printf("    Total system memory = %f GiB\n",
+                        ((double)sysconf(_SC_PHYS_PAGES))
+                        * ((double)sysconf(_SC_PAGESIZE)/(1024*1024*1024)));
 
     /* Test with name (reference) only */
     {
         itol_t f = sysconf;
         assert (f(_SC_NPROCESSORS_CONF) == nconf);
         assert (f(_SC_NPROCESSORS_ONLN) == nonln);
-        printf("f = sysconf, f(_SC_NPROCESSORS_XXXX) supported.\n");
+        if (verbose) printf("  f = sysconf, f(_SC_NPROCESSORS_XXXX)"
+                            " supported.\n");
 
         assert (f(_SC_PHYS_PAGES) == nphyspages);
-        printf("f = sysconf, f(_SC_PHYS_PAGES) supported.\n\n");
+        if (verbose) printf("  f = sysconf, f(_SC_PHYS_PAGES) supported.\n");
     }
 
     /* Test with function macro disabler */
     assert ((sysconf)(_SC_NPROCESSORS_CONF) == nconf);
     assert ((sysconf)(_SC_NPROCESSORS_ONLN) == nonln);
-    printf("(sysconf)(_SC_NPROCESSORS_XXXX) supported.\n");
+    if (verbose) printf("  (sysconf)(_SC_NPROCESSORS_XXXX) supported.\n");
 
     assert ((sysconf)(_SC_PHYS_PAGES) == nphyspages);
-    printf("(sysconf)(_SC_PHYS_PAGES) supported.\n\n");
+    if (verbose) printf("  (sysconf)(_SC_PHYS_PAGES) supported.\n");
 
     /* Test with same-named fields */
     {
@@ -76,10 +88,12 @@ int main() {
         assert (scv.sysconf == nonln);
         scv.sysconf = scf.sysconf(_SC_PHYS_PAGES);
         assert (scv.sysconf == nphyspages);
-        printf("scv.sysconf = scf.sysconf(_SC_NPROCESSORS_XXXX) supported.\n");
-        printf("scv.sysconf = scf.sysconf(_SC_PHYS_PAGES) supported.\n");
+        if (verbose) printf("  scv.sysconf = scf.sysconf(_SC_NPROCESSORS_XXXX)"
+                            " supported.\n");
+        if (verbose) printf("  scv.sysconf = scf.sysconf(_SC_PHYS_PAGES)"
+                            " supported.\n");
     }
 
-    printf("***sysconf wrapper tests completed\n\n");
-    return 0;
+    printf("%s %s.\n", progname, ret ? "failed" : "passed");
+    return ret;
 }
