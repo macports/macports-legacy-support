@@ -1,12 +1,18 @@
 /*
  * Simple test harness and benchmark for MT Arc4Random
+ *
+ * Note that this is almost entirely just a benchmark, and not an actual
+ * test of the randomness of the result, which would be complicated.  The
+ * only thing really being "tested" is that the function can be called.
  */
+#include <errno.h>
+#include <fcntl.h>
+#include <libgen.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <errno.h>
+#include <string.h>
 #include <unistd.h>
-#include <fcntl.h>
 
 /*
  * Performance counter access.
@@ -24,7 +30,6 @@ static inline uint64_t sys_cpu_timestamp(void)
 }
 
 #elif defined(__x86_64__)
-
 
 static inline uint64_t sys_cpu_timestamp(void)
 {
@@ -51,7 +56,7 @@ static inline uint64_t sys_cpu_timestamp(void)
  * Generate 'siz' byte RNG in a tight loop and provide averages.
  */
 static void
-bench(int fd, size_t siz, size_t niter)
+bench(int fd, size_t siz, size_t niter, int verbose)
 {
     size_t j;
     uint8_t *buf = malloc(siz);
@@ -79,36 +84,38 @@ bench(int fd, size_t siz, size_t niter)
 
     double speedup = ss / sa;
 
-    printf("%6lu, %9.4f,\t%9.4f,\t%6.2f\n", siz, sa, ss, speedup);
+    if (verbose) printf("%6lu,\t%9.4f,\t%9.4f,\t%6.2f\n", siz, sa, ss, speedup);
 
     free(buf);
 }
 
-
-
 #define NITER       8192
 
 int
-main()
+main(int argc, char *argv[])
 {
+  int verbose = 0;
+  char *progname = basename(argv[0]);
   int i;
+
+  if (argc > 1 && !strcmp(argv[1], "-v")) verbose = 1;
+
+  if (verbose) printf("%s started\n", progname);
 
   int fd = open("/dev/urandom", O_RDONLY);
 
   int args[]  = { 16, 32, 64, 256, 512 };
   int nargs = 5;
 
-  printf("size,      arc4rand,\tsysrand,\tspeed-up\n");
+  if (verbose) printf("  size,\t arc4rand,\t  sysrand,\tspeedup\n");
   for (i = 0; i < nargs; ++i) {
     int z = args[i];
     if (z <= 0) continue;
-    bench(fd, z, NITER);
+    bench(fd, z, NITER, verbose);
   }
 
   close(fd);
 
+  printf("%s completed.\n", progname);
   return 0;
 }
-
-
-/* EOF */
