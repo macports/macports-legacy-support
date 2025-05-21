@@ -6,8 +6,8 @@ approximately up to current expected standards.
 
 Three different libraries are provided
 
- - libMacportsLegacySupport.a      - A static library with the missing functions for the given OS.
- - libMacportsLegacySupport.dylib  - A dynamic library with the missing functions for the given OS.
+ - libMacportsLegacySupport.a      - A static library with the missing or enhanced functions for the given OS.
+ - libMacportsLegacySupport.dylib  - A dynamic library with the missing or enhanced functions for the given OS.
  - libMacportsLegacySystem.B.dylib - Similar to libMacportsLegacySupport.dylib but in addition re-exports the symbols from libSystem.B.dylib.
 
 To use this library within [MacPorts](https://github.com/macports)
@@ -115,7 +115,7 @@ Wrapped headers and replaced functions are:
     <td>OSX10.4</td>
   </tr>
   <tr>
-    <td>Adds functions <code>clock_gettime</code>, clock_gettime_nsec_np</code> and <code>clock_settime</code></td>
+    <td>Adds functions <code>clock_gettime</code>, <code>clock_gettime_nsec_np</code> and <code>clock_settime</code></td>
     <td>OSX10.11</td>
   </tr>
   <tr>
@@ -128,6 +128,15 @@ Wrapped headers and replaced functions are:
         <code>wcpncpy</code>, <code>wcscasecmp</code>, and <code>wcsncasecmp</code>
         functions</td>
     <td>OSX10.6</td>
+  </tr>
+  <tr>
+    <td rowspan="2"><code>mach/mach_time.h</code></td>
+    <td>Adds function <code>mach_approximate_time</code></td>
+    <td>OSX10.9</td>
+  </tr>
+  <tr>
+    <td>Adds functions <code>mach_continuous_time</code> and <code>mach_continuous_approximate_time</code></td>
+    <td>OSX10.11</td>
   </tr>
   <tr>
     <td><code>mach/machine.h</code></td>
