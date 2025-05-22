@@ -72,6 +72,7 @@
 #define NUM_SAMPLES (NUM_DIFFS+1)
 
 typedef uint64_t mach_time_t;
+typedef int64_t smach_time_t;
 typedef struct timeval timeval_t;
 typedef struct timespec timespec_t;
 typedef uint64_t ns_time_t;
@@ -1951,6 +1952,70 @@ check_thread_times(int verbose, int quiet)
   return ret;
 }
 
+/* Sleep offset (continuous - absolute time) functions */
+
+typedef struct sleepofs_s {
+  smach_time_t ofs;
+  smach_time_t toler;
+} sleepofs_t;
+
+/* Obtain sleep offset */
+static void
+get_sleepofs(sleepofs_t *ofs)
+{
+  int idx = 0;
+  mach_time_t std[4], *stp = &std[0];
+  mach_time_t cont[3], *ctp = &cont[0];
+
+  /*
+   * It's been empirically determined that a 4+3 sandwich is usually good
+   * enough to get a "best" sandwich.
+   */
+  *stp++ = mach_absolute_time();
+  *ctp++ = mach_continuous_time();
+  *stp++ = mach_absolute_time();
+  *ctp++ = mach_continuous_time();
+  *stp++ = mach_absolute_time();
+  *ctp++ = mach_continuous_time();
+  *stp++ = mach_absolute_time();
+
+  /* Find tightest sandwich */
+  if (std[idx+2] - std[idx+1] < std[idx+1] - std[idx]) ++idx;
+  if (std[idx+2] - std[idx+1] < std[idx+1] - std[idx]) ++idx;
+
+  ofs->ofs = cont[idx] - (std[idx+1] + std[idx]) / 2;
+  /* Round up and add one unit to tolerance */
+  ofs->toler = ((std[idx+1] - std[idx]) + 1 + 2) / 2;
+}
+
+/* Compare sleep offsets */
+static int
+compare_sleepofs(const sleepofs_t *ofs1, const sleepofs_t *ofs2)
+{
+  /* Return 0 if ranges overlap */
+  if (ofs1->ofs + ofs1->toler >= ofs2->ofs - ofs2->toler) return 0;
+  if (ofs2->ofs + ofs2->toler >= ofs1->ofs - ofs1->toler) return 0;
+  /* Else return comparison */
+  return ofs1->ofs < ofs2->ofs ? -1 : 1;
+}
+
+/* Report sleep offset */
+static void
+report_sleepofs(const char *text, const sleepofs_t *ofs)
+{
+  long double nanos = ofs->ofs * mach2nanos;
+  double scaled;
+  const char *units;
+
+  if (nanos < 1E9) {
+    scaled = nanos / 1E6; units = "ms";
+  } else {
+    scaled = nanos / 1E9; units = "sec";
+  }
+  printf("%s = %.6f %s +/- %.1f ns\n",
+         text, scaled, units, (double) (ofs->toler * mach2nanos));
+}
+
 /* Main function */
 int
 main(int argc, char *argv[])
@@ -1958,9 +2023,10 @@ main(int argc, char *argv[])
   int argn = 1;
   int continuous = 0, dump = 0, keepgoing = 0;
   int quiet = 0, replay = 0, verbose = 0;
-  int err = 0, tterr, ttries;
+  int err = 0, tterr, ttries, sleepchanged;
   const char *cp;
   char chr;
+  sleepofs_t lastsleep, cursleep;
 
   strncpy(progname, basename(argv[0]), sizeof(progname));
   while (argn < argc && argv[argn][0] == '-') {
@@ -1987,6 +2053,9 @@ main(int argc, char *argv[])
 
   err |= check_invalid();
 
+  get_sleepofs(&lastsleep);
+  if (verbose & !quiet) report_sleepofs("  Initial sleep offset", &lastsleep);
+
   while (!err || keepgoing) {
     err |= report_all_clocks(dump, verbose, quiet, replay);
     err |= report_all_clock_compares(dump, verbose, quiet, replay);
@@ -2004,6 +2073,20 @@ main(int argc, char *argv[])
       tterr = check_thread_times(verbose, quiet);
     } while (tterr > 0 && --ttries);
     err |= tterr;
+
+    get_sleepofs(&cursleep);
+    sleepchanged = compare_sleepofs(&cursleep, &lastsleep);
+    if (sleepchanged) {
+      if (sleepchanged < 0) {
+        printf("  *** Sleep offset went backwards\n");
+        err = 1;
+      } else {
+        printf("  *** Sleep offset changed\n");
+      }
+      report_sleepofs("    Old sleep offset", &lastsleep);
+      report_sleepofs("    New sleep offset", &cursleep);
+      lastsleep = cursleep;
+    }
 
     if (!continuous || stopiter) break;
     ++iteration;
