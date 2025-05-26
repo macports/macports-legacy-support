@@ -79,7 +79,7 @@ Wrapped headers and replaced functions are:
     <td>OSX10.6, OSX10.12 (open_memstream)</td>
   </tr>
   <tr>
-    <td>Adds include of <code>sys/stdio.h</code.</td>
+    <td>Adds include of <code>sys/stdio.h</code></td>
     <td>OSX10.9</td>
   </tr>
   <tr>
