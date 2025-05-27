@@ -39,24 +39,230 @@ uint64_t mach_approximate_time(void)
 
 #if __MPLS_LIB_SUPPORT_CONTINUOUS_TIME__
 
+#include <pthread.h>
+
 #include <mach/mach_time.h>
 
+#include <sys/sysctl.h>
+#include <sys/time.h>
+
 /*
- * Here we provide versions of mach_continuous_time() which are just wrappers
- * around the non-continuous versions.  This isn't strictly functionally
- * correct, but permits programs to build and run (correctly if they don't
- * care about sleep time).  A later version may add proper accounting for
- * sleep time, if some means can be found to obtain it.
+ * Continuous time.
+ *
+ * Unlike mach_absolute_time, mach_continuous_time includes time spent
+ * sleeping.  Since pre-10.12 kernels don't directly provide accounting
+ * for this, we need to deduce the sleep-time offset from other clock
+ * values.  The clocks used for this are:
+ *   1) Boottime.  The date/time when the system was first booted.
+ *   2) Timeofday.  The current date/time.
+ *   3) Mach Absolute Time.  The system "running" time, in mach units.
+ * Subtracting #1 from #2 gives us the total time since boot.  Subtracting
+ * #3 from that gives us the sleep-time offset (in principle).
+ *
+ * However, there are a number of issues affecting the accuracy of this
+ * approach:
+ *   1) The timeofday clock may be adjusted for synchronization purposes,
+ *  while the mach time is not.  Assuming the synchronization is to a
+ *  correct source, the two will diverge based on the error in the frequency
+ *  of the timebase reference clock.
+ *   2) Systems prior to 10.12 only track boottime with one-second precision,
+ *  leading to an error of up to one second in the #2 - #1 difference.
+ *   3) The OS doesn't set boottime as early as it starts counting mach time,
+ *  so in the absence of sleeping, the computed sleep offset will typically
+ *  be negative.  On x86 systems, this is usually no more than a few seconds,
+ *  but on PowerPC systems it's been observed to approach a minute.
+ *
+ * Since there's not a lot we can do about these issues, at present we simply
+ * tolerate #2, and for #3, treat negative sleep offsets as zero.  For #1, we
+ * calculate a maximum false offset due to MAX_DRIFT_PPM, and disallow
+ * adjustments of less than that.
+ *
+ * Note that issue #1 represents an ongoing change in the apparent sleep
+ * offset.  And since we can only compute the offset local to one program,
+ * different programs may disagree as to the sleep offset, and hence on
+ * values of the synthesized mach_continuous_time.  There's not much we
+ * can do about that.
+ *
+ * Also note that, since the subsecond portions of timeofday and mach time
+ * are the same, they cancel out in the final sleep offset, so that the
+ * up to one-second error in the result is the same for all parties.  Hence,
+ * although the calculated sleep time may differ from the true value by
+ * up to one second (from this source), all programs will agree on that
+ * error, and it will not cause a discrepancy across programs.
+ *
+ * The present implementation only accounts for the "static" sleep offset,
+ * i.e. sleeps occuring before the program was launched.  There is no
+ * provision for tracking "dynamic" sleep offsets, i.e. sleeps occurring
+ * while the program is running.
+ *
+ * In spite of the above, the code is written to allow for the possibility
+ * of recomputing the sleep offset later.  To avoid excessive "churn", it
+ * does not update the actual offset unless it's been increased by at least
+ * MIN_SLEEP_OFFSET_ADVANCE seconds, or the drift-based limit if larger.
+ * Since the initial offset is zero, this also has the effect of excluding
+ * negative offsets as noted above.
+ *
+ * If the first "raw" offset is negative, it's retained to use as a baseline
+ * for any subsequent adjustments (not currently implemented), thereby removing
+ * the "boottime delay" from any subsequent adjustments.
+ *
+ * Unlike the mach scale factor setup, attempting to set up the sleep offset
+ * simultaneously from multiple threads can cause trouble, so we protect
+ * the setup code with a mutex.
  */
+
+#define MIN_SLEEP_OFFSET_ADVANCE 5
+#define MAX_DRIFT_PPM 100
+
+typedef struct sleepofs_info_s {
+  struct timeval boottime;
+  struct timeval timeofday;
+  uint64_t mach_before;
+  uint64_t mach_after;
+  uint64_t mach_diff;
+} sleepofs_info_t;
+
+static int sleep_offset_valid = 0;
+static uint64_t sleep_offset = 0;
+static int64_t raw_offset = 0, first_offset = 0;
+static sleepofs_info_t sleep_info_raw, sleep_info = {.mach_before = 0};
+static pthread_mutex_t sleepofs_lock = PTHREAD_MUTEX_INITIALIZER;
+
+/*
+ * Get the system boot time, via sysctl.  The comm-page method of obtaining
+ * this faster and with better resolution didn't appear until 10.12, where
+ * this code is no longer relevant.
+ */
+static int
+get_boottime(struct timeval *bt)
+{
+  size_t bt_len = sizeof(*bt);
+
+  int bt_mib[] = {CTL_KERN, KERN_BOOTTIME};
+  size_t bt_miblen = sizeof(bt_mib) / sizeof(bt_mib[0]);
+
+  bt->tv_usec = 0;  /* In case OS doesn't store it */
+  return sysctl(bt_mib, bt_miblen, bt, &bt_len, NULL, 0);
+}
+
+/*
+ * Get timeofday/mach_time pair.
+ *
+ * This obtains the timeofday at its next change, sandwiched by a pair
+ * of mach_absolute_time reads.
+ */
+static int
+get_todmach(sleepofs_info_t *si)
+{
+  struct timeval tv1, tv2;
+  uint64_t mt1, mt2;
+
+  if (gettimeofday(&tv1, NULL)) return -1;
+  mt2 = mach_absolute_time();
+  do {
+    mt1 = mt2;
+    if (gettimeofday(&tv2, NULL)) return -1;
+    mt2 = mach_absolute_time();
+  } while (tv2.tv_usec == tv1.tv_usec);
+
+  si->timeofday = tv2;
+  si->mach_before = mt1;
+  si->mach_after = mt2;
+  /* Round up and add one unit to mach diff */
+  si->mach_diff = (mt2 - mt1 + 1 + 2) / 2;
+
+  return 0;
+}
+
+/*
+ * Get the parameters for calculating the sleep offset.
+ *
+ * Although boottime should be constant in all pre-10.12 systems, we still
+ * verify that it doesn't change during the collection of the tod/mach pair.
+ * Within that, we obtain the "tightest" of five tod/mach samples.
+ */
+static int
+get_sleepofs_info(sleepofs_info_t *si)
+{
+  int tries;
+  sleepofs_info_t si2;
+
+  if (get_boottime(&si->boottime)) return -1;
+  si2.boottime = si->boottime;
+
+  while(1) {
+    if (get_todmach(si)) return -1;
+
+    tries = 5;  /* Get best of 5 samples */
+    while (--tries) {
+      if (get_todmach(&si2)) return -1;
+      if (si2.mach_diff < si->mach_diff) *si = si2;
+    }
+
+    if (get_boottime(&si2.boottime)) return -1;
+    if (si2.boottime.tv_sec == si->boottime.tv_sec
+        && si2.boottime.tv_usec == si->boottime.tv_usec) break;
+    *si = si2;
+  }
+
+  return 0;
+}
+
+/*
+ * Compute the sleep offset.  Do nothing on failure, leaving the offset as is.
+ */
+static int get_mach_scale(void);
+static int64_t tvdiff2mach(const struct timeval *tv1,
+                           const struct timeval *tv2);
+
+static void get_sleep_offset(void)
+{
+  int64_t toddiff, offset, minsleepadj, maxdrift;
+  sleepofs_info_t si;
+  static const struct timeval tv5a = {MIN_SLEEP_OFFSET_ADVANCE, 0},
+                              tv5b = {0, 0};
+
+  if (get_mach_scale()) return;
+  if (get_sleepofs_info(&si)) return;
+
+  toddiff = tvdiff2mach(&si.timeofday, &si.boottime);
+  offset = toddiff - (si.mach_before + si.mach_after) / 2;
+  minsleepadj = tvdiff2mach(&tv5a, &tv5b);
+  maxdrift = (si.mach_before - sleep_info.mach_before)
+             / (1000000 / MAX_DRIFT_PPM);
+  if (maxdrift > minsleepadj) minsleepadj = maxdrift;
+
+  if (pthread_mutex_lock(&sleepofs_lock)) return;
+
+  raw_offset = offset;
+  if (!first_offset && offset < 0) first_offset = offset;
+  sleep_info_raw = si;
+
+  if (offset - first_offset > sleep_offset + minsleepadj) {
+    sleep_offset = offset - first_offset;
+    sleep_offset_valid = 1;
+    sleep_info = si;
+  }
+
+  (void) pthread_mutex_unlock(&sleepofs_lock);
+}
 
 uint64_t mach_continuous_time(void)
 {
-  return mach_absolute_time();
+  uint64_t mach_time;
+
+  if (!sleep_offset_valid) get_sleep_offset();
+  mach_time = mach_absolute_time();
+  return mach_time + sleep_offset;
 }
 
 uint64_t mach_continuous_approximate_time(void)
 {
-  return mach_approximate_time();
+  uint64_t mach_time;
+
+  if (!sleep_offset_valid) get_sleep_offset();
+  mach_time = mach_approximate_time();
+  return mach_time + sleep_offset;
 }
 
 #endif /* __MPLS_LIB_SUPPORT_CONTINUOUS_TIME__ */
@@ -344,6 +550,29 @@ static inline void
 mach2timespec(uint64_t mach_time, struct timespec *ts)
 {
   nanos2timespec(mach2nanos(mach_time), ts);
+}
+
+/*
+ * Convert timeval diff to mach units.
+ *
+ * Since this is only used for the sleep offset setup, we do it the easy
+ * way and use floating-point.
+ *
+ * If the tv_sec fields are 32-bit, we force unsigned interpretation
+ * to get around a possible Y2038 isue.
+ */
+static int64_t
+tvdiff2mach(const struct timeval *tv1, const struct timeval *tv2)
+{
+  double tvdiff;
+
+  if (sizeof(tv1->tv_sec) == sizeof(int32_t)) {
+    tvdiff = ((uint32_t) tv1->tv_sec - (uint32_t) tv2->tv_sec) * 1E9;
+  } else {
+    tvdiff = (tv1->tv_sec - tv2->tv_sec) * 1E9;
+  }
+  tvdiff += (tv1->tv_usec - tv2->tv_usec) * 1000.0;
+  return tvdiff * mach_scale.denom / mach_scale.numer;
 }
 
 /*
