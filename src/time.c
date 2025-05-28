@@ -109,6 +109,14 @@ uint64_t mach_approximate_time(void)
  * Unlike the mach scale factor setup, attempting to set up the sleep offset
  * simultaneously from multiple threads can cause trouble, so we protect
  * the setup code with a mutex.
+ *
+ * To maximize consistency, we use a "constructor" function to initialize
+ * the sleep offset at program launch, rather than waiting for the first
+ * use.  This means that programs launched at about the same time should
+ * have close agreement on the offset.  An added benefit is that it avoids
+ * the additional slowness on the first relevant call.  And since it needs
+ * the mach scale factor, it also eliminates most of the first-time delay
+ * in the other calls using that factor.
  */
 
 #define MIN_SLEEP_OFFSET_ADVANCE 5
@@ -245,6 +253,17 @@ static void get_sleep_offset(void)
   }
 
   (void) pthread_mutex_unlock(&sleepofs_lock);
+}
+
+/*
+ * Initialize the sleep offset at program launch.
+ *
+ * If this fails for some reason, we'll try again at first use.
+ */
+static void __attribute__((constructor))
+startup_sleep_offset(void)
+{
+  get_sleep_offset();
 }
 
 uint64_t mach_continuous_time(void)
