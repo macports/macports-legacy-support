@@ -101,6 +101,7 @@
 #include <sys/time.h>
 #include <sys/types.h>
 
+#include "compiler.h"
 #include "endian.h"
 
 #define CMSG_DATALEN(cmsg) ((uint8_t *) (cmsg) + (cmsg)->cmsg_len \
@@ -138,7 +139,7 @@ static recvmsg_fn_t *
 sys_recvmsg(fv_type_t fvtype)
 {
   /* Return cached value if available */
-  if (fv_adrs[fvtype]) return fv_adrs[fvtype];
+  if (MPLS_FASTPATH(fv_adrs[fvtype])) return fv_adrs[fvtype];
 
   /* Or cache and return address of desired variant if available */
   if ((fv_adrs[fvtype] = dlsym(RTLD_NEXT, fv_names[fvtype]))) {
@@ -395,7 +396,7 @@ recvmsg_internal(int socket, struct msghdr *message, int flags,
   ssize_t ret;
 
   /* Determine Rosettaness, if not already known */
-  if (!is_rosetta) is_rosetta = check_rosetta();
+  if (MPLS_SLOWPATH(!is_rosetta)) is_rosetta = check_rosetta();
 
   /* Just pass through if Rosetta-only and not Rosetta */
   if (!FORMAT_FIX && is_rosetta < 0) {

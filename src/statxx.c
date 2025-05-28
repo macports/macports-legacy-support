@@ -104,6 +104,8 @@ struct stat64 __DARWIN_STRUCT_STAT64;
 
 #include <libkern/OSByteOrder.h>
 
+#include "compiler.h"
+
 /* sysctl to check whether we're running natively (non-ppc only) */
 #define SYSCTL_NATIVE "sysctl.proc_native"
 
@@ -134,14 +136,16 @@ fstatx_np(int fildes, struct stat *buf, filesec_t fsec)
   static __typeof__(fstatx_np) *fstatx = NULL;
   static int tiger_rosetta = 0;
 
-  if (!fstatx) {
+  if (MPLS_SLOWPATH(!fstatx)) {
     if (!(fstatx = dlsym(RTLD_NEXT, "fstatx_np"))) {
       /* Something's badly wrong if we can't find the function */
       abort();
     }
   }
   /* If known not 10.4 Rosetta or NULL fsec, just call the function normally */
-  if (tiger_rosetta < 0 || fsec == NULL) return (*fstatx)(fildes, buf, fsec);
+  if (MPLS_FASTPATH(tiger_rosetta < 0 || fsec == NULL)) {
+    return (*fstatx)(fildes, buf, fsec);
+  }
 
   /* If we don't yet know the Rosetta status, get it */
   if (!tiger_rosetta) tiger_rosetta = is_tiger_rosetta();

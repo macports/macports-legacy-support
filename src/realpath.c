@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Frederick H. G. Wright II <fw@fwright.net>
+ * Copyright (c) 2025 Frederick H. G. Wright II <fw@fwright.net>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -32,6 +32,8 @@
 
 /* Now undo our macro kludge */
 #undef realpath
+
+#include "compiler.h"
 
 /*
  * This provides a wrapper for realpath() in order to make the 10.6+
@@ -118,7 +120,7 @@ realpath_internal(const char * __restrict file_name,
   int saved_errno;
 
   /* Locate proper OS realpath(), with fallback if needed */
-  if (!(os_realpath = rp_adr[version])) {
+  if (MPLS_SLOWPATH(!(os_realpath = rp_adr[version]))) {
     os_realpath = rp_adr[version] = dlsym(RTLD_NEXT, rp_name[version]);
     if (!os_realpath && version != rp_basic) {
       os_realpath = rp_adr[version] = dlsym(RTLD_NEXT, rp_name[rp_basic]);
