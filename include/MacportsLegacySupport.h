@@ -397,4 +397,8 @@
                                                             || __MPLS_TARGET_OSVER == 1090 \
                                                             || __MPLS_TARGET_OSVER <  1060)
 
+/* clonefile, clonefileat, fclonefileat */
+#define __MPLS_SDK_SUPPORT_CLONEFILE__       (__MPLS_SDK_MAJOR < 101200)
+#define __MPLS_LIB_SUPPORT_CLONEFILE__       (__MPLS_TARGET_OSVER < 101200)
+
 #endif /* _MACPORTS_LEGACYSUPPORTDEFS_H_ */

@@ -14,6 +14,7 @@
 #include <sys/mman.h>
 #include <sys/fsgetpath.h>
 #include <sys/fcntl.h>
+#include <sys/clonefile.h>
 #include <sys/cdefs.h>
 #include <sys/aio.h>
 #include <strings.h>

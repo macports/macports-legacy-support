@@ -31,6 +31,8 @@ FILTERS+='|MacportsLegacySupport.h'
 FILTERS+='|CoreFoundation/|IOKit/|OpenGL/'
 # The 10.5-internal-only available.h
 FILTERS+='|available.h'
+# sys/attr.h requires other headers that it doesn't include
+FILTERS+='|sys/attr.h'
 
 # Headers without .h are C++-only, and not legal in basic-C builds.
 CPPFILTER='[.]h$'
