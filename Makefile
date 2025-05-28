@@ -249,6 +249,10 @@ slibobjs: $(SLIBOBJS)
 
 allobjs: dlibobjs slibobjs syslibobjs
 
+# Rule to make assembler source for inspection (not used in normal builds)
+%.S: %.c
+	$(CC) -S -I$(SRCINCDIR) $(ALLCFLAGS) $< -o $@
+
 # Create a list of nonempty static object files.
 # Since completely empty archives are illegal, we use our dummy if there
 # would otherwise be no objects.
