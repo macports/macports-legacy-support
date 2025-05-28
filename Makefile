@@ -99,20 +99,15 @@ FIND_LIBHEADERS := find $(SRCINCDIR) -type f \( -name '*.h' -o \
 LIBHEADERS      := $(shell $(FIND_LIBHEADERS))
 ALLHEADERS      := $(LIBHEADERS) $(wildcard $(SRCDIR)/*.h)
 
-MULTISRCS       :=
 ADDSRCS         := $(SRCDIR)/add_symbols.c
-LIBSRCS         := $(filter-out $(MULTISRCS) $(ADDSRCS),$(wildcard $(SRCDIR)/*.c))
+LIBSRCS         := $(filter-out $(ADDSRCS),$(wildcard $(SRCDIR)/*.c))
 
 DLIBOBJEXT       = .dl.o
 SLIBOBJEXT       = .o
 DLIBOBJS        := $(patsubst %.c,%$(DLIBOBJEXT),$(LIBSRCS))
-MULTIDLIBOBJS   := $(patsubst %.c,%$(DLIBOBJEXT),$(MULTISRCS))
-ALLDLIBOBJS     := $(DLIBOBJS) $(MULTIDLIBOBJS)
 SLIBOBJS        := $(patsubst %.c,%$(SLIBOBJEXT),$(LIBSRCS))
-MULTISLIBOBJS   := $(patsubst %.c,%$(SLIBOBJEXT),$(MULTISRCS))
-ALLSLIBOBJS     := $(SLIBOBJS) $(MULTISLIBOBJS)
 ADDOBJS         := $(patsubst %.c,%$(SLIBOBJEXT),$(ADDSRCS))
-ALLSYSLIBOBJS   := $(ALLDLIBOBJS) $(ADDOBJS)
+SYSLIBOBJS      := $(DLIBOBJS) $(ADDOBJS)
 
 # Man pages
 SRCMAN3S        := $(wildcard $(SRCDIR)/*.3)
@@ -246,18 +241,18 @@ $(SLIBOBJS): %$(SLIBOBJEXT): %.c $(ALLHEADERS)
 $(ADDOBJS): %$(SLIBOBJEXT): %.c $(ALLHEADERS)
 	$(CC) -c -I$(SRCINCDIR) $(ALLCFLAGS) $(SLIBCFLAGS) $< -o $@
 
-dlibobjs: $(ALLDLIBOBJS)
+dlibobjs: $(DLIBOBJS)
 
-syslibobjs: $(ALLSYSLIBOBJS)
+syslibobjs: $(SYSLIBOBJS)
 
-slibobjs: $(ALLSLIBOBJS)
+slibobjs: $(SLIBOBJS)
 
 allobjs: dlibobjs slibobjs syslibobjs
 
 # Create a list of nonempty static object files.
 # Since completely empty archives are illegal, we use our dummy if there
 # would otherwise be no objects.
-$(SOBJLIST): $(ALLSLIBOBJS)
+$(SOBJLIST): $(SLIBOBJS)
 	$(CC) -c $(ALLCFLAGS) $(SLIBCFLAGS) -xc /dev/null -o $(EMPTYSOBJ)
 	$(CC) -c $(ALLCFLAGS) $(SLIBCFLAGS) -xc $(DUMMYSRC) -o $(DUMMYOBJ)
 	for f in $^; do cmp -s $(EMPTYSOBJ) $$f || echo $$f; done > $@
@@ -268,12 +263,12 @@ $(BUILDLIBDIR) $(DESTDIR)$(LIBDIR) $(DESTDIR)$(BINDIR) \
     $(DESTDIR)$(MAN1DIR) $(DESTDIR)$(MAN3DIR) $(TEST_TEMP):
 	$(MKINSTALLDIRS) $@
 
-$(BUILDDLIBPATH): $(ALLDLIBOBJS) | $(BUILDLIBDIR)
-	$(CC) $(BUILDDLIBFLAGS) $(ALLLDFLAGS) $(ALLDLIBOBJS) -o $@
+$(BUILDDLIBPATH): $(DLIBOBJS) | $(BUILDLIBDIR)
+	$(CC) $(BUILDDLIBFLAGS) $(ALLLDFLAGS) $(DLIBOBJS) -o $@
 
-$(BUILDSYSLIBPATH): $(ALLSYSLIBOBJS) | $(BUILDLIBDIR)
+$(BUILDSYSLIBPATH): $(SYSLIBOBJS) | $(BUILDLIBDIR)
 	$(CC) $(BUILDSYSLIBFLAGS) $(ALLLDFLAGS) $(SYSREEXPORTFLAG) \
-	      $(ALLSYSLIBOBJS) -o $@
+	      $(SYSLIBOBJS) -o $@
 
 $(BUILDSLIBPATH): $(SOBJLIST) | $(BUILDLIBDIR)
 	$(RM) $@
