@@ -171,6 +171,16 @@ Wrapped headers and replaced functions are:
     <td>OSX10.4</td>
   </tr>
   <tr>
+    <td><code>sys/attr.h</code></td>
+    <td>Adds missing <code>VOL_CAP_INT_CLONE</code> definition</td>
+    <td>OSX10.11</td>
+  </tr>
+  <tr>
+    <td><code>sys/clonefile.h</code></td>
+    <td>Adds <code>clonefile</code>, <code>clonefileat</code>, and <code>fclonefileat</code> functions</td>
+    <td>OSX10.11</td>
+  </tr>
+  <tr>
     <td rowspan="2"><code>sys/fcntl.h</code></td>
     <td>Adds missing <code>O_CLOEXEC</code>, <code>AT_FDCWD</code>, <code>AT_EACCESS</code>,
         <code>AT_SYMLINK_NOFOLLOW</code>, <code>AT_SYMLINK_FOLLOW</code>, and
