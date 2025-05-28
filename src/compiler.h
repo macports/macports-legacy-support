@@ -19,7 +19,7 @@
 
 /* Macros for compiler-specific features */
 
-/* Branch prediction hints */
+/* Branch prediction hints, similar to Apple's os_fastpath/os_slowpath */
 #ifdef __has_builtin
   #if __has_builtin(__builtin_expect)
     #define MPLS_EXPECT(x, v) __builtin_expect((x), (v))

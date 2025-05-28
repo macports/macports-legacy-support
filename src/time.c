@@ -18,6 +18,8 @@
 /* MP support header */
 #include "MacportsLegacySupport.h"
 
+#include "compiler.h"
+
 #if __MPLS_LIB_SUPPORT_APPROX_TIME__
 
 #include <mach/mach_time.h>
@@ -270,7 +272,7 @@ uint64_t mach_continuous_time(void)
 {
   uint64_t mach_time;
 
-  if (!sleep_offset_valid) get_sleep_offset();
+  if (MPLS_SLOWPATH(!sleep_offset_valid)) get_sleep_offset();
   mach_time = mach_absolute_time();
   return mach_time + sleep_offset;
 }
@@ -279,7 +281,7 @@ uint64_t mach_continuous_approximate_time(void)
 {
   uint64_t mach_time;
 
-  if (!sleep_offset_valid) get_sleep_offset();
+  if (MPLS_SLOWPATH(!sleep_offset_valid)) get_sleep_offset();
   mach_time = mach_approximate_time();
   return mach_time + sleep_offset;
 }
@@ -697,7 +699,7 @@ clock_gettime_nsec_np(clockid_t clk_id)
   uint64_t mach_time;
 
   /* Set up mach scaling early, whether we need it or not. */
-  if (!mach_mult) setup_mach_mult();
+  if (MPLS_SLOWPATH(!mach_mult)) setup_mach_mult();
 
   switch (clk_id) {
 
@@ -751,7 +753,7 @@ clock_gettime(clockid_t clk_id, struct timespec *ts)
   uint64_t mach_time, nanos;
 
   /* Set up mach scaling early, whether we need it or not. */
-  if (!mach_mult) mserr = setup_mach_mult();
+  if (MPLS_SLOWPATH(!mach_mult)) mserr = setup_mach_mult();
 
   switch (clk_id) {
 
@@ -807,7 +809,7 @@ clock_getres(clockid_t clk_id, struct timespec *res)
   int mserr = 0;
 
   /* Set up mach scale factor, whether we need it or not. */
-  if (!res_mach.tv_nsec) mserr = setup_mach_mult();
+  if (MPLS_SLOWPATH(!res_mach.tv_nsec)) mserr = setup_mach_mult();
 
   switch (clk_id) {
 

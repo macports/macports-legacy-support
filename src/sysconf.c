@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019
+ * Copyright (c) 2025
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -27,6 +27,8 @@
 #include <dlfcn.h>
 #include <stdlib.h>
 #include <stddef.h>
+
+#include "compiler.h"
 
 /*
  * Emulate several commonly used but missing (or broken) selectors from
@@ -97,7 +99,7 @@ long sysconf(int name) {
 #endif /* __MPLS_LIB_SUPPORT_SYSCONF_PHYS_PAGES__ */
 
     /* for any other values of "name", call the real sysconf() */
-    if (!os_sysconf) {
+    if (MPLS_SLOWPATH(!os_sysconf)) {
         os_sysconf = dlsym(RTLD_NEXT, "sysconf");
         /* Something's badly broken if this fails */
         if (!os_sysconf) {
