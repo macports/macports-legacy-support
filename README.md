@@ -73,10 +73,13 @@ Wrapped headers and replaced functions are:
     <td>OSX10.11</td>
   </tr>
   <tr>
-    <td rowspan="2"><code>stdio.h</code></td>
-    <td>Adds <code>dprintf</code>, <code>vdprintf</code>, <code>getline</code>, <code>getdelim</code>,
-        <code>open_memstream</code>, and <code>fmemopen</code> functions</td>
-    <td>OSX10.6, OSX10.12 (open_memstream)</td>
+    <td rowspan="3"><code>stdio.h</code></td>
+    <td>Adds <code>dprintf</code>, <code>vdprintf</code>, <code>getline</code>, and <code>getdelim</code> functions</td>
+    <td>OSX10.6</td>
+  </tr>
+  <tr>
+    <td>Adds <code>open_memstream</code> and <code>fmemopen</code> functions</td>
+    <td>OSX10.12</td>
   </tr>
   <tr>
     <td>Adds include of <code>sys/stdio.h</code></td>
@@ -105,9 +108,13 @@ Wrapped headers and replaced functions are:
     <td>OSX10.6</td>
   </tr>
   <tr>
-    <td><code>strings.h</code></td>
-    <td>Adds <code>fls,flsl,ffsl</code>(OSX10.4) and <code>flsll,ffsll</code>(macOS10.8) functions</td>
-    <td>OSX10.4(8)</td>
+    <td rowspan="2"><code>strings.h</code></td>
+    <td>Adds <code>fls</code>, <code>flsl</code>, and <code>ffsl</code> functions</td>
+    <td>OSX10.4</td>
+  </tr>
+  <tr>
+    <td>Adds <code>flsll</code> and <code>ffsll</code> functions</td>
+    <td>OSX10.8</td>
   </tr>
   <tr>
     <td rowspan="3"><code>time.h</code></td>
@@ -176,7 +183,7 @@ Wrapped headers and replaced functions are:
   </tr>
   <tr>
     <td><code>sys/fsgetpath.h</code></td>
-    <td>Adds missing <code>utimensat</code>, <code>fsgetpath</code> and <code>setattrlistat</code> functions</td>
+    <td>Adds <code>fsgetpath</code> function</td>
     <td>OSX10.12</td>
   </tr>
   <tr>
@@ -198,15 +205,23 @@ Wrapped headers and replaced functions are:
     <td>OSX10.4</td>
   </tr>
   <tr>
-    <td><code>sys/stdio.h</code></td>
-    <td>Adds <code>renameat</code> function</td>
-    <td>OSX10.9</td>
+    <td><code>sys/random.h</code></td>
+    <td>Adds <code>getentropy</code> function</td>
+    <td>OSX10.11</td>
   </tr>
   <tr>
-    <td rowspan="3"><code>sys/stat.h</code></td>
+    <td><code>sys/socket.h</code></td>
+    <td>Corrects <code>CMSG_DATA</code> definition</td>
+    <td>OSX10.5</td>
+  </tr>
+  <tr>
+    <td rowspan="4"><code>sys/stat.h</code></td>
     <td>Adds <code>fchmodat</code>, <code>fstatat</code>,
         and <code>mkdirat</code> functions</td>
     <td>OSX10.9</td>
+  <tr>
+    <td>Adds <code>setattrlistat</code> and <code>utimensat</code> functions</td>
+    <td>OSX10.12</td>
   </tr>
   <tr>
     <td>Adds <code>lchmod</code> function</td>
@@ -217,14 +232,9 @@ Wrapped headers and replaced functions are:
     <td>OSX10.4</td>
   </tr>
   <tr>
-    <td><code>sys/random.h</code></td>
-    <td>Adds <code>getentropy</code> function</td>
-    <td>OSX10.11</td>
-  </tr>
-  <tr>
-    <td><code>sys/socket.h</code></td>
-    <td>Corrects <code>CMSG_DATA</code> definition</td>
-    <td>OSX10.5</td>
+    <td><code>sys/stdio.h</code></td>
+    <td>Adds <code>renameat</code> function</td>
+    <td>OSX10.9</td>
   </tr>
   <tr>
     <td><code>sys/time.h</code></td>
