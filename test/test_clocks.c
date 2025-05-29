@@ -820,7 +820,7 @@ open_log(clock_idx_t clkidx, const char *extra, int quiet, int replay)
     fprintf(stderr, "    Unable to open %s\n", fname);
     return NULL;
   }
-  if (!quiet) printf("      %s %s/\n",
+  if (!quiet) printf("      %s %s\n",
                      replay ? "Replaying from" : "Logging to", fname);
   return fp;
 }
@@ -903,7 +903,8 @@ clock_replay_ns(clock_idx_t clkidx, int quiet)
 
 /* Report info about one clock */
 static int
-report_clock(clock_idx_t clkidx, int dump, int verbose, int quiet, int replay)
+report_clock(clock_idx_t clkidx, int dump, int dverbose,
+             int verbose, int quiet, int replay)
 {
   int err, ret = 0, vnq = verbose && !quiet;
   const char *name = clock_names[clkidx];
@@ -934,19 +935,19 @@ report_clock(clock_idx_t clkidx, int dump, int verbose, int quiet, int replay)
     ret = 1;
   }
   if (vnq && !ret) print_stats(&stats, &info);
-  if ((dump && ret) || dump > 1) clock_dump_ns(clkidx, &info, verbose, quiet);
+  if ((dump && ret) || dump > 1) clock_dump_ns(clkidx, &info, dverbose, quiet);
   return ret;
 }
 
 /* Report info about all clocks (singly) */
 static int
-report_all_clocks(int dump, int verbose, int quiet, int replay)
+report_all_clocks(int dump, int dverbose, int verbose, int quiet, int replay)
 {
   int ret = 0;
   clock_idx_t clkidx = 0;
 
   while (clkidx < (clock_idx_t) clock_idx_max) {
-    ret |= report_clock(clkidx, dump, verbose, quiet, replay);
+    ret |= report_clock(clkidx, dump, dverbose, verbose, quiet, replay);
     ++clkidx;
   }
   return ret;
@@ -1425,8 +1426,8 @@ clock_replay_dual_ns(clock_idx_t clkidx, int quiet)
 
 /* Report info about one clock comparison */
 static int
-report_clock_compare(clock_idx_t clkidx,
-                     int dump, int verbose, int quiet, int replay)
+report_clock_compare(clock_idx_t clkidx, int dump, int dverbose,
+                     int verbose, int quiet, int replay)
 {
   int ret = 0, vnq = verbose && !quiet;
   const char *name = clock_names[clkidx];
@@ -1451,21 +1452,21 @@ report_clock_compare(clock_idx_t clkidx,
     }
   }
   if ((dump && ret) || dump > 1) {
-    clock_dump_dual_ns(clkidx, &info, &refinfo, verbose, quiet);
+    clock_dump_dual_ns(clkidx, &info, &refinfo, dverbose, quiet);
   }
   return ret;
 }
 
 /* Report info about all clock comparisons */
 static int
-report_all_clock_compares(int dump, int verbose, int quiet, int replay)
+report_all_clock_compares(int dump, int dverbose, int verbose, int quiet, int replay)
 {
   int ret = 0;
   clock_idx_t clkidx = 0;
 
   while (clkidx < (clock_idx_t) clock_idx_max) {
     /* As sanity check, don't exclude self-compare */
-    ret |= report_clock_compare(clkidx, dump, verbose, quiet, replay);
+    ret |= report_clock_compare(clkidx, dump, dverbose, verbose, quiet, replay);
     ++clkidx;
   }
   return ret;
@@ -2022,7 +2023,7 @@ main(int argc, char *argv[])
 {
   int argn = 1;
   int continuous = 0, dump = 0, keepgoing = 0;
-  int quiet = 0, replay = 0, verbose = 0;
+  int quiet = 0, replay = 0, verbose = 0,  dverbose = 0;
   int err = 0, tterr, ttries, sleepchanged;
   const char *cp;
   char chr;
@@ -2034,11 +2035,12 @@ main(int argc, char *argv[])
     while ((chr = *++cp)) {
       switch (chr) {
         case 'C': ++continuous; ++iteration; break;
-        case 'd': ++dump; break;
+        case 'D': ++dump; break;
         case 'K': ++keepgoing; break;
         case 'q': ++quiet; break;
         case 'R': ++replay; break;
         case 'v': ++verbose; break;
+        case 'V': ++dverbose; break;
       }
     }
     ++argn;
@@ -2057,8 +2059,8 @@ main(int argc, char *argv[])
   if (verbose & !quiet) report_sleepofs("  Initial sleep offset", &lastsleep);
 
   while (!err || keepgoing) {
-    err |= report_all_clocks(dump, verbose, quiet, replay);
-    err |= report_all_clock_compares(dump, verbose, quiet, replay);
+    err |= report_all_clocks(dump, dverbose, verbose, quiet, replay);
+    err |= report_all_clock_compares(dump, dverbose, verbose, quiet, replay);
     err |= check_mach_scaling(verbose && !quiet);
 
     /*
