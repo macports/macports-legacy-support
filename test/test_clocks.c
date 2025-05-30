@@ -83,8 +83,8 @@ typedef int64_t sns_time_t;
 #define BILLION64  1000000000ULL
 
 /* Parameters for collection sequence */
-#define MAX_STEP_NS           700000  /* Maximum delta not considered a step */
-#define MAX_APPROX_STEP_NS  10000000  /* Maximum approximate-clock step */
+#define MAX_STEP_NS          1000000  /* Maximum delta not considered a step */
+#define MAX_APPROX_STEP_NS  15000000  /* Maximum approximate-clock step */
 #define MAX_RETRIES               50  /* Maximum soft-error retries */
 #define STD_SLEEP_US            1000  /* Standard sleep before collecting */
 #define MAX_SLEEP_US          100000  /* Maximum sleep when retrying */
