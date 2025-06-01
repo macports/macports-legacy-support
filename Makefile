@@ -70,8 +70,8 @@ DLIBCFLAGS      ?= -fPIC
 SLIBCFLAGS      ?=
 XCXXFLAGS       ?= $(DEBUG) $(OPT) -Wall
 ALLCXXFLAGS     := $(ARCHFLAGS) $(XCXXFLAGS) $(CXXFLAGS)
-LDFLAGS         ?= $(DEBUG)
-ALLLDFLAGS      := $(ARCHFLAGS) $(LDFLAGS)
+XLDFLAGS        ?= $(DEBUG)
+ALLLDFLAGS      := $(ARCHFLAGS) $(XLDFLAGS) $(LDFLAGS)
 TEST_ARGS       ?=
 
 ARX             ?= /usr/bin/ar
