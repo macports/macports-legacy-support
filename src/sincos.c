@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018 Chris Jones <jonesc@macports.org>
+ * Copyright (c) 2025 Frederick H. G. Wright II <fw@fwright.net>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -17,9 +18,15 @@
 /* MP support header */
 #include "MacportsLegacySupport.h"
 
-#include <math.h>
-
 #if __MPLS_LIB_SUPPORT_SINCOS__
+
+/* Avoid including math.h to avoid conflicts when building with a later SDK. */
+
+extern float cosf(float);
+extern double cos(double);
+
+extern float sinf(float);
+extern double sin(double);
 
 /* Following is borrowed from math.h on macOS 10.9+ */
 
