@@ -22,9 +22,10 @@
  */
 
 /*
- * NOTICE: This file was modified in May 2024 to allow for use as a supporting
- * file for MacPorts legacy support library. This notice is included in support
- * of clause 2.2 (b) of the Apple Public License, Version 2.0.
+ * NOTICE: This file was modified in May 2024, and again in June 2025, to allow
+ * for use as a supporting file for MacPorts legacy support library. This
+ * notice is included in support of clause 2.2 (b) of the Apple Public License,
+ * Version 2.0.
  *
  * The code is almost verbatim from Apple except for:
  *
@@ -37,10 +38,16 @@
  *
  * The _FORTIFY_SOURCE definition here in lieu of providing it as a
  * compiler command-line flag (as the Apple build procedure does).
+ *
+ * Making the reference to __chk_fail optional, to handle building
+ * with a "mismatched" SDK.  This uses dlsym() instead of weak linking.
+ *
+ * The inclusion of OS version conditionals.
  */
 
 /* MP support header */
 #include "MacportsLegacySupport.h"
+
 /* Note that the support for this mechanism is absent prior to 10.5 */
 #if __MPLS_LIB_SUPPORT_STPNCPY__ && __MPLS_TARGET_OSVER >= 1050
 
@@ -48,17 +55,19 @@
 #undef _FORTIFY_SOURCE
 #define _FORTIFY_SOURCE 0
 
+#include <dlfcn.h>
 #include <stdlib.h>
 #include <string.h>
 
-extern void __chk_fail (void) __attribute__((__noreturn__));
-
 char *
-__stpncpy_chk (char *dest, const char *src,
-	       size_t len, size_t dstlen)
+__stpncpy_chk (char *dest, const char *src, size_t len, size_t dstlen)
 {
-  if (__builtin_expect (dstlen < len, 0))
-    __chk_fail ();
+  void (*chk_fail_p) (void) __attribute__((__noreturn__));
+
+  if (__builtin_expect (dstlen < len, 0)) {
+    if ((chk_fail_p = dlsym(RTLD_NEXT, "__chk_fail"))) (*chk_fail_p)();
+    abort();
+  }
 
   return stpncpy (dest, src, len);
 }
