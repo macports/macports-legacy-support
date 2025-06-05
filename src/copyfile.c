@@ -38,6 +38,8 @@
  *   Fixing format warnings in debug messages
  *   Adding missing O_SYMLINK definition for 10.4
  *   Adding dummy quarantine operations for 10.4
+ *   Fixing unused variable warnings when built on some later OSes.
+ *   Making offsetof definition conditional to avoid SDK conflict.
  */
 
 /*
@@ -501,6 +503,8 @@ copytree(copyfile_state_t s)
 	const char *paths[2] =  { 0 };
 	unsigned int flags = 0;
 	int fts_flags = FTS_NOCHDIR;
+
+  (void) srcisdir; (void) dstexists;  /* Avoid warnings */
 
 	if (s == NULL) {
 		errno = EINVAL;
@@ -2333,7 +2337,9 @@ int main(int c, char *v[])
  */
 
 
+#ifndef offsetof
 #define offsetof(type, member)	((size_t)(&((type *)0)->member))
+#endif
 
 #define	XATTR_MAXATTRLEN   (4*1024)
 
