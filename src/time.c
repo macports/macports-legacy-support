@@ -250,9 +250,11 @@ static void get_sleep_offset(void)
 
   if (offset - first_offset > sleep_offset + minsleepadj) {
     sleep_offset = offset - first_offset;
-    sleep_offset_valid = 1;
     sleep_info = si;
   }
+
+  /* The offset is now valid, whether we decided to change it or not. */
+  sleep_offset_valid = 1;
 
   (void) pthread_mutex_unlock(&sleepofs_lock);
 }
