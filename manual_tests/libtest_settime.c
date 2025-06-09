@@ -163,8 +163,8 @@ static int
 do_test(info_t *tp, int extra)
 {
   int err, tverr;
-  snstime_t delta, scratch;
-  nstime_t target, limit, tod, todmod, delay;
+  snstime_t delta;
+  nstime_t scratch, target, limit, tod, todmod, delay;
   snstime_t todmin, todmax;
   struct timeval orig_tv;
 
