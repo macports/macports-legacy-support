@@ -76,7 +76,10 @@
  * the condition with __APPLE__.
  *
  * We also allow the definition to be overridden for special circumstances,
- * though this isn't normally necessary.
+ * though this isn't normally necessary.  In particular, overriding the
+ * default is *not* necessary just to build the library for an alternate
+ * target OS; that should be done via the usual target settings, which will
+ * in turn be picked up by the definition here.
  */
 #ifndef __MPLS_TARGET_OSVER
 #if __APPLE__
