@@ -52,6 +52,7 @@
 #include <mach/mach_time.h>
 
 #include <sys/param.h>
+#include <sys/sysctl.h>
 #include <sys/time.h>
 
 /*
@@ -380,6 +381,7 @@ intsig(int signum)
   ++stopiter;
 }
 
+/* Basic mach_time setup */
 static int
 setup(int verbose)
 {
@@ -444,6 +446,46 @@ static ns_time_t
 ts2nsec(timespec_t *ts)
 {
   return ts->tv_sec * BILLION64 + ts->tv_nsec;
+}
+
+/* Get boottime via sysctl() */
+static int
+get_boottime(struct timeval *bt)
+{
+  size_t bt_len = sizeof(*bt);
+
+  int bt_mib[] = {CTL_KERN, KERN_BOOTTIME};
+  size_t bt_miblen = sizeof(bt_mib) / sizeof(bt_mib[0]);
+
+  bt->tv_usec = 0;  /* In case OS doesn't store it */
+  return sysctl(bt_mib, bt_miblen, bt, &bt_len, NULL, 0);
+}
+
+/* Report and check boottime */
+static int
+check_boottime(int verbose)
+{
+  struct timeval bt, tod;
+
+  if (get_boottime(&bt)) {
+    printf("Can't get boottime: %s\n", strerror(errno));
+    return 1;
+  }
+  if (verbose) {
+    printf("  Boot time is %lld.%d\n", LL bt.tv_sec, bt.tv_usec);
+  }
+  if (gettimeofday(&tod, NULL)) {
+    printf("Can't get timeofday: %s\n", strerror(errno));
+    return 1;
+  }
+  if (tv2nsec(&bt) > tv2nsec(&tod)) {
+    printf("%s*** Boot time %lld.%d is later than timeofday %lld.%d\n",
+           verbose ? "    " : "",
+           LL bt.tv_sec, bt.tv_usec, LL tod.tv_sec, tod.tv_usec);
+    return 1;
+  }
+
+  return 0;
 }
 
 /* Version of usleep() that defends against signals */
@@ -2054,6 +2096,9 @@ main(int argc, char *argv[])
   err = setup(verbose && !quiet);
 
   err |= check_invalid();
+
+  /* For now, ignore (but report) any boottime error */
+  (void) check_boottime(verbose && !quiet);
 
   get_sleepofs(&lastsleep);
   if (verbose & !quiet) report_sleepofs("  Initial sleep offset", &lastsleep);
