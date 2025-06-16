@@ -275,13 +275,6 @@ startup_sleep_offset(void)
   get_sleep_offset();
 }
 
-/*
- * For some as-yet-undetermined reason, the sleep offset is causing trouble
- * in ppc64 builds.  So for now, we avoid it on ppc64.
- */
-
-#ifndef __ppc64__
-
 uint64_t mach_continuous_time(void)
 {
   uint64_t mach_time;
@@ -299,20 +292,6 @@ uint64_t mach_continuous_approximate_time(void)
   mach_time = mach_approximate_time();
   return mach_time + sleep_offset;
 }
-
-#else /* __ppc64__ */
-
-uint64_t mach_continuous_time(void)
-{
-  return mach_absolute_time();
-}
-
-uint64_t mach_continuous_approximate_time(void)
-{
-  return mach_approximate_time();
-}
-
-#endif /* __ppc64__ */
 
 #endif /* __MPLS_LIB_SUPPORT_CONTINUOUS_TIME__ */
 
