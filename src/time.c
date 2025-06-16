@@ -236,6 +236,11 @@ static void get_sleep_offset(void)
   if (get_sleepofs_info(&si)) return;
 
   toddiff = tvdiff2mach(&si.timeofday, &si.boottime);
+  /* boottime later than tod is garbage */
+  if (toddiff < 0) {
+    sleep_offset_valid = 1;  /* It's permanent garbage, so don't retry this */
+    return;
+  }
   offset = toddiff - (si.mach_before + si.mach_after) / 2;
   minsleepadj = tvdiff2mach(&tv5a, &tv5b);
   maxdrift = (si.mach_before - sleep_info.mach_before)
