@@ -138,6 +138,7 @@ static volatile union scratch_u {
   ONE_ERROR(early,"Test clock too early") \
   ONE_ERROR(late,"Test clock too late") \
   ONE_ERROR(badptime,"Process/thread time inconsistent") \
+  ONE_ERROR(badmach,"Bad mach_time value") \
 
 #define ONE_ERROR(name,text) err_##name,
 typedef enum errs { err_dummy,  /* Avoid zero */
@@ -516,6 +517,7 @@ static int
 collect_mach(void *arg, errinfo_t *ei)
 {
   mach_time_fn_t *func = (mach_time_fn_t *) arg;
+  int ret = 0;
   mach_time_t *mtp = &mtbuf[0];
   ns_time_t *nsp = &mtnsbuf[0];
 
@@ -529,9 +531,13 @@ collect_mach(void *arg, errinfo_t *ei)
 
   mtp = &mtbuf[0];
   while (nsp < &mtnsbuf[NUM_SAMPLES]) {
+    if ((smach_time_t) *mtp < 0) {
+      ei->errnum = -err_badmach;
+      ret = -1;
+    }
     *nsp++ = mt2nsec(*mtp++);
   }
-  return 0;
+  return ret;
 }
 
 static int
@@ -1006,6 +1012,7 @@ static int
 sandwich_mach(void *arg, errinfo_t *ei)
 {
   mach_time_fn_t *func = (mach_time_fn_t *) arg;
+  int ret = 0;
   mach_time_t *mtp = &mtbuf[0];
   ns_time_t *nsp = &mtnsbuf[0];
   mach_time_t *mtrp = &refbuf[0];
@@ -1028,10 +1035,14 @@ sandwich_mach(void *arg, errinfo_t *ei)
 
   *nsrp++ = mt2nsec(*mtrp++);
   while (nsp < &mtnsbuf[NUM_DIFFS]) {
+    if ((smach_time_t) *mtp < 0) {
+      ei->errnum = -err_badmach;
+      ret = -1;
+    }
     *nsp++ = mt2nsec(*mtp++);
     *nsrp++ = mt2nsec(*mtrp++);
   }
-  return 0;
+  return ret;
 }
 
 static int
@@ -2000,6 +2011,7 @@ check_thread_times(int verbose, int quiet)
 typedef struct sleepofs_s {
   smach_time_t ofs;
   smach_time_t toler;
+  int error;
 } sleepofs_t;
 
 /* Obtain sleep offset */
@@ -2022,6 +2034,13 @@ get_sleepofs(sleepofs_t *ofs)
   *ctp++ = mach_continuous_time();
   *stp++ = mach_absolute_time();
 
+  /* If any continuous times are negative, sleep offset is poisoned. */
+  if ((smach_time_t) (cont[0] | cont[1] | cont[2]) < 0) {
+    ofs->ofs = ofs->toler = 0;
+    ofs->error = 1;
+    return;
+  }
+
   /* Find tightest sandwich */
   if (std[idx+2] - std[idx+1] < std[idx+1] - std[idx]) ++idx;
   if (std[idx+2] - std[idx+1] < std[idx+1] - std[idx]) ++idx;
@@ -2029,6 +2048,7 @@ get_sleepofs(sleepofs_t *ofs)
   ofs->ofs = cont[idx] - (std[idx+1] + std[idx]) / 2;
   /* Round up and add one unit to tolerance */
   ofs->toler = ((std[idx+1] - std[idx]) + 1 + 2) / 2;
+  ofs->error = 0;
 }
 
 /* Compare sleep offsets */
@@ -2050,6 +2070,10 @@ report_sleepofs(const char *text, const sleepofs_t *ofs)
   double scaled;
   const char *units;
 
+  if (ofs->error) {
+    printf("%s is unavailable\n", text);
+    return;
+  }
   if (nanos < 1E9) {
     scaled = nanos / 1E6; units = "ms";
   } else {
