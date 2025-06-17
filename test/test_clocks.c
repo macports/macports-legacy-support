@@ -1201,7 +1201,7 @@ sandwich_samples(clock_idx_t clkidx, errinfo_t *ei)
  * In addition to the above, the "late" case is considered retriable.
  */
 static int
-compare_clocks(clock_idx_t clkidx, errinfo_t *ei, errinfo_t *eir, dstats_t *dp)
+compare_clocks(clock_idx_t clkidx, errinfo_t *ei, errinfo_t *eir)
 {
   const ns_time_t *refbp = &refnsbuf[0];
   const ns_time_t *testbp = nsbufp[clock_types[clkidx]];
@@ -1313,8 +1313,7 @@ static int clock_replay_dual_ns(clock_idx_t clkidx, int quiet);
 
 static int
 check_clock_sandwich(clock_idx_t clkidx,
-                     errinfo_t *ei, errinfo_t *eir, dstats_t *dp,
-                     int quiet, int replay)
+                     errinfo_t *ei, errinfo_t *eir, int quiet, int replay)
 {
   int ret, tries = 0;
   useconds_t sleepus = STD_SLEEP_US;
@@ -1335,7 +1334,7 @@ check_clock_sandwich(clock_idx_t clkidx,
 
     ret = check_samples(clkidx, nsbufp[clock_types[clkidx]], 1, ei);
     if (ret) { if (ret < 0) break; continue; }
-    ret = compare_clocks(clkidx, ei, eir, dp);
+    ret = compare_clocks(clkidx, ei, eir);
     if (ret <= 0) break;
   } while (!replay && ++tries < MAX_RETRIES);
 
@@ -1489,7 +1488,7 @@ report_clock_compare(clock_idx_t clkidx, int dump, int dverbose,
 
   if (vnq) printf("  Comparing %s to mach_absolute_time\n", name);
 
-  if (check_clock_sandwich(clkidx, &info, &refinfo, &dstats, quiet, replay)) {
+  if (check_clock_sandwich(clkidx, &info, &refinfo, quiet, replay)) {
     if (replay && info.retries < 0) return 0;  /* Just skip nonex replay */
     if (refinfo.errnum) {
       report_clock_err(clock_idx_mach_absolute, &refinfo, 0, verbose);
@@ -1542,7 +1541,7 @@ report_all_clock_compares(int dump, int dverbose, int verbose, int quiet, int re
  * "multiply first" approach on PowerPC can be observed.
  *
  * If and when the overflow occurs from using the "multiply first" approach
- * on PowrerPC, the computed nanosecond value wraps around, after which its
+ * on PowerPC, the computed nanosecond value wraps around, after which its
  * value is never more than half the correct value.  Thus, it can be detected
  * on the basis of a very large negative error in the scale (at least 0.5).
  */
