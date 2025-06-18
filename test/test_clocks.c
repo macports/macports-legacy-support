@@ -89,6 +89,7 @@ typedef int64_t sns_time_t;
 #define MAX_RETRIES               50  /* Maximum soft-error retries */
 #define STD_SLEEP_US            1000  /* Standard sleep before collecting */
 #define MAX_SLEEP_US          100000  /* Maximum sleep when retrying */
+#define MAX_OFFSET_FUDGE    50000000  /* Maximum-offset fudge factor */
 
 /* Mach_time scaling tolerance */
 #define MACH_SCALE_TOLER 10E-6  /* 10 ppm */
@@ -139,6 +140,7 @@ static volatile union scratch_u {
   ONE_ERROR(late,"Test clock too late") \
   ONE_ERROR(badptime,"Process/thread time inconsistent") \
   ONE_ERROR(badmach,"Bad mach_time value") \
+  ONE_ERROR(badoffset,"Bad continuous time offset") \
 
 #define ONE_ERROR(name,text) err_##name,
 typedef enum errs { err_dummy,  /* Avoid zero */
@@ -167,6 +169,7 @@ get_errstr(int err)
  * Step adjustments allowed
  * Slewing from adjtime() allowed
  * Approximate
+ * Continuous (includes sleep time)
  */
 
 /* List of clock types */
@@ -184,7 +187,7 @@ typedef enum clock_type {
 #undef CLOCK_TYPE
 
 /* List of non-process-specific clocks */
-/* #define NP_CLOCK(name,type,okstep,okadj,approx) */
+/* #define NP_CLOCK(name,type,okstep,okadj,approx,cont) */
 #define NP_CLOCKS \
   NP_TOD_CLOCKS \
   NP_MACH_CLOCKS \
@@ -193,23 +196,23 @@ typedef enum clock_type {
 
 /* Time of day clock */
 #define NP_TOD_CLOCKS \
-  NP_CLOCK(timeofday,timeofday,1,1,0) \
+  NP_CLOCK(timeofday,timeofday,1,1,0,0) \
 
 /* Mach clocks */
 #define NP_MACH_CLOCKS \
-  NP_CLOCK(absolute,mach,0,0,0) \
-  NP_CLOCK(approximate,mach,0,0,1) \
-  NP_CLOCK(continuous,mach,0,0,0) \
-  NP_CLOCK(continuous_approximate,mach,0,0,1)
+  NP_CLOCK(absolute,mach,0,0,0,0) \
+  NP_CLOCK(approximate,mach,0,0,1,0) \
+  NP_CLOCK(continuous,mach,0,0,0,1) \
+  NP_CLOCK(continuous_approximate,mach,0,0,1,1)
 
 /* Gettime clocks (for both flavors) */
 #define NP_GETTIME_CLOCKS(type) \
-  NP_CLOCK(REALTIME,type,1,1,0) \
-  NP_CLOCK(MONOTONIC,type,0,1,0) \
-  NP_CLOCK(MONOTONIC_RAW,type,0,0,0) \
-  NP_CLOCK(MONOTONIC_RAW_APPROX,type,0,0,1) \
-  NP_CLOCK(UPTIME_RAW,type,0,0,0) \
-  NP_CLOCK(UPTIME_RAW_APPROX,type,0,0,1) \
+  NP_CLOCK(REALTIME,type,1,1,0,1) \
+  NP_CLOCK(MONOTONIC,type,0,1,0,1) \
+  NP_CLOCK(MONOTONIC_RAW,type,0,0,0,1) \
+  NP_CLOCK(MONOTONIC_RAW_APPROX,type,0,0,1,1) \
+  NP_CLOCK(UPTIME_RAW,type,0,0,0,0) \
+  NP_CLOCK(UPTIME_RAW_APPROX,type,0,0,1,0) \
 
 #define CALLMAC(a,b,c) a##b(c)
 
@@ -218,7 +221,7 @@ typedef enum clock_type {
 #define CLOCK_IDX_mach(name) clock_idx_mach_##name
 #define CLOCK_IDX_gettime(name) clock_idx_gettime_##name
 #define CLOCK_IDX_gettime_ns(name) clock_idx_gettime_ns_##name
-#define NP_CLOCK(name,type,okstep,okadj,approx) \
+#define NP_CLOCK(name,type,okstep,okadj,approx,cont) \
   CALLMAC(CLOCK_IDX_,type,name),
 typedef enum clock_idx {
   NP_CLOCKS
@@ -238,7 +241,7 @@ typedef enum clock_idx {
 #define CLOCK_IDX_mach(name) clock_xidx_mach_##name
 #define CLOCK_IDX_gettime(name) clock_xidx_gettime_##name
 #define CLOCK_IDX_gettime_ns(name) clock_xidx_gettime_ns_##name
-#define NP_CLOCK(name,type,okstep,okadj,approx) \
+#define NP_CLOCK(name,type,okstep,okadj,approx,cont) \
   CALLMAC(CLOCK_IDX_,type,name),
 typedef enum clock_xidx {
   NP_CLOCKS
@@ -250,26 +253,32 @@ typedef enum clock_xidx {
 #undef CLOCK_IDX_gettime
 #undef CLOCK_IDX_gettime_ns
 
-#define NP_CLOCK(name,type,okstep,okadj,approx) clock_type_##type,
+#define NP_CLOCK(name,type,okstep,okadj,approx,cont) clock_type_##type,
 static const clock_type_t clock_types[] = {
   NP_CLOCKS
 };
 #undef NP_CLOCK
 
-#define NP_CLOCK(name,type,okstep,okadj,approx) okstep,
+#define NP_CLOCK(name,type,okstep,okadj,approx,cont) okstep,
 static const int clock_okstep[] = {
   NP_CLOCKS
 };
 #undef NP_CLOCK
 
-#define NP_CLOCK(name,type,okstep,okadj,approx) okadj,
+#define NP_CLOCK(name,type,okstep,okadj,approx,cont) okadj,
 static const int clock_okadj[] = {
   NP_CLOCKS
 };
 #undef NP_CLOCK
 
-#define NP_CLOCK(name,type,okstep,okadj,approx) approx,
+#define NP_CLOCK(name,type,okstep,okadj,approx,cont) approx,
 static const int clock_approx[] = {
+  NP_CLOCKS
+};
+#undef NP_CLOCK
+
+#define NP_CLOCK(name,type,okstep,okadj,approx,cont) cont,
+static const int clock_cont[] = {
   NP_CLOCKS
 };
 #undef NP_CLOCK
@@ -279,7 +288,7 @@ static const int clock_approx[] = {
 #define CLOCK_ARG_mach(name) mach_##name##_time
 #define CLOCK_ARG_gettime(name) ((void *) CLOCK_##name)
 #define CLOCK_ARG_gettime_ns(name) ((void *) CLOCK_##name)
-#define NP_CLOCK(name,type,okstep,okadj,approx) \
+#define NP_CLOCK(name,type,okstep,okadj,approx,cont) \
   CALLMAC(CLOCK_ARG_,type,name),
 static void * const clock_args[] = {
   NP_CLOCKS
@@ -295,7 +304,7 @@ static void * const clock_args[] = {
 #define CLOCK_NAME_mach(name) "mach_" #name "_time"
 #define CLOCK_NAME_gettime(name) "CLOCK_" #name
 #define CLOCK_NAME_gettime_ns(name) "CLOCK_" #name "_ns"
-#define NP_CLOCK(name,type,okstep,okadj,approx) \
+#define NP_CLOCK(name,type,okstep,okadj,approx,cont) \
   CALLMAC(CLOCK_NAME_,type,name),
 static const char * const clock_names[] = {
   NP_CLOCKS
@@ -348,6 +357,13 @@ typedef struct errinfo_s {
   timeval_t badtv;
   timespec_t badts;
 } errinfo_t;
+
+/* Struct for sleep offset info */
+typedef struct sleepofs_s {
+  smach_time_t ofs;
+  smach_time_t toler;
+  int error;
+} sleepofs_t;
 
 /* Buffers for clock values */
 static timeval_t tvbuf[NUM_SAMPLES];
@@ -1201,14 +1217,15 @@ sandwich_samples(clock_idx_t clkidx, errinfo_t *ei)
  * In addition to the above, the "late" case is considered retriable.
  */
 static int
-compare_clocks(clock_idx_t clkidx, errinfo_t *ei, errinfo_t *eir)
+compare_clocks(clock_idx_t clkidx, const sleepofs_t *so,
+               errinfo_t *ei, errinfo_t *eir)
 {
   const ns_time_t *refbp = &refnsbuf[0];
   const ns_time_t *testbp = nsbufp[clock_types[clkidx]];
   const ns_time_t *refp = refbp, *testp = testbp;
   sns_time_t prev, last, cur, tstlast, tstcur = 0;
   int ret = 0, steps = 0, adjret = clock_okadj[clkidx] ? 1 : -1;
-  sns_time_t minref = 0, maxref = 0, difflim;
+  sns_time_t minref = 0, maxref = 0, difflim, ofslim;
   sns_time_t lastmin = INT64_MIN, lastmax = INT64_MAX, curmin = 0, curmax = 0;
 
   /*
@@ -1220,12 +1237,35 @@ compare_clocks(clock_idx_t clkidx, errinfo_t *ei, errinfo_t *eir)
   difflim = MAX(clock_res[clkidx], ei->nzmin)
             + MAX(clock_res[clock_idx_mach_absolute], eir->nzmin);
 
+  /*
+   * The maximum offset for continuous clocks is the maximum sleep offset
+   * plus the difflim, plus a generous fudge factor.  Non-continuous clocks
+   * are allowed the same offset without the sleep offset, except that
+   * adjustable clocks don't get this check at all.
+   *
+   * If the sleep offset is unavailable, it's assumed that the continuous
+   * clocks don't apply it, and hence are treated as non-continuous.
+   */
+  if (clock_okadj[clkidx]) {
+    ofslim = INT64_MAX;
+  } else if (clock_cont[clkidx]) {
+    ofslim = mt2nsec(llabs(so->ofs) + llabs(so->toler))
+             + difflim + MAX_OFFSET_FUDGE;
+  } else {
+    ofslim = difflim + MAX_OFFSET_FUDGE;
+  }
+
   tstlast = *testp; prev = last = *refp++;
   while (testp < &testbp[NUM_DIFFS]) {
     tstcur = *testp++; cur = *refp++;
     minref = (clock_approx[clkidx] ? prev : last) - difflim;
     maxref = cur + difflim;
     curmin = tstcur - maxref; curmax = tstcur - minref;
+    if (llabs(tstcur - cur) > ofslim) {
+      ei->errnum = -err_badoffset;
+      ret = -1;
+      break;
+    }
     if (!clock_approx[clkidx]) {
       if (curmax < lastmin) {
         ei->errnum = -err_early;
@@ -1312,7 +1352,7 @@ get_dstats(clock_idx_t clkidx, dstats_t *dp)
 static int clock_replay_dual_ns(clock_idx_t clkidx, int quiet);
 
 static int
-check_clock_sandwich(clock_idx_t clkidx,
+check_clock_sandwich(clock_idx_t clkidx, const sleepofs_t *so,
                      errinfo_t *ei, errinfo_t *eir, int quiet, int replay)
 {
   int ret, tries = 0;
@@ -1334,7 +1374,7 @@ check_clock_sandwich(clock_idx_t clkidx,
 
     ret = check_samples(clkidx, nsbufp[clock_types[clkidx]], 1, ei);
     if (ret) { if (ret < 0) break; continue; }
-    ret = compare_clocks(clkidx, ei, eir);
+    ret = compare_clocks(clkidx, so, ei, eir);
     if (ret <= 0) break;
   } while (!replay && ++tries < MAX_RETRIES);
 
@@ -1478,8 +1518,8 @@ clock_replay_dual_ns(clock_idx_t clkidx, int quiet)
 
 /* Report info about one clock comparison */
 static int
-report_clock_compare(clock_idx_t clkidx, int dump, int dverbose,
-                     int verbose, int quiet, int replay)
+report_clock_compare(clock_idx_t clkidx, const sleepofs_t *so,
+                     int dump, int dverbose, int verbose, int quiet, int replay)
 {
   int ret = 0, vnq = verbose && !quiet;
   const char *name = clock_names[clkidx];
@@ -1488,7 +1528,7 @@ report_clock_compare(clock_idx_t clkidx, int dump, int dverbose,
 
   if (vnq) printf("  Comparing %s to mach_absolute_time\n", name);
 
-  if (check_clock_sandwich(clkidx, &info, &refinfo, quiet, replay)) {
+  if (check_clock_sandwich(clkidx, so, &info, &refinfo, quiet, replay)) {
     if (replay && info.retries < 0) return 0;  /* Just skip nonex replay */
     if (refinfo.errnum) {
       report_clock_err(clock_idx_mach_absolute, &refinfo, 0, verbose);
@@ -1511,14 +1551,16 @@ report_clock_compare(clock_idx_t clkidx, int dump, int dverbose,
 
 /* Report info about all clock comparisons */
 static int
-report_all_clock_compares(int dump, int dverbose, int verbose, int quiet, int replay)
+report_all_clock_compares(const sleepofs_t *so, int dump, int dverbose,
+                          int verbose, int quiet, int replay)
 {
   int ret = 0;
   clock_idx_t clkidx = 0;
 
   while (clkidx < (clock_idx_t) clock_idx_max) {
     /* As sanity check, don't exclude self-compare */
-    ret |= report_clock_compare(clkidx, dump, dverbose, verbose, quiet, replay);
+    ret |= report_clock_compare(clkidx, so,
+                                dump, dverbose, verbose, quiet, replay);
     ++clkidx;
   }
   return ret;
@@ -2007,12 +2049,6 @@ check_thread_times(int verbose, int quiet)
 
 /* Sleep offset (continuous - absolute time) functions */
 
-typedef struct sleepofs_s {
-  smach_time_t ofs;
-  smach_time_t toler;
-  int error;
-} sleepofs_t;
-
 /* Obtain sleep offset */
 static void
 get_sleepofs(sleepofs_t *ofs)
@@ -2128,7 +2164,8 @@ main(int argc, char *argv[])
 
   while (!err || keepgoing) {
     err |= report_all_clocks(dump, dverbose, verbose, quiet, replay);
-    err |= report_all_clock_compares(dump, dverbose, verbose, quiet, replay);
+    err |= report_all_clock_compares(&lastsleep,
+                                     dump, dverbose, verbose, quiet, replay);
     err |= check_mach_scaling(verbose && !quiet);
 
     /*
