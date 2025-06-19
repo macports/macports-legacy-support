@@ -141,6 +141,8 @@ static volatile union scratch_u {
   ONE_ERROR(badptime,"Process/thread time inconsistent") \
   ONE_ERROR(badmach,"Bad mach_time value") \
   ONE_ERROR(badoffset,"Bad continuous time offset") \
+  ONE_ERROR(badboottimelen,"Bad boottime result length") \
+  ONE_ERROR(badboottimeusecs,"Bad boottime microseconds") \
 
 #define ONE_ERROR(name,text) err_##name,
 typedef enum errs { err_dummy,  /* Avoid zero */
@@ -469,13 +471,33 @@ ts2nsec(timespec_t *ts)
 static int
 get_boottime(struct timeval *bt)
 {
+  int ret;
   size_t bt_len = sizeof(*bt);
+  uint32_t *ip = (uint32_t *) bt;
 
   int bt_mib[] = {CTL_KERN, KERN_BOOTTIME};
   size_t bt_miblen = sizeof(bt_mib) / sizeof(bt_mib[0]);
 
-  bt->tv_usec = 0;  /* In case OS doesn't store it */
-  return sysctl(bt_mib, bt_miblen, bt, &bt_len, NULL, 0);
+  /* Prefill result with garbage, to detect incomplete stores */
+  while (ip < (uint32_t *)(bt + 1)) {
+    *ip++ = 0xDEADBEEFU;
+  }
+
+  ret = sysctl(bt_mib, bt_miblen, bt, &bt_len, NULL, 0);
+  if (ret) return ret;
+
+  /* Make sure returned length is correct */
+  if (bt_len != sizeof(*bt)) {
+    errno = -err_badboottimelen;
+    return -1;
+  }
+  /* Check for valid microseconds (possibly unwritten) */
+  if ((unsigned int) bt->tv_usec >= MILLION) {
+    errno = -err_badboottimeusecs;
+    return -1;
+  }
+
+  return 0;
 }
 
 /* Report and check boottime */
@@ -485,14 +507,14 @@ check_boottime(int verbose)
   struct timeval bt, tod;
 
   if (get_boottime(&bt)) {
-    printf("Can't get boottime: %s\n", strerror(errno));
+    printf("Can't get boottime: %s\n", get_errstr(errno));
     return 1;
   }
   if (verbose) {
     printf("  Boot time is %lld.%d\n", LL bt.tv_sec, bt.tv_usec);
   }
   if (gettimeofday(&tod, NULL)) {
-    printf("Can't get timeofday: %s\n", strerror(errno));
+    printf("Can't get timeofday: %s\n", get_errstr(errno));
     return 1;
   }
   if (tv2nsec(&bt) > tv2nsec(&tod)) {
