@@ -2178,8 +2178,7 @@ main(int argc, char *argv[])
 
   err |= check_invalid();
 
-  /* For now, ignore (but report) any boottime error */
-  (void) check_boottime(verbose && !quiet);
+  err |= check_boottime(verbose && !quiet);
 
   get_sleepofs(&lastsleep);
   if (verbose & !quiet) report_sleepofs("  Initial sleep offset", &lastsleep);
