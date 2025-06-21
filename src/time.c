@@ -143,16 +143,23 @@ static pthread_mutex_t sleepofs_lock = PTHREAD_MUTEX_INITIALIZER;
  * this faster and with better resolution didn't appear until 10.12, where
  * this code is no longer relevant.
  */
+#define BAD_BT_LEN -2
+
 static int
 get_boottime(struct timeval *bt)
 {
+  int ret;
   size_t bt_len = sizeof(*bt);
 
   int bt_mib[] = {CTL_KERN, KERN_BOOTTIME};
   size_t bt_miblen = sizeof(bt_mib) / sizeof(bt_mib[0]);
 
-  bt->tv_usec = 0;  /* In case OS doesn't store it */
-  return sysctl(bt_mib, bt_miblen, bt, &bt_len, NULL, 0);
+  ret = sysctl(bt_mib, bt_miblen, bt, &bt_len, NULL, 0);
+  if (ret) return ret;
+
+  /* Check that result legth is correct */
+  if (bt_len != sizeof(*bt)) return BAD_BT_LEN;
+  return 0;
 }
 
 /*
@@ -194,10 +201,10 @@ get_todmach(sleepofs_info_t *si)
 static int
 get_sleepofs_info(sleepofs_info_t *si)
 {
-  int tries;
+  int ret, tries;
   sleepofs_info_t si2;
 
-  if (get_boottime(&si->boottime)) return -1;
+  if ((ret = get_boottime(&si->boottime))) return ret;
   si2.boottime = si->boottime;
 
   while(1) {
@@ -209,7 +216,7 @@ get_sleepofs_info(sleepofs_info_t *si)
       if (si2.mach_diff < si->mach_diff) *si = si2;
     }
 
-    if (get_boottime(&si2.boottime)) return -1;
+    if ((ret = get_boottime(&si2.boottime))) return ret;
     if (si2.boottime.tv_sec == si->boottime.tv_sec
         && si2.boottime.tv_usec == si->boottime.tv_usec) break;
     *si = si2;
@@ -227,15 +234,25 @@ static int64_t tvdiff2mach(const struct timeval *tv1,
 
 static void get_sleep_offset(void)
 {
+  int ret;
   int64_t toddiff, offset, minsleepadj, maxdrift;
   sleepofs_info_t si;
   static const struct timeval tv5a = {MIN_SLEEP_OFFSET_ADVANCE, 0},
                               tv5b = {0, 0};
 
   if (get_mach_scale()) return;
-  if (get_sleepofs_info(&si)) return;
+  if ((ret = get_sleepofs_info(&si))) {
+    /* If boottime is broken, retries are useless */
+    if (ret == BAD_BT_LEN) sleep_offset_valid = 1;
+    return;
+  }
 
   toddiff = tvdiff2mach(&si.timeofday, &si.boottime);
+  /* boottime later than tod is garbage */
+  if (toddiff < 0) {
+    sleep_offset_valid = 1;  /* It's permanent garbage, so don't retry this */
+    return;
+  }
   offset = toddiff - (si.mach_before + si.mach_after) / 2;
   minsleepadj = tvdiff2mach(&tv5a, &tv5b);
   maxdrift = (si.mach_before - sleep_info.mach_before)
@@ -270,13 +287,6 @@ startup_sleep_offset(void)
   get_sleep_offset();
 }
 
-/*
- * For some as-yet-undetermined reason, the sleep offset is causing trouble
- * in ppc64 builds.  So for now, we avoid it on ppc64.
- */
-
-#ifndef __ppc64__
-
 uint64_t mach_continuous_time(void)
 {
   uint64_t mach_time;
@@ -294,20 +304,6 @@ uint64_t mach_continuous_approximate_time(void)
   mach_time = mach_approximate_time();
   return mach_time + sleep_offset;
 }
-
-#else /* __ppc64__ */
-
-uint64_t mach_continuous_time(void)
-{
-  return mach_absolute_time();
-}
-
-uint64_t mach_continuous_approximate_time(void)
-{
-  return mach_approximate_time();
-}
-
-#endif /* __ppc64__ */
 
 #endif /* __MPLS_LIB_SUPPORT_CONTINUOUS_TIME__ */
 

@@ -314,6 +314,11 @@ Wrapped headers and replaced functions are:
     <td>Provides a workaround for bug in <code>pthread_get_stacksize_np</code></td>
     <td>OSX10.4, OSX10.5, OSX10.9, OSX10.10</td>
   </tr>
+  <tr>
+    <td><code>-</code></td>
+    <td>Fixes boottime bug in 64-bit <code>sysctl()</code> and <code>sysctlbyname()</code></td>
+    <td>OSX10.5</td>
+  </tr>
 </table>
 
 For information on building this library outside MacPorts, see BUILDING.txt.

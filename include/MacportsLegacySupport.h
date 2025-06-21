@@ -172,6 +172,10 @@
 #define __MPLS_SDK_SUPPORT_TIMESPEC_GET__     (__MPLS_SDK_MAJOR < 101500)
 #define __MPLS_LIB_SUPPORT_TIMESPEC_GET__     (__MPLS_TARGET_OSVER < 101500)
 
+/* Fix bugs in sysctl() and sysctlbyname() for boottime */
+#define __MPLS_LIB_FIX_64BIT_BOOTTIME__       (__MPLS_TARGET_OSVER < 1060 \
+                                               && __MPLS_64BIT)
+
 /* "at" calls, including fdopendir */
 #define __MPLS_SDK_SUPPORT_ATCALLS__          (__MPLS_SDK_MAJOR < 101000)
 #define __MPLS_LIB_SUPPORT_ATCALLS__          (__MPLS_TARGET_OSVER < 101000)

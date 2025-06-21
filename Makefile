@@ -537,7 +537,11 @@ test_clean: xtest_clean $(MANRUNPREFIX)clean
 	@$(RMDIR) $(XLIBDIR)
 	$(RM) -r $(TEST_TEMP)
 
-clean: $(MANRUNPREFIX)clean test_clean
+tools_clean:
+	$(RM) $(TOOLDIR)*.o $(TOOLDIR)/boottime $(TOOLDIR)/clock_info
+	$(RM) $(TOOLDIR)/mach_time $(TOOLDIR)/realpath_test
+
+clean: $(MANRUNPREFIX)clean test_clean tools_clean
 	$(RM) $(foreach D,$(SRCDIR),$D/*.o $D/*.o.* $D/*.d)
 	$(RM) $(BUILDDLIBPATH) $(BUILDSLIBPATH) $(BUILDSYSLIBPATH)
 	@$(RMDIR) $(BUILDLIBDIR)
