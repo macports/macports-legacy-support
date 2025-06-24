@@ -58,6 +58,13 @@
 #define __MPLS_APPLE_PPC__            0
 #endif
 
+/* True for Apple-only ppc64 build */
+#if defined(__ppc64__) && __APPLE__
+#define __MPLS_APPLE_PPC64__            1
+#else
+#define __MPLS_APPLE_PPC64__            0
+#endif
+
 /*
  * More concise and more comprehensive target OS definition, to simplify
  * many conditionals.
@@ -175,6 +182,10 @@
 /* Fix bugs in sysctl() and sysctlbyname() for boottime */
 #define __MPLS_LIB_FIX_64BIT_BOOTTIME__       (__MPLS_TARGET_OSVER < 1060 \
                                                && __MPLS_64BIT)
+
+/* Fix bugs in certain 10.4 ppc64 calls */
+#define __MPLS_LIB_FIX_TIGER_PPC64__          (__MPLS_TARGET_OSVER < 1050 \
+                                               && __MPLS_APPLE_PPC64__)
 
 /* "at" calls, including fdopendir */
 #define __MPLS_SDK_SUPPORT_ATCALLS__          (__MPLS_SDK_MAJOR < 101000)
