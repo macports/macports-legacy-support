@@ -275,9 +275,9 @@
                                                  && __MPLS_TARGET_OSVER < 1070 \
                                                  && !__MPLS_64BIT)
 
-/* fsetattrlistat, fgetattrlistat */
-#define __MPLS_SDK_SUPPORT_FSETATTRLIST__     (__MPLS_SDK_MAJOR < 1060)
-#define __MPLS_LIB_SUPPORT_FSETATTRLIST__     (__MPLS_TARGET_OSVER < 1060)
+/* fgetattrlist, fsetattrlist */
+#define __MPLS_SDK_SUPPORT_FXETATTRLIST__     (__MPLS_SDK_MAJOR < 1060)
+#define __MPLS_LIB_SUPPORT_FXETATTRLIST__     (__MPLS_TARGET_OSVER < 1060)
 
 /* localtime_r, gmtime_r, etc only declared on Tiger when _ANSI_SOURCE and _POSIX_C_SOURCE are undefined */
 #define __MPLS_SDK_SUPPORT_TIME_THREAD_SAFE_FUNCTIONS__  (__MPLS_SDK_MAJOR < 1050)
