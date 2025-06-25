@@ -97,7 +97,7 @@
 #define _SC_PHYS_PAGES 200
 #endif
 
-#if __MPLS_SDK_SUPPORT_FSETATTRLIST__
+#if __MPLS_SDK_SUPPORT_FXETATTRLIST__
 
 #ifdef __LP64__
 int   fsetattrlist(int,void*,void*,size_t,unsigned int);
@@ -107,7 +107,7 @@ int   fsetattrlist(int,void*,void*,size_t,unsigned long);
 int   fgetattrlist(int,void*,void*,size_t,unsigned long);
 #endif /* defined (__LP64__) */
 
-#endif  /* __MPLS_SDK_SUPPORT_FSETATTRLIST__ */
+#endif  /* __MPLS_SDK_SUPPORT_FXETATTRLIST__ */
 
 #endif /* __DARWIN_C_LEVEL >= __DARWIN_C_FULL */
 

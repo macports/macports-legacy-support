@@ -17,7 +17,7 @@
 /* MP support header */
 #include "MacportsLegacySupport.h"
 
-#if __MPLS_LIB_SUPPORT_FSETATTRLIST__
+#if __MPLS_LIB_SUPPORT_FXETATTRLIST__
 
 /*
  * This provides implementations of fgetattrlist() and fsetattrlist(), by
@@ -79,4 +79,4 @@ fsetattrlist(int fd, void *attrList, void *attrBuf,
   return setattrlist(fpath, attrList, attrBuf, attrBufSize, options);
 }
 
-#endif  /* __MPLS_LIB_SUPPORT_FSETATTRLIST__ */
+#endif  /* __MPLS_LIB_SUPPORT_FXETATTRLIST__ */
