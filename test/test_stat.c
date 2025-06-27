@@ -233,7 +233,7 @@ int
 main(int argc, char *argv[])
 {
   int verbose = 0;
-  FILE *fp; int fd;
+  FILE *fp; int fd = -1;
   filesec_t fsec;
   safe_stat_t stat_buf, stat_copy, stat_link_copy;
 
@@ -265,11 +265,11 @@ main(int argc, char *argv[])
   assert(S_ISREG(get_mode(0)) && "stat expected regular file");
   copy_stat(0, 0);
 
-  if (verbose) printf("  testing 'stat' of uselink\n");
+  if (verbose) printf("  testing 'stat' of link\n");
   stat_init(0);
   stat_err = stat(source_link, &stat_buf_p->s.s);
-  if (check_err("stat of uselink")) return 1;
-  assert(S_ISREG(get_mode(0)) && "stat of uselink expected regular file");
+  if (check_err("stat of link")) return 1;
+  assert(S_ISREG(get_mode(0)) && "stat of link expected regular file");
   check_copy(0, 0);
 
   if (verbose) printf("  testing 'lstat'\n");
@@ -279,9 +279,9 @@ main(int argc, char *argv[])
   assert(S_ISLNK(get_mode(0)) && "lstat expected symlink");
   copy_stat(0, 1);
 
-  if (verbose) printf("  opening test file\n");
+  if (verbose) printf("    opening test file\n");
   /* Use fopen() to steer clear of open()/close() variant issues. */
-  assert((fp = fopen(source_link, "r")) != NULL && "open of source failed");
+  assert((fp = fopen(source, "r")) != NULL && "open of source failed");
   fd = fileno(fp);
 
   if (verbose) printf("  testing 'stat' while open\n");
@@ -298,7 +298,8 @@ main(int argc, char *argv[])
   assert(S_ISREG(get_mode(0)) && "fstat expected regular file");
   check_copy(0, 0);
 
-  (void) fclose(fp);
+  if (verbose) printf("    closing test file\n");
+  (void) fclose(fp); fd = -1;
 
 #if __MPLS_HAVE_STAT64
 
@@ -309,11 +310,11 @@ main(int argc, char *argv[])
   assert(S_ISREG(get_mode(1)) && "stat64 expected regular file");
   copy_stat(1, 0);
 
-  if (verbose) printf("  testing 'stat64' of uselink\n");
+  if (verbose) printf("  testing 'stat64' of link\n");
   stat_init(1);
   stat_err = stat64(source_link, &stat_buf_p->s64.s);
-  if (check_err("stat64 of uselink")) return 1;
-  assert(S_ISREG(get_mode(1)) && "stat64 of uselink expected regular file");
+  if (check_err("stat64 of link")) return 1;
+  assert(S_ISREG(get_mode(1)) && "stat64 of link expected regular file");
   check_copy(1, 0);
 
   if (verbose) printf("  testing 'lstat64'\n");
@@ -323,21 +324,29 @@ main(int argc, char *argv[])
   assert(S_ISLNK(get_mode(1)) && "lstat64 expected symlink");
   copy_stat(1, 1);
 
-  if (verbose) printf("  testing 'fstat64'\n");
+  if (verbose) printf("    opening test file\n");
   /* Use fopen() to steer clear of open()/close() variant issues. */
-  assert((fp = fopen(source_link, "r")) != NULL && "open of source failed");
+  assert((fp = fopen(source, "r")) != NULL && "open of source failed");
+  fd = fileno(fp);
+
+  if (verbose) printf("  testing 'stat64' while open\n");
   stat_init(1);
-  stat_err = fstat64(fileno(fp), &stat_buf_p->s64.s);
+  stat_err = stat64(source, &stat_buf_p->s64.s);
+  if (check_err("stat64 while open")) return 1;
+  assert(S_ISREG(get_mode(0)) && "stat64 expected regular file");
+  check_copy(1, 0);
+
+  if (verbose) printf("  testing 'fstat64'\n");
+  stat_init(1);
+  stat_err = fstat64(fd, &stat_buf_p->s64.s);
   if (check_err("fstat64")) return 1;
   assert(S_ISREG(get_mode(1)) && "fstat64 expected regular file");
   check_copy(1, 0);
-  (void) fclose(fp);
+
+  if (verbose) printf("    closing test file\n");
+  (void) fclose(fp); fd = -1;
 
 #endif /* __MPLS_HAVE_STAT64 */
-
-  /* Use fopen() to steer clear of open()/close() variant issues. */
-  assert((fp = fopen(dir, "r")) != NULL && "open of source failed");
-  fd = fileno(fp);
 
   if (verbose) printf("  testing 'fstatat' (AT_FDCWD)\n");
   stat_init(0);
@@ -346,15 +355,15 @@ main(int argc, char *argv[])
   assert(S_ISREG(get_mode(0)) && "fstatat (AT_FDCWD) expected regular file");
   check_copy(0, 0);
 
-  if (verbose) printf("  testing 'fstatat' (AT_FDCWD) of uselink\n");
+  if (verbose) printf("  testing 'fstatat' (AT_FDCWD) of link\n");
   stat_init(0);
   stat_err = fstatat(AT_FDCWD, source_link, &stat_buf_p->s.s, 0);
-  if (check_err("fstatat (AT_FDCWD) of uselink")) return 1;
+  if (check_err("fstatat (AT_FDCWD) of link")) return 1;
   assert(S_ISREG(get_mode(0))
-         && "fstatat (AT_FDCWD) of uselink expected regular file");
+         && "fstatat (AT_FDCWD) of link expected regular file");
   check_copy(0, 0);
 
-  if (verbose) printf("  testing 'fstatat' (AT_FDCWD) of uselink (NOFOLLOW)\n");
+  if (verbose) printf("  testing 'fstatat' (AT_FDCWD) of link (NOFOLLOW)\n");
   stat_init(0);
   stat_err = fstatat(AT_FDCWD, source_link, &stat_buf_p->s.s,
                      AT_SYMLINK_NOFOLLOW);
@@ -363,6 +372,10 @@ main(int argc, char *argv[])
          && "fstatat (AT_FDCWD) (NOFOLLOW) expected symlink");
   check_copy(0, 1);
 
+  if (verbose) printf("    opening test dir\n");
+  /* Use fopen() to steer clear of open()/close() variant issues. */
+  assert((fp = fopen(dir, "r")) != NULL && "open of source failed");
+  fd = fileno(fp);
 
   if (verbose) printf("  testing 'fstatat' (dir)\n");
   stat_init(0);
@@ -371,20 +384,24 @@ main(int argc, char *argv[])
   assert(S_ISREG(get_mode(0)) && "fstatat (dir) expected regular file");
   check_copy(0, 0);
 
-  if (verbose) printf("  testing 'fstatat' (dir) of uselink\n");
+  if (verbose) printf("  testing 'fstatat' (dir) of link\n");
   stat_init(0);
   stat_err = fstatat(fd, rel_link, &stat_buf_p->s.s, 0);
-  if (check_err("fstatat (dir) of uselink")) return 1;
-  assert(S_ISREG(get_mode(0)) && "fstatat (dir) of uselink expected regular file");
+  if (check_err("fstatat (dir) of link")) return 1;
+  assert(S_ISREG(get_mode(0))
+         && "fstatat (dir) of link expected regular file");
   check_copy(0, 0);
 
-  if (verbose) printf("  testing 'fstatat' (dir) of uselink (NOFOLLOW)\n");
+  if (verbose) printf("  testing 'fstatat' (dir) of link (NOFOLLOW)\n");
   stat_init(0);
   stat_err = fstatat(fd, rel_link, &stat_buf_p->s.s,
                      AT_SYMLINK_NOFOLLOW);
   if (check_err("fstatat (dir) (NOFOLLOW)")) return 1;
   assert(S_ISLNK(get_mode(0)) && "fstatat (dir) (NOFOLLOW) expected symlink");
   check_copy(0, 1);
+
+  if (verbose) printf("    closing test dir\n");
+  (void) fclose(fp); fd = -1;
 
 #if __MPLS_HAVE_STAT64
 
@@ -404,15 +421,16 @@ main(int argc, char *argv[])
   assert(S_ISREG(get_mode(1)) && "fstatat64 (AT_FDCWD) expected regular file");
   check_copy(1, 0);
 
-  if (verbose) printf("  testing 'fstatat64' (AT_FDCWD) of uselink\n");
+  if (verbose) printf("  testing 'fstatat64' (AT_FDCWD) of link\n");
   stat_init(1);
   stat_err = fstatat64(AT_FDCWD, source_link, &stat_buf_p->s64.s, 0);
-  if (check_err("fstatat64 (AT_FDCWD) of uselink")) return 1;
+  if (check_err("fstatat64 (AT_FDCWD) of link")) return 1;
   assert(S_ISREG(get_mode(1))
-         && "fstatat64 (AT_FDCWD) of uselink expected regular file");
+         && "fstatat64 (AT_FDCWD) of link expected regular file");
   check_copy(1, 0);
 
-  if (verbose) printf("  testing 'fstatat64' (AT_FDCWD) of uselink (NOFOLLOW)\n");
+  if (verbose) printf("  testing 'fstatat64' (AT_FDCWD)"
+                      " of link (NOFOLLOW)\n");
   stat_init(1);
   stat_err = fstatat64(AT_FDCWD, source_link, &stat_buf_p->s64.s,
                        AT_SYMLINK_NOFOLLOW);
@@ -421,6 +439,10 @@ main(int argc, char *argv[])
          && "fstatat64 (AT_FDCWD) (NOFOLLOW) expected symlink");
   check_copy(1, 1);
 
+  if (verbose) printf("    opening test dir\n");
+  /* Use fopen() to steer clear of open()/close() variant issues. */
+  assert((fp = fopen(dir, "r")) != NULL && "open of source failed");
+  fd = fileno(fp);
 
   if (verbose) printf("  testing 'fstatat64' (dir)'\n");
   stat_init(1);
@@ -429,15 +451,15 @@ main(int argc, char *argv[])
   assert(S_ISREG(get_mode(1)) && "fstatat64 (dir) expected regular file");
   check_copy(1, 0);
 
-  if (verbose) printf("  testing 'fstatat64' (dir) of uselink\n");
+  if (verbose) printf("  testing 'fstatat64' (dir) of link\n");
   stat_init(1);
   stat_err = fstatat64(fd, rel_link, &stat_buf_p->s64.s, 0);
-  if (check_err("fstatat64 (dir) of uselink")) return 1;
+  if (check_err("fstatat64 (dir) of link")) return 1;
   assert(S_ISREG(get_mode(1))
-         && "fstatat64 (dir) of uselink expected regular file");
+         && "fstatat64 (dir) of link expected regular file");
   check_copy(1, 0);
 
-  if (verbose) printf("  testing 'fstatat64' (dir) of uselink (NOFOLLOW)\n");
+  if (verbose) printf("  testing 'fstatat64' (dir) of link (NOFOLLOW)\n");
   stat_init(1);
   stat_err = fstatat64(fd, rel_link, &stat_buf_p->s64.s,
                        AT_SYMLINK_NOFOLLOW);
@@ -445,9 +467,10 @@ main(int argc, char *argv[])
   assert(S_ISLNK(get_mode(1)) && "fstatat64 (dir) (NOFOLLOW) expected symlink");
   check_copy(1, 1);
 
-#endif /* __MPLS_HAVE_STAT64 */
+  if (verbose) printf("    closing test dir\n");
+  (void) fclose(fp); fd = -1;
 
-  (void) fclose(fp);
+#endif /* __MPLS_HAVE_STAT64 */
 
 /* Test the (undocumented) extended *statx_np() functions */
 
@@ -463,11 +486,11 @@ main(int argc, char *argv[])
   assert(S_ISREG(get_mode(0)) && "statx_np expected regular file");
   check_copy(0, 0);
 
-  if (verbose) printf("  testing 'statx_np' of uselink\n");
+  if (verbose) printf("  testing 'statx_np' of link\n");
   stat_init(0);
   stat_err = statx_np(source_link, &stat_buf_p->s.s, fsec);
-  if (check_err("statx_np of uselink")) return 1;
-  assert(S_ISREG(get_mode(0)) && "statx_np of uselink expected regular file");
+  if (check_err("statx_np of link")) return 1;
+  assert(S_ISREG(get_mode(0)) && "statx_np of link expected regular file");
   check_copy(0, 0);
 
   if (verbose) printf("  testing 'lstatx_np'\n");
@@ -477,25 +500,27 @@ main(int argc, char *argv[])
   assert(S_ISLNK(get_mode(0)) && "lstatx_np expected symlink");
   check_copy(0, 1);
 
-  if (verbose) printf("  testing 'fstatx_np with NULL fsec'\n");
+  if (verbose) printf("    opening test file\n");
   /* Use fopen() to steer clear of open()/close() variant issues. */
-  assert((fp = fopen(source_link, "r")) != NULL && "open of source failed");
+  assert((fp = fopen(source, "r")) != NULL && "open of source failed");
+  fd = fileno(fp);
+
+  if (verbose) printf("  testing 'fstatx_np with NULL fsec'\n");
   stat_init(0);
-  stat_err = fstatx_np(fileno(fp), &stat_buf_p->s.s, NULL);
+  stat_err = fstatx_np(fd, &stat_buf_p->s.s, NULL);
   if (check_err("fstatx_np")) return 1;
   assert(S_ISREG(get_mode(0)) && "fstat expected regular file");
   check_copy(0, 0);
-  (void) fclose(fp);
 
   if (verbose) printf("  testing 'fstatx_np'\n");
-  /* Use fopen() to steer clear of open()/close() variant issues. */
-  assert((fp = fopen(source_link, "r")) != NULL && "open of source failed");
   stat_init(0);
-  stat_err = fstatx_np(fileno(fp), &stat_buf_p->s.s, fsec);
+  stat_err = fstatx_np(fd, &stat_buf_p->s.s, fsec);
   if (check_err("fstatx_np")) return 1;
   assert(S_ISREG(get_mode(0)) && "fstat expected regular file");
   check_copy(0, 0);
-  (void) fclose(fp);
+
+  if (verbose) printf("    closing test file\n");
+  (void) fclose(fp); fd = -1;
 
 #if __MPLS_HAVE_STAT64
 
@@ -506,11 +531,11 @@ main(int argc, char *argv[])
   assert(S_ISREG(get_mode(1)) && "statx64_np expected regular file");
   check_copy(1, 0);
 
-  if (verbose) printf("  testing 'statx64_np' of uselink\n");
+  if (verbose) printf("  testing 'statx64_np' of link\n");
   stat_init(1);
   stat_err = statx64_np(source_link, &stat_buf_p->s64.s, fsec);
-  if (check_err("statx64_np of uselink")) return 1;
-  assert(S_ISREG(get_mode(1)) && "statx64_np of uselink expected regular file");
+  if (check_err("statx64_np of link")) return 1;
+  assert(S_ISREG(get_mode(1)) && "statx64_np of link expected regular file");
   check_copy(1, 0);
 
   if (verbose) printf("  testing 'lstatx64_np'\n");
@@ -520,25 +545,27 @@ main(int argc, char *argv[])
   assert(S_ISLNK(get_mode(1)) && "lstatx64_np expected symlink");
   check_copy(1, 1);
 
-  if (verbose) printf("  testing 'fstatx64_np with NULL fsec'\n");
+  if (verbose) printf("    opening test file\n");
   /* Use fopen() to steer clear of open()/close() variant issues. */
-  assert((fp = fopen(source_link, "r")) != NULL && "open of source failed");
+  assert((fp = fopen(source, "r")) != NULL && "open of source failed");
+  fd = fileno(fp);
+
+  if (verbose) printf("  testing 'fstatx64_np with NULL fsec'\n");
   stat_init(1);
-  stat_err = fstatx64_np(fileno(fp), &stat_buf_p->s64.s, NULL);
+  stat_err = fstatx64_np(fd, &stat_buf_p->s64.s, NULL);
   if (check_err("fstatx64_np")) return 1;
   assert(S_ISREG(get_mode(1)) && "fstatx64_np expected regular file");
   check_copy(1, 0);
-  (void) fclose(fp);
 
   if (verbose) printf("  testing 'fstatx64_np'\n");
-  /* Use fopen() to steer clear of open()/close() variant issues. */
-  assert((fp = fopen(source_link, "r")) != NULL && "open of source failed");
   stat_init(1);
-  stat_err = fstatx64_np(fileno(fp), &stat_buf_p->s64.s, fsec);
+  stat_err = fstatx64_np(fd, &stat_buf_p->s64.s, fsec);
   if (check_err("fstatx64_np")) return 1;
   assert(S_ISREG(get_mode(1)) && "fstatx64_np expected regular file");
   check_copy(1, 0);
-  (void) fclose(fp);
+
+  if (verbose) printf("    closing test file\n");
+  (void) fclose(fp); fd = -1;
 
 #endif /* __MPLS_HAVE_STAT64 */
 
