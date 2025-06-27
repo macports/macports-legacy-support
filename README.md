@@ -45,9 +45,9 @@ Wrapped headers and replaced functions are:
     <td>OSX10.9</td>
   </tr>
   <tr>
-    <td><code>os/lock.h</code></td>
-    <td>Adds <code>os_unfair_lock_lock</code>, <code>os_unfair_lock_trylock</code>, and <code>os_unfair_lock_unlock</code> functions</td>
-    <td>OSX10.11</td>
+    <td><code>fcntl.h</code></td>
+    <td>Fixes <code>fcntl(...,F_GETPATH,...)</code> bug on 10.4 ppc64.
+    <td>OSX10.4 ppc64</td>
   </tr>
   <tr>
     <td><code>math.h</code></td>
@@ -161,9 +161,9 @@ Wrapped headers and replaced functions are:
     <td>OSX10.5</td>
   </tr>
   <tr>
-    <td><code>xlocale/_wchar.h</code></td>
-    <td>Adds <code>wcscasecmp_l</code>, <code>wcsncasecmp_l</code> functions</td>
-    <td>OSX10.6</td>
+    <td><code>os/lock.h</code></td>
+    <td>Adds <code>os_unfair_lock_lock</code>, <code>os_unfair_lock_trylock</code>, and <code>os_unfair_lock_unlock</code> functions</td>
+    <td>OSX10.11</td>
   </tr>
   <tr>
     <td><code>sys/aio.h</code></td>
@@ -277,6 +277,11 @@ Wrapped headers and replaced functions are:
     <td><code>uuid/uuid.h</code></td>
     <td>Adds typedef of <code>uuid_string_t</code></td>
     <td>OSX10.5</td>
+  </tr>
+  <tr>
+    <td><code>xlocale/_wchar.h</code></td>
+    <td>Adds <code>wcscasecmp_l</code>, <code>wcsncasecmp_l</code> functions</td>
+    <td>OSX10.6</td>
   </tr>
   <tr>
     <td><code>CoreFoundation/CoreFoundation.h</code></td>
