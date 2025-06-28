@@ -61,7 +61,8 @@ POSTINSTALL     ?= /usr/bin/install_name_tool
 # is wanted, then override XC[XX]FLAGS.
 #
 # Note: Overriding CC or CXX with ?= doesn't work, since they're "defined".
-ARCHFLAGS       ?=
+ARCHS           ?=
+ARCHFLAGS       ?= $(patsubst %,-arch %,$(ARCHS))
 DEBUG           ?=
 OPT             ?= -Os
 XCFLAGS         ?= $(DEBUG) $(OPT) -Wall -Wno-deprecated-declarations -Wundef
