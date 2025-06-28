@@ -17,9 +17,10 @@
 /* MP support header */
 #include "MacportsLegacySupport.h"
 
-#if __MPLS_LIB_SUPPORT_STAT64__ || __MPLS_LIB_SUPPORT_ATCALLS__
+#if __MPLS_LIB_SUPPORT_STAT64__ || __MPLS_LIB_SUPPORT_ATCALLS__ \
+   || __MPLS_LIB_FIX_TIGER_PPC64__
 
-/* Common setup for both kinds of *stat*() calls provided here */
+/* Common setup for all versions of *stat*() calls provided here */
 
 /*
  * Cause our own refs to always use the 32-bit-inode variants.  This
@@ -27,18 +28,127 @@
  * our implementations are needed.  It means that the referenced function
  * names are always the "unadorned" versions, except when we explicitly
  * add a suffix.
+ *
+ * This also makes the dlsym() interface common code.
  */
 
 #define _DARWIN_NO_64_BIT_INODE 1
 
+#include <dlfcn.h>
+#include <stddef.h>
+#include <stdlib.h>
+
 #include <sys/stat.h>
 
-/* Make sure we have "struct sta64" */
+#include "compiler.h"
+
+/* Make sure we have "struct stat64" */
 #if !__MPLS_HAVE_STAT64
 struct stat64 __DARWIN_STRUCT_STAT64;
 #endif /* !__MPLS_HAVE_STAT64 */
 
-#endif /*__MPLS_LIB_SUPPORT_STAT64__ || __MPLS_LIB_SUPPORT_ATCALLS__*/
+#define GET_OS_FUNC(name) \
+  static __typeof__(name) *os_##name = NULL; \
+  \
+  if (MPLS_SLOWPATH(!os_##name)) { \
+    if (!(os_##name = dlsym(RTLD_NEXT, #name))) abort(); \
+  }
+
+#endif /* __MPLS_LIB_SUPPORT_... */
+
+#if __MPLS_LIB_FIX_TIGER_PPC64__
+
+/*
+ * All *stat*() calls on 10.4 ppc64 usually return garbage in the tv_nsec
+ * values of timestamps.  Since sub-second values are not actually supported
+ * in this OS version, the fix is simply to add wrappers that clear all
+ * tv_nsec values in the results.
+ */
+
+/* Clear all tv_nsec values in the structure */
+static void
+fix_stat(struct stat *buf)
+{
+  buf->st_atimespec.tv_nsec = 0;
+  buf->st_mtimespec.tv_nsec = 0;
+  buf->st_ctimespec.tv_nsec = 0;
+  /* Note that the non-ino64 version has no birthtime. */
+}
+
+/* Now all the wrapper functions */
+
+int
+stat(const char *path, struct stat *buf)
+{
+  int ret;
+  GET_OS_FUNC(stat)
+
+  ret = (*os_stat)(path, buf);
+  if (!ret) fix_stat(buf);
+  return ret;
+}
+
+int
+lstat(const char *path, struct stat *buf)
+{
+  int ret;
+  GET_OS_FUNC(lstat)
+
+  ret = (*os_lstat)(path, buf);
+  if (!ret) fix_stat(buf);
+  return ret;
+}
+
+int
+fstat(int fildes, struct stat *buf)
+{
+  int ret;
+  GET_OS_FUNC(fstat)
+
+  ret = (*os_fstat)(fildes, buf);
+  if (!ret) fix_stat(buf);
+  return ret;
+}
+
+/*
+ * Since Rosetta (ppc) and ppc64 are mutually exclusive, we don't need
+ * to worry about conflicts in the *statx_np() functions.
+ */
+
+int
+statx_np(const char *path, struct stat *buf, filesec_t fsec)
+{
+  int ret;
+  GET_OS_FUNC(statx_np)
+
+  ret = (*os_statx_np)(path, buf, fsec);
+  if (!ret) fix_stat(buf);
+  return ret;
+}
+
+int
+lstatx_np(const char *path, struct stat *buf, filesec_t fsec)
+{
+  int ret;
+  GET_OS_FUNC(lstatx_np)
+
+  ret = (*os_lstatx_np)(path, buf, fsec);
+  if (!ret) fix_stat(buf);
+  return ret;
+}
+
+int
+fstatx_np(int fildes, struct stat *buf, filesec_t fsec)
+{
+  int ret;
+  GET_OS_FUNC(fstatx_np)
+
+  ret = (*os_fstatx_np)(fildes, buf, fsec);
+  if (!ret) fix_stat(buf);
+  return ret;
+}
+
+#endif /* __MPLS_LIB_FIX_TIGER_PPC64__ */
 
 #if __MPLS_LIB_FIX_TIGER_ROSETTA__
 /*
@@ -91,20 +201,17 @@ struct stat64 __DARWIN_STRUCT_STAT64;
  * Note that we only need to provide the basic variant, since the wrappers
  * providing the additional variants will call this version.
  *
- * Also note that chmod_np() is also broken in 10.4 Rosetta, but the nature of
- * the bug is unknwon, and hence there's no fix provided.  It's known *not*
+ * Also note that chmodx_np() is also broken in 10.4 Rosetta, but the nature of
+ * the bug is unknown, and hence there's no fix provided.  It's known *not*
  * to be a simple byte-swapping issue.
  */
 
-#include <dlfcn.h>
-#include <stdlib.h>
+#include <stddef.h>
 
 #include <sys/sysctl.h>
 #include <sys/types.h>
 
 #include <libkern/OSByteOrder.h>
-
-#include "compiler.h"
 
 /* sysctl to check whether we're running natively (non-ppc only) */
 #define SYSCTL_NATIVE "sysctl.proc_native"
@@ -133,25 +240,19 @@ is_tiger_rosetta(void)
 int
 fstatx_np(int fildes, struct stat *buf, filesec_t fsec)
 {
-  static __typeof__(fstatx_np) *fstatx = NULL;
   static int tiger_rosetta = 0;
+  GET_OS_FUNC(fstatx_np)
 
-  if (MPLS_SLOWPATH(!fstatx)) {
-    if (!(fstatx = dlsym(RTLD_NEXT, "fstatx_np"))) {
-      /* Something's badly wrong if we can't find the function */
-      abort();
-    }
-  }
   /* If known not 10.4 Rosetta or NULL fsec, just call the function normally */
   if (MPLS_FASTPATH(tiger_rosetta < 0 || fsec == NULL)) {
-    return (*fstatx)(fildes, buf, fsec);
+    return (*os_fstatx_np)(fildes, buf, fsec);
   }
 
   /* If we don't yet know the Rosetta status, get it */
   if (!tiger_rosetta) tiger_rosetta = is_tiger_rosetta();
 
   /* Iff it's 10.4 Rosetta, byte-swap the fd */
-  return (*fstatx)(tiger_rosetta >= 0 ? OSSwapInt32(fildes) : fildes,
+  return (*os_fstatx_np)(tiger_rosetta >= 0 ? OSSwapInt32(fildes) : fildes,
                    buf, fsec);
 }
 
