@@ -90,24 +90,26 @@ INSTALL_PROGRAM  = install -c -m 755
 INSTALL_DATA     = install -c -m 644
 INSTALL_MAN      = install -c -m 444
 RM               = rm -f
-RMDIR            = sh -c 'for d; do test ! -d "$$d" || rmdir -p "$$d"; done' rmdir
+RMDIR            = rm -rf
 
 SRCDIR           = src
 SRCINCDIR        = include
+BUILDDIR         = bin
 # Use VAR := $(shell CMD) instead of VAR != CMD to support old make versions
 FIND_LIBHEADERS := find $(SRCINCDIR) -type f \( -name '*.h' -o \
                                              \( -name 'c*' ! -name '*.*' \) \)
 LIBHEADERS      := $(shell $(FIND_LIBHEADERS))
 ALLHEADERS      := $(LIBHEADERS) $(wildcard $(SRCDIR)/*.h)
 
-ADDSRCS         := $(SRCDIR)/add_symbols.c
-LIBSRCS         := $(filter-out $(ADDSRCS),$(wildcard $(SRCDIR)/*.c))
+ALLLIBSRCS      := $(patsubst $(SRCDIR)/%.c,%,$(wildcard $(SRCDIR)/*.c))
+ADDSRCS         := add_symbols
+LIBSRCS         := $(filter-out $(ADDSRCS),$(ALLLIBSRCS))
 
 DLIBOBJEXT       = .dl.o
 SLIBOBJEXT       = .o
-DLIBOBJS        := $(patsubst %.c,%$(DLIBOBJEXT),$(LIBSRCS))
-SLIBOBJS        := $(patsubst %.c,%$(SLIBOBJEXT),$(LIBSRCS))
-ADDOBJS         := $(patsubst %.c,%$(SLIBOBJEXT),$(ADDSRCS))
+DLIBOBJS        := $(patsubst %,$(BUILDDIR)/%$(DLIBOBJEXT),$(LIBSRCS))
+SLIBOBJS        := $(patsubst %,$(BUILDDIR)/%$(SLIBOBJEXT),$(LIBSRCS))
+ADDOBJS         := $(patsubst %,$(BUILDDIR)/%$(SLIBOBJEXT),$(ADDSRCS))
 SYSLIBOBJS      := $(DLIBOBJS) $(ADDOBJS)
 
 # Man pages
@@ -130,10 +132,10 @@ SRCMAN3S        := $(wildcard $(SRCDIR)/*.3)
 #
 # This treatment is only applicable to the static library.
 EMPTY            = empty_source_content
-EMPTYSOBJ        = $(SRCDIR)/$(EMPTY)$(SLIBOBJEXT)
-SOBJLIST         = $(SRCDIR)/slibobjs.tmp
+EMPTYSOBJ        = $(BUILDDIR)/$(EMPTY)$(SLIBOBJEXT)
+SOBJLIST         = $(BUILDDIR)/slibobjs.tmp
 DUMMYSRC         = $(SRCDIR)/dummylib.xxc
-DUMMYOBJ         = $(SRCDIR)/dummylib.o
+DUMMYOBJ         = $(BUILDDIR)/dummylib.o
 
 # Automatic tests that don't use the library, and are OK with -fno-builtin
 XTESTDIR          = xtest
@@ -219,9 +221,12 @@ STRNCHKRUNS      := $(patsubst \
 # C standard for tests
 TESTCSTD         := c99
 
-TIGERSRCDIR      = tiger_only/src
-TIGERSRCS       := $(wildcard $(TIGERSRCDIR)/*.c)
-TIGERPRGS       := $(patsubst %.c,%,$(TIGERSRCS))
+TIGERROOT        = tiger_only
+TIGERSRCDIR      = $(TIGERROOT)/src
+TIGERBINDIR      = $(TIGERROOT)/bin
+TIGERSRCS       := \
+    $(patsubst $(TIGERSRCDIR)/%.c,%,$(wildcard $(TIGERSRCDIR)/*.c))
+TIGERPRGS       := $(patsubst %,$(TIGERBINDIR)/%,$(TIGERSRCS))
 TIGERMAN1S      := $(wildcard $(TIGERSRCDIR)/*.1)
 
 TOOLDIR          = tools
@@ -233,13 +238,16 @@ slib: $(BUILDSLIBPATH)
 syslib: $(BUILDSYSLIBPATH)
 
 # Generously marking all header files as potential dependencies
-$(DLIBOBJS): %$(DLIBOBJEXT): %.c $(ALLHEADERS)
+$(DLIBOBJS): $(BUILDDIR)/%$(DLIBOBJEXT): $(SRCDIR)/%.c $(ALLHEADERS) \
+    | $(BUILDDIR)
 	$(CC) -c -I$(SRCINCDIR) $(ALLCFLAGS) $(DLIBCFLAGS) $< -o $@
 
-$(SLIBOBJS): %$(SLIBOBJEXT): %.c $(ALLHEADERS)
+$(SLIBOBJS): $(BUILDDIR)/%$(SLIBOBJEXT): $(SRCDIR)/%.c $(ALLHEADERS) \
+    | $(BUILDDIR)
 	$(CC) -c -I$(SRCINCDIR) $(ALLCFLAGS) $(SLIBCFLAGS) $< -o $@
 
-$(ADDOBJS): %$(SLIBOBJEXT): %.c $(ALLHEADERS)
+$(ADDOBJS): $(BUILDDIR)/%$(SLIBOBJEXT): $(SRCDIR)/%.c $(ALLHEADERS) \
+    | $(BUILDDIR)
 	$(CC) -c -I$(SRCINCDIR) $(ALLCFLAGS) $(SLIBCFLAGS) $< -o $@
 
 dlibobjs: $(DLIBOBJS)
@@ -264,8 +272,10 @@ $(SOBJLIST): $(SLIBOBJS)
 	if [ ! -s $@ ]; then echo $(DUMMYOBJ) > $@; fi
 
 # Make the directories separate targets to avoid collisions in parallel builds.
-$(BUILDLIBDIR) $(DESTDIR)$(LIBDIR) $(DESTDIR)$(BINDIR) \
-    $(DESTDIR)$(MAN1DIR) $(DESTDIR)$(MAN3DIR) $(TEST_TEMP):
+$(BUILDDIR) $(TIGERBINDIR) $(BUILDLIBDIR) \
+    $(DESTDIR)$(LIBDIR) $(DESTDIR)$(BINDIR) \
+    $(DESTDIR)$(MAN1DIR) $(DESTDIR)$(MAN3DIR) \
+    $(TEST_TEMP):
 	$(MKINSTALLDIRS) $@
 
 $(BUILDDLIBPATH): $(DLIBOBJS) | $(BUILDLIBDIR)
@@ -327,7 +337,7 @@ $(MANTESTPRGS_CPP): %: %.o $(BUILDDLIBPATH)
 
 alltestobjs: $(TESTOBJS_C) $(XTESTOBJS_C) $(MANTESTOBJS_C) $(MANLIBTESTOBJS_C)
 
-$(TIGERPRGS): %: %.c
+$(TIGERPRGS): $(TIGERBINDIR)/%: $(TIGERSRCDIR)/%.c | $(TIGERBINDIR)
 	$(CC) $$($(ARCHTOOL)) $< -o $@
 
 tiger-bins: $(TIGERPRGS)
@@ -533,19 +543,17 @@ $(MANRUNPREFIX)clean:
 	$(RM) $(MANTESTDIR)/*.o $(MANTESTPRGS)
 
 test_clean: xtest_clean $(MANRUNPREFIX)clean
-	$(RM) $(TESTDIR)/*.o $(ALLTESTPRGS) $(XLIBPATH)
+	$(RM) $(TESTDIR)/*.o $(ALLTESTPRGS)
 	$(RM) test/test_cmath_* test/test_faccessat_setuid
-	@$(RMDIR) $(XLIBDIR)
-	$(RM) -r $(TEST_TEMP)
+	$(RMDIR) $(XLIBDIR)
+	$(RMDIR) $(TEST_TEMP)
 
 tools_clean:
 	$(RM) $(TOOLDIR)*.o $(TOOLDIR)/boottime $(TOOLDIR)/clock_info
 	$(RM) $(TOOLDIR)/mach_time $(TOOLDIR)/realpath_test
 
 clean: $(MANRUNPREFIX)clean test_clean tools_clean
-	$(RM) $(foreach D,$(SRCDIR),$D/*.o $D/*.o.* $D/*.d)
-	$(RM) $(BUILDDLIBPATH) $(BUILDSLIBPATH) $(BUILDSYSLIBPATH)
-	@$(RMDIR) $(BUILDLIBDIR)
+	$(RMDIR) $(BUILDDIR) $(BUILDLIBDIR) $(TIGERBINDIR)
 
 .PHONY: all dlib syslib slib clean check test test_cmath xtest
 .PHONY: test_static test_syslib test_all
