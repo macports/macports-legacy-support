@@ -2,6 +2,7 @@
 *.o.*
 *.d
 *.dylib
+bin
 lib
 *~
 *.dSYM
