@@ -225,7 +225,7 @@ Wrapped headers and replaced functions are:
     <td>OSX10.5</td>
   </tr>
   <tr>
-    <td rowspan="4"><code>sys/stat.h</code></td>
+    <td rowspan="5"><code>sys/stat.h</code></td>
     <td>Adds <code>fchmodat</code>, <code>fstatat</code>,
         and <code>mkdirat</code> functions</td>
     <td>OSX10.9</td>
@@ -240,6 +240,10 @@ Wrapped headers and replaced functions are:
   <tr>
     <td>Adds limited <code>stat64</code> support</td>
     <td>OSX10.4</td>
+  </tr>
+  <tr>
+    <td>Fixes <code>*stat*</code> bugs on 10.4 ppc64</td>
+    <td>OSX10.4 ppc64</td>
   </tr>
   <tr>
     <td><code>sys/stdio.h</code></td>
