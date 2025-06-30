@@ -95,6 +95,7 @@ RMDIR            = rm -rf
 SRCDIR           = src
 SRCINCDIR        = include
 BUILDDIR         = bin
+TESTBINDIR       = tbin
 # Use VAR := $(shell CMD) instead of VAR != CMD to support old make versions
 FIND_LIBHEADERS := find $(SRCINCDIR) -type f \( -name '*.h' -o \
                                              \( -name 'c*' ! -name '*.*' \) \)
@@ -140,13 +141,15 @@ DUMMYOBJ         = $(BUILDDIR)/dummylib.o
 # Automatic tests that don't use the library, and are OK with -fno-builtin
 XTESTDIR          = xtest
 XTESTNAMEPREFIX   = $(XTESTDIR)/test_
+XTESTBINPREFIX    = $(TESTBINDIR)/test_
 XTESTRUNPREFIX    = run_
 XTESTLDFLAGS      = $(ALLLDFLAGS)
 XTESTSRCS_C      := $(wildcard $(XTESTNAMEPREFIX)*.c)
-XTESTOBJS_C      := $(patsubst %.c,%.o,$(XTESTSRCS_C))
-XTESTPRGS_C      := $(patsubst %.c,%,$(XTESTSRCS_C))
-XTESTPRGS         = $(XTESTPRGS_C)
-XTESTRUNS        := $(patsubst $(XTESTNAMEPREFIX)%,$(XTESTRUNPREFIX)%,$(XTESTPRGS))
+XTESTPRGS_C      := $(patsubst $(XTESTDIR)/%.c,%,$(XTESTSRCS_C))
+XTESTOBJS_C      := $(patsubst %,$(TESTBINDIR)/%.o,$(XTESTPRGS_C))
+XTESTPRGS         = $(patsubst %,$(TESTBINDIR)/%,$(XTESTPRGS_C))
+XTESTRUNS        := \
+    $(patsubst $(XTESTBINPREFIX)%,$(XTESTRUNPREFIX)%,$(XTESTPRGS))
 DARWINSRCS_C    := $(wildcard $(XTESTNAMEPREFIX)darwin_c*.c)
 DARWINRUNS      := $(patsubst \
                      $(XTESTNAMEPREFIX)%.c,$(XTESTRUNPREFIX)%,$(DARWINSRCS_C))
@@ -161,22 +164,24 @@ ALLHDRRUNS      := $(patsubst \
 # Normal automatic tests
 TESTDIR          = test
 TESTNAMEPREFIX   = $(TESTDIR)/test_
+TESTBINPREFIX    = $(TESTBINDIR)/test_
 TESTRUNPREFIX    = run_
 TESTLDFLAGS      = -L$(BUILDLIBDIR) $(ALLLDFLAGS)
 TESTLIBS         = -l$(LIBNAME)
 TESTSYSLDFLAGS   = -L$(XLIBDIR) $(ALLLDFLAGS)
 TESTSRCS_C      := $(wildcard $(TESTNAMEPREFIX)*.c)
-TESTOBJS_C      := $(patsubst %.c,%.o,$(TESTSRCS_C))
-TESTPRGS_C      := $(patsubst %.c,%,$(TESTSRCS_C))
-TESTSPRGS_C     := $(patsubst %.c,%_static,$(TESTSRCS_C))
-TESTSYSPRGS_C   := $(patsubst %.c,%_syslib,$(TESTSRCS_C))
-ALLTESTPRGS     := $(TESTPRGS_C) $(TESTSPRGS_C) $(TESTSYSPRGS_C)
+TESTPRGS_C      := $(patsubst $(TESTDIR)/%.c,%,$(TESTSRCS_C))
+TESTOBJS_C      := $(patsubst %,$(TESTBINDIR)/%.o,$(TESTPRGS_C))
+TESTPRGS        := $(patsubst %,$(TESTBINDIR)/%,$(TESTPRGS_C))
+TESTSPRGS       := $(patsubst %,%_static,$(TESTPRGS))
+TESTSYSPRGS     := $(patsubst %,%_syslib,$(TESTPRGS))
+ALLTESTPRGS     := $(TESTPRGS) $(TESTSPRGS) $(TESTSYSPRGS)
 TESTRUNS        := $(patsubst \
-                     $(TESTNAMEPREFIX)%,$(TESTRUNPREFIX)%,$(TESTPRGS_C))
+                     $(TESTBINPREFIX)%,$(TESTRUNPREFIX)%,$(TESTPRGS))
 TESTSRUNS       := $(patsubst \
-                     $(TESTNAMEPREFIX)%,$(TESTRUNPREFIX)%,$(TESTSPRGS_C))
+                     $(TESTBINPREFIX)%,$(TESTRUNPREFIX)%,$(TESTSPRGS))
 TESTSYSRUNS     := $(patsubst \
-                     $(TESTNAMEPREFIX)%,$(TESTRUNPREFIX)%,$(TESTSYSPRGS_C))
+                     $(TESTBINPREFIX)%,$(TESTRUNPREFIX)%,$(TESTSYSPRGS))
 REALPATHSRCS_C  := $(wildcard $(TESTNAMEPREFIX)realpath*.c)
 REALPATHRUNS    := $(patsubst \
                      $(TESTNAMEPREFIX)%.c,$(TESTRUNPREFIX)%,$(REALPATHSRCS_C))
@@ -194,29 +199,37 @@ PACKETRUNS      := $(patsubst \
 MANTESTDIR       = manual_tests
 MANTESTPREFIX    = $(MANTESTDIR)/
 MANLIBTESTPFX    = $(MANTESTDIR)/libtest_
+MANTESTBINPREFIX = $(TESTBINDIR)/
 MANRUNPREFIX     = mantest_
 MANTESTLDFLAGS   = $(ALLLDFLAGS)
 MANALLTESTSRCS_C := $(wildcard $(MANTESTPREFIX)*.c)
 MANLIBTESTSRCS_C := $(wildcard $(MANLIBTESTPFX)*.c)
-MANTESTSRCS_C   := $(filter-out $(MANLIBTESTSRCS_C),$(MANALLTESTSRCS_C))
-MANTESTSRCS_CPP := $(wildcard $(MANTESTPREFIX)*.cpp)
-MANTESTOBJS_C   := $(patsubst %.c,%.o,$(MANTESTSRCS_C))
-MANLIBTESTOBJS_C := $(patsubst %.c,%.o,$(MANLIBTESTSRCS_C))
-MANTESTOBJS_CPP := $(patsubst %.cpp,%.o,$(MANTESTSRCS_CPP))
-MANTESTPRGS_C   := $(patsubst %.c,%,$(MANTESTSRCS_C))
-MANLIBTESTPRGS_C := $(patsubst %.c,%,$(MANLIBTESTSRCS_C))
-MANTESTPRGS_CPP := $(patsubst %.cpp,%,$(MANTESTSRCS_CPP))
-MANTESTPRGS      = $(MANTESTPRGS_C) $(MANTESTPRGS_CPP)
-MANTESTRUNS     := $(patsubst \
-                     $(MANTESTPREFIX)%,$(MANRUNPREFIX)%,$(MANTESTPRGS))
+MANTESTSRCS_C    := $(filter-out $(MANLIBTESTSRCS_C),$(MANALLTESTSRCS_C))
+MANTESTSRCS_CPP  := $(wildcard $(MANTESTPREFIX)*.cpp)
+MANTESTPRGS_C    := $(patsubst $(MANTESTPREFIX)%.c,%,$(MANTESTSRCS_C))
+MANLIBTESTPRGS_C := $(patsubst $(MANLIBTESTPFX)%.c,%,$(MANLIBTESTSRCS_C))
+MANTESTPRGS_CPP  := $(patsubst $(MANTESTPREFIX)%.cpp,%,$(MANTESTSRCS_CPP))
+MANTESTOBJS_C    := $(patsubst %,$(TESTBINDIR)/%.o,$(MANTESTPRGS_C))
+MANLIBTESTOBJS_C := $(patsubst %,$(TESTBINDIR)/%.o,$(MANLIBTESTPRGS_C))
+MANTESTOBJS_CPP  := $(patsubst %,$(TESTBINDIR)/%.o,$(MANTESTPRGS_CPP))
+MANTESTOBJS      := $(MANTESTOBJS_C) $(MANLIBTESTOBJS_C) $(MANTESTOBJS_CPP)
+MANTESTBINS_C    := $(patsubst %,$(TESTBINDIR)/%,$(MANTESTPRGS_C))
+MANTESTBINS_CPP  := $(patsubst %,$(TESTBINDIR)/%,$(MANTESTPRGS_CPP))
+MANTESTPRGS      := $(MANTESTBINS_C) $(MANTESTBINS_CPP)
+MANTESTRUNS      := $(patsubst \
+                     $(TESTBINDIR)/%,$(MANRUNPREFIX)%,$(MANTESTPRGS))
+MANLIBTESTBINS   := $(patsubst %,$(TESTBINDIR)/%,$(MANLIBTESTPRGS_C))
 MANLIBTESTRUNS  := $(patsubst \
-                     $(MANLIBTESTPFX)%,$(MANRUNPREFIX)%,$(MANLIBTESTPRGS_C))
-STPNCHKSRCS_C    := $(wildcard $(MANTESTPREFIX)stpncpy_chk*.c)
+                     $(TESTBINDIR)/%,$(MANRUNPREFIX)%,$(MANLIBTESTBINS))
+STPNCHKSRCS_C    := $(wildcard $(MANLIBTESTPFX)stpncpy_chk*.c)
 STPNCHKRUNS      := $(patsubst \
-                     $(MANTESTPREFIX)%.c,$(MANRUNPREFIX)%,$(STPNCHKSRCS_C))
-STRNCHKSRCS_C    := $(wildcard $(MANTESTPREFIX)strncpy_chk*.c)
+                     $(MANLIBTESTPFX)%.c,$(MANRUNPREFIX)%,$(STPNCHKSRCS_C))
+STRNCHKSRCS_C    := $(wildcard $(MANLIBTESTPFX)strncpy_chk*.c)
 STRNCHKRUNS      := $(patsubst \
-                     $(MANTESTPREFIX)%.c,$(MANRUNPREFIX)%,$(STRNCHKSRCS_C))
+                     $(MANLIBTESTPFX)%.c,$(MANRUNPREFIX)%,$(STRNCHKSRCS_C))
+MANPACKETSRCS_C  := $(wildcard $(MANLIBTESTPFX)packet*.c)
+MANPACKETRUNS    := $(patsubst \
+                     $(MANLIBTESTPFX)%.c,$(MANRUNPREFIX)%,$(MANPACKETSRCS_C))
 
 # C standard for tests
 TESTCSTD         := c99
@@ -272,7 +285,7 @@ $(SOBJLIST): $(SLIBOBJS)
 	if [ ! -s $@ ]; then echo $(DUMMYOBJ) > $@; fi
 
 # Make the directories separate targets to avoid collisions in parallel builds.
-$(BUILDDIR) $(TIGERBINDIR) $(BUILDLIBDIR) \
+$(BUILDDIR) $(TIGERBINDIR) $(BUILDLIBDIR) $(TESTBINDIR) \
     $(DESTDIR)$(LIBDIR) $(DESTDIR)$(BINDIR) \
     $(DESTDIR)$(MAN1DIR) $(DESTDIR)$(MAN3DIR) \
     $(TEST_TEMP):
@@ -299,40 +312,49 @@ $(XLIBPATH): $(BUILDSYSLIBPATH)
 	$(MKINSTALLDIRS) $(XLIBDIR)
 	cd $(XLIBDIR) && ln -sf ../$< ../$@
 
-$(TESTOBJS_C) $(MANTESTOBJS_C) $(MANLIBTESTOBJS_C): %.o: %.c $(ALLHEADERS)
+$(TESTOBJS_C): $(TESTBINDIR)/%.o: $(TESTDIR)/%.c $(ALLHEADERS) | $(TESTBINDIR)
 	$(CC) -c -std=$(TESTCSTD) -I$(SRCINCDIR) $(TESTCFLAGS) $< -o $@
 
-$(TESTPRGS_C): %: %.o $(BUILDDLIBPATH)
+$(MANTESTOBJS_C): \
+    $(TESTBINDIR)/%.o: $(MANTESTDIR)/%.c $(ALLHEADERS) | $(TESTBINDIR)
+	$(CC) -c -std=$(TESTCSTD) -I$(SRCINCDIR) $(TESTCFLAGS) $< -o $@
+
+$(MANLIBTESTOBJS_C): \
+    $(TESTBINDIR)/%.o: $(MANLIBTESTPFX)%.c $(ALLHEADERS) | $(TESTBINDIR)
+	$(CC) -c -std=$(TESTCSTD) -I$(SRCINCDIR) $(TESTCFLAGS) $< -o $@
+
+$(MANTESTOBJS_CPP): $(TESTBINDIR)/%.o: \
+    $(MANTESTDIR)/%.cpp $(ALLHEADERS) | $(TESTBINDIR)
+	$(CXX) -c -I$(SRCINCDIR) $(ALLCXXFLAGS) $< -o $@
+
+$(TESTPRGS): %: %.o $(BUILDDLIBPATH)
 	$(CC) $(TESTLDFLAGS) $< $(TESTLIBS) -o $@
 
 # Build tests with *only* our replacement syslib.
-$(TESTSYSPRGS_C): %_syslib: %.o $(XLIBPATH)
+$(TESTSYSPRGS): %_syslib: %.o $(XLIBPATH)
 	$(CC) $(TESTSYSLDFLAGS) $< -o $@
 
-$(TESTSPRGS_C): %_static: %.o $(BUILDSLIBPATH)
+$(TESTSPRGS): %_static: %.o $(BUILDSLIBPATH)
 	$(CC) $(ALLLDFLAGS) $< $(BUILDSLIBPATH) -o $@
 
 # The "darwin_c" tests need the -fno-builtin option with some compilers.
-$(XTESTOBJS_C): %.o: %.c $(ALLHEADERS)
+$(XTESTOBJS_C): $(TESTBINDIR)/%.o: $(XTESTDIR)/%.c $(ALLHEADERS) | $(TESTBINDIR)
 	$(CC) -c -std=$(TESTCSTD) -fno-builtin -I$(SRCINCDIR) $(TESTCFLAGS) $< -o $@
 
 # The xtests don't require the library
-$(XTESTPRGS_C): %: %.o
+$(XTESTPRGS): %: %.o
 	$(CC) $(XTESTLDFLAGS) $< -o $@
 
 # Currently, the manual C tests don't require the library
-$(MANTESTPRGS_C): %: %.o
+$(MANTESTBINS): %: %.o
 	$(CC) $(MANTESTLDFLAGS) $< -o $@
 
 # Except for the ones that do
-$(MANLIBTESTPRGS_C): %: %.o $(BUILDDLIBPATH)
+$(MANLIBTESTBINS): %: %.o $(BUILDDLIBPATH)
 	$(CC) $(TESTLDFLAGS) $< $(TESTLIBS) -o $@
 
 # And the manual C++ tests *do* require the library
-$(MANTESTOBJS_CPP): %.o: %.cpp $(ALLHEADERS)
-	$(CXX) -c -I$(SRCINCDIR) $(ALLCXXFLAGS) $< -o $@
-
-$(MANTESTPRGS_CPP): %: %.o $(BUILDDLIBPATH)
+$(MANTESTBINS_CPP): %: %.o $(BUILDDLIBPATH)
 	$(CXX) $(TESTLDFLAGS) $< $(TESTLIBS) -o $@
 
 alltestobjs: $(TESTOBJS_C) $(XTESTOBJS_C) $(MANTESTOBJS_C) $(MANLIBTESTOBJS_C)
@@ -354,98 +376,99 @@ leopard-bins:
 # functions being tested were not introduced until c++11. GCC
 # correctly fails the compile and link using c++03 or older, but
 # succeeds using c++11 -- as desired.
-test_cmath: test/test_cmath.cc $(ALLHEADERS)
+test_cmath: test/test_cmath.cc $(ALLHEADERS) | $(TESTBINDIR)
 	$(info 1: testing compiler '$(CXX)' for non-legacy cmath using c++03; the build should fail, regardless of the compiler or OS)
-	$(info 1: $(CXX) $(ALLCXXFLAGS) -std=c++03 $< -o test/$@_cxx03)
-	@-$(CXX) -I$(SRCINCDIR) $(ALLCXXFLAGS) -std=c++03 $< -o test/$@_cxx03 &> /dev/null && echo "1: c++03 no legacy cmath build success (test failed)!" || echo "1: c++03 no legacy cmath build failure (test succeeded)!"
+	$(info 1: $(CXX) $(ALLCXXFLAGS) -std=c++03 $< -o $(TESTBINDIR)/$@_cxx03)
+	@-$(CXX) -I$(SRCINCDIR) $(ALLCXXFLAGS) -std=c++03 $< -o $(TESTBINDIR)/$@_cxx03 &> /dev/null && echo "1: c++03 no legacy cmath build success (test failed)!" || echo "1: c++03 no legacy cmath build failure (test succeeded)!"
 	$(info 2: testing compiler '$(CXX)' for non-legacy cmath using c++03; the build should fail, regardless of the compiler or OS)
-	$(info 2: $(CXX) -I$(SRCINCDIR) $(ALLCXXFLAGS) -std=c++03 $< -o test/$@_cxx03)
-	@-$(CXX) -I$(SRCINCDIR) $(ALLCXXFLAGS) -std=c++03 $< -o test/$@_cxx03 &> /dev/null && echo "2: c++03 legacy cmath build success (test failed)!" || echo "2: c++03 legacy cmath build failure (test succeeded)!"
+	$(info 2: $(CXX) -I$(SRCINCDIR) $(ALLCXXFLAGS) -std=c++03 $< -o $(TESTBINDIR)/$@_cxx03)
+	@-$(CXX) -I$(SRCINCDIR) $(ALLCXXFLAGS) -std=c++03 $< -o $(TESTBINDIR)/$@_cxx03 &> /dev/null && echo "2: c++03 legacy cmath build success (test failed)!" || echo "2: c++03 legacy cmath build failure (test succeeded)!"
 	$(info 3: testing compiler '$(CXX)' for non-legacy cmath using c++11; if the compiler supports this standard, then the build should succeed regardless of OS)
-	$(info 3: $(CXX) $(ALLCXXFLAGS) -std=c++11 $< -o test/$@_cxx11)
-	@-$(CXX) $(ALLCXXFLAGS) -std=c++11 $< -o test/$@_cxx11 &> /dev/null && echo "3: c++11 no legacy cmath build success (test failed)!" || echo "3: c++11 no legacy cmath build failure (test succeeded)!"
+	$(info 3: $(CXX) $(ALLCXXFLAGS) -std=c++11 $< -o $(TESTBINDIR)/$@_cxx11)
+	@-$(CXX) $(ALLCXXFLAGS) -std=c++11 $< -o $(TESTBINDIR)/$@_cxx11 &> /dev/null && echo "3: c++11 no legacy cmath build success (test failed)!" || echo "3: c++11 no legacy cmath build failure (test succeeded)!"
 	$(info 4: testing compiler '$(CXX)' for legacy cmath using c++11; if the compiler supports this standard, then the build should succeed regardless of OS)
-	$(info 4: $(CXX) -I$(SRCINCDIR) $(ALLCXXFLAGS) -std=c++11 $< -o test/$@_cxx11)
-	@-$(CXX) -I$(SRCINCDIR) $(ALLCXXFLAGS) -std=c++11 $< -o test/$@_cxx11 &> /dev/null && echo "4: c++11 legacy cmath build success (test succeeded)!" || echo "4: c++11 legacy cmath build failure (test failed)!"
+	$(info 4: $(CXX) -I$(SRCINCDIR) $(ALLCXXFLAGS) -std=c++11 $< -o $(TESTBINDIR)/$@_cxx11)
+	@-$(CXX) -I$(SRCINCDIR) $(ALLCXXFLAGS) -std=c++11 $< -o $(TESTBINDIR)/$@_cxx11 &> /dev/null && echo "4: c++11 legacy cmath build success (test succeeded)!" || echo "4: c++11 legacy cmath build failure (test failed)!"
 
 # Special clause for testing faccessat in a setuid program.
 # Must be run by root.
 # Assumes there is a _uucp user.
 # Tests setuid _uucp, setuid root, and setgid tty.
-test_faccessat_setuid: test/test_faccessat
-	@test/do_test_faccessat_setuid "$(BUILDDLIBPATH)"
+test_faccessat_setuid: $(TESTBINDIR)/test_faccessat_static | $(TEST_TEMP)
+	@test/do_test_faccessat_setuid
 
 test_faccessat_setuid_msg:
 	@echo 'Run "sudo make test_faccessat_setuid" to test faccessat properly (Not on 10.4)'
 
-$(TESTRUNS): $(TESTRUNPREFIX)%: $(TESTNAMEPREFIX)% | $(TEST_TEMP)
+$(TESTRUNS): $(TESTRUNPREFIX)%: $(TESTBINPREFIX)% | $(TEST_TEMP)
 	$< $(TEST_ARGS)
 
-$(TESTSRUNS): $(TESTRUNPREFIX)%: $(TESTNAMEPREFIX)% | $(TEST_TEMP)
+$(TESTSRUNS): $(TESTRUNPREFIX)%: $(TESTBINPREFIX)% | $(TEST_TEMP)
 	$< $(TEST_ARGS)
 
-$(TESTSYSRUNS): $(TESTRUNPREFIX)%: $(TESTNAMEPREFIX)% | $(TEST_TEMP)
+$(TESTSYSRUNS): $(TESTRUNPREFIX)%: $(TESTBINPREFIX)% | $(TEST_TEMP)
 	$< $(TEST_ARGS)
 
-$(XTESTRUNS): $(XTESTRUNPREFIX)%: $(XTESTNAMEPREFIX)% | $(TEST_TEMP)
+$(XTESTRUNS): $(XTESTRUNPREFIX)%: $(XTESTBINPREFIX)% | $(TEST_TEMP)
 	$< $(TEST_ARGS)
 
-$(MANLIBTESTRUNS): $(MANRUNPREFIX)%: $(MANLIBTESTPFX)% | $(TEST_TEMP)
+$(MANTESTRUNS) $(MANLIBTESTRUNS): \
+    $(MANRUNPREFIX)%: $(MANTESTBINPREFIX)% | $(TEST_TEMP)
 	$< $(TEST_ARGS)
 
 # The "dirfuncs_compat" test includes the fdopendir test source
 $(TESTNAMEPREFIX)dirfuncs_compat.o: $(TESTNAMEPREFIX)fdopendir.c
 
 # The "forced" tests include the unforced source
-$(TESTNAMEPREFIX)stpncpy_chk_forced.o: $(TESTNAMEPREFIX)stpncpy_chk.c
-$(TESTNAMEPREFIX)stpncpy_chk_force0.o: $(TESTNAMEPREFIX)stpncpy_chk.c
-$(TESTNAMEPREFIX)stpncpy_chk_force1.o: $(TESTNAMEPREFIX)stpncpy_chk.c
-$(TESTNAMEPREFIX)strncpy_chk_forced.o: $(TESTNAMEPREFIX)strncpy_chk.c
-$(TESTNAMEPREFIX)strncpy_chk_force0.o: $(TESTNAMEPREFIX)strncpy_chk.c
-$(TESTNAMEPREFIX)strncpy_chk_force1.o: $(TESTNAMEPREFIX)strncpy_chk.c
+$(MANTESTBINPREFIX)stpncpy_chk_forced.o: $(MANLIBTESTPFX)stpncpy_chk.c
+$(MANTESTBINPREFIX)stpncpy_chk_force0.o: $(MANLIBTESTPFX)stpncpy_chk.c
+$(MANTESTBINPREFIX)stpncpy_chk_force1.o: $(MANLIBTESTPFX)stpncpy_chk.c
+$(MANTESTBINPREFIX)strncpy_chk_forced.o: $(MANLIBTESTPFX)strncpy_chk.c
+$(MANTESTBINPREFIX)strncpy_chk_force0.o: $(MANLIBTESTPFX)strncpy_chk.c
+$(MANTESTBINPREFIX)strncpy_chk_force1.o: $(MANLIBTESTPFX)strncpy_chk.c
 
 # The "darwin_c" tests include the basic "darwin_c" source
-$(XTESTNAMEPREFIX)darwin_c_199309.o: $(XTESTNAMEPREFIX)darwin_c.c
-$(XTESTNAMEPREFIX)darwin_c_200809.o: $(XTESTNAMEPREFIX)darwin_c.c
-$(XTESTNAMEPREFIX)darwin_c_full.o: $(XTESTNAMEPREFIX)darwin_c.c
+$(XTESTBINPREFIX)darwin_c_199309.o: $(XTESTNAMEPREFIX)darwin_c.c
+$(XTESTBINPREFIX)darwin_c_200809.o: $(XTESTNAMEPREFIX)darwin_c.c
+$(XTESTBINPREFIX)darwin_c_full.o: $(XTESTNAMEPREFIX)darwin_c.c
 
 # The "scandir_*" tests include the basic "scandir" source
-$(XTESTNAMEPREFIX)scandir_old.o: $(XTESTNAMEPREFIX)scandir.c
-$(XTESTNAMEPREFIX)scandir_ino32.o: $(XTESTNAMEPREFIX)scandir.c
-$(XTESTNAMEPREFIX)scandir_ino64.o: $(XTESTNAMEPREFIX)scandir.c
+$(XTESTBINPREFIX)scandir_old.o: $(XTESTNAMEPREFIX)scandir.c
+$(XTESTBINPREFIX)scandir_ino32.o: $(XTESTNAMEPREFIX)scandir.c
+$(XTESTBINPREFIX)scandir_ino64.o: $(XTESTNAMEPREFIX)scandir.c
 
 # The nonstandard realpath tests include the realpath source
-$(TESTNAMEPREFIX)realpath_nonext.o: $(TESTNAMEPREFIX)realpath.c
-$(TESTNAMEPREFIX)realpath_nonposix.o: $(TESTNAMEPREFIX)realpath.c
-$(TESTNAMEPREFIX)realpath_compat.o: $(TESTNAMEPREFIX)realpath.c
+$(TESTBINPREFIX)realpath_nonext.o: $(TESTNAMEPREFIX)realpath.c
+$(TESTBINPREFIX)realpath_nonposix.o: $(TESTNAMEPREFIX)realpath.c
+$(TESTBINPREFIX)realpath_compat.o: $(TESTNAMEPREFIX)realpath.c
 
 # The fdopendir_ino?? tests include the fdopendir source
-$(TESTNAMEPREFIX)fdopendir_ino32.o: $(TESTNAMEPREFIX)fdopendir.c
-$(TESTNAMEPREFIX)fdopendir_ino64.o: $(TESTNAMEPREFIX)fdopendir.c
+$(TESTBINPREFIX)fdopendir_ino32.o: $(TESTNAMEPREFIX)fdopendir.c
+$(TESTBINPREFIX)fdopendir_ino64.o: $(TESTNAMEPREFIX)fdopendir.c
 
 # The stat_ino?? tests include the stat source
-$(TESTNAMEPREFIX)stat_darwin.o: $(TESTNAMEPREFIX)stat.c
-$(TESTNAMEPREFIX)stat_ino32.o: $(TESTNAMEPREFIX)stat.c
-$(TESTNAMEPREFIX)stat_ino64.o: $(TESTNAMEPREFIX)stat.c
-$(TESTNAMEPREFIX)stat_ino64_darwin.o: $(TESTNAMEPREFIX)stat.c
+$(TESTBINPREFIX)stat_darwin.o: $(TESTNAMEPREFIX)stat.c
+$(TESTBINPREFIX)stat_ino32.o: $(TESTNAMEPREFIX)stat.c
+$(TESTBINPREFIX)stat_ino64.o: $(TESTNAMEPREFIX)stat.c
+$(TESTBINPREFIX)stat_ino64_darwin.o: $(TESTNAMEPREFIX)stat.c
 
 # The packet_* tests include the packet source
-$(TESTNAMEPREFIX)packet_nocancel.o: $(TESTNAMEPREFIX)packet.c
-$(TESTNAMEPREFIX)packet_nonposix.o: $(TESTNAMEPREFIX)packet.c
+$(TESTBINPREFIX)packet_nocancel.o: $(TESTNAMEPREFIX)packet.c
+$(TESTBINPREFIX)packet_nonposix.o: $(TESTNAMEPREFIX)packet.c
 
 # The manual packet tests include the packet source
-$(MANTESTPREFIX)libtest_packet_cont.o: $(TESTNAMEPREFIX)packet.c
-$(MANTESTPREFIX)libtest_packet_nofix.o: $(TESTNAMEPREFIX)packet.c
-$(MANTESTPREFIX)libtest_packet_nofix_nocancel.o: $(TESTNAMEPREFIX)packet.c
-$(MANTESTPREFIX)libtest_packet_nofix_nonposix.o: $(TESTNAMEPREFIX)packet.c
+$(MANTESTBINPREFIX)packet_cont.o: $(TESTNAMEPREFIX)packet.c
+$(MANTESTBINPREFIX)packet_nofix.o: $(TESTNAMEPREFIX)packet.c
+$(MANTESTBINPREFIX)packet_nofix_nocancel.o: $(TESTNAMEPREFIX)packet.c
+$(MANTESTBINPREFIX)packet_nofix_nonposix.o: $(TESTNAMEPREFIX)packet.c
 
 # The "allheaders" tests include the basic "allheaders" source
-$(XTESTNAMEPREFIX)allheaders_199309.o: $(XTESTNAMEPREFIX)allheaders.c
-$(XTESTNAMEPREFIX)allheaders_200809.o: $(XTESTNAMEPREFIX)allheaders.c
-$(XTESTNAMEPREFIX)allheaders_full.o: $(XTESTNAMEPREFIX)allheaders.c
-$(XTESTNAMEPREFIX)allheaders_199309_ds.o: $(XTESTNAMEPREFIX)allheaders.c
-$(XTESTNAMEPREFIX)allheaders_200809_ds.o: $(XTESTNAMEPREFIX)allheaders.c
-$(XTESTNAMEPREFIX)allheaders_full_ds.o: $(XTESTNAMEPREFIX)allheaders.c
+$(XTESTBINPREFIX)allheaders_199309.o: $(XTESTNAMEPREFIX)allheaders.c
+$(XTESTBINPREFIX)allheaders_200809.o: $(XTESTNAMEPREFIX)allheaders.c
+$(XTESTBINPREFIX)allheaders_full.o: $(XTESTNAMEPREFIX)allheaders.c
+$(XTESTBINPREFIX)allheaders_199309_ds.o: $(XTESTNAMEPREFIX)allheaders.c
+$(XTESTBINPREFIX)allheaders_200809_ds.o: $(XTESTNAMEPREFIX)allheaders.c
+$(XTESTBINPREFIX)allheaders_full_ds.o: $(XTESTNAMEPREFIX)allheaders.c
 
 # Provide a target for all "darwin_c" tests
 $(XTESTRUNPREFIX)darwin_c_all: $(DARWINRUNS)
@@ -471,11 +494,11 @@ $(MANRUNPREFIX)strncpy_chk_all: $(STRNCHKRUNS)
 # Provide a target for all non-manual "packet" tests
 $(TESTRUNPREFIX)packet_all: $(PACKETRUNS)
 
+# Provide a target for all manual "packet" tests
+$(MANRUNPREFIX)packet_all: $(MANPACKETRUNS)
+
 # Provide a target for all "allheaders" tests
 $(XTESTRUNPREFIX)allheaders_all: $(ALLHDRRUNS)
-
-$(MANTESTRUNS): $(MANRUNPREFIX)%: $(MANTESTPREFIX)% | $(TEST_TEMP)
-	$< $(TEST_ARGS)
 
 install: install-headers install-lib
 
@@ -525,11 +548,11 @@ xtest: $(XTESTRUNS)
 
 # Targets to build tests without running them
 
-build_tests: $(TESTPRGS_C) $(XTESTPRGS_C)
+build_tests: $(TESTPRGS) $(XTESTPRGS)
 
-build_tests_static: $(TESTSPRGS_C)
+build_tests_static: $(TESTSPRGS)
 
-build_tests_syslib: $(TESTSYSPRGS_C)
+build_tests_syslib: $(TESTSYSPRGS)
 
 build_tests_all: build_tests build_tests_static build_tests_syslib
 
@@ -537,31 +560,35 @@ build_tests_all: build_tests build_tests_static build_tests_syslib
 dummy:
 
 xtest_clean:
-	$(RM) $(XTESTDIR)/*.o $(XTESTPRGS)
+	$(RM) $(XTESTOBJS_C) $(XTESTPRGS)
 
 $(MANRUNPREFIX)clean:
-	$(RM) $(MANTESTDIR)/*.o $(MANTESTPRGS)
+	$(RM) $(MANTESTOBJS) $(MANTESTPRGS) $(MANLIBTESTBINS)
 
-test_clean: xtest_clean $(MANRUNPREFIX)clean
-	$(RM) $(TESTDIR)/*.o $(ALLTESTPRGS)
-	$(RM) test/test_cmath_* test/test_faccessat_setuid
-	$(RMDIR) $(XLIBDIR)
-	$(RMDIR) $(TEST_TEMP)
+test_clean:
+	$(RMDIR) $(TESTBINDIR) $(XLIBDIR) $(TEST_TEMP)
 
 tools_clean:
 	$(RM) $(TOOLDIR)*.o $(TOOLDIR)/boottime $(TOOLDIR)/clock_info
 	$(RM) $(TOOLDIR)/mach_time $(TOOLDIR)/realpath_test
 
-clean: $(MANRUNPREFIX)clean test_clean tools_clean
+clean: test_clean tools_clean
 	$(RMDIR) $(BUILDDIR) $(BUILDLIBDIR) $(TIGERBINDIR)
 
 .PHONY: all dlib syslib slib clean check test test_cmath xtest
 .PHONY: test_static test_syslib test_all
 .PHONY: $(TESTRUNS) $(XTESTRUNS) $(MANTESTRUNS)
 .PHONY: $(MANRUNPREFIX)clean test_clean xtest_clean
+.PHONY: $(XTESTRUNPREFIX)darwin_c_all
 .PHONY: $(XTESTRUNPREFIX)scandir_all
+.PHONY: $(TESTRUNPREFIX)realpath_all
 .PHONY: $(TESTRUNPREFIX)fdopendir_all
 .PHONY: $(TESTRUNPREFIX)stat_all
+.PHONY: $(MANRUNPREFIX)stpncpy_chk_all
+.PHONY: $(MANRUNPREFIX)strncpy_chk_all
+.PHONY: $(TESTRUNPREFIX)packet_all
+.PHONY: $(MANRUNPREFIX)packet_all
+.PHONY: $(XTESTRUNPREFIX)allheaders_all
 .PHONY: install install-headers install-lib install-dlib install-slib
 .PHONY: tiger-bins install-tiger
 .PHONY: leopard-bins install-leopard

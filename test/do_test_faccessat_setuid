@@ -27,8 +27,7 @@ fi
 
 # Define some names and functions
 
-lib="$1"
-s=test/test_faccessat_setuid
+s=tbin/test_faccessat_setuid
 t=test/tmp
 fail=0
 
@@ -44,11 +43,7 @@ setid() # usage: setid owner group mode fname [createcmd]
 
 setup() # usage: setup owner group mode
 {
-	cp test/test_faccessat $s || die "cp $s failed"
-	# The following replaces the @executable_path-based library reference
-	# with an absolute path reference to the library-being-tested.
-	# This is needed for a setuid/setgid program to be allowed to load a library.
-	install_name_tool -change "@executable_path/../$lib" "$(pwd)/$lib" $s || die "install_name_tool $s failed"
+	cp tbin/test_faccessat_static $s || die "cp $s failed"
 	setid $1 $2 $3 $s
 	setid $1 $2 $3 $t mkdir
 }
