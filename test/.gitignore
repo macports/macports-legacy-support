@@ -1,9 +1,0 @@
-*
-!.gitignore
-!*.h
-!*.c
-!*.cc
-!*.cpp
-!do_test_faccessat_setuid
-!*.txt
-!*_link

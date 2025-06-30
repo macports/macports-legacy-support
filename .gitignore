@@ -7,4 +7,5 @@ lib
 *~
 *.dSYM
 *.tmp
-tst_data/*
+tst_data
+tbin

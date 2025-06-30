@@ -4,4 +4,4 @@
 
 #define _FORTIFY_SOURCE 1
 
-#include "stpncpy_chk.c"
+#include "libtest_stpncpy_chk.c"
