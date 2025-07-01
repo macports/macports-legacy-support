@@ -63,16 +63,23 @@ struct stat64 __DARWIN_STRUCT_STAT64;
  * values of timestamps.  Since sub-second values are not actually supported
  * in this OS version, the fix is simply to add wrappers that clear all
  * tv_nsec values in the results.
+ *
+ * We arrange to pass through the result of the underlying *stat*() call,
+ * for convenience.  We only apply the fix in the success case.
  */
 
 /* Clear all tv_nsec values in the structure */
-static void
-fix_stat(struct stat *buf)
+static __inline__ int
+fix_stat(int result, struct stat *buf)
 {
+  if (MPLS_SLOWPATH(result)) return result;
+
   buf->st_atimespec.tv_nsec = 0;
   buf->st_mtimespec.tv_nsec = 0;
   buf->st_ctimespec.tv_nsec = 0;
   /* Note that the non-ino64 version has no birthtime. */
+
+  return 0;
 }
 
 /* Now all the wrapper functions */
@@ -80,34 +87,22 @@ fix_stat(struct stat *buf)
 int
 stat(const char *path, struct stat *buf)
 {
-  int ret;
   GET_OS_FUNC(stat)
-
-  ret = (*os_stat)(path, buf);
-  if (!ret) fix_stat(buf);
-  return ret;
+  return fix_stat((*os_stat)(path, buf), buf);
 }
 
 int
 lstat(const char *path, struct stat *buf)
 {
-  int ret;
   GET_OS_FUNC(lstat)
-
-  ret = (*os_lstat)(path, buf);
-  if (!ret) fix_stat(buf);
-  return ret;
+  return fix_stat((*os_lstat)(path, buf), buf);
 }
 
 int
 fstat(int fildes, struct stat *buf)
 {
-  int ret;
   GET_OS_FUNC(fstat)
-
-  ret = (*os_fstat)(fildes, buf);
-  if (!ret) fix_stat(buf);
-  return ret;
+  return fix_stat((*os_fstat)(fildes, buf), buf);
 }
 
 /*
@@ -118,34 +113,22 @@ fstat(int fildes, struct stat *buf)
 int
 statx_np(const char *path, struct stat *buf, filesec_t fsec)
 {
-  int ret;
   GET_OS_FUNC(statx_np)
-
-  ret = (*os_statx_np)(path, buf, fsec);
-  if (!ret) fix_stat(buf);
-  return ret;
+  return fix_stat((*os_statx_np)(path, buf, fsec), buf);
 }
 
 int
 lstatx_np(const char *path, struct stat *buf, filesec_t fsec)
 {
-  int ret;
   GET_OS_FUNC(lstatx_np)
-
-  ret = (*os_lstatx_np)(path, buf, fsec);
-  if (!ret) fix_stat(buf);
-  return ret;
+  return fix_stat((*os_lstatx_np)(path, buf, fsec), buf);
 }
 
 int
 fstatx_np(int fildes, struct stat *buf, filesec_t fsec)
 {
-  int ret;
   GET_OS_FUNC(fstatx_np)
-
-  ret = (*os_fstatx_np)(fildes, buf, fsec);
-  if (!ret) fix_stat(buf);
-  return ret;
+  return fix_stat((*os_fstatx_np)(fildes, buf, fsec), buf);
 }
 
 #endif /* __MPLS_LIB_FIX_TIGER_PPC64__ */
