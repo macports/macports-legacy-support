@@ -235,7 +235,11 @@ static void
 report_stat(const char *name, lstat_fn_t *os_lstat, int verbose)
 {
   int err;
-  struct stat sb;
+  /* Paranoia - make sure we can accomodate an unexpected stat64 */
+  union stat_u {
+    struct stat s;
+    struct s64 __DARWIN_STRUCT_STAT64 s64;
+  } sb;
   char rpath[MAXPATHLEN];
 
   printf("lstat() for '%s':\n", name);
@@ -247,17 +251,17 @@ report_stat(const char *name, lstat_fn_t *os_lstat, int verbose)
       printf("  full path is %s\n", rpath);
     }
   }
-  err = (*os_lstat)(name, &sb);
+  err = (*os_lstat)(name, &sb.s);
   if (err) {
     printf("  *** failed: %s (%d)\n", strerror(errno), errno);
     return;
   }
-  report_type(sb.st_mode);
-  report_time("atime    ", &sb.st_atimespec);
-  report_time("mtime    ", &sb.st_mtimespec);
-  report_time("ctime    ", &sb.st_ctimespec);
+  report_type(sb.s.st_mode);
+  report_time("atime    ", &sb.s.st_atimespec);
+  report_time("mtime    ", &sb.s.st_mtimespec);
+  report_time("ctime    ", &sb.s.st_ctimespec);
 #ifdef _DARWIN_FEATURE_64_BIT_INODE
-  report_time("birthtime", &sb.st_birthtimespec);
+  report_time("birthtime", &sb.s.st_birthtimespec);
 #endif
 }
 
