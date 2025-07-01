@@ -28,7 +28,7 @@ fi
 # Define some names and functions
 
 s=tbin/test_faccessat_setuid
-t=test/tmp
+t=tst_data/tmp
 fail=0
 
 die() { echo "$0: $@" >&2; rm -rf $s $t; exit 1; }

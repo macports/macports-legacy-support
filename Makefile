@@ -394,11 +394,8 @@ test_cmath: test/test_cmath.cc $(ALLHEADERS) | $(TESTBINDIR)
 # Must be run by root.
 # Assumes there is a _uucp user.
 # Tests setuid _uucp, setuid root, and setgid tty.
-test_faccessat_setuid: $(TESTBINDIR)/test_faccessat_static | $(TEST_TEMP)
-	@test/do_test_faccessat_setuid
-
-test_faccessat_setuid_msg:
-	@echo 'Run "sudo make test_faccessat_setuid" to test faccessat properly (Not on 10.4)'
+mantest_faccessat_setuid: $(TESTBINDIR)/test_faccessat_static | $(TEST_TEMP)
+	@manual_tests/do_test_faccessat_setuid.sh
 
 $(TESTRUNS): $(TESTRUNPREFIX)%: $(TESTBINPREFIX)% | $(TEST_TEMP)
 	$< $(TEST_ARGS)
@@ -536,7 +533,7 @@ install-tiger: $(TIGERPRGS) | $(DESTDIR)$(BINDIR) \
 install-leopard: | $(DESTDIR)$(MAN3DIR)
 	$(INSTALL_MAN) $(SRCMAN3S) $(DESTDIR)$(MAN3DIR)
 
-test check: $(TESTRUNS) $(XTESTRUNS) test_cmath test_faccessat_setuid_msg
+test check: $(TESTRUNS) $(XTESTRUNS) test_cmath
 
 test_static: $(TESTSRUNS)
 

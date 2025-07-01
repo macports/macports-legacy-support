@@ -24,6 +24,10 @@
 #include <pwd.h>
 #include <grp.h>
 
+#ifndef TEST_TEMP
+#define TEST_TEMP "/dev/null"
+#endif
+
 int main(int ac, char **av)
 {
 	int failures = 0;
@@ -95,14 +99,14 @@ int main(int ac, char **av)
 	// Instead of comparing against access(), these tests have explicit expected
 	// results.
 
-	#define TMP "test/tmp"
+	#define TMP TEST_TEMP "/tmp"
 	const char *readable_path = TMP "/readable";
 	const char *writable_path = TMP "/writable";
 	const char *executable_path = TMP "/executable";
 	const char *inaccessible_path = TMP "/inaccessible";
 	const char *nonexistent_path = TMP "/nonexistent";
 
-	/* Create test/tmp directory if not already there (see make test_faccessat_setuid) */
+	/* Create TEST_TEMP/tmp directory if not already there (see make test_faccessat_setuid) */
 
 	int mkdir_rc = mkdir(TMP, 0700);
 	int mkdir_errno = errno;
@@ -333,7 +337,7 @@ int main(int ac, char **av)
 			getgrgid(effective_gid) ? getgrgid(effective_gid)->gr_name : "?"
 		);
 
-		system("/bin/ls -l test/tmp/*ble");
+		system("/bin/ls -l " TEST_TEMP "/tmp/*ble");
 	}
 
 	/* Test argument validation */
