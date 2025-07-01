@@ -67,6 +67,7 @@ DEBUG           ?=
 OPT             ?= -Os
 XCFLAGS         ?= $(DEBUG) $(OPT) -Wall -Wno-deprecated-declarations -Wundef
 ALLCFLAGS       := $(ARCHFLAGS) $(XCFLAGS) $(CFLAGS)
+TOOLCFLAGS      ?= $(ARCHFLAGS) $(DEBUG) $(OPT) $(CFLAGS)
 DLIBCFLAGS      ?= -fPIC
 SLIBCFLAGS      ?=
 XCXXFLAGS       ?= $(DEBUG) $(OPT) -Wall
@@ -242,7 +243,15 @@ TIGERSRCS       := \
 TIGERPRGS       := $(patsubst %,$(TIGERBINDIR)/%,$(TIGERSRCS))
 TIGERMAN1S      := $(wildcard $(TIGERSRCDIR)/*.1)
 
+# Miscellaneous tools
+TOOLPREFIX       = tool_
 TOOLDIR          = tools
+TOOLBINDIR       = tlbin
+TOOLSRCS_C      := $(wildcard $(TOOLDIR)/*.c)
+TOOLBINS        := $(patsubst $(TOOLDIR)/%.c,$(TOOLBINDIR)/%,$(TOOLSRCS_C))
+TOOLTARGS       := $(patsubst $(TOOLBINDIR)/%, $(TOOLPREFIX)%, $(TOOLBINS))
+TOOL_ARGS       ?=
+
 ARCHTOOL         = $(TOOLDIR)/binarchs.sh
 
 all: dlib slib syslib
@@ -288,7 +297,7 @@ $(SOBJLIST): $(SLIBOBJS)
 $(BUILDDIR) $(TIGERBINDIR) $(BUILDLIBDIR) $(TESTBINDIR) \
     $(DESTDIR)$(LIBDIR) $(DESTDIR)$(BINDIR) \
     $(DESTDIR)$(MAN1DIR) $(DESTDIR)$(MAN3DIR) \
-    $(TEST_TEMP):
+    $(TEST_TEMP) $(TOOLBINDIR):
 	$(MKINSTALLDIRS) $@
 
 $(BUILDDLIBPATH): $(DLIBOBJS) | $(BUILDLIBDIR)
@@ -412,6 +421,13 @@ $(XTESTRUNS): $(XTESTRUNPREFIX)%: $(XTESTBINPREFIX)% | $(TEST_TEMP)
 $(MANTESTRUNS) $(MANLIBTESTRUNS): \
     $(MANRUNPREFIX)%: $(MANTESTBINPREFIX)% | $(TEST_TEMP)
 	$< $(TEST_ARGS)
+
+# Rule for tools - no include or library
+$(TOOLBINS): $(TOOLBINDIR)/%: $(TOOLDIR)/%.c | $(TOOLBINDIR)
+	$(CC) -std=$(TESTCSTD) $(TOOLCFLAGS) $< -o $@
+
+$(TOOLTARGS): $(TOOLPREFIX)%: $(TOOLBINDIR)/%
+	$< $(TOOL_ARGS)
 
 # The "dirfuncs_compat" test includes the fdopendir test source
 $(TESTNAMEPREFIX)dirfuncs_compat.o: $(TESTNAMEPREFIX)fdopendir.c
@@ -566,8 +582,7 @@ test_clean:
 	$(RMDIR) $(TESTBINDIR) $(XLIBDIR) $(TEST_TEMP)
 
 tools_clean:
-	$(RM) $(TOOLDIR)*.o $(TOOLDIR)/boottime $(TOOLDIR)/clock_info
-	$(RM) $(TOOLDIR)/mach_time $(TOOLDIR)/realpath_test
+	$(RMDIR) $(TOOLBINDIR)
 
 clean: test_clean tools_clean
 	$(RMDIR) $(BUILDDIR) $(BUILDLIBDIR) $(TIGERBINDIR)
