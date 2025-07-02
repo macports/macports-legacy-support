@@ -19,9 +19,21 @@
 /* MP support header */
 #include "MacportsLegacySupport.h"
 
+#include <dlfcn.h>
+
+#include "compiler.h"
+
 #define __MPLS_NEED_CHECK_ACCESS__ \
     (__MPLS_LIB_FIX_TIGER_PPC64__ \
      || __MPLS_LIB_SUPPORT_STAT64__)
+
+/* Obtain the address of an OS function */
+#define GET_OS_FUNC(name) \
+  static __typeof__(name) *os_##name = NULL; \
+  \
+  if (MPLS_SLOWPATH(!os_##name)) { \
+    if (!(os_##name = dlsym(RTLD_NEXT, #name))) abort(); \
+  }
 
 #if __MPLS_NEED_CHECK_ACCESS__
 

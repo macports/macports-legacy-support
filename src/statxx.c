@@ -28,31 +28,21 @@
  * our implementations are needed.  It means that the referenced function
  * names are always the "unadorned" versions, except when we explicitly
  * add a suffix.
- *
- * This also makes the dlsym() interface common code.
  */
 
 #define _DARWIN_NO_64_BIT_INODE 1
 
-#include <dlfcn.h>
 #include <stddef.h>
 #include <stdlib.h>
 
 #include <sys/stat.h>
 
-#include "compiler.h"
+#include "util.h"
 
 /* Make sure we have "struct stat64" */
 #if !__MPLS_HAVE_STAT64
 struct stat64 __DARWIN_STRUCT_STAT64;
 #endif /* !__MPLS_HAVE_STAT64 */
-
-#define GET_OS_FUNC(name) \
-  static __typeof__(name) *os_##name = NULL; \
-  \
-  if (MPLS_SLOWPATH(!os_##name)) { \
-    if (!(os_##name = dlsym(RTLD_NEXT, #name))) abort(); \
-  }
 
 #endif /* __MPLS_LIB_SUPPORT_... */
 
@@ -275,8 +265,6 @@ fstatx_np(int fildes, struct stat *buf, filesec_t fsec)
  */
 
 #include <errno.h>
-
-#include "util.h"
 
 typedef union stat_buf_u {
   struct stat s;

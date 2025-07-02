@@ -37,7 +37,6 @@
  * bad pointer, so we need to check it explicitly.
  */
 
-#include <dlfcn.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <pthread.h>
@@ -49,13 +48,10 @@
 
 #include <sys/param.h>
 
-#include "compiler.h"
 #include "util.h"
 
 static pthread_mutex_t path_lock = PTHREAD_MUTEX_INITIALIZER;
 static char pathbuf[MAXPATHLEN];
-
-typedef int (fcntl_fn_t)(int fildes, int cmd, ...);
 
 int
 fcntl(int fildes, int cmd, ...)
@@ -70,15 +66,8 @@ fcntl(int fildes, int cmd, ...)
   } arg;
 
   int ret;
-  static fcntl_fn_t *os_fcntl = NULL;
 
-  if (MPLS_SLOWPATH(!os_fcntl)) {
-    os_fcntl = dlsym(RTLD_NEXT, "fcntl");
-    /* Something's badly broken if this fails */
-    if (!os_fcntl) {
-        abort();
-    }
-  }
+  GET_OS_FUNC(fcntl)
 
   va_start(ap, cmd);
   switch (cmd) {

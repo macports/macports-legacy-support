@@ -24,11 +24,10 @@
 #include <sys/sysctl.h>
 
 #include <unistd.h>
-#include <dlfcn.h>
 #include <stdlib.h>
 #include <stddef.h>
 
-#include "compiler.h"
+#include "util.h"
 
 /*
  * Emulate several commonly used but missing (or broken) selectors from
@@ -36,7 +35,7 @@
  */
 
 long sysconf(int name) {
-    static long (*os_sysconf)(int);
+    GET_OS_FUNC(sysconf)
 
 #if __MPLS_LIB_SUPPORT_SYSCONF_NPROCESSORS__
     if ( name == _SC_NPROCESSORS_ONLN ) {
@@ -99,13 +98,6 @@ long sysconf(int name) {
 #endif /* __MPLS_LIB_SUPPORT_SYSCONF_PHYS_PAGES__ */
 
     /* for any other values of "name", call the real sysconf() */
-    if (MPLS_SLOWPATH(!os_sysconf)) {
-        os_sysconf = dlsym(RTLD_NEXT, "sysconf");
-        /* Something's badly broken if this fails */
-        if (!os_sysconf) {
-            abort();
-        }
-    }
     return (*os_sysconf)(name);
 }
 

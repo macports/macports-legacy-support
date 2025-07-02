@@ -19,7 +19,6 @@
 
 #if __MPLS_LIB_FIX_64BIT_BOOTTIME__
 
-#include <dlfcn.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
@@ -27,7 +26,7 @@
 #include <sys/sysctl.h>
 #include <sys/time.h>
 
-#include "compiler.h"
+#include "util.h"
 
 /*
  * Under OS <10.6, the returned struct timeval for boottime is always based on
@@ -63,24 +62,13 @@ fix_boottime(timeval_t *oldp, size_t *oldlenp, size_t origlen)
   }
 }
 
-typedef int (sysctl_fn_t)(int *name, u_int namelen, void *oldp, size_t *oldlenp,
-             void *newp, size_t newlen);
-
 int
 sysctl(int *name, u_int namelen, void *oldp, size_t *oldlenp,
        void *newp, size_t newlen)
 {
   int ret;
   size_t origlen;
-  static sysctl_fn_t *os_sysctl = NULL;
-
-  if (MPLS_SLOWPATH(!os_sysctl)) {
-    os_sysctl = dlsym(RTLD_NEXT, "sysctl");
-    /* Something's badly broken if this fails */
-    if (!os_sysctl) {
-        abort();
-    }
-  }
+  GET_OS_FUNC(sysctl)
 
   /* Capture originally specified length */
   origlen = oldlenp ? *oldlenp : 0;
@@ -103,24 +91,13 @@ sysctl(int *name, u_int namelen, void *oldp, size_t *oldlenp,
  * this item on 10.4.
  */
 
-typedef int (sysctlbyname_fn_t)(const char *name, void *oldp, size_t *oldlenp,
-             void *newp, size_t newlen);
-
 int
 sysctlbyname(const char *name, void *oldp, size_t *oldlenp,
        void *newp, size_t newlen)
 {
   int ret;
   size_t origlen;
-  static sysctlbyname_fn_t *os_sysctlbyname = NULL;
-
-  if (MPLS_SLOWPATH(!os_sysctlbyname)) {
-    os_sysctlbyname = dlsym(RTLD_NEXT, "sysctlbyname");
-    /* Something's badly broken if this fails */
-    if (!os_sysctlbyname) {
-        abort();
-    }
-  }
+  GET_OS_FUNC(sysctlbyname)
 
   /* Capture originally specified length */
   origlen = oldlenp ? *oldlenp : 0;
