@@ -42,48 +42,15 @@
 #include <fcntl.h>
 #include <pthread.h>
 #include <stdarg.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <unistd.h>
 
 #include <sys/param.h>
 
-#include <mach/mach.h>
-#include <mach/mach_vm.h>
-
 #include "compiler.h"
-
-int
-check_access(void *adr, mach_vm_size_t size, vm_prot_t access)
-{
-  vm_map_t task = mach_task_self();
-  mach_vm_address_t address;
-  mach_vm_size_t msize;
-  vm_region_basic_info_data_64_t info;
-  mach_msg_type_number_t count;
-  mach_port_t object_name;
-  kern_return_t ret;
-
-  address = (mach_vm_address_t) adr;
-  msize = 0;
-  count = VM_REGION_BASIC_INFO_COUNT_64;
-  ret = mach_vm_region(task, &address, &msize, VM_REGION_BASIC_INFO_64,
-                       (vm_region_info_t)&info, &count, &object_name);
-  if (ret != KERN_SUCCESS) return -1;
-  if ((mach_vm_address_t) adr < address) return -1;
-  if (access & ~info.protection) return -1;
-
-  address = (mach_vm_address_t) ((uint8_t *) adr + size -1);
-  msize = 0;
-  count = VM_REGION_BASIC_INFO_COUNT_64;
-  ret = mach_vm_region(task, &address, &msize, VM_REGION_BASIC_INFO_64,
-                       (vm_region_info_t)&info, &count, &object_name);
-  if (ret != KERN_SUCCESS) return -1;
-  if ((mach_vm_address_t) adr < address) return -1;
-  if (access & ~info.protection) return -1;
-
-  return 0;
-}
+#include "util.h"
 
 static pthread_mutex_t path_lock = PTHREAD_MUTEX_INITIALIZER;
 static char pathbuf[MAXPATHLEN];
@@ -171,8 +138,8 @@ fcntl(int fildes, int cmd, ...)
   /* If not a 64-bit issue, just punt (probably genuine bad adr). */
   if ((uint64_t) arg.ptr < (1ULL << 32)) return -1;
 
-  /* Now do a correct access check on the result buffer, & fail if bad */
-  if (check_access(arg.ptr, MAXPATHLEN, VM_PROT_WRITE)) {
+  /* Now do a correct access check on the result buffer, and fail if bad */
+  if (__mpls_check_access(arg.ptr, MAXPATHLEN, VM_PROT_WRITE, NULL)) {
     errno = EFAULT;
     return -1;
   }
