@@ -5,10 +5,9 @@
 
 #include <pthread.h>
 #include <sys/resource.h>
-#include <dlfcn.h>
 #include <stdlib.h>
 
-#include "compiler.h"
+#include "util.h"
 
 #if __MPLS_TARGET_OSVER >= 1090
 /* private system call available on OS X Mavericks (version 10.9) and later */
@@ -61,15 +60,7 @@ size_t pthread_get_stacksize_np(pthread_t t) {
         }
     } else {
         /* bug only affects main thread */
-        static size_t (*os_pthread_get_stacksize_np)(pthread_t);
-        if (MPLS_SLOWPATH(!os_pthread_get_stacksize_np)) {
-            os_pthread_get_stacksize_np =
-                dlsym(RTLD_NEXT, "pthread_get_stacksize_np");
-            /* Something's badly broken if this fails */
-            if (!os_pthread_get_stacksize_np) {
-                abort();
-            }
-        }
+        GET_OS_FUNC(pthread_get_stacksize_np)
         return (*os_pthread_get_stacksize_np)(t);
     }
 }

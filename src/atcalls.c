@@ -38,7 +38,6 @@
 
 #include <assert.h>
 #include <dirent.h>
-#include <dlfcn.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdint.h>
