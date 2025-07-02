@@ -19,7 +19,9 @@
 /* MP support header */
 #include "MacportsLegacySupport.h"
 
-#define __MPLS_NEED_CHECK_ACCESS__ __MPLS_LIB_FIX_TIGER_PPC64__
+#define __MPLS_NEED_CHECK_ACCESS__ \
+    (__MPLS_LIB_FIX_TIGER_PPC64__ \
+     || __MPLS_LIB_SUPPORT_STAT64__)
 
 #if __MPLS_NEED_CHECK_ACCESS__
 

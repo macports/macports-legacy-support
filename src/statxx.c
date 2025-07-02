@@ -246,91 +246,136 @@ fstatx_np(int fildes, struct stat *buf, filesec_t fsec)
 /*
  * This provides definitions for some 64-bit-inode function variants on 10.4.
  *
- * For the *stat() functions, this simply involves translating the result of
- * the 32-bit-inode variant.
- *
  * Providing a similar capability for directory-related functions would be
  * much more difficult, since the differently-formatted dirent struct is
  * provided via a pointer to an internal buffer, rather than one provided
  * by the caller.  Hence we don't do anything about those, for now.
+ *
+ * For the *stat() functions, this simply involves translating the result of
+ * the 32-bit-inode variant.
+ *
+ * Since the caller-supplied stat64 buffer is larger than the stat buffer
+ * needed by the syscall, we can use it directly for the syscall, thereby
+ * (mostly) leveraging the OS address validation.  But since the fields
+ * are in a different order, we can't directly reformat it in place, and
+ * instead need to make a temporary copy as an intermediary.  Although this
+ * seems like extra overhead, it's far less expensive than performing the
+ * buffer address validation in userspace.
+ *
+ * The "mostly" comes about because if a page boundary lands between the
+ * end of the stat and the end of the stat64, we haven't fully validated the
+ * buffer.  We call the validation function for extra portion, with the
+ * known valid start address as a hint, which will usually avoid the full
+ * validation sequence.
+ *
+ * For some unknown reason, optimized code was sometimes screwing up the
+ * result until the extra clearing step was inserted, even though there's
+ * no good reason why this should be necessary (there's no type punning
+ * involved).
  */
+
+#include <errno.h>
+
+#include "util.h"
+
+typedef union stat_buf_u {
+  struct stat s;
+  struct stat64 s64;
+} stat_buf_t;
 
 /* Do a field-by-field copy from ino32 stat to ino64 stat. */
 /* Also provide passthrough for return value. */
 static int
-convert_stat(const struct stat *in, struct stat64 *out, int status)
+convert_stat(int result, stat_buf_t *sb)
 {
-  out->st_dev = in->st_dev;
-  out->st_mode = in->st_mode;
-  out->st_nlink = in->st_nlink;
-  out->st_ino = in->st_ino;  /* Possible but unlikely overflow here */
-  out->st_uid = in->st_uid;
-  out->st_gid = in->st_gid;
-  out->st_rdev = in->st_rdev;
-  out->st_atimespec = in->st_atimespec;
-  out->st_mtimespec = in->st_mtimespec;
-  out->st_ctimespec = in->st_ctimespec;
-  /* The ino32 stat doesn't have birthtime, so use MIN(ctime, mtime) */
-  if (in->st_ctimespec.tv_sec < in->st_mtimespec.tv_sec
-      || (in->st_ctimespec.tv_sec == in->st_mtimespec.tv_sec
-          && in->st_ctimespec.tv_nsec < in->st_mtimespec.tv_nsec)) {
-    out->st_birthtimespec = in->st_ctimespec;
-  } else {
-    out->st_birthtimespec = in->st_mtimespec;
+  struct stat stbuf;
+  static const struct stat64 s64zero = {0};
+
+  if (MPLS_SLOWPATH(result)) return result;
+
+  if (__mpls_check_access(&sb->s + 1, sizeof(sb->s64) - sizeof(sb->s),
+      VM_PROT_WRITE, &sb->s)) {
+    errno = EFAULT;
+    return -1;
   }
-  out->st_size = in->st_size;
-  out->st_blocks = in->st_blocks;
-  out->st_blksize = in->st_blksize;
-  out->st_flags = in->st_flags;
-  out->st_gen = in->st_gen;
-  out->st_lspare = 0;
-  out->st_qspare[0] = 0;
-  out->st_qspare[1] = 0;
-  return status;
+
+  stbuf = sb->s;
+  /* Start with all-zero result (avoid weird optimizer bug) */
+  sb->s64 = s64zero;
+
+  sb->s64.st_dev = stbuf.st_dev;
+  sb->s64.st_mode = stbuf.st_mode;
+  sb->s64.st_nlink = stbuf.st_nlink;
+  sb->s64.st_ino = stbuf.st_ino;  /* Possible but unlikely overflow here */
+  sb->s64.st_uid = stbuf.st_uid;
+  sb->s64.st_gid = stbuf.st_gid;
+  sb->s64.st_rdev = stbuf.st_rdev;
+  sb->s64.st_atimespec = stbuf.st_atimespec;
+  sb->s64.st_mtimespec = stbuf.st_mtimespec;
+  sb->s64.st_ctimespec = stbuf.st_ctimespec;
+  /* The ino32 stat doesn't have birthtime, so use MIN(ctime, mtime) */
+  if (stbuf.st_ctimespec.tv_sec < stbuf.st_mtimespec.tv_sec
+      || (stbuf.st_ctimespec.tv_sec == stbuf.st_mtimespec.tv_sec
+          && stbuf.st_ctimespec.tv_nsec < stbuf.st_mtimespec.tv_nsec)) {
+    sb->s64.st_birthtimespec = stbuf.st_ctimespec;
+  } else {
+    sb->s64.st_birthtimespec = stbuf.st_mtimespec;
+  }
+  sb->s64.st_size = stbuf.st_size;
+  sb->s64.st_blocks = stbuf.st_blocks;
+  sb->s64.st_blksize = stbuf.st_blksize;
+  sb->s64.st_flags = stbuf.st_flags;
+  sb->s64.st_gen = stbuf.st_gen;
+  /* Copy the "do not use" spares verbatim as well */
+  sb->s64.st_lspare = stbuf.st_lspare;
+  sb->s64.st_qspare[0] = stbuf.st_qspare[0];
+  sb->s64.st_qspare[1] = stbuf.st_qspare[1];
+
+  return result;
 }
 
 int
 stat$INODE64(const char *__restrict path, struct stat64 *buf)
 {
-  struct stat stbuf;
-  return convert_stat(&stbuf, buf, stat(path, &stbuf));
+  stat_buf_t *sb = (stat_buf_t *) buf;
+  return convert_stat(stat(path, &sb->s), sb);
 }
 
 int
 lstat$INODE64(const char *__restrict path, struct stat64 *buf)
 {
-  struct stat stbuf;
-  return convert_stat(&stbuf, buf, lstat(path, &stbuf));
+  stat_buf_t *sb = (stat_buf_t *) buf;
+  return convert_stat(lstat(path, &sb->s), sb);
 }
 
 int
 fstat$INODE64(int fildes, struct stat64 *buf)
 {
-  struct stat stbuf;
-  return convert_stat(&stbuf, buf, fstat(fildes, &stbuf));
+  stat_buf_t *sb = (stat_buf_t *) buf;
+  return convert_stat(fstat(fildes, &sb->s), sb);
 }
 
 int
 statx_np$INODE64(const char *__restrict path, struct stat64 *buf,
                  filesec_t fsec)
 {
-  struct stat stbuf;
-  return convert_stat(&stbuf, buf, statx_np(path, &stbuf, fsec));
+  stat_buf_t *sb = (stat_buf_t *) buf;
+  return convert_stat(statx_np(path, &sb->s, fsec), sb);
 }
 
 int
 lstatx_np$INODE64(const char *__restrict path, struct stat64 *buf,
                   filesec_t fsec)
 {
-  struct stat stbuf;
-  return convert_stat(&stbuf, buf, lstatx_np(path, &stbuf, fsec));
+  stat_buf_t *sb = (stat_buf_t *) buf;
+  return convert_stat(lstatx_np(path, &sb->s, fsec), sb);
 }
 
 int
 fstatx_np$INODE64(int fildes, struct stat64 *buf, filesec_t fsec)
 {
-  struct stat stbuf;
-  return convert_stat(&stbuf, buf, fstatx_np(fildes, &stbuf, fsec));
+  stat_buf_t *sb = (stat_buf_t *) buf;
+  return convert_stat(fstatx_np(fildes, &sb->s, fsec), sb);
 }
 
 #if __MPLS_HAVE_STAT64
@@ -338,43 +383,43 @@ fstatx_np$INODE64(int fildes, struct stat64 *buf, filesec_t fsec)
 int
 stat64(const char *__restrict path, struct stat64 *buf)
 {
-  struct stat stbuf;
-  return convert_stat(&stbuf, buf, stat(path, &stbuf));
+  stat_buf_t *sb = (stat_buf_t *) buf;
+  return convert_stat(stat(path, &sb->s), sb);
 }
 
 int
 lstat64(const char *__restrict path, struct stat64 *buf)
 {
-  struct stat stbuf;
-  return convert_stat(&stbuf, buf, lstat(path, &stbuf));
+  stat_buf_t *sb = (stat_buf_t *) buf;
+  return convert_stat(lstat(path, &sb->s), sb);
 }
 
 int
 fstat64(int fildes, struct stat64 *buf)
 {
-  struct stat stbuf;
-  return convert_stat(&stbuf, buf, fstat(fildes, &stbuf));
+  stat_buf_t *sb = (stat_buf_t *) buf;
+  return convert_stat(fstat(fildes, &sb->s), sb);
 }
 
 int
 statx64_np(const char *__restrict path, struct stat64 *buf, filesec_t fsec)
 {
-  struct stat stbuf;
-  return convert_stat(&stbuf, buf, statx_np(path, &stbuf, fsec));
+  stat_buf_t *sb = (stat_buf_t *) buf;
+  return convert_stat(statx_np(path, &sb->s, fsec), sb);
 }
 
 int
 lstatx64_np(const char *__restrict path, struct stat64 *buf, filesec_t fsec)
 {
-  struct stat stbuf;
-  return convert_stat(&stbuf, buf, lstatx_np(path, &stbuf, fsec));
+  stat_buf_t *sb = (stat_buf_t *) buf;
+  return convert_stat(lstatx_np(path, &sb->s, fsec), sb);
 }
 
 int
 fstatx64_np(int fildes, struct stat64 *buf, filesec_t fsec)
 {
-  struct stat stbuf;
-  return convert_stat(&stbuf, buf, fstatx_np(fildes, &stbuf, fsec));
+  stat_buf_t *sb = (stat_buf_t *) buf;
+  return convert_stat(fstatx_np(fildes, &sb->s, fsec), sb);
 }
 
 #endif /* __MPLS_HAVE_STAT64 */
