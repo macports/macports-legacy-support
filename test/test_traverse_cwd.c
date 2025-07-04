@@ -1,6 +1,6 @@
-
 /*
  * Copyright (C) 2023 raf <raf@raf.org>
+ * Copyright (c) 2025 Frederick H. G. Wright II <fw@fwright.net>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -16,15 +16,17 @@
  */
 
 /*
-Test directory traversal with macports legacysupport.
+Test directory traversal with MacPorts legacy-support.
 
-This test creates ".test.dir", ".test.dir/subdir" and ".test.dir/subdir/file".
-It then chdirs into ".test.dir" and then traverses ".".
+This test creates a temporary directory <temp_dir>, <temp_dir>/subdir,
+and <temp_dir>/subdir/file.
+It then chdirs into <temp_dir> and then traverses ".".
 It then chdirs to ".." afterwards.
-It then deletes ".test.dir" and its contents.
+It then deletes <temp_dir> and its contents.
 
-The output should look something like:
+The (verbose) output should look something like:
 
+  cd <temp_dir>
   fstatat(parent_fd=-2, .) ok
   openat(parent_fd=-2, .) = dir_fd=3 ok
   fdopendir(dir_fd=3) ok
@@ -34,8 +36,9 @@ The output should look something like:
   fdopendir(dir_fd=4) ok
   entry file
   fstatat(parent_fd=4, file) ok
-  cwd (before cd ..) /Users/.../macports-legacy-support/.test.dir
-  cwd (after cd ..)  /Users/.../macports-legacy-support
+  cwd (before cd ..) <test_data_dir>/<temp_dir>
+  cwd (after cd ..)  <test_data_dir>
+  cd <build_dir>
 
 This differs from test/test_traverse.c which traverses a
 named directory rather than ".". Originally, these
@@ -43,161 +46,206 @@ exhibited different errors.
 
 */
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <string.h>
+#include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <dirent.h>
+#include <libgen.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+
+#include <sys/param.h>
 #include <sys/stat.h>
 
-int traverse(int parent_fd, const char *name)
+#ifndef TEST_TEMP
+#define TEST_TEMP "/dev/null"
+#endif
+
+static char topdir[MAXPATHLEN];
+static char subdir[MAXPATHLEN];
+static char testfile[MAXPATHLEN];
+
+static int
+traverse(int parent_fd, const char *name, int verbose)
 {
-    /* Test: fstatat(AT_FDCWD, .test.dir) */
+  int dir_fd;
+  DIR *dir;
 
-    struct stat statbuf[1];
+  /* Test: fstatat(AT_FDCWD, <temp_dir>) */
 
-    if (fstatat(parent_fd, name, statbuf, AT_SYMLINK_NOFOLLOW) == -1)
+  struct stat statbuf[1];
+
+  if (fstatat(parent_fd, name, statbuf, AT_SYMLINK_NOFOLLOW) == -1)
+  {
+    fprintf(stderr, "fstatat(parent_fd=%d, %s) failed: %s\n", parent_fd, name, strerror(errno));
+    return EXIT_FAILURE;
+  }
+
+  if (verbose) printf("fstatat(parent_fd=%d, %s) ok\n", parent_fd, name);
+
+  /* If it's a directory, process its entries */
+
+  if ((statbuf->st_mode & S_IFMT) == S_IFDIR)
+  {
+    /* Open it with openat() */
+
+    if ((dir_fd = openat(parent_fd, name, O_RDONLY)) == -1)
     {
-        fprintf(stderr, "fstatat(parent_fd=%d, %s) failed: %s\n", parent_fd, name, strerror(errno));
+      fprintf(stderr, "openat(parent_fd=%d, %s) failed: %s\n", parent_fd, name, strerror(errno));
+      return EXIT_FAILURE;
+    }
+
+    if (verbose) {
+      printf("openat(parent_fd=%d, %s) = dir_fd=%d ok\n",
+             parent_fd, name, dir_fd);
+    }
+
+    /* Open it for traversing with fdopendir() */
+
+    if (!(dir = fdopendir(dir_fd)))
+    {
+      fprintf(stderr, "fdopendir(dir_fd=%d, dir) failed\n", dir_fd);
+      close(dir_fd);
+      return EXIT_FAILURE;
+    }
+
+    if (verbose) printf("fdopendir(dir_fd=%d) ok\n", dir_fd);
+
+    /* Apply recursively to this directory's entries */
+
+    struct dirent *entry;
+
+    while ((entry = readdir(dir)))
+    {
+      if (!strcmp(entry->d_name, ".") || !strcmp(entry->d_name, ".."))
+        continue;
+
+      if (verbose) printf("entry %s\n", entry->d_name);
+
+      if (traverse(dir_fd, entry->d_name, verbose) == EXIT_FAILURE)
         return EXIT_FAILURE;
     }
 
-    printf("fstatat(parent_fd=%d, %s) ok\n", parent_fd, name);
+    closedir(dir);
+  }
 
-    /* If it's a directory, process its entries */
-
-    if ((statbuf->st_mode & S_IFMT) == S_IFDIR)
-    {
-        /* Open it with openat() */
-
-        int dir_fd;
-
-        if ((dir_fd = openat(parent_fd, name, O_RDONLY)) == -1)
-        {
-            fprintf(stderr, "openat(parent_fd=%d, %s) failed: %s\n", parent_fd, name, strerror(errno));
-            return EXIT_FAILURE;
-        }
-
-        printf("openat(parent_fd=%d, %s) = dir_fd=%d ok\n", parent_fd, name, dir_fd);
-
-        /* Open it for traversing with fdopendir() */
-
-        DIR *dir;
-
-        if (!(dir = fdopendir(dir_fd)))
-        {
-            fprintf(stderr, "fdopendir(dir_fd=%d, dir) failed\n", dir_fd);
-            close(dir_fd);
-            return EXIT_FAILURE;
-        }
-
-        printf("fdopendir(dir_fd=%d) ok\n", dir_fd);
-
-        /* Apply recursively to this directory's entries */
-
-        struct dirent *entry;
-
-        while ((entry = readdir(dir)))
-        {
-            if (!strcmp(entry->d_name, ".") || !strcmp(entry->d_name, ".."))
-                continue;
-
-            printf("entry %s\n", entry->d_name);
-
-            if (traverse(dir_fd, entry->d_name) == EXIT_FAILURE)
-                return EXIT_FAILURE;
-        }
-
-        closedir(dir);
-    }
-
-    return EXIT_SUCCESS;
+  return EXIT_SUCCESS;
 }
 
-int main(int argc, char **argv)
+/* Cleanup */
+
+static void
+cleanup(int quiet)
 {
-    /* Prepare: Create a directory */
 
-    system("rm -rf .test.dir");
+  if (unlink(testfile) == -1 && !quiet) {
+    fprintf(stderr, "unlink(%s) failed: %s\n", testfile, strerror(errno));
+  }
 
-    if (mkdir(".test.dir", (mode_t)0755) == -1)
-    {
-        perror("mkdir(.test.dir) failed\n");
-        exit(EXIT_FAILURE);
-    }
+  if (rmdir(subdir) == -1 && !quiet) {
+    fprintf(stderr, "unlink(%s) failed: %s\n", subdir, strerror(errno));
+  }
 
-    /* And a directory within it */
+  if (rmdir(topdir) == -1 && !quiet) {
+    fprintf(stderr, "unlink(%s) failed: %s\n", topdir, strerror(errno));
+  }
+}
 
-    if (mkdir(".test.dir/subdir", (mode_t)0755) == -1)
-    {
-        perror("mkdir(.test.dir/subdir) failed\n");
-        (void)rmdir(".test.dir");
-        exit(EXIT_FAILURE);
-    }
+/* Setup */
 
-    /* And a file within that */
+static int
+setup(void)
+{
+  int fd;
 
-    int fd;
+  cleanup(1);
 
-    if ((fd = creat(".test.dir/subdir/file", (mode_t)0644)) == -1)
-    {
-        perror("creat(.test.dir/subdir/file) failed\n");
-        (void)rmdir(".test.dir/subdir");
-        (void)rmdir(".test.dir");
-        exit(EXIT_FAILURE);
-    }
+  /* Prepare: Create the top directory */
 
-    close(fd);
+  if (mkdir(topdir, (mode_t) 0755) == -1)
+  {
+    fprintf(stderr, "mkdir(%s) failed: %s\n", topdir, strerror(errno));
+    return EXIT_FAILURE;
+  }
 
+  /* And a directory within it */
+
+  if (mkdir(subdir, (mode_t) 0755) == -1)
+  {
+    fprintf(stderr, "mkdir(%s) failed: %s\n", subdir, strerror(errno));
+    cleanup(1);
+    return EXIT_FAILURE;
+  }
+
+  /* And a file within that */
+
+  if ((fd = creat(testfile, (mode_t) 0644)) == -1)
+  {
+    fprintf(stderr, "creat(%s) failed: %s\n", testfile, strerror(errno));
+    cleanup(1);
+    return EXIT_FAILURE;
+  }
+
+  (void) close(fd);
+
+  return EXIT_SUCCESS;
+}
+
+int
+main(int argc, char *argv[])
+{
+  int rc, verbose = 0;
+  pid_t pid = getpid();
+  char *progname = basename(argv[0]);
+  char cwdbuf0[MAXPATHLEN];
+  char cwdbuf1[MAXPATHLEN];
+  char cwdbuf2[MAXPATHLEN];
+
+  if (argc > 1 && !strcmp(argv[1], "-v")) verbose = 1;
+
+  (void) snprintf(topdir, sizeof(topdir), TEST_TEMP "/%s-%u", progname, pid);
+  (void) snprintf(subdir, sizeof(subdir), "%s/subdir", topdir);
+  (void) snprintf(testfile, sizeof(testfile), "%s/file", subdir);
+
+  (void) getcwd(cwdbuf0, sizeof(cwdbuf0));
+
+  /* Prepare: Create the directories and file */
+
+  rc = setup();
+
+  if (!rc) {
     /* Test directory traversal */
 
-    fprintf(stderr, "cd .test.dir\n");
-    if (chdir(".test.dir") == -1)
-        perror("chdir(.test.dir) failed");
+    if (verbose) printf("cd %s\n", topdir);
+    if (chdir(topdir) == -1)
+      fprintf(stderr, "chdir(%s) failed: %s\n", topdir, strerror(errno));
 
-    int rc = traverse(AT_FDCWD, ".");
+    rc = traverse(AT_FDCWD, ".", verbose);
 
-    char cwdbuf1[BUFSIZ];
-    char cwdbuf2[BUFSIZ];
-
-    printf("cwd (before cd ..) %s\n", getcwd(cwdbuf1, BUFSIZ));
+    (void) getcwd(cwdbuf1, sizeof(cwdbuf1));
+    if (verbose) printf("cwd (before cd ..) %s\n", cwdbuf1);
 
     if (chdir("..") == -1)
-        perror("chdir .. failed");
+      fprintf(stderr, "chdir(\"..\") failed: %s\n", strerror(errno));
 
-    printf("cwd (after cd ..)  %s\n", getcwd(cwdbuf2, BUFSIZ));
+    (void) getcwd(cwdbuf2, sizeof(cwdbuf2));
+    if (verbose) printf("cwd (after cd ..) %s\n", cwdbuf2);
 
-    if (!strcmp(cwdbuf1, cwdbuf2))
-    {
-        fprintf(stderr, "Post-traversal chdir(..) silently failed to change directory!\n");
-        fprintf(stderr, "Replacing __mpls_best_fchdir() in fdopendir() with fchdir() fixes this badly.\n");
-        fprintf(stderr, "Using _ATCALL for opendir fixes this properly.\n");
-        rc = EXIT_FAILURE;
+    if (!strcmp(cwdbuf1, cwdbuf2)) {
+      fprintf(stderr, "Post-traversal chdir(..) silently failed to change directory!\n");
+      fprintf(stderr, "Replacing __mpls_best_fchdir() in fdopendir() with fchdir() fixes this badly.\n");
+      fprintf(stderr, "Using _ATCALL for opendir fixes this properly.\n");
+      rc = EXIT_FAILURE;
     }
 
-    /* Cleanup */
+    if (verbose) printf("cd %s\n", cwdbuf0);
+    if (chdir(cwdbuf0) == -1)
+      fprintf(stderr, "chdir(%s) failed: %s\n", cwdbuf0, strerror(errno));
 
-    if (unlink(".test.dir/subdir/file") == -1)
-        perror("unlink .test.dir/subdir/file failed");
+    cleanup(0);
+  }
 
-    if (rmdir(".test.dir/subdir") == -1)
-        perror("rmdir .test.dir/subdir failed");
-
-    if (rmdir(".test.dir") == -1)
-        perror("rmdir .test.dir failed");
-
-    /* If the above cleanup didn't work (because chdir .. silently failed to work) */
-
-    if (!strcmp(cwdbuf1, cwdbuf2))
-    {
-        fprintf(stderr, "Cleaning up\n");
-        (void)unlink("../.test.dir/subdir/file");
-        (void)rmdir("../.test.dir/subdir");
-        (void)rmdir("../.test.dir");
-    }
-
-    return rc;
+  printf("%s %s.\n", progname, rc ? "failed" : "passed");
+  return (rc) ? 1 : 0;
 }
-
