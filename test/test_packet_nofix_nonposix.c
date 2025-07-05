@@ -22,6 +22,6 @@ main(int argc, char *argv[])
 #define _MACPORTS_LEGACY_DISABLE_CMSG_FIXES 1
 #define _NONSTD_SOURCE
 
-#include "../test/test_packet.c"
+#include "test_packet.c"
 
 #endif /* 32-bit */
