@@ -9,4 +9,4 @@
 
 #define _FORTIFY_SOURCE 2
 
-#include "libtest_stpncpy_chk.c"
+#include "test_stpncpy_chk.c"
