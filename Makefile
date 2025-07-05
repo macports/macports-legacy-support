@@ -468,12 +468,12 @@ $(TESTBINPREFIX)stat_ino64_darwin.o: $(TESTNAMEPREFIX)stat.c
 # The packet_* tests include the packet source
 $(TESTBINPREFIX)packet_nocancel.o: $(TESTNAMEPREFIX)packet.c
 $(TESTBINPREFIX)packet_nonposix.o: $(TESTNAMEPREFIX)packet.c
+$(TESTBINPREFIX)packet_nofix.o: $(TESTNAMEPREFIX)packet.c
+$(TESTBINPREFIX)packet_nofix_nocancel.o: $(TESTNAMEPREFIX)packet.c
+$(TESTBINPREFIX)packet_nofix_nonposix.o: $(TESTNAMEPREFIX)packet.c
 
-# The manual packet tests include the packet source
+# The manual packet test includes the packet source
 $(MANTESTBINPREFIX)packet_cont.o: $(TESTNAMEPREFIX)packet.c
-$(MANTESTBINPREFIX)packet_nofix.o: $(TESTNAMEPREFIX)packet.c
-$(MANTESTBINPREFIX)packet_nofix_nocancel.o: $(TESTNAMEPREFIX)packet.c
-$(MANTESTBINPREFIX)packet_nofix_nonposix.o: $(TESTNAMEPREFIX)packet.c
 
 # The "allheaders" tests include the basic "allheaders" source
 $(XTESTBINPREFIX)allheaders_199309.o: $(XTESTNAMEPREFIX)allheaders.c
@@ -506,9 +506,6 @@ $(MANRUNPREFIX)strncpy_chk_all: $(STRNCHKRUNS)
 
 # Provide a target for all non-manual "packet" tests
 $(TESTRUNPREFIX)packet_all: $(PACKETRUNS)
-
-# Provide a target for all manual "packet" tests
-$(MANRUNPREFIX)packet_all: $(MANPACKETRUNS)
 
 # Provide a target for all "allheaders" tests
 $(XTESTRUNPREFIX)allheaders_all: $(ALLHDRRUNS)
