@@ -38,6 +38,88 @@
 
 #include <mach/mach_time.h>
 
+#define SYSCTL_OSVER_CLASS CTL_KERN
+#define SYSCTL_OSVER_ITEM  KERN_OSRELEASE
+
+#ifdef __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__
+#define TARGET_OSVER __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__
+#else
+#define TARGET_OSVER 1040
+#endif
+
+/*
+ * If we're disabling the packet timestamp fixes, arrange to let the expected
+ * failures through.  This allows those tests to be included in the automatic
+ * tests.
+ */
+
+/* Cases of badness */
+typedef enum {
+  ts_bad_noallow,  /* Not allowable error */
+  ts_bad_tv,       /* Bad timestamp value */
+  ts_bad_len,      /* Bad timestamp length */
+  ts_bad_padding,  /* Unexpected timestamp padding */
+} ts_bad_t;
+
+#if defined(_MACPORTS_LEGACY_DISABLE_CMSG_FIXES) \
+    && _MACPORTS_LEGACY_DISABLE_CMSG_FIXES
+
+#if TARGET_OSVER < 1060 && (defined(__x86_64__) || defined(__ppc64__))
+
+static int
+allow_error(ts_bad_t errtype)
+{
+  /* Bad padding is 10.5 only */
+  if (TARGET_OSVER < 1050 && errtype == ts_bad_padding) return 0;
+
+  return 1;
+}
+
+#elif defined(__ppc__) /* Possibly Rosetta */
+
+/* sysctl to check whether we're running natively (non-ppc only) */
+#define SYSCTL_NATIVE "sysctl.proc_native"
+
+static int
+allow_error(ts_bad_t errtype)
+{
+  int native;
+  size_t native_sz = sizeof(native);
+
+  if (errtype != ts_bad_tv) return 0;
+
+  if (sysctlbyname(SYSCTL_NATIVE, &native, &native_sz, NULL, 0) < 0) {
+    /* If sysctl failed, must be real ppc. */
+    return 0;
+  }
+  if (native) return 0;
+
+  return 1;
+}
+
+#else /* Nothing allowable */
+
+static int
+allow_error(ts_bad_t errtype)
+{
+  (void) errtype;
+  return 0;
+}
+
+#endif /* Nothing allowable */
+
+#else /* !_MACPORTS_LEGACY_DISABLE_CMSG_FIXES */
+
+static int
+allow_error(ts_bad_t errtype)
+{
+  (void) errtype;
+  return 0;
+}
+
+#endif /* !_MACPORTS_LEGACY_DISABLE_CMSG_FIXES */
+
+#if TARGET_OSVER < 1050
 /*
  * If we're building for 10.4 with a later SDK, and testing an alternate
  * variant of recvmsg(), we may reference that variant of various other
@@ -47,8 +129,6 @@
  * using the __asm() mechanism to point it to the basic version of the
  * function, and then defining a macro to substitute it for the local use.
  */
-#if defined(__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__) \
-    && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1050
 
 int	__connect(int, const struct sockaddr *, socklen_t) __asm("_connect");
 #define connect __connect
@@ -59,10 +139,7 @@ ssize_t	__send(int, const void *, size_t, int) __asm("_send");
 int __close(int) __asm("_close");
 #define close __close
 
-#endif /* 10.4 */
-
-#define SYSCTL_OSVER_CLASS CTL_KERN
-#define SYSCTL_OSVER_ITEM  KERN_OSRELEASE
+#endif /* TARGET_OSVER < 1050 */
 
 #define CMSG_DATALEN(cmsg) ((uint8_t *) (cmsg) + (cmsg)->cmsg_len \
 	                    - (uint8_t *) CMSG_DATA(cmsg))
@@ -173,9 +250,7 @@ mach2ns(uint64_t mach_time)
  * Rosetta 2.
  */
 
-#if defined(__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__) \
-    && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ >= 110000 \
-    && defined(__x86_64__)
+#if TARGET_OSVER >= 110000 && defined(__x86_64__)
 
 #include <sys/sysctl.h>
 
@@ -392,7 +467,7 @@ static int
 test_timestamp(const char *name, ts_type_t tstype, int sockopt, int scmtype,
                int verbose)
 {
-  int ret = 0, rret = 0;
+  int ret = 0, qret = 0, rret = 0;
   const char *tsname = ts_type_names[tstype];
   const char *err = NULL;
   times_t times;
@@ -467,17 +542,23 @@ test_timestamp(const char *name, ts_type_t tstype, int sockopt, int scmtype,
   if (verbose) printf("    cmsg length = %d (%d+%d), level = %d, type = %d\n",
                       (int) cmsglen, hdrlen, datalen, cmsglvl, cmsgtype);
   if (ts_sizes[tstype] && datalen != ts_sizes[tstype]) {
-    printf("    %s payload length %d != expected sizeof(%s) = %d\n",
-           name, datalen, tsname, ts_sizes[tstype]);
-    ret = 1;
+    qret |= allow_error(ts_bad_len);
+    if (!qret || verbose) {
+      printf("    %s payload length %d != expected sizeof(%s) = %d\n",
+             name, datalen, tsname, ts_sizes[tstype]);
+    }
+    if (!qret) ret = 1;
   }
   if (hdrlen > (int) sizeof(*cmsg)) {
-    xdatap = (uint32_t *) (cbuf + sizeof(*cmsg));
-    printf("    %s header padding:\n", name);
-    while (xdatap < datap) {
-      printf("     (%10u)\n", *xdatap++);
+    qret |= allow_error(ts_bad_padding);
+    if (!qret || verbose) {
+      xdatap = (uint32_t *) (cbuf + sizeof(*cmsg));
+      printf("    %s header padding:\n", name);
+      while (xdatap < datap) {
+        printf("     (%10u)\n", *xdatap++);
+      }
     }
-    ret = 1;
+    if (!qret) ret = 1;
   }
   if (verbose) {
     printf("    %s%spayload longwords:\n", tsname, tsname[0] ? " " : "");
@@ -505,8 +586,11 @@ test_timestamp(const char *name, ts_type_t tstype, int sockopt, int scmtype,
   if (ts_getters[tstype]) {
     tsval = (*ts_getters[tstype])(cmsg);
     if (!tsval) {
-      printf("    %s provided invalid %s\n", name, tsname);
-      ret = 1;
+      qret |= allow_error(tstype == ts_tv ? ts_bad_tv : ts_bad_noallow);
+      if (!qret || verbose) {
+        printf("    %s provided invalid %s\n", name, tsname);
+      }
+      if (!qret) ret = 1;
     } else {
       switch (tstype) {
 
@@ -537,6 +621,9 @@ test_timestamp(const char *name, ts_type_t tstype, int sockopt, int scmtype,
   }
   if (rret && !ret) {
     printf("      Ignoring errors caused by Rosetta 2 bug\n");
+  }
+  if (qret && !ret && verbose) {
+    printf("      Ignoring errors with suppressed fixes\n");
   }
 
   return ret;
