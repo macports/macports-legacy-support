@@ -64,18 +64,6 @@ int __close(int) __asm("_close");
 #define SYSCTL_OSVER_CLASS CTL_KERN
 #define SYSCTL_OSVER_ITEM  KERN_OSRELEASE
 
-/*
- * Temporary hack to avoid dependency on mach_continuous_time fallback
- * for successful build on <10.12.  This function should never actually
- * be executed on <10.14, anyway.
- *
- * This hack can be removed once the relevant time.c update is merged.
- */
-#if defined(__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__) \
-    && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 101200
-#define mach_continuous_time mach_absolute_time
-#endif
-
 #define CMSG_DATALEN(cmsg) ((uint8_t *) (cmsg) + (cmsg)->cmsg_len \
 	                    - (uint8_t *) CMSG_DATA(cmsg))
 
