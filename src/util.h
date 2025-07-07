@@ -20,6 +20,7 @@
 #include "MacportsLegacySupport.h"
 
 #include <dlfcn.h>
+#include <stdlib.h>
 
 #include "compiler.h"
 
@@ -33,6 +34,14 @@
   \
   if (MPLS_SLOWPATH(!os_##name)) { \
     if (!(os_##name = dlsym(RTLD_NEXT, #name))) abort(); \
+  }
+
+/* Obtain the address of an alternate OS function variant */
+#define GET_OS_ALT_FUNC(name, stdname) \
+  static __typeof__(stdname) *os_##stdname = NULL; \
+  \
+  if (MPLS_SLOWPATH(!os_##stdname)) { \
+    if (!(os_##stdname = dlsym(RTLD_NEXT, #name))) abort(); \
   }
 
 #if __MPLS_NEED_CHECK_ACCESS__
