@@ -17,9 +17,8 @@
 /*
  * This provides some simple tests of the attrlist functions, both the
  * traditional set/get flavor, and the newer fget/fset flavor.  Tests of
- * "null" cases (no bits set) are included, since an older implementation
- * seemed to think that special handling was needed for them, though these
- * tests indicate otherwise.
+ * "null" cases (no bits set) and "nobuf" cases (zero-length buffer) are
+ * included, since those sometimes cause trouble.
  */
 
 #include <errno.h>
@@ -68,7 +67,7 @@ set_tc(FInfoAttrBuf_t *ab)
 int
 main(int argc, char *argv[])
 {
-  int verbose = 0, ret = 0, fd = -1;
+  int verbose = 0, ret = 0, fd = -1, err;
   char *progname = basename(argv[0]);
   pid_t pid = getpid();
   char tpath[MAXPATHLEN];
@@ -90,7 +89,8 @@ main(int argc, char *argv[])
     }
 
     if (verbose) printf("  testing 'getattrlist'\n");
-    al.commonattr  = ATTR_CMN_OBJTYPE | ATTR_CMN_FNDRINFO;
+    al.commonattr = ATTR_CMN_OBJTYPE | ATTR_CMN_FNDRINFO;
+    ab.length = -1;
     if (getattrlist(tpath, &al, &ab, sizeof(ab), 0)) {
       printf("  *** getattrlist() for '%s' failed: %s\n",
              tpath, strerror(errno));
@@ -107,7 +107,7 @@ main(int argc, char *argv[])
       }
 
       if (verbose) printf("  testing 'setattrlist'\n");
-      al.commonattr  = ATTR_CMN_FNDRINFO;
+      al.commonattr = ATTR_CMN_FNDRINFO;
       if (set_tc(&ab)) {
         ret = 1;
         break;
@@ -117,10 +117,31 @@ main(int argc, char *argv[])
                tpath, strerror(errno));
         ret = 1;
       } 
+
+      if (verbose) printf("  testing nobuf 'setattrlist'\n");
+      al.commonattr = ATTR_CMN_FNDRINFO;
+      if (set_tc(&ab)) {
+        ret = 1;
+        break;
+      }
+      err = setattrlist(tpath, &al, &ab, 0, 0);
+      if (err) {
+        if (errno == ENOMEM || errno == EINVAL) {
+          if (verbose) printf("    failed as expected: %s\n", strerror(errno));
+        } else {
+          printf("  *** nobuf setattrlist() for '%s' failed: %s\n",
+                 tpath, strerror(errno));
+          ret = 1;
+        }
+      } else {
+        printf("  *** nobuf setattrlist() unexpectedly succeeded\n");
+        ret = 1;
+      }
     }
 
     if (verbose) printf("  testing null 'getattrlist'\n");
-    al.commonattr  = 0;
+    al.commonattr = 0;
+    ab.length = -1;
     if (getattrlist(tpath, &al, &ab, sizeof(ab), 0)) {
       printf("  *** null getattrlist() for '%s' failed: %s\n",
              tpath, strerror(errno));
@@ -134,8 +155,37 @@ main(int argc, char *argv[])
       }
     }
 
+    if (verbose) printf("  testing nobuf 'getattrlist'\n");
+    al.commonattr = ATTR_CMN_OBJTYPE | ATTR_CMN_FNDRINFO;
+    ab.length = -1;
+    /* Silent truncation means "success" */
+    err = getattrlist(tpath, &al, &ab, 0, 0);
+    if (err) {
+      if (errno == EINVAL || errno == ERANGE) {
+        if (verbose) printf("    failed as expected: %s\n", strerror(errno));
+      } else {
+        printf("  *** nobuf getattrlist() for '%s' failed: %s\n",
+               tpath, strerror(errno));
+        ret = 1;
+      }
+    }
+
+    if (verbose) printf("  testing null/nobuf 'getattrlist'\n");
+    al.commonattr = 0;
+    ab.length = -1;
+    err = getattrlist(tpath, &al, &ab, 0, 0);
+    if (err) {
+      if (errno == EINVAL || errno == ERANGE) {
+        if (verbose) printf("    failed as expected: %s\n", strerror(errno));
+      } else {
+        printf("  *** null/nobuf getattrlist() for '%s' failed: %s\n",
+               tpath, strerror(errno));
+        ret = 1;
+      }
+    }
+
     if (verbose) printf("  testing null 'setattrlist'\n");
-    al.commonattr  = 0;
+    al.commonattr = 0;
     ab.length = sizeof(ab.length);
     if (setattrlist(tpath, &al, &ab, sizeof(ab), 0)) {
       printf("  *** null setattrlist() for '%s' failed: %s\n",
@@ -144,7 +194,7 @@ main(int argc, char *argv[])
     }
 
     if (verbose) printf("  testing null/zero 'setattrlist'\n");
-    al.commonattr  = 0;
+    al.commonattr = 0;
     ab.length = 0;
     if (setattrlist(tpath, &al, &ab, sizeof(ab), 0)) {
       printf("  *** null/zero setattrlist() for '%s' failed: %s\n",
@@ -152,8 +202,17 @@ main(int argc, char *argv[])
       ret = 1;
     }
 
+    if (verbose) printf("  testing null/nobuf 'setattrlist'\n");
+    al.commonattr = 0;
+    if (setattrlist(tpath, &al, &ab, 0, 0)) {
+      printf("  *** null/nobuf setattrlist() for '%s' failed: %s\n",
+             tpath, strerror(errno));
+      ret = 1;
+    }
+
     if (verbose) printf("  testing 'fgetattrlist'\n");
-    al.commonattr  = ATTR_CMN_OBJTYPE | ATTR_CMN_FNDRINFO;
+    al.commonattr = ATTR_CMN_OBJTYPE | ATTR_CMN_FNDRINFO;
+    ab.length = -1;
     if (fgetattrlist(fd, &al, &ab, sizeof(ab), 0)) {
       printf("  *** fgetattrlist() for '%s' failed: %s\n",
              tpath, strerror(errno));
@@ -170,7 +229,7 @@ main(int argc, char *argv[])
       }
 
       if (verbose) printf("  testing 'fsetattrlist'\n");
-      al.commonattr  = ATTR_CMN_FNDRINFO;
+      al.commonattr = ATTR_CMN_FNDRINFO;
       if (set_tc(&ab)) {
         ret = 1;
         break;
@@ -180,10 +239,31 @@ main(int argc, char *argv[])
                tpath, strerror(errno));
         ret = 1;
       } 
+
+      if (verbose) printf("  testing nobuf 'fsetattrlist'\n");
+      al.commonattr = ATTR_CMN_FNDRINFO;
+      if (set_tc(&ab)) {
+        ret = 1;
+        break;
+      }
+      err = fsetattrlist(fd, &al, &ab, 0, 0);
+      if (err) {
+        if (errno == ENOMEM || errno == EINVAL) {
+          if (verbose) printf("    failed as expected: %s\n", strerror(errno));
+        } else {
+          printf("  *** nobuf fsetattrlist() for '%s' failed: %s\n",
+                 tpath, strerror(errno));
+          ret = 1;
+        }
+      } else {
+        printf("  *** nobuf fsetattrlist() unexpectedly succeeded\n");
+        ret = 1;
+      }
     }
 
     if (verbose) printf("  testing null 'fgetattrlist'\n");
-    al.commonattr  = 0;
+    al.commonattr = 0;
+    ab.length = -1;
     if (fgetattrlist(fd, &al, &ab, sizeof(ab), 0)) {
       printf("  *** null fgetattrlist() for '%s' failed: %s\n",
              tpath, strerror(errno));
@@ -197,8 +277,37 @@ main(int argc, char *argv[])
       }
     }
 
+    if (verbose) printf("  testing nobuf 'fgetattrlist'\n");
+    al.commonattr = ATTR_CMN_OBJTYPE | ATTR_CMN_FNDRINFO;
+    ab.length = -1;
+    /* Silent truncation means "success" */
+    err = fgetattrlist(fd, &al, &ab, 0, 0);
+    if (err) {
+      if (errno == EINVAL || errno == ERANGE) {
+        if (verbose) printf("    failed as expected: %s\n", strerror(errno));
+      } else {
+        printf("  *** nobuf fgetattrlist() for '%s' failed: %s\n",
+               tpath, strerror(errno));
+        ret = 1;
+      }
+    }
+
+    if (verbose) printf("  testing null/nobuf 'fgetattrlist'\n");
+    al.commonattr = 0;
+    ab.length = -1;
+    err = fgetattrlist(fd, &al, &ab, 0, 0);
+    if (err) {
+      if (errno == EINVAL || errno == ERANGE) {
+        if (verbose) printf("    failed as expected: %s\n", strerror(errno));
+      } else {
+        printf("  *** null/nobuf fgetattrlist() for '%s' failed: %s\n",
+               tpath, strerror(errno));
+        ret = 1;
+      }
+    }
+
     if (verbose) printf("  testing null 'fsetattrlist'\n");
-    al.commonattr  = 0;
+    al.commonattr = 0;
     ab.length = sizeof(ab.length);
     if (fsetattrlist(fd, &al, &ab, sizeof(ab), 0)) {
       printf("  *** null fsetattrlist() for '%s' failed: %s\n",
@@ -207,10 +316,18 @@ main(int argc, char *argv[])
     }
 
     if (verbose) printf("  testing null/zero 'fsetattrlist'\n");
-    al.commonattr  = 0;
+    al.commonattr = 0;
     ab.length = 0;
     if (fsetattrlist(fd, &al, &ab, sizeof(ab), 0)) {
       printf("  *** null/zero fsetattrlist() for '%s' failed: %s\n",
+             tpath, strerror(errno));
+      ret = 1;
+    }
+
+    if (verbose) printf("  testing null/nobuf 'fsetattrlist'\n");
+    al.commonattr = 0;
+    if (fsetattrlist(fd, &al, &ab, 0, 0)) {
+      printf("  *** null/nobuf fsetattrlist() for '%s' failed: %s\n",
              tpath, strerror(errno));
       ret = 1;
     }

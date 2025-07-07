@@ -197,7 +197,10 @@ PACKETRUNS      := $(patsubst \
                      $(TESTNAMEPREFIX)%.c,$(TESTRUNPREFIX)%,$(PACKETSRCS_C))
 STPNCHKSRCS_C    := $(wildcard $(TESTNAMEPREFIX)stpncpy_chk*.c)
 STPNCHKRUNS      := $(patsubst \
-                     $(TESTNAMEPREFIX)%.c,$(TESTRUNPREFIX)%,$(STPNCHKSRCS_C))
+                      $(TESTNAMEPREFIX)%.c,$(TESTRUNPREFIX)%,$(STPNCHKSRCS_C))
+ATTRLISTSRCS_C   := $(wildcard $(TESTNAMEPREFIX)attrlist*.c)
+ATTRLISTRUNS     := $(patsubst \
+                      $(TESTNAMEPREFIX)%.c,$(TESTRUNPREFIX)%,$(ATTRLISTSRCS_C))
 
 # Tests that are only run manually
 MANTESTDIR       = manual_tests
@@ -483,6 +486,9 @@ $(XTESTBINPREFIX)allheaders_199309_ds.o: $(XTESTNAMEPREFIX)allheaders.c
 $(XTESTBINPREFIX)allheaders_200809_ds.o: $(XTESTNAMEPREFIX)allheaders.c
 $(XTESTBINPREFIX)allheaders_full_ds.o: $(XTESTNAMEPREFIX)allheaders.c
 
+# The "attrlist_nonposix" test includes the attrlist test source
+$(TESTNAMEPREFIX)attrlist_nonposix.o: $(TESTNAMEPREFIX)attrlist.c
+
 # Provide a target for all "darwin_c" tests
 $(XTESTRUNPREFIX)darwin_c_all: $(DARWINRUNS)
 
@@ -509,6 +515,9 @@ $(TESTRUNPREFIX)packet_all: $(PACKETRUNS)
 
 # Provide a target for all "allheaders" tests
 $(XTESTRUNPREFIX)allheaders_all: $(ALLHDRRUNS)
+
+# Provide a target for all "attrlist" tests
+$(TESTRUNPREFIX)attrlist_all: $(ATTRLISTRUNS)
 
 install: install-headers install-lib
 
