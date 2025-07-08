@@ -38,6 +38,12 @@
  * that such handling wouldn't be worthwhile.  Hence, we just use the
  * normally appropriate stack-based buffers, and let the fcntl() wrapper
  * fix the 10.4 ppc64 case.
+ *
+ * NOTE: This needs to be a separate source from setattrlist, due to
+ * the handling of the variant suffixes.
+ *
+ * Also note that, if we're not supplying missing functions here, then
+ * a wrapper for fsetattrlist() may be provided by setattrlist.
  */
 
 #include <fcntl.h>

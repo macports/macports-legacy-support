@@ -279,6 +279,10 @@
 #define __MPLS_SDK_SUPPORT_FXETATTRLIST__     (__MPLS_SDK_MAJOR < 1060)
 #define __MPLS_LIB_SUPPORT_FXETATTRLIST__     (__MPLS_TARGET_OSVER < 1060)
 
+/* Bugfix for [f]setattrlist() */
+#define __MPLS_LIB_FIX_SETATTRLIST__          (__MPLS_TARGET_OSVER < 1080 \
+                                               && __MPLS_TARGET_OSVER >= 1050)
+
 /* localtime_r, gmtime_r, etc only declared on Tiger when _ANSI_SOURCE and _POSIX_C_SOURCE are undefined */
 #define __MPLS_SDK_SUPPORT_TIME_THREAD_SAFE_FUNCTIONS__  (__MPLS_SDK_MAJOR < 1050)
 
