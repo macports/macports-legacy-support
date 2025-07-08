@@ -40,6 +40,8 @@
  *   Adding dummy quarantine operations for 10.4
  *   Fixing unused variable warnings when built on some later OSes.
  *   Making offsetof definition conditional to avoid SDK conflict.
+ *   Fixing misleading indentation warned by gcc 11+.
+ *   Fixing unused variable warning from clang 15+.
  */
 
 /*
@@ -1877,6 +1879,7 @@ static int copyfile_security(copyfile_state_t s)
 		goto no_acl;
 
 	if (acl_src) {
+		(void) copied;  /* Apple's unused variable may provoke a warning. */
 		if (acl_dst == NULL)
 			acl_dst = acl_init(4);
 		for (copied = 0;acl_get_entry(acl_src,
@@ -2793,9 +2796,9 @@ static int copyfile_unpack(copyfile_state_t s)
 	    if (entry->namelen < 2) {
 		if (COPYFILE_VERBOSE & s->flags)
 		    copyfile_warn("Corrupt attribute entry (only %d bytes)", entry->namelen);
-		    error = -1;
-		    s->err = EINVAL;
-		    goto exit;
+		error = -1;
+		s->err = EINVAL;
+		goto exit;
 	    }
 
 	    if (entry->namelen > XATTR_MAXNAMELEN + 1) {
