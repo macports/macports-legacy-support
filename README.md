@@ -130,6 +130,16 @@ Wrapped headers and replaced functions are:
     <td>OSX10.14</td>
   </tr>
   <tr>
+    <td rowspan="2"><code>unistd.h</code></td>
+    <td>Adds <code>fgetattrlist</code> and <code>fsetattrlist</code>
+        functions</td>
+    <td>OSX10.5</td>
+  </tr>
+  <tr>
+    <td>Fixes bug in <code>setattrlist</code> function</td>
+    <td>OSX10.7</td>
+  </tr>
+  <tr>
     <td><code>wchar.h</code></td>
     <td>Adds <code>wcsdup</code>, <code>wcsnlen</code>, <code>wcpcpy</code>,
         <code>wcpncpy</code>, <code>wcscasecmp</code>, and <code>wcsncasecmp</code>
@@ -264,8 +274,7 @@ Wrapped headers and replaced functions are:
     <td rowspan="3"><code>sys/unistd.h</code></td>
     <td>Adds <code>getattrlistat</code>, <code>readlinkat</code>, <code>faccessat</code>,
         <code>fchownat</code>, <code>linkat</code>, <code>symlinkat</code>,
-        <code>unlinkat</code>,
-        <code>fsetattrlist</code>, and <code>fgetattrlist</code> functions.</td>
+        and <code>unlinkat</code> functions.</td>
     <td>OSX10.9</td>
   </tr>
   <tr>
