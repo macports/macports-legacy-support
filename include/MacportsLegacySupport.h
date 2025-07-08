@@ -415,9 +415,9 @@
 
 /* fix bug in pthread_get_stacksize_np */
 /* see https://github.com/rust-lang/rust/issues/43347 */
-#define __MPLS_LIB_SUPPORT_PTHREAD_GET_STACKSIZE_NP_FIX__  (__MPLS_TARGET_OSVER == 101000 \
-                                                            || __MPLS_TARGET_OSVER == 1090 \
-                                                            || __MPLS_TARGET_OSVER <  1060)
+#define __MPLS_LIB_SUPPORT_PTHREAD_GET_STACKSIZE_NP_FIX__  (__MPLS_TARGET_OSVER < 1060 \
+                                                            || (__MPLS_TARGET_OSVER >= 1090 \
+                                                                && __MPLS_TARGET_OSVER < 101100))
 
 /* clonefile, clonefileat, fclonefileat */
 #define __MPLS_SDK_SUPPORT_CLONEFILE__       (__MPLS_SDK_MAJOR < 101200)
