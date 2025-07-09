@@ -34,6 +34,9 @@
 #define TEST_TEMP "/dev/null"
 #endif
 
+#define BILLION 1000000000LL
+#define LL (long long)
+
 typedef struct timespec timespec_t;
 typedef struct timeval timeval_t;
 
@@ -92,7 +95,7 @@ do_tests(int mode, const char *path, int apfs,
 {
   int ret = 0, i, lret, fd = -1;
   struct stat pre_st, post_st;
-  timespec_t now;
+  int64_t before, test, after;
 
   if (verbose) printf("  Testing %s\n", mode ? "futimens()" : "utimensat()");
 
@@ -105,12 +108,14 @@ do_tests(int mode, const char *path, int apfs,
                           tptr[i][0].tv_sec, tptr[i][0].tv_nsec,
                           tptr[i][1].tv_sec, tptr[i][1].tv_nsec);
 
-      if (clock_gettime(CLOCK_REALTIME, &now)) {
-        printf("      *** clock_gettime() failed: %s (%d)\n",
+      if (!(before = clock_gettime_nsec_np(CLOCK_REALTIME))) {
+        printf("      *** clock_gettime_nsec_np() failed: %s (%d)\n",
                strerror(errno), errno);
         ret = 1;
         break;
       }
+      /* Accomodate one-second-resolution non-APFS timestamps */
+      if (!apfs) before = before / BILLION * BILLION;
 
       if (mode ? fstat(fd, &pre_st) : stat(path, &pre_st)) {
         printf("      *** first stat() failed: %s (%d)\n",
@@ -132,11 +137,21 @@ do_tests(int mode, const char *path, int apfs,
         break;
       }
 
+      if (!(after = clock_gettime_nsec_np(CLOCK_REALTIME))) {
+        printf("      *** clock_gettime_nsec_np() failed: %s (%d)\n",
+               strerror(errno), errno);
+        ret = 1;
+        break;
+      }
+
       /* First do the atimes */
       lret = 0;
       if (tptr[i][0].tv_nsec == UTIME_NOW) {
-        if (post_st.st_atimespec.tv_sec < now.tv_sec) {
-          printf("      *** post-stat atime seconds < now\n");
+        test = post_st.st_atimespec.tv_sec * BILLION
+               + post_st.st_atimespec.tv_nsec;
+        if (test < before || test > after) {
+          printf("      *** post-stat atime fails %lld <= %lld <= %lld\n",
+                 LL before, LL test, LL after);
           lret = 1;
         }
       } else if (tptr[i][0].tv_nsec == UTIME_OMIT) {
@@ -195,8 +210,11 @@ do_tests(int mode, const char *path, int apfs,
       /* Now do the mtimes */
       lret = 0;
       if (tptr[i][1].tv_nsec == UTIME_NOW) {
-        if (post_st.st_mtimespec.tv_sec < now.tv_sec) {
-          printf("      *** post-stat mtime seconds < now\n");
+        test = post_st.st_mtimespec.tv_sec * BILLION
+               + post_st.st_mtimespec.tv_nsec;
+        if (test < before || test > after) {
+          printf("      *** post-stat mtime fails %lld <= %lld <= %lld\n",
+                 LL before, LL test, LL after);
           lret = 1;
         }
       } else if (tptr[i][1].tv_nsec == UTIME_OMIT) {
