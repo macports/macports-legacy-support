@@ -91,7 +91,7 @@ print_case(const timespec_t *tts, const timespec_t *ots, const timespec_t *nts)
 
 static int
 do_tests(int mode, const char *path, int apfs,
-         int verbose, int keepgoing, int *filter)
+         int verbose, int quiet, int keepgoing, int *filter)
 {
   int ret = 0, i, lret, fd = -1;
   struct stat pre_st, post_st;
@@ -171,7 +171,7 @@ do_tests(int mode, const char *path, int apfs,
              * the atime when the mtime operand is set to UTIME_OMIT.  We check
              * for that case here, and tolerate the error.
              */
-            if (!*filter || verbose) {
+            if (!quiet && (!*filter || verbose)) {
               printf("      *** "
                      "tolerating known bug setting atime without mtime.\n");
             }
@@ -276,7 +276,7 @@ do_tests(int mode, const char *path, int apfs,
 int
 main(int argc, char *argv[])
 {
-  int argn = 1, verbose = 0, keepgoing = 0;
+  int argn = 1, verbose = 0, quiet = 0, keepgoing = 0;
   int ret = 0, apfs = 0, filter = 0;
   char *progname = basename(argv[0]);
   pid_t pid = getpid();
@@ -290,6 +290,7 @@ main(int argc, char *argv[])
     while ((chr = *++cp)) {
       switch (chr) {
         case 'K': ++keepgoing; break;
+        case 'q': ++quiet; break;
         case 'v': ++verbose; break;
       }
     }
@@ -308,12 +309,12 @@ main(int argc, char *argv[])
     if (verbose) printf("  filesystem type is '%s'\n", sfs.f_fstypename);
     apfs = !strcmp(sfs.f_fstypename, "apfs");
 
-    ret = do_tests(0, tpath, apfs, verbose, keepgoing, &filter);
+    ret = do_tests(0, tpath, apfs, verbose, quiet, keepgoing, &filter);
     if (!ret || keepgoing) {
-      ret = do_tests(1, tpath, apfs, verbose, keepgoing, &filter);
+      ret = do_tests(1, tpath, apfs, verbose, quiet, keepgoing, &filter);
     }
   }
 
-  printf("%s %s.\n", progname, ret ? "failed" : "passed");
+  if (!quiet || ret) printf("%s %s.\n", progname, ret ? "failed" : "passed");
   return ret;
 }
