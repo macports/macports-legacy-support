@@ -90,7 +90,7 @@ setattrlist$UNIX2003(const char *path, void *attrList, void *attrBuf,
                      size_t attrBufSize, attrlist_opts_t options)
 {
   int ret, saverr = errno;
-  GET_OS_ALT_FUNC(setattrlist$UNIX2003, setattrlist)
+  GET_OS_ALT_FUNC(setattrlist,$UNIX2003)
 
   /* Try the call - if it's not the possible bug, just pass the result. */
   ret = (*os_setattrlist)(path, attrList, attrBuf, attrBufSize, options);
