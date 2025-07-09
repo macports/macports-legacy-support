@@ -24,25 +24,32 @@
 
 #include "compiler.h"
 
+/* Composite conditionals, determining need for functions */
+
 #define __MPLS_NEED_CHECK_ACCESS__ \
     (__MPLS_LIB_FIX_TIGER_PPC64__ \
      || __MPLS_LIB_SUPPORT_STAT64__)
 
-/* Obtain the address of an OS function */
-#define GET_OS_FUNC(name) \
+/*
+ * Obtain the address of an OS function, with an optional suffix
+ *
+ * This provides both the variable and the code to obtain a pointer to
+ * a given OS function via dlsym(), with an optional variant-related
+ * suffix (e.g. '$UNIX2003') to use in the lookup.
+ *
+ * Args are:
+ *   name: the standard function name
+ *   suffix: the optional suffix
+ */
+#define GET_OS_ALT_FUNC(name, suffix) \
   static __typeof__(name) *os_##name = NULL; \
   \
   if (MPLS_SLOWPATH(!os_##name)) { \
-    if (!(os_##name = dlsym(RTLD_NEXT, #name))) abort(); \
+    if (!(os_##name = dlsym(RTLD_NEXT, #name #suffix))) abort(); \
   }
 
-/* Obtain the address of an alternate OS function variant */
-#define GET_OS_ALT_FUNC(name, stdname) \
-  static __typeof__(stdname) *os_##stdname = NULL; \
-  \
-  if (MPLS_SLOWPATH(!os_##stdname)) { \
-    if (!(os_##stdname = dlsym(RTLD_NEXT, #name))) abort(); \
-  }
+/* Obtain the address of an OS function, without an optional suffix */
+#define GET_OS_FUNC(name) GET_OS_ALT_FUNC(name,)
 
 #if __MPLS_NEED_CHECK_ACCESS__
 
