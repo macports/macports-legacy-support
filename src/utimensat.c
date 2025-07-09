@@ -64,18 +64,19 @@ prepare_times_array_and_attrs(struct timespec times_in[2],
 		struct timespec now = {};
 		{
 			/*
-			 * TODO: Replace with nanosecond time when available
+			 * The original code uses __commpage_gettimeofday(),
+			 * with a fallback to __gettimeofday() here, but the
+			 * commpage mechanism isn't available prior to 10.12.
+			 * We can straightforwardly use clock_gettime(), which
+			 * we provide for <10.12 systems.  This simply wraps
+			 * gettimeofday() with nanosecond scaling, passing
+			 * through any (unlikely) error.  We just ignore any
+			 * error, as does the Apple code.
+			 *
+			 * NOTE: No version of macOS provides better than
+			 * microsecond resolution for timeofday.
 			 */
-			struct timeval tv;
-			/*
-			 * The original code uses __commpage_gettimeofday() with a
-			 * fallback to __gettimeofday() here, but that's only relevant
-			 * in its XNU kernel context.
-			 * Userspace code can comfortably use gettimeofday(), which
-			 * wraps this stuff nicely.
-			 */
-			gettimeofday(&tv, NULL);
-			TIMEVAL_TO_TIMESPEC(&tv, &now);
+			(void) clock_gettime(CLOCK_REALTIME, &now);;
 		}
 
 		if (times_in[0].tv_nsec == UTIME_NOW) {
