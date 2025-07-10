@@ -43,11 +43,17 @@
 
 typedef struct attrlist attrlist_t;
 
+/* FinderInfo alone */
 typedef struct FInfoAttrBuf_s {
-    u_int32_t    length;
-    fsobj_type_t objType;
     uint8_t      finderInfo[32];
 } FInfoAttrBuf_t;
+
+/* Complete expected read buffer */
+typedef struct rFInfoAttrBuf_s {
+    u_int32_t       length;
+    fsobj_type_t    objType;
+    FInfoAttrBuf_t  FInfo;
+} rFInfoAttrBuf_t;
 
 static int
 set_tc(FInfoAttrBuf_t *ab)
@@ -58,7 +64,6 @@ set_tc(FInfoAttrBuf_t *ab)
        return 1;
     }
     memset(ab, 0, sizeof(*ab));
-    ab->length = sizeof(*ab);
     memcpy(&ab->finderInfo[0], FINFO_TYPE, FINFO_TCSIZE);
     memcpy(&ab->finderInfo[4], FINFO_CREATOR, FINFO_TCSIZE);
     return 0;
@@ -72,7 +77,7 @@ main(int argc, char *argv[])
   pid_t pid = getpid();
   char tpath[MAXPATHLEN];
   attrlist_t al = {.bitmapcount = ATTR_BIT_MAP_COUNT};
-  FInfoAttrBuf_t ab;
+  rFInfoAttrBuf_t abr; FInfoAttrBuf_t abw;
 
   if (argc > 1 && !strcmp(argv[1], "-v")) verbose = 1;
 
@@ -90,29 +95,29 @@ main(int argc, char *argv[])
 
     if (verbose) printf("  testing 'getattrlist'\n");
     al.commonattr = ATTR_CMN_OBJTYPE | ATTR_CMN_FNDRINFO;
-    ab.length = -1;
-    if (getattrlist(tpath, &al, &ab, sizeof(ab), 0)) {
+    abr.length = -1;
+    if (getattrlist(tpath, &al, &abr, sizeof(abr), 0)) {
       printf("  *** getattrlist() for '%s' failed: %s\n",
              tpath, strerror(errno));
       ret = 1;
     } else {
-      if (ab.length != sizeof(ab)) {
+      if (abr.length != sizeof(abr)) {
         printf("  *** getattrlist() returned length %d, should be %d\n",
-               ab.length, (int) sizeof(ab));
+               abr.length, (int) sizeof(abr));
         ret = 1;
       }
-      if (ab.objType != VREG) {
+      if (abr.objType != VREG) {
         printf("  *** '%s' is not a regular file.\n", tpath);
         ret = 1;
       }
 
       if (verbose) printf("  testing 'setattrlist'\n");
       al.commonattr = ATTR_CMN_FNDRINFO;
-      if (set_tc(&ab)) {
+      if (set_tc(&abw)) {
         ret = 1;
         break;
       }
-      if (setattrlist(tpath, &al, &ab, sizeof(ab), 0)) {
+      if (setattrlist(tpath, &al, &abw, sizeof(abw), 0)) {
         printf("  *** setattrlist() for '%s' failed: %s\n",
                tpath, strerror(errno));
         ret = 1;
@@ -120,11 +125,11 @@ main(int argc, char *argv[])
 
       if (verbose) printf("  testing nobuf 'setattrlist'\n");
       al.commonattr = ATTR_CMN_FNDRINFO;
-      if (set_tc(&ab)) {
+      if (set_tc(&abw)) {
         ret = 1;
         break;
       }
-      err = setattrlist(tpath, &al, &ab, 0, 0);
+      err = setattrlist(tpath, &al, &abw, 0, 0);
       if (err) {
         if (errno == ENOMEM || errno == EINVAL) {
           if (verbose) printf("    failed as expected: %s\n", strerror(errno));
@@ -141,25 +146,25 @@ main(int argc, char *argv[])
 
     if (verbose) printf("  testing null 'getattrlist'\n");
     al.commonattr = 0;
-    ab.length = -1;
-    if (getattrlist(tpath, &al, &ab, sizeof(ab), 0)) {
+    abr.length = -1;
+    if (getattrlist(tpath, &al, &abr, sizeof(abr), 0)) {
       printf("  *** null getattrlist() for '%s' failed: %s\n",
              tpath, strerror(errno));
       ret = 1;
     } else {
       /* Null result should have length of just the length field alone. */
-      if (ab.length != sizeof(ab.length)) {
+      if (abr.length != sizeof(abr.length)) {
         printf("  *** null getattrlist() returned length %d, should be %d\n",
-               ab.length, (int) sizeof(ab.length));
+               abr.length, (int) sizeof(abr.length));
         ret = 1;
       }
     }
 
     if (verbose) printf("  testing nobuf 'getattrlist'\n");
     al.commonattr = ATTR_CMN_OBJTYPE | ATTR_CMN_FNDRINFO;
-    ab.length = -1;
+    abr.length = -1;
     /* Silent truncation means "success" */
-    err = getattrlist(tpath, &al, &ab, 0, 0);
+    err = getattrlist(tpath, &al, &abr, 0, 0);
     if (err) {
       if (errno == EINVAL || errno == ERANGE) {
         if (verbose) printf("    failed as expected: %s\n", strerror(errno));
@@ -172,8 +177,8 @@ main(int argc, char *argv[])
 
     if (verbose) printf("  testing null/nobuf 'getattrlist'\n");
     al.commonattr = 0;
-    ab.length = -1;
-    err = getattrlist(tpath, &al, &ab, 0, 0);
+    abr.length = -1;
+    err = getattrlist(tpath, &al, &abr, 0, 0);
     if (err) {
       if (errno == EINVAL || errno == ERANGE) {
         if (verbose) printf("    failed as expected: %s\n", strerror(errno));
@@ -186,25 +191,15 @@ main(int argc, char *argv[])
 
     if (verbose) printf("  testing null 'setattrlist'\n");
     al.commonattr = 0;
-    ab.length = sizeof(ab.length);
-    if (setattrlist(tpath, &al, &ab, sizeof(ab), 0)) {
+    if (setattrlist(tpath, &al, &abw, sizeof(abw), 0)) {
       printf("  *** null setattrlist() for '%s' failed: %s\n",
-             tpath, strerror(errno));
-      ret = 1;
-    }
-
-    if (verbose) printf("  testing null/zero 'setattrlist'\n");
-    al.commonattr = 0;
-    ab.length = 0;
-    if (setattrlist(tpath, &al, &ab, sizeof(ab), 0)) {
-      printf("  *** null/zero setattrlist() for '%s' failed: %s\n",
              tpath, strerror(errno));
       ret = 1;
     }
 
     if (verbose) printf("  testing null/nobuf 'setattrlist'\n");
     al.commonattr = 0;
-    if (setattrlist(tpath, &al, &ab, 0, 0)) {
+    if (setattrlist(tpath, &al, &abw, 0, 0)) {
       printf("  *** null/nobuf setattrlist() for '%s' failed: %s\n",
              tpath, strerror(errno));
       ret = 1;
@@ -212,29 +207,29 @@ main(int argc, char *argv[])
 
     if (verbose) printf("  testing 'fgetattrlist'\n");
     al.commonattr = ATTR_CMN_OBJTYPE | ATTR_CMN_FNDRINFO;
-    ab.length = -1;
-    if (fgetattrlist(fd, &al, &ab, sizeof(ab), 0)) {
+    abr.length = -1;
+    if (fgetattrlist(fd, &al, &abr, sizeof(abr), 0)) {
       printf("  *** fgetattrlist() for '%s' failed: %s\n",
              tpath, strerror(errno));
       ret = 1;
     } else {
-      if (ab.length != sizeof(ab)) {
+      if (abr.length != sizeof(abr)) {
         printf("  *** fgetattrlist() returned length %d, should be %d\n",
-               ab.length, (int) sizeof(ab));
+               abr.length, (int) sizeof(abr));
         ret = 1;
       }
-      if (ab.objType != VREG) {
+      if (abr.objType != VREG) {
         printf("  *** '%s' is not a regular file.\n", tpath);
         ret = 1;
       }
 
       if (verbose) printf("  testing 'fsetattrlist'\n");
       al.commonattr = ATTR_CMN_FNDRINFO;
-      if (set_tc(&ab)) {
+      if (set_tc(&abw)) {
         ret = 1;
         break;
       }
-      if (fsetattrlist(fd, &al, &ab, sizeof(ab), 0)) {
+      if (fsetattrlist(fd, &al, &abw, sizeof(abw), 0)) {
         printf("  *** fsetattrlist() for '%s' failed: %s\n",
                tpath, strerror(errno));
         ret = 1;
@@ -242,11 +237,11 @@ main(int argc, char *argv[])
 
       if (verbose) printf("  testing nobuf 'fsetattrlist'\n");
       al.commonattr = ATTR_CMN_FNDRINFO;
-      if (set_tc(&ab)) {
+      if (set_tc(&abw)) {
         ret = 1;
         break;
       }
-      err = fsetattrlist(fd, &al, &ab, 0, 0);
+      err = fsetattrlist(fd, &al, &abw, 0, 0);
       if (err) {
         if (errno == ENOMEM || errno == EINVAL) {
           if (verbose) printf("    failed as expected: %s\n", strerror(errno));
@@ -263,25 +258,25 @@ main(int argc, char *argv[])
 
     if (verbose) printf("  testing null 'fgetattrlist'\n");
     al.commonattr = 0;
-    ab.length = -1;
-    if (fgetattrlist(fd, &al, &ab, sizeof(ab), 0)) {
+    abr.length = -1;
+    if (fgetattrlist(fd, &al, &abr, sizeof(abr), 0)) {
       printf("  *** null fgetattrlist() for '%s' failed: %s\n",
              tpath, strerror(errno));
       ret = 1;
     } else {
       /* Null result should have length of just the length field alone. */
-      if (ab.length != sizeof(ab.length)) {
+      if (abr.length != sizeof(abr.length)) {
         printf("  *** null fgetattrlist() returned length %d, should be %d\n",
-               ab.length, (int) sizeof(ab.length));
+               abr.length, (int) sizeof(abr.length));
         ret = 1;
       }
     }
 
     if (verbose) printf("  testing nobuf 'fgetattrlist'\n");
     al.commonattr = ATTR_CMN_OBJTYPE | ATTR_CMN_FNDRINFO;
-    ab.length = -1;
+    abr.length = -1;
     /* Silent truncation means "success" */
-    err = fgetattrlist(fd, &al, &ab, 0, 0);
+    err = fgetattrlist(fd, &al, &abr, 0, 0);
     if (err) {
       if (errno == EINVAL || errno == ERANGE) {
         if (verbose) printf("    failed as expected: %s\n", strerror(errno));
@@ -294,8 +289,8 @@ main(int argc, char *argv[])
 
     if (verbose) printf("  testing null/nobuf 'fgetattrlist'\n");
     al.commonattr = 0;
-    ab.length = -1;
-    err = fgetattrlist(fd, &al, &ab, 0, 0);
+    abr.length = -1;
+    err = fgetattrlist(fd, &al, &abr, 0, 0);
     if (err) {
       if (errno == EINVAL || errno == ERANGE) {
         if (verbose) printf("    failed as expected: %s\n", strerror(errno));
@@ -308,25 +303,15 @@ main(int argc, char *argv[])
 
     if (verbose) printf("  testing null 'fsetattrlist'\n");
     al.commonattr = 0;
-    ab.length = sizeof(ab.length);
-    if (fsetattrlist(fd, &al, &ab, sizeof(ab), 0)) {
+    if (fsetattrlist(fd, &al, &abw, sizeof(abw), 0)) {
       printf("  *** null fsetattrlist() for '%s' failed: %s\n",
-             tpath, strerror(errno));
-      ret = 1;
-    }
-
-    if (verbose) printf("  testing null/zero 'fsetattrlist'\n");
-    al.commonattr = 0;
-    ab.length = 0;
-    if (fsetattrlist(fd, &al, &ab, sizeof(ab), 0)) {
-      printf("  *** null/zero fsetattrlist() for '%s' failed: %s\n",
              tpath, strerror(errno));
       ret = 1;
     }
 
     if (verbose) printf("  testing null/nobuf 'fsetattrlist'\n");
     al.commonattr = 0;
-    if (fsetattrlist(fd, &al, &ab, 0, 0)) {
+    if (fsetattrlist(fd, &al, &abw, 0, 0)) {
       printf("  *** null/nobuf fsetattrlist() for '%s' failed: %s\n",
              tpath, strerror(errno));
       ret = 1;
