@@ -146,9 +146,9 @@ do_tests(int mode, const char *path, int apfs,
 
       /* First do the atimes */
       lret = 0;
+      test = post_st.st_atimespec.tv_sec * BILLION
+             + post_st.st_atimespec.tv_nsec;
       if (tptr[i][0].tv_nsec == UTIME_NOW) {
-        test = post_st.st_atimespec.tv_sec * BILLION
-               + post_st.st_atimespec.tv_nsec;
         if (test < before || test > after) {
           printf("      *** post-stat atime fails %lld <= %lld <= %lld\n",
                  LL before, LL test, LL after);
@@ -163,14 +163,17 @@ do_tests(int mode, const char *path, int apfs,
       } else {
         /* Seconds must always match. */
         if (post_st.st_atimespec.tv_sec != tptr[i][0].tv_sec) {
-          if (!apfs && post_st.st_atimespec.tv_sec == pre_st.st_atimespec.tv_sec
-              && post_st.st_atimespec.tv_nsec == pre_st.st_atimespec.tv_nsec
-              && tptr[i][1].tv_nsec == UTIME_OMIT) {
-            /*
-             * A bug (non-APFS only, including in Apple's code) fails to set
-             * the atime when the mtime operand is set to UTIME_OMIT.  We check
-             * for that case here, and tolerate the error.
-             */
+          /*
+           * A bug (non-APFS only, in Apple's code) fails to set the atime
+           * as intended when the mtime operand is set to UTIME_OMIT.
+           * We check for that case here, and tolerate the error, allowing
+           * it to be either unset or set to "now".
+           */
+          if (!apfs && tptr[i][1].tv_nsec == UTIME_OMIT
+              && ((post_st.st_atimespec.tv_sec == pre_st.st_atimespec.tv_sec
+                   && post_st.st_atimespec.tv_nsec
+                      == pre_st.st_atimespec.tv_nsec)
+                  || (test >= before && test <= after))) {
             if (!quiet && (!*filter || verbose)) {
               printf("      *** "
                      "tolerating known bug setting atime without mtime.\n");
