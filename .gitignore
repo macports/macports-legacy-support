@@ -1,12 +1,7 @@
-*.o
-*.o.*
-*.d
-*.dylib
+*~
 bin
 lib
-*~
-*.dSYM
-*.tmp
+xlib
 tst_data
 tbin
 tlbin
