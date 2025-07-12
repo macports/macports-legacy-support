@@ -63,7 +63,8 @@ ssize_t recvmsg(int, struct msghdr *, int) __DARWIN_ALIAS_C(recvmsg);
 /*
  * OSX prior to 10.6 defines CMSG_DATA without properly considering 64-bit
  * builds, due to bad alignment assumptions, though it happens to work in
- * the 10.4 case and only actually fails in the 10.5 64-bit case.
+ * some 10.4 cases, depending upon the particular SDK, while always
+ * failing on 10.5 64-bit builds.
  *
  * In that OS version we substitute a version of the definition from 10.6.
  */
@@ -75,8 +76,9 @@ ssize_t recvmsg(int, struct msghdr *, int) __DARWIN_ALIAS_C(recvmsg);
 	((size_t)((char *)(size_t)(p) \
 	 + __DARWIN_ALIGNBYTES32) &~ __DARWIN_ALIGNBYTES32)
 
-/* given pointer to struct cmsghdr, return pointer to data */
 #undef CMSG_DATA
+
+/* given pointer to struct cmsghdr, return pointer to data */
 #define	CMSG_DATA(cmsg) ((unsigned char *)(cmsg) + \
 	__DARWIN_ALIGN32(sizeof(struct cmsghdr)))
 
