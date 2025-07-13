@@ -82,6 +82,33 @@ ssize_t recvmsg(int, struct msghdr *, int) __DARWIN_ALIAS_C(recvmsg);
 #define	CMSG_DATA(cmsg) ((unsigned char *)(cmsg) + \
 	__DARWIN_ALIGN32(sizeof(struct cmsghdr)))
 
+#if __MPLS_SDK_CMSG_NXTHDR_FIX__
+
+/*
+ * Also, in some 10.4 SDKs, the definition of CMSG_NXTHDR provokes warnings
+ * in 64-bit builds.  Again, we just substitute the 10.6 definition to
+ * fix it.
+ */
+
+#undef CMSG_NXTHDR
+
+/* 
+ * Given pointer to struct cmsghdr, return pointer to next cmsghdr
+ * RFC 2292 says that CMSG_NXTHDR(mhdr, NULL) is equivalent to CMSG_FIRSTHDR(mhdr)
+ */
+#define	CMSG_NXTHDR(mhdr, cmsg)						\
+	((char *)(cmsg) == (char *)0L ? CMSG_FIRSTHDR(mhdr) :		\
+	 ((((unsigned char *)(cmsg) +					\
+	    __DARWIN_ALIGN32((__uint32_t)(cmsg)->cmsg_len) +		\
+	    __DARWIN_ALIGN32(sizeof(struct cmsghdr))) >			\
+	    ((unsigned char *)(mhdr)->msg_control +			\
+	     (mhdr)->msg_controllen)) ?					\
+	  (struct cmsghdr *)0L /* NULL */ :				\
+	  (struct cmsghdr *)((unsigned char *)(cmsg) +			\
+	 		    __DARWIN_ALIGN32((__uint32_t)(cmsg)->cmsg_len))))
+
+#endif  /* __MPLS_SDK_CMSG_NXTHDR_FIX__ */
+
 #endif /* __MPLS_SDK_CMSG_DATA_FIX__ */
 
 #endif /* !_MACPORTS_LEGACY_DISABLE_CMSG_FIXES */
