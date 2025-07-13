@@ -122,20 +122,47 @@ typedef struct tsattr_s {
     timespec_t      acctime;
 } tsattr_t;
 
+const char * const getname[] = {
+    "getattrlist", "fgetattrlist", "getattrlistat",
+    };
+const char * const setname[] = {
+    "setattrlist", "fsetattrlist", "setattrlistat",
+    };
+
 static int
 xgetattrlist(int mode, const char* path, int fd, attrlist_t *attrList,
              void *attrBuf, size_t attrBufSize, attrlist_opts_t options)
 {
-  return mode ? fgetattrlist(fd, attrList, attrBuf, attrBufSize, options)
-              : getattrlist(path, attrList, attrBuf, attrBufSize, options);
+  switch (mode) {
+
+  case 0:
+    return getattrlist(path, attrList, attrBuf, attrBufSize, options);
+
+  case 1:
+    return fgetattrlist(fd, attrList, attrBuf, attrBufSize, options);
+
+  case 2:
+    return getattrlistat(fd, path, attrList, attrBuf, attrBufSize, options);
+  }
+  return 0;  /* Shouldn't get here */
 }
 
 static int
 xsetattrlist(int mode, const char* path, int fd, attrlist_t *attrList,
              void *attrBuf, size_t attrBufSize, attrlist_opts_t options)
 {
-  return mode ? fsetattrlist(fd, attrList, attrBuf, attrBufSize, options)
-              : setattrlist(path, attrList, attrBuf, attrBufSize, options);
+  switch (mode) {
+
+  case 0:
+    return setattrlist(path, attrList, attrBuf, attrBufSize, options);
+
+  case 1:
+    return fsetattrlist(fd, attrList, attrBuf, attrBufSize, options);
+
+  case 2:
+    return setattrlistat(fd, path, attrList, attrBuf, attrBufSize, options);
+  }
+  return 0;  /* Shouldn't get here */
 }
 
 static int
@@ -147,14 +174,14 @@ get_tsattrs(int mode, const char* path, int fd, tsattr_t *tsb)
 
   ret = xgetattrlist(mode, path, fd, &al, tsb, sizeof(*tsb), 0);
   if (ret) {
-    printf("      *** %sgetattrlist() for timestamps failed: %s\n",
-           mode ? "f" : "", strerror(errno));
+    printf("      *** %s() for timestamps failed: %s\n",
+           getname[mode], strerror(errno));
     return ret;
   }
   if (tsb->length != sizeof(*tsb)) {
-    printf("      *** %sgetattrlist() for timestamps returned"
+    printf("      *** %s() for timestamps returned"
            " length %d, should be %d\n",
-           mode ? "f" : "", tsb->length, (int) sizeof(*tsb));
+           getname[mode], tsb->length, (int) sizeof(*tsb));
   }
   return 0;
 }
@@ -195,8 +222,8 @@ set_tsattrs(int mode, const char* path, int fd, tsattr_t *tsb,
 
   ret = xsetattrlist(mode, path, fd, &al, &wbuf, wbp - &wbuf[0], 0);
   if (ret) {
-    printf("      *** %ssetattrlist() for timestamps failed: %s\n",
-           mode ? "f" : "", strerror(errno));
+    printf("      *** %s() for timestamps failed: %s\n",
+           setname[mode], strerror(errno));
     return ret;
   }
   return 0;
@@ -278,17 +305,25 @@ do_tstests(int mode, const char *path, int fd, int apfs,
 }
 
 static int
-do_tests(int mode, const char *path, int apfs,
+do_tests(int mode, const char *path, const char *rpath, int apfs,
          int verbose, int testmode)
 {
-  int ret = 0, fd = -1, err;
+  int ret = 0, dirfd = -1, fd = -1, xfd, err;
+  const char *xpath;
   attrlist_t al = {.bitmapcount = ATTR_BIT_MAP_COUNT};
   rFInfoAttrBuf_t abr; FInfoAttrBuf_t abw;
 
-  const char *get = mode ? "fgetattrlist" : "getattrlist";
-  const char *set = mode ? "fsetattrlist" : "setattrlist";
+  const char *get = getname[mode];
+  const char *set = setname[mode];
 
   do {
+    if (verbose) printf("  opening '" TEST_TEMP "'\n");
+    if ((dirfd = open(TEST_TEMP, O_RDONLY)) < 0) {
+       printf("    *** unable to open '" TEST_TEMP "': %s\n", strerror(errno));
+       ret = 1;
+       break;
+    }
+
     if (verbose) printf("  creating '%s'\n", path);
     if ((fd = open(path, O_CREAT | O_RDWR, S_IRWXU)) < 0) {
        printf("    *** unable to open '%s': %s\n", path, strerror(errno));
@@ -296,12 +331,20 @@ do_tests(int mode, const char *path, int apfs,
        break;
     }
 
+    if (mode == 2) {
+      xfd = dirfd;
+      xpath = rpath;
+    } else {
+      xfd = fd;
+      xpath = path;
+    }
+
     if (verbose) printf("    testing '%s'\n", get);
     al.commonattr = ATTR_CMN_OBJTYPE | ATTR_CMN_FNDRINFO;
     abr.length = -1;
-    if (xgetattrlist(mode, path, fd, &al, &abr, sizeof(abr), 0)) {
+    if (xgetattrlist(mode, xpath, xfd, &al, &abr, sizeof(abr), 0)) {
       printf("      *** %s() for '%s' failed: %s\n",
-             get, path, strerror(errno));
+             get, xpath, strerror(errno));
       ret = 1;
     } else {
       if (abr.length != sizeof(abr)) {
@@ -320,9 +363,9 @@ do_tests(int mode, const char *path, int apfs,
         ret = 1;
         break;
       }
-      if (xsetattrlist(mode, path, fd, &al, &abw, sizeof(abw), 0)) {
+      if (xsetattrlist(mode, xpath, xfd, &al, &abw, sizeof(abw), 0)) {
         printf("      *** %s() for '%s' failed: %s\n",
-               set, path, strerror(errno));
+               set, xpath, strerror(errno));
         ret = 1;
       } 
 
@@ -332,14 +375,14 @@ do_tests(int mode, const char *path, int apfs,
         ret = 1;
         break;
       }
-      err = xsetattrlist(mode, path, fd, &al, &abw, 0, 0);
+      err = xsetattrlist(mode, xpath, xfd, &al, &abw, 0, 0);
       if (err) {
         if (errno == ENOMEM || errno == EINVAL) {
           if (verbose) printf("      failed as expected: %s\n",
                               strerror(errno));
         } else {
           printf("      *** nobuf %s() for '%s' failed: %s\n",
-                 set, path, strerror(errno));
+                 set, xpath, strerror(errno));
           ret = 1;
         }
       } else {
@@ -351,9 +394,9 @@ do_tests(int mode, const char *path, int apfs,
     if (verbose) printf("    testing null '%s'\n", get);
     al.commonattr = 0;
     abr.length = -1;
-    if (xgetattrlist(mode, path, fd, &al, &abr, sizeof(abr), 0)) {
+    if (xgetattrlist(mode, xpath, xfd, &al, &abr, sizeof(abr), 0)) {
       printf("      *** null %s() for '%s' failed: %s\n",
-             get, path, strerror(errno));
+             get, xpath, strerror(errno));
       ret = 1;
     } else {
       /* Null result should have length of just the length field alone. */
@@ -368,13 +411,13 @@ do_tests(int mode, const char *path, int apfs,
     al.commonattr = ATTR_CMN_OBJTYPE | ATTR_CMN_FNDRINFO;
     abr.length = -1;
     /* Silent truncation means "success" */
-    err = xgetattrlist(mode, path, fd, &al, &abr, 0, 0);
+    err = xgetattrlist(mode, xpath, xfd, &al, &abr, 0, 0);
     if (err) {
       if (errno == EINVAL || errno == ERANGE) {
         if (verbose) printf("      failed as expected: %s\n", strerror(errno));
       } else {
         printf("      *** nobuf %s() for '%s' failed: %s\n",
-               get, path, strerror(errno));
+               get, xpath, strerror(errno));
         ret = 1;
       }
     }
@@ -382,34 +425,34 @@ do_tests(int mode, const char *path, int apfs,
     if (verbose) printf("    testing null/nobuf '%s'\n", get);
     al.commonattr = 0;
     abr.length = -1;
-    err = xgetattrlist(mode, path, fd, &al, &abr, 0, 0);
+    err = xgetattrlist(mode, xpath, xfd, &al, &abr, 0, 0);
     if (err) {
       if (errno == EINVAL || errno == ERANGE) {
         if (verbose) printf("      failed as expected: %s\n", strerror(errno));
       } else {
         printf("      *** null/nobuf %s() for '%s' failed: %s\n",
-               get, path, strerror(errno));
+               get, xpath, strerror(errno));
         ret = 1;
       }
     }
 
     if (verbose) printf("    testing null '%s'\n", set);
     al.commonattr = 0;
-    if (xsetattrlist(mode, path, fd, &al, &abw, sizeof(abw), 0)) {
+    if (xsetattrlist(mode, xpath, xfd, &al, &abw, sizeof(abw), 0)) {
       printf("      *** null %s() for '%s' failed: %s\n",
-             set, path, strerror(errno));
+             set, xpath, strerror(errno));
       ret = 1;
     }
 
     if (verbose) printf("    testing null/nobuf '%s'\n", set);
     al.commonattr = 0;
-    if (xsetattrlist(mode, path, fd, &al, &abw, 0, 0)) {
+    if (xsetattrlist(mode, xpath, xfd, &al, &abw, 0, 0)) {
       printf("      *** null/nobuf %s() for '%s' failed: %s\n",
-             set, path, strerror(errno));
+             set, xpath, strerror(errno));
       ret = 1;
     }
 
-    if (testmode) ret |= do_tstests(mode, path, fd, apfs, verbose, testmode);
+    if (testmode) ret |= do_tstests(mode, xpath, xfd, apfs, verbose, testmode);
   } while (0);
 
   if (fd >= 0) (void) close(fd);
@@ -419,6 +462,11 @@ do_tests(int mode, const char *path, int apfs,
 		printf("    *** error deleting '%s': %s (%d)\n",
 					 path, strerror(errno), errno);
 	}
+
+  if (dirfd >=0) {
+    if (verbose) printf("  closing '" TEST_TEMP "'\n");
+    (void) close(dirfd);
+  }
 
   return ret;
 }
@@ -431,7 +479,7 @@ main(int argc, char *argv[])
   pid_t pid = getpid();
   const char *cp;
   char chr;
-  char tpath[MAXPATHLEN];
+  char tpath[MAXPATHLEN], rpath[MAXPATHLEN];
   struct statfs sfs = {0};
 
   while (argn < argc && argv[argn][0] == '-') {
@@ -445,7 +493,8 @@ main(int argc, char *argv[])
     ++argn;
   }
 
-  (void) snprintf(tpath, sizeof(tpath), "%s/%s-%u", TEST_TEMP, progname, pid);
+  (void) snprintf(tpath, sizeof(tpath), TEST_TEMP "/%s-%u", progname, pid);
+  (void) snprintf(rpath, sizeof(rpath), "%s-%u", progname, pid);
 
   if (verbose) printf("%s starting.\n", progname);
 
@@ -457,8 +506,9 @@ main(int argc, char *argv[])
     if (verbose) printf("  filesystem type is '%s'\n", sfs.f_fstypename);
     apfs = !strcmp(sfs.f_fstypename, "apfs");
 
-    ret = do_tests(0, tpath, apfs, verbose, testmode);
-    ret |= do_tests(1, tpath, apfs, verbose, testmode);
+    ret = do_tests(0, tpath, rpath, apfs, verbose, testmode);
+    ret |= do_tests(1, tpath, rpath, apfs, verbose, testmode);
+    ret |= do_tests(2, tpath, rpath, apfs, verbose, testmode);
   }
 
   printf("%s %s.\n", progname, ret ? "failed" : "passed");
