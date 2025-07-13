@@ -34,6 +34,7 @@
 
 /* MP support header */
 #include "MacportsLegacySupport.h"
+
 #if __MPLS_LIB_SUPPORT_ATCALLS__
 
 #include <assert.h>
@@ -273,5 +274,23 @@ int unlinkat(int dirfd, const char *pathname, int flags)
 }
 
 #endif  /* __MPLS_LIB_SUPPORT_ATCALLS__ */
+
+#if __MPLS_LIB_SUPPORT_SETATTRLISTAT__
+
+#include <stdint.h>
+
+#include <sys/attr.h>
+
+#include "atcalls.h"
+
+int
+setattrlistat(int dirfd, const char *pathname, void *a, void *buf,
+              size_t size, uint32_t flags)
+{
+    return ATCALL(dirfd, pathname,
+                  setattrlist(pathname, a, buf, size, flags));
+}
+
+#endif  /* __MPLS_LIB_SUPPORT_SETATTRLISTAT__ */
 
 /* vi:set et ts=4 sw=4: */
