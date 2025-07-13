@@ -200,6 +200,10 @@
 /* Bad CMSG_DATA definition in <10.6 <sys/socket.h> */
 #define __MPLS_SDK_CMSG_DATA_FIX__            (__MPLS_SDK_MAJOR < 1060)
 
+/* Warning-prone CMSG_NXTHDR definition in some 10.4 <sys/socket.h>s */
+#define __MPLS_SDK_CMSG_NXTHDR_FIX__          (__MPLS_SDK_MAJOR < 1050 \
+                                               && __MPLS_64BIT)
+
 /* Byte-swapping failure in CMSG data with Rosetta (any OS with PPC) */
 #define __MPLS_LIB_CMSG_ROSETTA_FIX__         __MPLS_APPLE_PPC__
 
