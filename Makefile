@@ -76,6 +76,26 @@ XLDFLAGS        ?= $(DEBUG)
 ALLLDFLAGS      := $(ARCHFLAGS) $(XLDFLAGS) $(LDFLAGS)
 TEST_ARGS       ?=
 
+# Setup for possible multiarch test running
+ifneq ($(strip $(ARCHS)),)
+  ifndef TESTARCHS
+    TESTARCHS       := $(shell tools/runnablearchs.sh $(ARCHS))
+  endif
+endif
+TESTARCHS       ?=
+ifdef TESTARCHS
+  ifneq ($(words $(TESTARCHS)), 1)
+    TESTMULTI        = 1
+  endif
+endif
+ifdef TESTMULTI
+  ARCHRUN        := $(shell tools/checkarchprog.sh)
+  ifndef ARCHRUN
+    ARCHRUN        := tools/archrun.sh
+  endif
+endif
+
+# Misc programs
 ARX             ?= /usr/bin/ar
 UNAME           ?= uname
 SED             ?= /usr/bin/sed
@@ -203,7 +223,7 @@ ATTRLISTRUNS    := $(patsubst \
                      $(TESTNAMEPREFIX)%.c,$(TESTRUNPREFIX)%,$(ATTRLISTSRCS_C))
 
 # All automatic test runners
-ALLTESTRUNS      = $(TESTRUNS) $(TESTSRUNS) $(TESTSYSRUNS) $(XTESTRUNS)
+ALLTESTRUNS     := $(TESTRUNS) $(TESTSRUNS) $(TESTSYSRUNS) $(XTESTRUNS)
 
 # Tests that are only run manually
 MANTESTDIR        = manual_tests
@@ -442,11 +462,125 @@ test_cmath: test/test_cmath.cc $(ALLHEADERS) | $(TESTBINDIR)
 mantest_faccessat_setuid: $(TESTBINDIR)/test_faccessat_static | $(TEST_TEMP)
 	@manual_tests/do_test_faccessat_setuid.sh
 
+# Test-running targets - standard
+
 $(ALLTESTRUNS): $(TESTRUNPREFIX)%: $(TESTBINPREFIX)% | $(TEST_TEMP)
 	$< $(TEST_ARGS)
 
 $(ALLMANTESTRUNS): $(MANRUNPREFIX)%: $(MANTESTBINPREFIX)% | $(TEST_TEMP)
 	$< $(TEST_ARGS)
+
+# Targets for multiarch test running
+#
+# Applying the arch list automatically runs into issues with older versions
+# of make, so we just generate versions for all known architectures explicitly.
+# It doesn't hurt to have targets for architectures we're not actually using.
+#
+# Note that the "known architecture" concept only applies to the multiarch
+# test runner.  Builds have no preconceived notions of legal architectures.
+
+# Create 'unv' targets unconditionally.
+
+TESTUNVS        := $(addsuffix _unv,$(TESTRUNS))
+TESTSUNVS       := $(addsuffix _unv,$(TESTSRUNS))
+TESTSYSUNVS     := $(addsuffix _unv,$(TESTSYSRUNS))
+XTESTUNVS       := $(addsuffix _unv,$(XTESTRUNS))
+ALLTESTUNVS     := $(addsuffix _unv,$(ALLTESTRUNS))
+ALLMANTESTUNVS  := $(addsuffix _unv,$(ALLMANTESTRUNS))
+
+.PHONY: $(ALLTESTUNVS) $(ALLMANTESTUNVS)
+
+# Then the rules and targets which are only needed with multiple test arches.
+
+ifdef TESTMULTI
+
+# List of all known architectures - keep in sync with the targets below.
+ALLARCHS        = ppc ppc7400 ppc64 i386 x86_64 x86_64h arm64 arm64e
+
+$(addsuffix _ppc,$(ALLTESTRUNS)): \
+    $(TESTRUNPREFIX)%_ppc: $(TESTBINPREFIX)% | $(TEST_TEMP)
+	$(ARCHRUN) -ppc $< $(TEST_ARGS)
+
+$(addsuffix _ppc,$(ALLMANTESTRUNS)): \
+    $(MANRUNPREFIX)%_ppc: $(MANTESTBINPREFIX)% | $(TEST_TEMP)
+	$(ARCHRUN) -ppc $< $(TEST_ARGS)
+
+$(addsuffix _ppc7400,$(ALLTESTRUNS)): \
+    $(TESTRUNPREFIX)%_ppc7400: $(TESTBINPREFIX)% | $(TEST_TEMP)
+	$(ARCHRUN) -ppc7400 $< $(TEST_ARGS)
+
+$(addsuffix _ppc7400,$(ALLMANTESTRUNS)): \
+    $(MANRUNPREFIX)%_ppc7400: $(MANTESTBINPREFIX)% | $(TEST_TEMP)
+	$(ARCHRUN) -ppc7400 $< $(TEST_ARGS)
+
+$(addsuffix _ppc64,$(ALLTESTRUNS)): \
+    $(TESTRUNPREFIX)%_ppc64: $(TESTBINPREFIX)% | $(TEST_TEMP)
+	$(ARCHRUN) -ppc64 $< $(TEST_ARGS)
+
+$(addsuffix _ppc64,$(ALLMANTESTRUNS)): \
+    $(MANRUNPREFIX)%_ppc64: $(MANTESTBINPREFIX)% | $(TEST_TEMP)
+	$(ARCHRUN) -ppc64 $< $(TEST_ARGS)
+
+$(addsuffix _i386,$(ALLTESTRUNS)): \
+    $(TESTRUNPREFIX)%_i386: $(TESTBINPREFIX)% | $(TEST_TEMP)
+	$(ARCHRUN) -i386 $< $(TEST_ARGS)
+
+$(addsuffix _i386,$(ALLMANTESTRUNS)): \
+    $(MANRUNPREFIX)%_i386: $(MANTESTBINPREFIX)% | $(TEST_TEMP)
+	$(ARCHRUN) -i386 $< $(TEST_ARGS)
+
+$(addsuffix _x86_64,$(ALLTESTRUNS)): \
+    $(TESTRUNPREFIX)%_x86_64: $(TESTBINPREFIX)% | $(TEST_TEMP)
+	$(ARCHRUN) -x86_64 $< $(TEST_ARGS)
+
+$(addsuffix _x86_64,$(ALLMANTESTRUNS)): \
+    $(MANRUNPREFIX)%_x86_64: $(MANTESTBINPREFIX)% | $(TEST_TEMP)
+	$(ARCHRUN) -x86_64 $< $(TEST_ARGS)
+
+$(addsuffix _x86_64h,$(ALLTESTRUNS)): \
+    $(TESTRUNPREFIX)%_x86_64h: $(TESTBINPREFIX)% | $(TEST_TEMP)
+	$(ARCHRUN) -x86_64h $< $(TEST_ARGS)
+
+$(addsuffix _x86_64h,$(ALLMANTESTRUNS)): \
+    $(MANRUNPREFIX)%_x86_64h: $(MANTESTBINPREFIX)% | $(TEST_TEMP)
+	$(ARCHRUN) -x86_64h $< $(TEST_ARGS)
+
+$(addsuffix _arm64,$(ALLTESTRUNS)): \
+    $(TESTRUNPREFIX)%_arm64: $(TESTBINPREFIX)% | $(TEST_TEMP)
+	$(ARCHRUN) -arm64 $< $(TEST_ARGS)
+
+$(addsuffix _arm64,$(ALLMANTESTRUNS)): \
+    $(MANRUNPREFIX)%_arm64: $(MANTESTBINPREFIX)% | $(TEST_TEMP)
+	$(ARCHRUN) -arm64 $< $(TEST_ARGS)
+
+$(addsuffix _arm64e,$(ALLTESTRUNS)): \
+    $(TESTRUNPREFIX)%_arm64e: $(TESTBINPREFIX)% | $(TEST_TEMP)
+	$(ARCHRUN) -arm64e $< $(TEST_ARGS)
+
+$(addsuffix _arm64e,$(ALLMANTESTRUNS)): \
+    $(MANRUNPREFIX)%_arm64e: $(MANTESTBINPREFIX)% | $(TEST_TEMP)
+	$(ARCHRUN) -arm64e $< $(TEST_ARGS)
+
+$(ALLTESTUNVS): $(TESTRUNPREFIX)%_unv: \
+    $(foreach arch,$(TESTARCHS),$(TESTRUNPREFIX)%_$(arch))
+
+$(ALLMANTESTUNVS): $(MANRUNPREFIX)%_unv: \
+    $(foreach arch,$(TESTARCHS),$(MANRUNPREFIX)%_$(arch))
+
+.PHONY: $(foreach arch,$(ALLARCHS),$(addsuffix _$(arch), $(ALLTESTRUNS)))
+.PHONY: $(foreach arch,$(ALLARCHS),$(addsuffix _$(arch), $(ALLMANTESTRUNS)))
+
+endif  # TESTMULTI
+
+# Degenerate 'unv' dependencies for non-multiarch builds
+
+ifndef TESTMULTI
+
+$(ALLTESTUNVS): $(TESTRUNPREFIX)%_unv: $(TESTRUNPREFIX)%
+
+$(ALLMANTESTUNVS): $(MANRUNPREFIX)%_unv: $(MANRUNPREFIX)%
+
+endif  # !TESTMULTI
 
 # Rules for tools - no include or library
 
@@ -593,6 +727,20 @@ test_syslib: $(TESTSYSRUNS)
 test_all: test test_static test_syslib
 
 xtest: $(XTESTRUNS)
+
+# Additional targets for multiarch test collections
+
+test_unv check_unv: $(TESTUNVS) $(XTESTUNVS) test_cmath
+
+test_static_unv: $(TESTSUNVS)
+
+test_syslib_unv: $(TESTSYSUNVS)
+
+test_all_unv: test_unv test_static_unv test_syslib_unv
+
+xtest_unv: $(XTESTUNVS)
+
+.PHONY: test_unv check_unv test_static_unv test_syslib_unv test_all_unv
 
 # Targets to build tests without running them
 
