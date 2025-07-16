@@ -290,7 +290,8 @@ slibobjs: $(SLIBOBJS)
 allobjs: dlibobjs slibobjs syslibobjs
 
 # Rule to make assembler source for inspection (not used in normal builds)
-%.S: %.c
+$(patsubst %$(SLIBOBJEXT),%.S,$(SLIBOBJS)): \
+    $(BUILDDIR)/%.S: $(TESTDIR)/%.c $(ALLHEADERS) | $(BUILDDIR)
 	$(CC) -S -I$(SRCINCDIR) $(ALLCFLAGS) $< -o $@
 
 # Create a list of nonempty static object files.
@@ -330,6 +331,8 @@ $(XLIBPATH): $(BUILDSYSLIBPATH)
 	$(MKINSTALLDIRS) $(XLIBDIR)
 	cd $(XLIBDIR) && ln -sf ../$< ../$@
 
+# Rules for test objects
+
 $(TESTOBJS_C): $(TESTBINDIR)/%.o: $(TESTDIR)/%.c $(ALLHEADERS) | $(TESTBINDIR)
 	$(CC) -c -std=$(TESTCSTD) -I$(SRCINCDIR) $(TESTCFLAGS) $< -o $@
 
@@ -348,6 +351,30 @@ $(MANLIBTESTOBJS_C): \
 $(MANTESTOBJS_CPP): $(TESTBINDIR)/%.o: \
     $(MANTESTDIR)/%.cpp $(ALLHEADERS) | $(TESTBINDIR)
 	$(CXX) -c -I$(SRCINCDIR) $(ALLCXXFLAGS) $< -o $@
+
+# Rules to make assembler source for inspection (not used in normal builds)
+
+$(patsubst %.o,%.S,$(TESTOBJS_C)): \
+    $(TESTBINDIR)/%.S: $(TESTDIR)/%.c $(ALLHEADERS) | $(TESTBINDIR)
+	$(CC) -S -std=$(TESTCSTD) -I$(SRCINCDIR) $(TESTCFLAGS) $< -o $@
+
+$(patsubst %.o,%.S,$(XTESTOBJS_C)): \
+    $(TESTBINDIR)/%.S: $(XTESTDIR)/%.c $(ALLHEADERS) | $(TESTBINDIR)
+	$(CC) -S -std=$(TESTCSTD) -fno-builtin -I$(SRCINCDIR) $(TESTCFLAGS) $< -o $@
+
+$(patsubst %.o,%.S,$(MANTESTOBJS_C)): \
+    $(TESTBINDIR)/%.S: $(MANTESTDIR)/%.c $(ALLHEADERS) | $(TESTBINDIR)
+	$(CC) -S -std=$(TESTCSTD) -I$(SRCINCDIR) $(TESTCFLAGS) $< -o $@
+
+$(patsubst %.o,%.S,$(MANLIBTESTOBJS_C)): \
+    $(TESTBINDIR)/%.S: $(MANLIBTESTPFX)%.c $(ALLHEADERS) | $(TESTBINDIR)
+	$(CC) -S -std=$(TESTCSTD) -I$(SRCINCDIR) $(TESTCFLAGS) $< -o $@
+
+$(patsubst %.o,%.S,$(MANTESTOBJS_CPP)): \
+    $(TESTBINDIR)/%.S: $(MANTESTDIR)/%.cpp $(ALLHEADERS) | $(TESTBINDIR)
+	$(CXX) -S -I$(SRCINCDIR) $(ALLCXXFLAGS) $< -o $@
+
+# Rules for test executables
 
 $(TESTPRGS): %: %.o $(BUILDDLIBPATH)
 	$(CC) $(TESTLDFLAGS) $< $(TESTLIBS) -o $@
@@ -421,9 +448,15 @@ $(ALLTESTRUNS): $(TESTRUNPREFIX)%: $(TESTBINPREFIX)% | $(TEST_TEMP)
 $(ALLMANTESTRUNS): $(MANRUNPREFIX)%: $(MANTESTBINPREFIX)% | $(TEST_TEMP)
 	$< $(TEST_ARGS)
 
-# Rule for tools - no include or library
+# Rules for tools - no include or library
+
 $(TOOLBINS): $(TOOLBINDIR)/%: $(TOOLDIR)/%.c | $(TOOLBINDIR)
 	$(CC) -std=$(TESTCSTD) $(TOOLCFLAGS) $< -o $@
+
+# Assembler source for inspection only
+$(addsuffix .S,$(TOOLBINS)): \
+    $(TOOLBINDIR)/%.S: $(TOOLDIR)/%.c | $(TOOLBINDIR)
+	$(CC) -S -std=$(TESTCSTD) $(TOOLCFLAGS) $< -o $@
 
 $(TOOLTARGS): $(TOOLPREFIX)%: $(TOOLBINDIR)/%
 	$< $(TOOL_ARGS)
