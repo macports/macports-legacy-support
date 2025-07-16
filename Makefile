@@ -195,20 +195,23 @@ STATXXRUNS      := $(patsubst \
 PACKETSRCS_C    := $(wildcard $(TESTNAMEPREFIX)packet*.c)
 PACKETRUNS      := $(patsubst \
                      $(TESTNAMEPREFIX)%.c,$(TESTRUNPREFIX)%,$(PACKETSRCS_C))
-STPNCHKSRCS_C    := $(wildcard $(TESTNAMEPREFIX)stpncpy_chk*.c)
-STPNCHKRUNS      := $(patsubst \
-                      $(TESTNAMEPREFIX)%.c,$(TESTRUNPREFIX)%,$(STPNCHKSRCS_C))
-ATTRLISTSRCS_C   := $(wildcard $(TESTNAMEPREFIX)attrlist*.c)
-ATTRLISTRUNS     := $(patsubst \
-                      $(TESTNAMEPREFIX)%.c,$(TESTRUNPREFIX)%,$(ATTRLISTSRCS_C))
+STPNCHKSRCS_C   := $(wildcard $(TESTNAMEPREFIX)stpncpy_chk*.c)
+STPNCHKRUNS     := $(patsubst \
+                     $(TESTNAMEPREFIX)%.c,$(TESTRUNPREFIX)%,$(STPNCHKSRCS_C))
+ATTRLISTSRCS_C  := $(wildcard $(TESTNAMEPREFIX)attrlist*.c)
+ATTRLISTRUNS    := $(patsubst \
+                     $(TESTNAMEPREFIX)%.c,$(TESTRUNPREFIX)%,$(ATTRLISTSRCS_C))
+
+# All automatic test runners
+ALLTESTRUNS      = $(TESTRUNS) $(TESTSRUNS) $(TESTSYSRUNS) $(XTESTRUNS)
 
 # Tests that are only run manually
-MANTESTDIR       = manual_tests
-MANTESTPREFIX    = $(MANTESTDIR)/
-MANLIBTESTPFX    = $(MANTESTDIR)/libtest_
-MANTESTBINPREFIX = $(TESTBINDIR)/
-MANRUNPREFIX     = mantest_
-MANTESTLDFLAGS   = $(ALLLDFLAGS)
+MANTESTDIR        = manual_tests
+MANTESTPREFIX     = $(MANTESTDIR)/
+MANLIBTESTPFX     = $(MANTESTDIR)/libtest_
+MANTESTBINPREFIX  = $(TESTBINDIR)/
+MANRUNPREFIX      = mantest_
+MANTESTLDFLAGS    = $(ALLLDFLAGS)
 MANALLTESTSRCS_C := $(wildcard $(MANTESTPREFIX)*.c)
 MANLIBTESTSRCS_C := $(wildcard $(MANLIBTESTPFX)*.c)
 MANTESTSRCS_C    := $(filter-out $(MANLIBTESTSRCS_C),$(MANALLTESTSRCS_C))
@@ -226,14 +229,17 @@ MANTESTPRGS      := $(MANTESTBINS_C) $(MANTESTBINS_CPP)
 MANTESTRUNS      := $(patsubst \
                      $(TESTBINDIR)/%,$(MANRUNPREFIX)%,$(MANTESTPRGS))
 MANLIBTESTBINS   := $(patsubst %,$(TESTBINDIR)/%,$(MANLIBTESTPRGS_C))
-MANLIBTESTRUNS  := $(patsubst \
-                     $(TESTBINDIR)/%,$(MANRUNPREFIX)%,$(MANLIBTESTBINS))
+MANLIBTESTRUNS   := $(patsubst \
+                      $(TESTBINDIR)/%,$(MANRUNPREFIX)%,$(MANLIBTESTBINS))
 STRNCHKSRCS_C    := $(wildcard $(MANLIBTESTPFX)strncpy_chk*.c)
 STRNCHKRUNS      := $(patsubst \
-                     $(MANLIBTESTPFX)%.c,$(MANRUNPREFIX)%,$(STRNCHKSRCS_C))
+                      $(MANLIBTESTPFX)%.c,$(MANRUNPREFIX)%,$(STRNCHKSRCS_C))
 MANPACKETSRCS_C  := $(wildcard $(MANLIBTESTPFX)packet*.c)
 MANPACKETRUNS    := $(patsubst \
                      $(MANLIBTESTPFX)%.c,$(MANRUNPREFIX)%,$(MANPACKETSRCS_C))
+
+# All manual test runners
+ALLMANTESTRUNS   := $(MANTESTRUNS) $(MANLIBTESTRUNS)
 
 # C standard for tests
 TESTCSTD         := c99
@@ -327,6 +333,10 @@ $(XLIBPATH): $(BUILDSYSLIBPATH)
 $(TESTOBJS_C): $(TESTBINDIR)/%.o: $(TESTDIR)/%.c $(ALLHEADERS) | $(TESTBINDIR)
 	$(CC) -c -std=$(TESTCSTD) -I$(SRCINCDIR) $(TESTCFLAGS) $< -o $@
 
+# The "darwin_c" tests need the -fno-builtin option with some compilers.
+$(XTESTOBJS_C): $(TESTBINDIR)/%.o: $(XTESTDIR)/%.c $(ALLHEADERS) | $(TESTBINDIR)
+	$(CC) -c -std=$(TESTCSTD) -fno-builtin -I$(SRCINCDIR) $(TESTCFLAGS) $< -o $@
+
 $(MANTESTOBJS_C): \
     $(TESTBINDIR)/%.o: $(MANTESTDIR)/%.c $(ALLHEADERS) | $(TESTBINDIR)
 	$(CC) -c -std=$(TESTCSTD) -I$(SRCINCDIR) $(TESTCFLAGS) $< -o $@
@@ -349,16 +359,12 @@ $(TESTSYSPRGS): %_syslib: %.o $(XLIBPATH)
 $(TESTSPRGS): %_static: %.o $(BUILDSLIBPATH)
 	$(CC) $(ALLLDFLAGS) $< $(BUILDSLIBPATH) -o $@
 
-# The "darwin_c" tests need the -fno-builtin option with some compilers.
-$(XTESTOBJS_C): $(TESTBINDIR)/%.o: $(XTESTDIR)/%.c $(ALLHEADERS) | $(TESTBINDIR)
-	$(CC) -c -std=$(TESTCSTD) -fno-builtin -I$(SRCINCDIR) $(TESTCFLAGS) $< -o $@
-
 # The xtests don't require the library
 $(XTESTPRGS): %: %.o
 	$(CC) $(XTESTLDFLAGS) $< -o $@
 
 # Currently, the manual C tests don't require the library
-$(MANTESTBINS): %: %.o
+$(MANTESTBINS_C): %: %.o
 	$(CC) $(MANTESTLDFLAGS) $< -o $@
 
 # Except for the ones that do
@@ -409,20 +415,10 @@ test_cmath: test/test_cmath.cc $(ALLHEADERS) | $(TESTBINDIR)
 mantest_faccessat_setuid: $(TESTBINDIR)/test_faccessat_static | $(TEST_TEMP)
 	@manual_tests/do_test_faccessat_setuid.sh
 
-$(TESTRUNS): $(TESTRUNPREFIX)%: $(TESTBINPREFIX)% | $(TEST_TEMP)
+$(ALLTESTRUNS): $(TESTRUNPREFIX)%: $(TESTBINPREFIX)% | $(TEST_TEMP)
 	$< $(TEST_ARGS)
 
-$(TESTSRUNS): $(TESTRUNPREFIX)%: $(TESTBINPREFIX)% | $(TEST_TEMP)
-	$< $(TEST_ARGS)
-
-$(TESTSYSRUNS): $(TESTRUNPREFIX)%: $(TESTBINPREFIX)% | $(TEST_TEMP)
-	$< $(TEST_ARGS)
-
-$(XTESTRUNS): $(XTESTRUNPREFIX)%: $(XTESTBINPREFIX)% | $(TEST_TEMP)
-	$< $(TEST_ARGS)
-
-$(MANTESTRUNS) $(MANLIBTESTRUNS): \
-    $(MANRUNPREFIX)%: $(MANTESTBINPREFIX)% | $(TEST_TEMP)
+$(ALLMANTESTRUNS): $(MANRUNPREFIX)%: $(MANTESTBINPREFIX)% | $(TEST_TEMP)
 	$< $(TEST_ARGS)
 
 # Rule for tools - no include or library
