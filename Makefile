@@ -215,9 +215,6 @@ STATXXRUNS      := $(patsubst \
 PACKETSRCS_C    := $(wildcard $(TESTNAMEPREFIX)packet*.c)
 PACKETRUNS      := $(patsubst \
                      $(TESTNAMEPREFIX)%.c,$(TESTRUNPREFIX)%,$(PACKETSRCS_C))
-STPNCHKSRCS_C   := $(wildcard $(TESTNAMEPREFIX)stpncpy_chk*.c)
-STPNCHKRUNS     := $(patsubst \
-                     $(TESTNAMEPREFIX)%.c,$(TESTRUNPREFIX)%,$(STPNCHKSRCS_C))
 ATTRLISTSRCS_C  := $(wildcard $(TESTNAMEPREFIX)attrlist*.c)
 ATTRLISTRUNS    := $(patsubst \
                      $(TESTNAMEPREFIX)%.c,$(TESTRUNPREFIX)%,$(ATTRLISTSRCS_C))
@@ -250,7 +247,10 @@ MANTESTRUNS      := $(patsubst \
                      $(TESTBINDIR)/%,$(MANRUNPREFIX)%,$(MANTESTPRGS))
 MANLIBTESTBINS   := $(patsubst %,$(TESTBINDIR)/%,$(MANLIBTESTPRGS_C))
 MANLIBTESTRUNS   := $(patsubst \
-                      $(TESTBINDIR)/%,$(MANRUNPREFIX)%,$(MANLIBTESTBINS))
+                     $(TESTBINDIR)/%,$(MANRUNPREFIX)%,$(MANLIBTESTBINS))
+STPNCHKSRCS_C    := $(wildcard $(MANLIBTESTPFX)stpncpy_chk*.c)
+STPNCHKRUNS      := $(patsubst \
+                     $(MANLIBTESTPFX)%.c,$(MANRUNPREFIX)%,$(STPNCHKSRCS_C))
 STRNCHKSRCS_C    := $(wildcard $(MANLIBTESTPFX)strncpy_chk*.c)
 STRNCHKRUNS      := $(patsubst \
                       $(MANLIBTESTPFX)%.c,$(MANRUNPREFIX)%,$(STRNCHKSRCS_C))
@@ -599,9 +599,9 @@ $(TOOLTARGS): $(TOOLPREFIX)%: $(TOOLBINDIR)/%
 $(TESTNAMEPREFIX)dirfuncs_compat.o: $(TESTNAMEPREFIX)fdopendir.c
 
 # The "forced" tests include the unforced source
-$(TESTBINPREFIX)stpncpy_chk_forced.o: $(TESTNAMEPREFIX)stpncpy_chk.c
-$(TESTBINPREFIX)stpncpy_chk_force0.o: $(TESTNAMEPREFIX)stpncpy_chk.c
-$(TESTBINPREFIX)stpncpy_chk_force1.o: $(TESTNAMEPREFIX)stpncpy_chk.c
+$(MANTESTBINPREFIX)stpncpy_chk_forced.o: $(MANLIBTESTPFX)stpncpy_chk.c
+$(MANTESTBINPREFIX)stpncpy_chk_force0.o: $(MANLIBTESTPFX)stpncpy_chk.c
+$(MANTESTBINPREFIX)stpncpy_chk_force1.o: $(MANLIBTESTPFX)stpncpy_chk.c
 $(MANTESTBINPREFIX)strncpy_chk_forced.o: $(MANLIBTESTPFX)strncpy_chk.c
 $(MANTESTBINPREFIX)strncpy_chk_force0.o: $(MANLIBTESTPFX)strncpy_chk.c
 $(MANTESTBINPREFIX)strncpy_chk_force1.o: $(MANLIBTESTPFX)strncpy_chk.c
@@ -668,7 +668,7 @@ $(TESTRUNPREFIX)fdopendir_all: $(FDOPENDIRRUNS)
 $(TESTRUNPREFIX)stat_all: $(STATXXRUNS)
 
 # Provide a target for all "stpncpy_chk" tests
-$(TESTRUNPREFIX)stpncpy_chk_all: $(STPNCHKRUNS)
+$(MANRUNPREFIX)stpncpy_chk_all: $(STPNCHKRUNS)
 
 # Provide a target for all "strncpy_chk" tests
 $(MANRUNPREFIX)strncpy_chk_all: $(STRNCHKRUNS)
