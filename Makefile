@@ -251,9 +251,6 @@ MANLIBTESTRUNS   := $(patsubst \
 STPNCHKSRCS_C    := $(wildcard $(MANLIBTESTPFX)stpncpy_chk*.c)
 STPNCHKRUNS      := $(patsubst \
                      $(MANLIBTESTPFX)%.c,$(MANRUNPREFIX)%,$(STPNCHKSRCS_C))
-STRNCHKSRCS_C    := $(wildcard $(MANLIBTESTPFX)strncpy_chk*.c)
-STRNCHKRUNS      := $(patsubst \
-                      $(MANLIBTESTPFX)%.c,$(MANRUNPREFIX)%,$(STRNCHKSRCS_C))
 MANPACKETSRCS_C  := $(wildcard $(MANLIBTESTPFX)packet*.c)
 MANPACKETRUNS    := $(patsubst \
                      $(MANLIBTESTPFX)%.c,$(MANRUNPREFIX)%,$(MANPACKETSRCS_C))
@@ -602,9 +599,6 @@ $(TESTNAMEPREFIX)dirfuncs_compat.o: $(TESTNAMEPREFIX)fdopendir.c
 $(MANTESTBINPREFIX)stpncpy_chk_forced.o: $(MANLIBTESTPFX)stpncpy_chk.c
 $(MANTESTBINPREFIX)stpncpy_chk_force0.o: $(MANLIBTESTPFX)stpncpy_chk.c
 $(MANTESTBINPREFIX)stpncpy_chk_force1.o: $(MANLIBTESTPFX)stpncpy_chk.c
-$(MANTESTBINPREFIX)strncpy_chk_forced.o: $(MANLIBTESTPFX)strncpy_chk.c
-$(MANTESTBINPREFIX)strncpy_chk_force0.o: $(MANLIBTESTPFX)strncpy_chk.c
-$(MANTESTBINPREFIX)strncpy_chk_force1.o: $(MANLIBTESTPFX)strncpy_chk.c
 
 # The "darwin_c" tests include the basic "darwin_c" source
 $(XTESTBINPREFIX)darwin_c_199309.o: $(XTESTNAMEPREFIX)darwin_c.c
@@ -669,9 +663,6 @@ $(TESTRUNPREFIX)stat_all: $(STATXXRUNS)
 
 # Provide a target for all "stpncpy_chk" tests
 $(MANRUNPREFIX)stpncpy_chk_all: $(STPNCHKRUNS)
-
-# Provide a target for all "strncpy_chk" tests
-$(MANRUNPREFIX)strncpy_chk_all: $(STRNCHKRUNS)
 
 # Provide a target for all non-manual "packet" tests
 $(TESTRUNPREFIX)packet_all: $(PACKETRUNS)
@@ -780,7 +771,6 @@ clean: test_clean tools_clean
 .PHONY: $(TESTRUNPREFIX)fdopendir_all
 .PHONY: $(TESTRUNPREFIX)stat_all
 .PHONY: $(MANRUNPREFIX)stpncpy_chk_all
-.PHONY: $(MANRUNPREFIX)strncpy_chk_all
 .PHONY: $(TESTRUNPREFIX)packet_all
 .PHONY: $(MANRUNPREFIX)packet_all
 .PHONY: $(XTESTRUNPREFIX)allheaders_all
