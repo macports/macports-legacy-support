@@ -49,6 +49,7 @@ main(int argc, char *argv[])
 #include <fcntl.h>
 #include <libgen.h>
 #include <pthread.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -92,13 +93,38 @@ run_thread(thread_fn_t *func, info_t *ip)
 }
 
 static int
-compare_stats(const struct stat *sb1, const struct stat *sb2)
+compare_stats(const char *name, int isdir,
+              const struct stat *sb1, const struct stat *sb2)
 {
-  if (sb1->st_dev != sb2->st_dev) return 1;
-  if (sb1->st_mode != sb2->st_mode) return 2;
-  if (sb1->st_nlink != sb2->st_nlink) return 3;
-  if (sb1->st_ino != sb2->st_ino) return 4;
-  return 0;
+  int ret = 0;
+
+  if (sb1->st_dev != sb2->st_dev) {
+    printf("    %s test st_dev %d != orig st_dev %d\n", name,
+           (int) sb1->st_dev, (int) sb2->st_dev); 
+    ret = ret ? ret : 1;
+  }
+  if (sb1->st_mode != sb2->st_mode) {
+    printf("    %s test st_mode %u != orig st_mode %u\n", name,
+           (unsigned int) sb1->st_mode, (unsigned int) sb2->st_mode); 
+    ret = ret ? ret : 2;
+  }
+  /*
+   * Link counts for directories are actually the entry counts,
+   * and can't be counted on to remain stable, especially during
+   * parallel tests.
+   */
+  if (!isdir && sb1->st_nlink != sb2->st_nlink) {
+    printf("    %s test st_nlink %u != orig st_nlink %u\n", name,
+           (unsigned int) sb1->st_nlink, (unsigned int) sb2->st_nlink); 
+    ret = ret ? ret : 3;
+  }
+  if (sb1->st_ino != sb2->st_ino) {
+    printf("    %s test st_ino %llu != orig st_ino %llu\n", name,
+           (unsigned long long) sb1->st_ino,
+           (unsigned long long) sb2->st_ino); 
+    ret = ret ? ret : 4;
+  }
+  return ret;
 }
 
 static int
@@ -106,11 +132,11 @@ check_results(info_t *ip)
 {
   int err;
   /* Make sure thread didn't change our cwd */
-  err = compare_stats(&ip->cwd_sb, &ip->test_cwd_sb);
+  err = compare_stats("cwd", 1, &ip->cwd_sb, &ip->test_cwd_sb);
   if (err) return err;
-  err = compare_stats(&ip->progdir_sb, &ip->test_progdir_sb);
+  err = compare_stats("progdir", 1, &ip->progdir_sb, &ip->test_progdir_sb);
   if (err) return 100 + err;
-  err = compare_stats(&ip->progname_sb, &ip->test_progname_sb);
+  err = compare_stats("progname", 0, &ip->progname_sb, &ip->test_progname_sb);
   if (err) return 200 + err;
   return 0;
 }
@@ -176,6 +202,7 @@ main(int argc, char *argv[])
     perror("Can't stat program");
     return 20;
   }
+  if (verbose) printf("  stat() of '%s' successful\n", info.argv0);
   if ((info.cwd_fd = open(".", O_RDONLY)) < 0) {
     perror("Can't open cwd");
     return 20;
@@ -184,6 +211,7 @@ main(int argc, char *argv[])
     perror("Can't stat cwd");
     return 20;
   }
+  if (verbose) printf("  stat() of '.' successful\n");
   if ((info.progdir_fd = open(info.progdir, O_RDONLY)) < 0) {
     perror("Can't open program's dir");
     return 20;
@@ -192,6 +220,7 @@ main(int argc, char *argv[])
     perror("Can't stat program's dir");
     return 20;
   }
+  if (verbose) printf("  stat() of '%s' successful\n", info.progdir);
 
   /* Do the chdir test */
   if (verbose) printf("  Testing pthread_chdir_np()\n");
