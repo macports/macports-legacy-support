@@ -20,7 +20,7 @@ ARGS="$@"
 
 DEST="$PROG-$ARCH"
 
-LIPO=lipo
+LIPO="/usr/bin/lipo"
 
 if [ "$ARCH" != 'ppc' ]; then
   $LIPO "$PROG" -thin "$ARCH" -output "$DEST" && exec "$DEST" "$ARGS"
