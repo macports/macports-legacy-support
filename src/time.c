@@ -685,11 +685,19 @@ get_thread_usage_ts(struct timespec *ts)
 
 #else /* __MPLS_TARGET_OSVER >= 101000 */
 
-/* Get the CPU usage of the current thread via syscall, in nanoseconds. */
+/*
+ * Get the CPU usage of the current thread via syscall, in nanoseconds.
+ *
+ * We do a trick here to override the return type of syscall to avoid overflows.
+ */
 static inline uint64_t
 get_thread_usage_ns(void)
 {
-  uint64_t mach_time = syscall(SYS_thread_selfusage);
+  static uint64_t (*syscall64)(int, ...) = NULL;
+  if (!syscall64)
+    syscall64 = dlfcn(RTLD_NEXT, "syscall");
+
+  uint64_t mach_time = syscall64(SYS_thread_selfusage);
 
   return mach2nanos(mach_time);
 }
@@ -698,7 +706,11 @@ get_thread_usage_ns(void)
 static inline int
 get_thread_usage_ts(struct timespec *ts)
 {
-  uint64_t mach_time = syscall(SYS_thread_selfusage);
+  static uint64_t (*syscall64)(int, ...) = NULL;
+  if (!syscall64)
+    syscall64 = dlfcn(RTLD_NEXT, "syscall");
+
+  uint64_t mach_time = syscall64(SYS_thread_selfusage);
 
   mach2timespec(mach_time, ts);
   return mach_time ? 0 : -1;
