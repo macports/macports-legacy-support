@@ -690,13 +690,12 @@ get_thread_usage_ts(struct timespec *ts)
  *
  * We do a trick here to override the return type of syscall to avoid overflows.
  */
+
+extern uint64_t syscall64(int, ...) __asm("_syscall");
+
 static inline uint64_t
 get_thread_usage_ns(void)
 {
-  static uint64_t (*syscall64)(int, ...) = NULL;
-  if (!syscall64)
-    syscall64 = dlsym(RTLD_NEXT, "syscall");
-
   uint64_t mach_time = syscall64(SYS_thread_selfusage);
 
   return mach2nanos(mach_time);
@@ -706,10 +705,6 @@ get_thread_usage_ns(void)
 static inline int
 get_thread_usage_ts(struct timespec *ts)
 {
-  static uint64_t (*syscall64)(int, ...) = NULL;
-  if (!syscall64)
-    syscall64 = dlsym(RTLD_NEXT, "syscall");
-
   uint64_t mach_time = syscall64(SYS_thread_selfusage);
 
   mach2timespec(mach_time, ts);
