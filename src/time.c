@@ -695,7 +695,7 @@ get_thread_usage_ns(void)
 {
   static uint64_t (*syscall64)(int, ...) = NULL;
   if (!syscall64)
-    syscall64 = dlfcn(RTLD_NEXT, "syscall");
+    syscall64 = dlsym(RTLD_NEXT, "syscall");
 
   uint64_t mach_time = syscall64(SYS_thread_selfusage);
 
@@ -708,7 +708,7 @@ get_thread_usage_ts(struct timespec *ts)
 {
   static uint64_t (*syscall64)(int, ...) = NULL;
   if (!syscall64)
-    syscall64 = dlfcn(RTLD_NEXT, "syscall");
+    syscall64 = dlsym(RTLD_NEXT, "syscall");
 
   uint64_t mach_time = syscall64(SYS_thread_selfusage);
 
