@@ -1757,6 +1757,7 @@ typedef struct dptime_s {
   volatile int errnum;
   pthread_fn_t *func;
   const char *name;
+  useconds_t time;
 } dptime_t;
 
 /* Get specified time two ways, and compare */
@@ -1926,7 +1927,7 @@ thread_spin(void *arg)
   mach_time_t stop_time;
 
   if (get_ptime(CLOCK_THREAD_CPUTIME_ID, &dpt->start)) return NULL;
-  stop_time = mach_absolute_time() + THREAD_RUN_TIME / mach2usecs;
+  stop_time = mach_absolute_time() + dpt->time / mach2usecs;
   while (mach_absolute_time() < stop_time) ;
   (void) get_ptime(CLOCK_THREAD_CPUTIME_ID, &dpt->end);
   return NULL;
@@ -1939,20 +1940,25 @@ thread_sleep(void *arg)
   dptime_t *dpt = (dptime_t *) arg;
 
   if (get_ptime(CLOCK_THREAD_CPUTIME_ID, &dpt->start)) return NULL;
-  usleepx(THREAD_RUN_TIME);
+  usleepx(dpt->time);
   (void) get_ptime(CLOCK_THREAD_CPUTIME_ID, &dpt->end);
   return NULL;
 }
 
 /* Main checking function */
 static int
-check_thread_times(int verbose, int quiet)
+check_thread_times(int verbose, int quiet, int slow)
 {
   int ret = 0, rret = 0, wret = 0, eret = 0;
   ns_time_t start, end, wall, difflo, diffhi;
-  dptime_t spin1 = {.func = thread_spin, .name = "spin1"};
-  dptime_t spin2 = {.func = thread_spin, .name = "spin2"};
-  dptime_t sleeper = {.func = thread_sleep, .name = "sleeper"};
+  /* If 'slow', use that as runtime in seconds, else default */
+  useconds_t sleep_time = slow ? slow * MILLION : PROCESS_SLEEP_TIME;
+  /* And half that for the thread runs, else default */
+  useconds_t thread_run = slow ? slow * MILLION / 2 : THREAD_RUN_TIME;
+  dptime_t spin1 = {.func = thread_spin, .name = "spin1", .time = thread_run};
+  dptime_t spin2 = {.func = thread_spin, .name = "spin2", .time = thread_run};
+  dptime_t sleeper = {.func = thread_sleep, .name = "sleeper",
+                      .time = thread_run};
   dptime_t top = {.func = NULL};
   dptime_t *threads[] = {&spin1, &spin2, &sleeper};
   const int numthreads = sizeof(threads) / sizeof(threads[0]);
@@ -1977,7 +1983,7 @@ check_thread_times(int verbose, int quiet)
     return -1;
   }
 
-  usleepx(PROCESS_SLEEP_TIME);
+  usleepx(sleep_time);
 
   wret = wait_threads(threads, numthreads); 
 
@@ -2146,7 +2152,7 @@ main(int argc, char *argv[])
 {
   int argn = 1;
   int continuous = 0, dump = 0, keepgoing = 0;
-  int quiet = 0, replay = 0, verbose = 0,  dverbose = 0;
+  int quiet = 0, replay = 0, slow = 0, verbose = 0,  dverbose = 0;
   int err = 0, tterr, ttries, sleepchanged;
   const char *cp;
   char chr;
@@ -2162,6 +2168,7 @@ main(int argc, char *argv[])
         case 'K': ++keepgoing; break;
         case 'q': ++quiet; break;
         case 'R': ++replay; break;
+        case 'S': ++slow; break;
         case 'v': ++verbose; break;
         case 'V': ++dverbose; break;
       }
@@ -2198,7 +2205,7 @@ main(int argc, char *argv[])
      */
     ttries = THREAD_TEST_TRIES;
     do {
-      tterr = check_thread_times(verbose, quiet);
+      tterr = check_thread_times(verbose, quiet, slow);
     } while (tterr > 0 && --ttries);
     err |= tterr;
 
