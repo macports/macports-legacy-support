@@ -316,7 +316,6 @@ uint64_t mach_continuous_approximate_time(void)
 #include <unistd.h>
 
 #include <sys/resource.h>
-#include <sys/syscall.h>
 #include <sys/time.h>
 
 #include <mach/mach_init.h>
@@ -616,7 +615,7 @@ tvdiff2mach(const struct timeval *tv1, const struct timeval *tv2)
 }
 
 /*
- * Get the best available thread time, using the syscall on 10.10+,
+ * Get the best available thread time, using __thread_selfusage() on 10.10+,
  * but falling back to thread_info() on <10.10.
  *
  * In the latter case, a thread which has just started may not yet have
@@ -685,11 +684,14 @@ get_thread_usage_ts(struct timespec *ts)
 
 #else /* __MPLS_TARGET_OSVER >= 101000 */
 
-/* Get the CPU usage of the current thread via syscall, in nanoseconds. */
+/* Provide the missing prototype for the undocumented __thread_selfusage(). */
+extern uint64_t __thread_selfusage(void);
+
+/* Get the CPU usage of the current thread, in nanoseconds. */
 static inline uint64_t
 get_thread_usage_ns(void)
 {
-  uint64_t mach_time = syscall(SYS_thread_selfusage);
+  uint64_t mach_time = __thread_selfusage();
 
   return mach2nanos(mach_time);
 }
@@ -698,7 +700,7 @@ get_thread_usage_ns(void)
 static inline int
 get_thread_usage_ts(struct timespec *ts)
 {
-  uint64_t mach_time = syscall(SYS_thread_selfusage);
+  uint64_t mach_time = __thread_selfusage();
 
   mach2timespec(mach_time, ts);
   return mach_time ? 0 : -1;
