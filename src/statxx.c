@@ -164,7 +164,7 @@ fstatx_np(int fildes, struct stat *buf, filesec_t fsec)
  *  if someone played mix-'n-match with system components, it might not be.
  *   5) We assume that the Rosetta bug has not been fixed.
  *
- * In principle, there's a more elaborate way to make the deteremination,
+ * In principle, there's a more elaborate way to make the determination,
  * based on testing the actual behavior of the function, but for simplicity
  * we avoid that at the present, and use the conditions above.  If any of
  * the above assumptions were to become incorrect, we'd need to implement
