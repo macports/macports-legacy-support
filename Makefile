@@ -75,6 +75,7 @@ ALLCXXFLAGS     := $(ARCHFLAGS) $(XCXXFLAGS) $(CXXFLAGS)
 XLDFLAGS        ?= $(DEBUG)
 ALLLDFLAGS      := $(ARCHFLAGS) $(XLDFLAGS) $(LDFLAGS)
 TEST_ARGS       ?=
+NOADDSYMS       ?=
 
 # Setup for possible multiarch test running
 ifneq ($(strip $(ARCHS)),)
@@ -132,7 +133,10 @@ SLIBOBJEXT       = .o
 DLIBOBJS        := $(patsubst %,$(BUILDDIR)/%$(DLIBOBJEXT),$(LIBSRCS))
 SLIBOBJS        := $(patsubst %,$(BUILDDIR)/%$(SLIBOBJEXT),$(LIBSRCS))
 ADDOBJS         := $(patsubst %,$(BUILDDIR)/%$(SLIBOBJEXT),$(ADDSRCS))
-SYSLIBOBJS      := $(DLIBOBJS) $(ADDOBJS)
+SYSLIBOBJS      := $(DLIBOBJS)
+ifndef NOADDSYMS
+  SYSLIBOBJS    += $(ADDOBJS)
+endif
 
 # Man pages
 SRCMAN3S        := $(wildcard $(SRCDIR)/*.3)
