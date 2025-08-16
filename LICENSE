@@ -1,0 +1,24 @@
+Various.
+
+Note that files in the repository have various licenses.
+
+Some files originate from the Apple Open Source repository, and are subject to the 
+Apple Public Open Source License Version 2.0. Other files may have other
+licenses as per each source file.
+
+Parts of this project that have been created by members of the MacPorts community 
+are under the MIT License
+
+Copyright (c) 2018-2025 Chris Jones, Michael Dickens
+Mihai Moldovan, and many other contributing members of the MacPorts community
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

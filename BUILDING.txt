@@ -1,0 +1,126 @@
+## Building
+
+Usual Makefile project. This project does not require a configure phase.
+
+Officially, the minimum required compiler is GCC 4.2.  On 10.6+ with Xcode 3.2+,
+the default Xcode compiler is adequate, and a simple 'make' is sufficient to
+build all three versions of the library for the default architecture.
+
+On 10.5 with Xcode 3.1, GCC 4.2 is provided, but the default is usually GCC 4.0,
+so overriding the default may be needed.  Successful builds have been observed
+with Xcode 3.1 GCC 4.0, but these have not been significantly tested.  There is
+very little reson not to use the provided GCC 4.2.
+
+On 10.4 with Xcode 2.5, only GCC 4.0 is provided, and its accompanying linker is
+known to have issues with legacy-support's dynamic linking, so it's necessary to
+use the MacPorts apple-gcc42 compiler (or better).
+
+Cross-builds and/or universal builds may be specified in the usual way, either
+via the usual CFLAGS/CXXFLAGS/LDFLAGS, or via ARCHFLAGS, though the preferred
+method is to provide a list of architectures in ARCHS.
+
+Note that the 'ar' tool may generate spurious warnings when creating a
+universal static library, but it still produces the correct result.
+
+## Optional variables
+
+# `CFLAGS`
+# `CXXFLAGS`
+# `LDFLAGS`
+
+Applied as usual to C compiles, C++ compiles, and linking, respectively. Note
+that CFLAGS and CXXFLAGS are applied in addition to the defaults included in
+the Makefile.  To override the defaults, see below.
+
+# `XCFLAGS`
+# `XCXXFLAGS`
+# `XLDFLAGS`
+
+Overridable default values for CFLAGS, CXXFLAGS, and LDFLAGS, respectively.
+Merged with any supplied CFLAGS, CXXFLAGS, and/or LDFLAGS.  Note that the only
+C++ builds are a few tests not included in the standard test suite, so
+[X]CXXFLAGS usually has no effect.
+
+# `ARCHS`
+
+List of architectures to build, without the '-arch'.  This is the preferred
+method of specifying architectures.  Including architectures that can't be
+built with the default or chosen SDK will result in failures.
+
+# `ARCHFLAGS`
+
+Merged into CFLAGS/CXXFLAGS/LDFLAGS, normally to specify arch-related options.
+The default value is derived from 'ARCHS', so in most cases it should not be
+specified.  The only exception is if there is some reason to want to use options
+like '-m32' or '-m64'.  Note that setting both 'ARCHS' and 'ARCHFLAGS'
+inconsistently will probably produce bad results.
+
+# `TESTARCHS`
+
+List of architectures to use for running tests.  The default is a filtered
+version of 'ARCHS' which excludes architectures that can't be executed on the
+current machine.  In most cases, this is appropriate.  This does not affect
+the *building* of tests, which is always based on 'ARCHS', but the targets
+for *running* tests are based on this list.
+
+# `TEST_ARGS`
+
+Arguments supplied to tests when run via the test targets.  Most commonly
+used for the '-v' argument, giving verbose output.
+
+# `DEBUG`
+
+Merged into CFLAGS/CXXFLAGS/LDFLAGS, normally to specify a debug option
+such as `-g3`.
+
+# `OPT`
+
+The optimization setting (defaulting to `-Os`), which is merged into the
+compile flags but not the linker flags.  When debugging, `-O0` is usually
+a desirable choice.
+
+### Special optional variables
+
+# `PLATFORM`
+# `FORCE_ARCH`
+
+Obsolete.  No longer used.
+
+
+## Running tests
+
+If a test is named 'test_foo', then it has a run target named 'run_foo', which
+builds (if needed) and runs that test.  If 'TESTARCHS' has multiple entries,
+then the test also has a set of targets of the form 'run_foo_<arch>', to run the
+test on that specific architecture.  Additionally, it has a target
+'run_foo_unv', which runs all the 'run_foo_<arch>' targets.  If 'TESTARCH' does
+not have multiple entries, the '<arch>' versions are unavailable, but
+'run_foo_unv' still exists as a synonym for 'run_foo', making it unconditionally
+legal.  In all cases, 'run_foo' runs the test without any constraints, allowing
+the OS to choose the architecture (if relevant).
+
+## Special test targets
+
+# `test[_unv]`
+# 'check[_unv]`
+
+These run all normal automatic tests on the usual dynamic library.
+
+# `test_static[_unv]`
+
+Like the above, but using the static library.
+
+# `test_syslib[_unv]`
+
+Like the above, but using the special "system" version of the dynamic library.
+
+# `test_all[_unv]`
+
+Run all tests against all three libraries.
+
+# `build_tests`
+# `build_tests_static`
+# `build_tests_syslib`
+# `build_tests_all`
+
+Versions of the above run targets which build the tests without running them.
