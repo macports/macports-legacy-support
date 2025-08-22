@@ -325,7 +325,7 @@ $(SOBJLIST): $(SLIBOBJS)
 	if [ ! -s $@ ]; then echo $(DUMMYOBJ) > $@; fi
 
 # Make the directories separate targets to avoid collisions in parallel builds.
-$(BUILDDIR) $(TIGERBINDIR) $(BUILDLIBDIR) $(TESTBINDIR) \
+$(BUILDDIR) $(TIGERBINDIR) $(BUILDLIBDIR) $(TESTBINDIR) $(XLIBDIR) \
     $(DESTDIR)$(LIBDIR) $(DESTDIR)$(BINDIR) \
     $(DESTDIR)$(MAN1DIR) $(DESTDIR)$(MAN3DIR) \
     $(TEST_TEMP) $(TOOLBINDIR):
@@ -348,8 +348,7 @@ $(BUILDSLIBPATH): $(SOBJLIST) | $(BUILDLIBDIR)
 # and without unwanted side effects.  So instead we create a special lib
 # directory containing a symlink to our replacement library, but with the
 # normal OS syslib name, to fake out the implied '-lSystem'.
-$(XLIBPATH): $(BUILDSYSLIBPATH)
-	$(MKINSTALLDIRS) $(XLIBDIR)
+$(XLIBPATH): $(BUILDSYSLIBPATH) | $(XLIBDIR)
 	cd $(XLIBDIR) && ln -sf ../$< ../$@
 
 # Rules for test objects
