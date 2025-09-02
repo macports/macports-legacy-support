@@ -145,9 +145,9 @@ init_mach_clock(void)
 {
   mach_port_t mach_host;
 
-	mach_host = mach_host_self();
-	host_get_clock_service(mach_host, SYSTEM_CLOCK, &mclock);
-	mach_port_deallocate(mach_task_self(), mach_host);
+  mach_host = mach_host_self();
+  host_get_clock_service(mach_host, SYSTEM_CLOCK, &mclock);
+  mach_port_deallocate(mach_task_self(), mach_host);
 }
 
 static nstime_t

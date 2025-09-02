@@ -890,7 +890,7 @@ clock_settime(clockid_t clk_id, const struct timespec *ts)
 
 /* In case built with SDK that's sparing with the definition */
 #ifndef TIME_UTC
-#define TIME_UTC	1	/* time elapsed since epoch */
+#define TIME_UTC  1 /* time elapsed since epoch */
 #endif
 
 int timespec_get(struct timespec *ts, int base)

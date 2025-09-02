@@ -130,10 +130,10 @@ allow_error(ts_bad_t errtype)
  * function, and then defining a macro to substitute it for the local use.
  */
 
-int	__connect(int, const struct sockaddr *, socklen_t) __asm("_connect");
+int __connect(int, const struct sockaddr *, socklen_t) __asm("_connect");
 #define connect __connect
 
-ssize_t	__send(int, const void *, size_t, int) __asm("_send");
+ssize_t __send(int, const void *, size_t, int) __asm("_send");
 #define send __send
 
 int __close(int) __asm("_close");
@@ -142,7 +142,7 @@ int __close(int) __asm("_close");
 #endif /* TARGET_OSVER < 1050 */
 
 #define CMSG_DATALEN(cmsg) ((uint8_t *) (cmsg) + (cmsg)->cmsg_len \
-	                    - (uint8_t *) CMSG_DATA(cmsg))
+                            - (uint8_t *) CMSG_DATA(cmsg))
 
 typedef struct timeval timeval_t;
 

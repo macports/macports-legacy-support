@@ -39,17 +39,17 @@ for a in $TESTARCHS; do
   else
     archflag="$a"
   fi
-	cat >$TESTSRC <<EOD
-	int
-	main(int argc, char *argv[])
-	{
-		(void) argc; (void) argv;
-	  #ifdef __${archflag}__
-  		return 0;
-  	#else
-  	  return 1;
-  	#endif
-	}
+  cat >$TESTSRC <<EOD
+  int
+  main(int argc, char *argv[])
+  {
+    (void) argc; (void) argv;
+    #ifdef __${archflag}__
+      return 0;
+    #else
+      return 1;
+    #endif
+  }
 EOD
   rm -f $TESTBIN
   if sh -c "$CC -arch $a $TESTSRC -o $TESTBIN 2>/dev/null" 2>/dev/null; then

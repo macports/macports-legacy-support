@@ -77,24 +77,24 @@
 
 /* stdio buffers */
 struct __mpls__sbuf {
-	unsigned char	*_base;
-	int		_size;
+  unsigned char *_base;
+  int   _size;
 };
 
 /* stdio FILE object (truncated) */
 struct __mpls__sFILE {
-	unsigned char *_p;	/* current position in (some) buffer */
-	int	_r;		/* read space left for getc() */
-	int	_w;		/* write space left for putc() */
-	short	_flags;		/* flags, below; this FILE is free if 0 */
-	short	_file;		/* fileno, if Unix descriptor, else -1 */
-	struct	__mpls__sbuf _bf;	/* the buffer (at least 1 byte, if !NULL) */
-	int	_lbfsize;	/* 0 or -_bf._size, for inline putc */
+  unsigned char *_p;  /* current position in (some) buffer */
+  int _r;   /* read space left for getc() */
+  int _w;   /* write space left for putc() */
+  short _flags;   /* flags, below; this FILE is free if 0 */
+  short _file;    /* fileno, if Unix descriptor, else -1 */
+  struct  __mpls__sbuf _bf; /* the buffer (at least 1 byte, if !NULL) */
+  int _lbfsize; /* 0 or -_bf._size, for inline putc */
 
-	/* operations */
-	void	*_cookie;	/* cookie passed to io functions */
-	int	(*_close)(void *);
-	/* We don't need the rest */
+  /* operations */
+  void  *_cookie; /* cookie passed to io functions */
+  int (*_close)(void *);
+  /* We don't need the rest */
 };
 
 int

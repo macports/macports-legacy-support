@@ -105,7 +105,7 @@
 #include "endian.h"
 
 #define CMSG_DATALEN(cmsg) ((uint8_t *) (cmsg) + (cmsg)->cmsg_len \
-	                    - (uint8_t *) CMSG_DATA(cmsg))
+                      - (uint8_t *) CMSG_DATA(cmsg))
 
 #define FORMAT_FIX   __MPLS_LIB_CMSG_FORMAT_FIX__
 #define ROSETTA_FIX  __MPLS_LIB_CMSG_ROSETTA_FIX__
@@ -180,71 +180,71 @@ sys_recvmsg(fv_type_t fvtype)
 static void
 fetch_cmsg_timeval(struct cmsghdr *cmsghdr, struct timeval *tvp)
 {
-	struct timeval_3232 {
-		uint32_t	tv_sec;  /* Unsigned to get past 2038 */
-		int32_t		tv_usec;
-	} *tv3232p;
-	struct timeval_6432 {
-		int64_t		tv_sec;
-		int32_t		tv_usec;
-	} *tv6432p;
-	#define SIZEOF_PACKED_TIMEVAL6432 (sizeof(int64_t) + sizeof(int32_t))
-	struct timeval_6464 {
-		int64_t		tv_sec;
-		uint32_t	tv_usec[2];  /* Unsigned for compares */
-	} *tv6464p;
-	int datalen = CMSG_DATALEN(cmsghdr);
+  struct timeval_3232 {
+    uint32_t  tv_sec;  /* Unsigned to get past 2038 */
+    int32_t   tv_usec;
+  } *tv3232p;
+  struct timeval_6432 {
+    int64_t   tv_sec;
+    int32_t   tv_usec;
+  } *tv6432p;
+  #define SIZEOF_PACKED_TIMEVAL6432 (sizeof(int64_t) + sizeof(int32_t))
+  struct timeval_6464 {
+    int64_t   tv_sec;
+    uint32_t  tv_usec[2];  /* Unsigned for compares */
+  } *tv6464p;
+  int datalen = CMSG_DATALEN(cmsghdr);
 
-	if (datalen == sizeof(struct timeval)) {
-		*tvp = *((struct timeval *) CMSG_DATA(cmsghdr));
-		return;
-	}
+  if (datalen == sizeof(struct timeval)) {
+    *tvp = *((struct timeval *) CMSG_DATA(cmsghdr));
+    return;
+  }
 
-	switch (datalen) {
+  switch (datalen) {
 
-	case sizeof(struct timeval_3232):
-		tv3232p = (struct timeval_3232 *) CMSG_DATA(cmsghdr);
-		tvp->tv_sec = tv3232p->tv_sec;
-		tvp->tv_usec = tv3232p->tv_usec;
-		return;
+  case sizeof(struct timeval_3232):
+    tv3232p = (struct timeval_3232 *) CMSG_DATA(cmsghdr);
+    tvp->tv_sec = tv3232p->tv_sec;
+    tvp->tv_usec = tv3232p->tv_usec;
+    return;
 
-	case SIZEOF_PACKED_TIMEVAL6432:
-		tv6432p = (struct timeval_6432 *) CMSG_DATA(cmsghdr);
-		tvp->tv_sec = tv6432p->tv_sec;
-		tvp->tv_usec = tv6432p->tv_usec;
-		return;
+  case SIZEOF_PACKED_TIMEVAL6432:
+    tv6432p = (struct timeval_6432 *) CMSG_DATA(cmsghdr);
+    tvp->tv_sec = tv6432p->tv_sec;
+    tvp->tv_usec = tv6432p->tv_usec;
+    return;
 
-	case sizeof(struct timeval_6464):
-		tv6464p = (struct timeval_6464 *) CMSG_DATA(cmsghdr);
-		tvp->tv_sec = tv6464p->tv_sec;
-		if (IS_LITTLE_ENDIAN) {
-			tvp->tv_usec = tv6464p->tv_usec[0];
-			return;
-		} else if (tv6464p->tv_usec[0] == 0) {
-			if (tv6464p->tv_usec[1] < MAX_TV_USEC) {
-				tvp->tv_usec = tv6464p->tv_usec[1];
-			} else {
-				tvp->tv_usec = tv6464p->tv_usec[0];
-			}
-			return;
-		} else if (tv6464p->tv_usec[0] < MAX_TV_USEC) {
-			tvp->tv_usec = tv6464p->tv_usec[0];
-			return;
-		}
-		/* FALLTHRU to default (invalid timestamp) */
+  case sizeof(struct timeval_6464):
+    tv6464p = (struct timeval_6464 *) CMSG_DATA(cmsghdr);
+    tvp->tv_sec = tv6464p->tv_sec;
+    if (IS_LITTLE_ENDIAN) {
+      tvp->tv_usec = tv6464p->tv_usec[0];
+      return;
+    } else if (tv6464p->tv_usec[0] == 0) {
+      if (tv6464p->tv_usec[1] < MAX_TV_USEC) {
+        tvp->tv_usec = tv6464p->tv_usec[1];
+      } else {
+        tvp->tv_usec = tv6464p->tv_usec[0];
+      }
+      return;
+    } else if (tv6464p->tv_usec[0] < MAX_TV_USEC) {
+      tvp->tv_usec = tv6464p->tv_usec[0];
+      return;
+    }
+    /* FALLTHRU to default (invalid timestamp) */
 
-	default:
-		memset(tvp, 0, sizeof(*tvp));
-	}
+  default:
+    memset(tvp, 0, sizeof(*tvp));
+  }
 }
 
 /* Check message lengths, to see if format adjustments are needed */
 static int
 check_cmsg_lengths(struct msghdr *msghdr, socklen_t *new_controllen)
 {
-	struct cmsghdr *cmsghdr;
-	int lenadj;
-	int needadj = 0;
+  struct cmsghdr *cmsghdr;
+  int lenadj;
+  int needadj = 0;
 
   cmsghdr = CMSG_FIRSTHDR(msghdr);
   *new_controllen = 0;
@@ -273,9 +273,9 @@ check_cmsg_lengths(struct msghdr *msghdr, socklen_t *new_controllen)
 static void
 fix_cmsg_formats(struct msghdr *msghdr, socklen_t new_controllen)
 {
-	struct cmsghdr *cmsghdr, *newhdr;
-	struct timeval *tvp;
-	uint8_t *newcmsg, cbuf[1024];
+  struct cmsghdr *cmsghdr, *newhdr;
+  struct timeval *tvp;
+  uint8_t *newcmsg, cbuf[1024];
 
   /* If our local buffer won't hold the new contents, punt */
   if (new_controllen > sizeof(cbuf)) return;
@@ -357,8 +357,8 @@ check_rosetta(void)
 static void
 fix_cmsg_endianness(struct msghdr *msghdr)
 {
-	struct cmsghdr *cmsghdr;
-	struct timeval *tvp;
+  struct cmsghdr *cmsghdr;
+  struct timeval *tvp;
 
   cmsghdr = CMSG_FIRSTHDR(msghdr);
 

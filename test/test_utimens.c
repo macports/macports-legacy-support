@@ -42,18 +42,18 @@ typedef struct timeval timeval_t;
 
 /* Test cases copied from the old test */
 static const timespec_t tptr[][2] = {
-	{ { 0x12345678, 987654321 }, { 0x15263748, 123456789 }, },
+  { { 0x12345678, 987654321 }, { 0x15263748, 123456789 }, },
 
-	{ { 0, UTIME_NOW }, { 0x15263748, 123456789 }, },
-	{ { 0x12345678, 987654321 }, { 0, UTIME_NOW }, },
-	{ { 0, UTIME_NOW }, { 0, UTIME_NOW }, },
+  { { 0, UTIME_NOW }, { 0x15263748, 123456789 }, },
+  { { 0x12345678, 987654321 }, { 0, UTIME_NOW }, },
+  { { 0, UTIME_NOW }, { 0, UTIME_NOW }, },
 
-	{ { 0, UTIME_OMIT }, { 0x15263748, 123456789 }, },
-	{ { 0x12345678, 987654321 }, { 0, UTIME_OMIT }, },
-	{ { 0, UTIME_OMIT }, { 0, UTIME_OMIT }, },
+  { { 0, UTIME_OMIT }, { 0x15263748, 123456789 }, },
+  { { 0x12345678, 987654321 }, { 0, UTIME_OMIT }, },
+  { { 0, UTIME_OMIT }, { 0, UTIME_OMIT }, },
 
-	{ { 0, UTIME_NOW }, { 0, UTIME_OMIT }, },
-	{ { 0, UTIME_OMIT }, { 0, UTIME_NOW }, },
+  { { 0, UTIME_NOW }, { 0, UTIME_OMIT }, },
+  { { 0, UTIME_OMIT }, { 0, UTIME_NOW }, },
 };
 
 static int
@@ -255,7 +255,7 @@ do_tests(int mode, const char *path, int apfs,
       ret |= lret;
       if (ret && !keepgoing) break;
     }
-		if (ret && !keepgoing) break;
+    if (ret && !keepgoing) break;
   } while (0);
 
   if (fd >= 0 && close(fd)) {

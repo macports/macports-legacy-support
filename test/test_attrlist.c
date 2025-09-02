@@ -457,11 +457,11 @@ do_tests(int mode, const char *path, const char *rpath, int apfs,
 
   if (fd >= 0) (void) close(fd);
 
-	if (verbose) printf("  deleting '%s'\n", path);
-	if (unlink(path)) {
-		printf("    *** error deleting '%s': %s (%d)\n",
-					 path, strerror(errno), errno);
-	}
+  if (verbose) printf("  deleting '%s'\n", path);
+  if (unlink(path)) {
+    printf("    *** error deleting '%s': %s (%d)\n",
+           path, strerror(errno), errno);
+  }
 
   if (dirfd >=0) {
     if (verbose) printf("  closing '" TEST_TEMP "'\n");
