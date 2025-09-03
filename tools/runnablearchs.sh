@@ -31,7 +31,11 @@
 # is one of the instructions added by Haswell.  Running this on a pre-Haswell
 # CPU fails with an illegal instruction trap.
 
-TESTARCHS="${@:-ppc ppc64 i386 x86_64 arm64}"
+if [ "$1" != "-a" ]; then
+  TESTARCHS="${@:-ppc ppc64 i386 x86_64 arm64}"
+else
+  TESTARCHS="ppc ppc7400 ppc64 i386 x86_64 x86_64h arm arm64 arm64e"
+fi
 
 if [ "$CC" == "" ]; then CC=cc; fi
 
