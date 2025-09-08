@@ -24,6 +24,12 @@
 # Furthermore, attempts to run an arm64e executable (on arm64) fail with the
 # very nasty signal 9, so we also need to redirect the test program's own
 # stderr to hide that.
+#
+# In addition, the larval support for x86_64h on 10.9 considers x86_64h code
+# to be runnable on all x86_64 machines, including pre-Haswell.  To get around
+# that, in the x86_64h case, we include a use of the MOVBE instruction, which
+# is one of the instructions added by Haswell.  Running this on a pre-Haswell
+# CPU fails with an illegal instruction trap.
 
 TESTARCHS="${@:-ppc ppc64 i386 x86_64 arm64}"
 
@@ -45,6 +51,9 @@ for a in $TESTARCHS; do
   {
     (void) argc; (void) argv;
     #ifdef __${archflag}__
+      #ifdef __x86_64h__
+      __asm__ __volatile__ ("\tmovbe %%eax, %0\n" :: "m" (argc) : "eax");
+      #endif
       return 0;
     #else
       return 1;
