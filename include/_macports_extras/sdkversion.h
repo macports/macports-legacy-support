@@ -171,23 +171,33 @@
 #define __MPLS_SDK_MAJOR 140000
 #elif MAC_OS_X_VERSION_MAX_ALLOWED < 160000
 #define __MPLS_SDK_MAJOR 150000
+#elif MAC_OS_X_VERSION_MAX_ALLOWED < 260000
+#define __MPLS_SDK_MAJOR 160000
+#elif MAC_OS_X_VERSION_MAX_ALLOWED < 270000
+#define __MPLS_SDK_MAJOR 260000
 #else
 #error Unknown SDK version
 #endif
 
 /*
- * Workaround for broken 15.0 SDK
+ * Workaround for broken 15.0+ SDKs
  *
  * Apple screwed up and failed to update AvailabilityMacros.h for the
- * 15.0 SDK, causing it to appear to be the 14.x SDK.  However, the 15.0
- * macro was added to AvailabilityVersions.h, so we can check for
+ * 15.0 and later SDKs, causing them to appear to be the 14.x SDK.  However,
+ * the 15.0+ macros were added to AvailabilityVersions.h, so we can check for
  * that as a workaround, when the apparent version is 14.x.  In this
  * case, AvailabilityVersions.h has already been included, so we don't
  * need to do it again.
  */
 
 #if __MPLS_SDK_MAJOR == 140000
-  #ifdef MAC_OS_VERSION_15_0
+  #if defined(MAC_OS_VERSION_26_0)
+    #undef __MPLS_SDK_MAJOR
+    #define __MPLS_SDK_MAJOR 260000
+  #elif defined(MAC_OS_VERSION_16_0)
+    #undef __MPLS_SDK_MAJOR
+    #define __MPLS_SDK_MAJOR 160000
+  #elif defined(MAC_OS_VERSION_15_0)
     #undef __MPLS_SDK_MAJOR
     #define __MPLS_SDK_MAJOR 150000
   #endif
@@ -237,24 +247,29 @@
 #undef MAC_OS_VERSION_12_7
 #undef MAC_OS_VERSION_13_0
 #undef MAC_OS_VERSION_13_1
-#undef MAC_OS_VERSION_13_1
 #undef MAC_OS_VERSION_13_2
 #undef MAC_OS_VERSION_13_3
 #undef MAC_OS_VERSION_13_4
 #undef MAC_OS_VERSION_13_5
 #undef MAC_OS_VERSION_13_6
+#undef MAC_OS_VERSION_13_7
 #undef MAC_OS_VERSION_14_0
 #undef MAC_OS_VERSION_14_1
 #undef MAC_OS_VERSION_14_2
 #undef MAC_OS_VERSION_14_3
 #undef MAC_OS_VERSION_14_4
 #undef MAC_OS_VERSION_14_5
+#undef MAC_OS_VERSION_14_6
+#undef MAC_OS_VERSION_14_7
 #undef MAC_OS_VERSION_15_0
 #undef MAC_OS_VERSION_15_1
 #undef MAC_OS_VERSION_15_2
 #undef MAC_OS_VERSION_15_3
 #undef MAC_OS_VERSION_15_4
 #undef MAC_OS_VERSION_15_5
+#undef MAC_OS_VERSION_15_6
+#undef MAC_OS_VERSION_16_0
+#undef MAC_OS_VERSION_26_0
 
 #endif /* __MPLS_SDK_MAJOR >= 110000 */
 
