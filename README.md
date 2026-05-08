@@ -307,6 +307,11 @@ Wrapped headers and replaced functions are:
     <td>OSX10.5</td>
   </tr>
   <tr>
+    <td><code>CoreFoundation/CFString.h</code></td>
+    <td>Adds <code>CFStringCreateWithBytesNoCopy</code> prototype</td>
+    <td>OSX10.4</td>
+  </tr>
+  <tr>
     <td><code>OpenGL/gliDispatch.h</code></td>
     <td>Wraps <code>gliDispatch.h</code> to prevent including
         <code>glext.h</code> and thereby match behaviour of newer systems.</td>
