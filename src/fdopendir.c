@@ -65,7 +65,7 @@
 #endif /* __MPLS_SDK_MAJOR < 1050
 */
 
-/* Make sure we have "struct sta64" */
+/* Make sure we have "struct stat64" */
 #if !__MPLS_HAVE_STAT64
 struct stat64 __DARWIN_STRUCT_STAT64;
 #endif /* !__MPLS_HAVE_STAT64 */
