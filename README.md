@@ -147,6 +147,11 @@ Wrapped headers and replaced functions are:
     <td>OSX10.6</td>
   </tr>
   <tr>
+    <td><code>Xplugin.h</code></td>
+    <td>Adds missing <code>Xplugin.h</code> to 10.4</td>
+    <td>OSX10.4</td>
+  </tr>
+  <tr>
     <td rowspan="2"><code>mach/mach_time.h</code></td>
     <td>Adds function <code>mach_approximate_time</code></td>
     <td>OSX10.9</td>
