@@ -28,6 +28,7 @@
 #include <net/if_utun.h>
 #include <net/if.h>
 #include <math.h>
+#include <mach/port.h>
 #include <mach/machine.h>
 #include <mach/mach_time.h>
 #include <libkern/OSAtomic.h>

@@ -11,6 +11,7 @@
 #include <libkern/OSAtomic.h>
 #include <mach/mach_time.h>
 #include <mach/machine.h>
+#include <mach/port.h>
 #include <math.h>
 #include <net/if.h>
 #include <net/if_utun.h>
