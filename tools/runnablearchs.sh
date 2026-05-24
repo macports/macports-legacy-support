@@ -2,15 +2,19 @@
 
 # Script to determine which architectures can build and run on this machine.
 # The list of architectures to test can be specified on the command line;
-# the default is to test all primary architectures.  The final output is
-# the filtered architecture list.
+# the default is to test all primary architectures (or all potentially relevant
+# architectures if "-a" is given).  The final output is the filtered
+# architecture list.
 #
 # We need to verify that the program can actually run; not just that it built.
 #
 # Some gccs ignore unsupported -arch options, so we need to include a check
 # in the test program to verify the expected architecture.  But since there's
-# no '__ppc7400__' preprocessor flag, we need to map 'ppc7400' to 'ppc' while
+# no '__ppc7400__' preprocessor macro, we need to map 'ppc7400' to 'ppc' while
 # doing this.
+#
+# Also, some gccs don't implement -arch at all, and treat it as an error.
+# This script won't work with such compilers.
 #
 # In addition, some MacPorts clangs segfault when given unsupported -arch
 # options, causing an error message from the shell rather than clang.  To get
