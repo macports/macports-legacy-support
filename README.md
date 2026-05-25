@@ -130,6 +130,11 @@ Wrapped headers and replaced functions are:
     <td>OSX10.14</td>
   </tr>
   <tr>
+    <td><code>ucontext.h</code> subincludes</td>
+    <td>Adds definitions and aliases for 10.5+ context names to 10.4</td>
+    <td>OSX10.4</td>
+  </tr>
+  <tr>
     <td rowspan="2"><code>unistd.h</code></td>
     <td>Adds <code>fgetattrlist</code> and <code>fsetattrlist</code>
         functions</td>
