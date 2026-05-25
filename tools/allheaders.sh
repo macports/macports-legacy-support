@@ -1,9 +1,12 @@
 #! /bin/bash
 
 # Script to generate list of #includes for all headers (with exceptions).
-# Requires git, and hence can't be used in a Makefile rule.
+# Requires git, and hence can't be used in a Makefile rule.  Also, each
+# run may require new exceptions to be added manually.
 #
-# This creates forward and reverse-ordered "kitchen sink" headers.
+# This creates forward and reverse-ordered "kitchen sink" headers.  It writes
+# them directly to their normal locations, with the expectation that git
+# will be used to compare and/or restore them, as needed.
 #
 # Because the builds of some headers may be unexpectedly influenced by the
 # prior inclusion of other headers, this generates the list in both forward and
@@ -35,6 +38,8 @@ FILTERS+='|available.h'
 FILTERS+='|sys/attr.h'
 # Xplugin.h needs an additional flag to work, and has its own test, anyway
 FILTERS+='|Xplugin.h'
+# Subsidiary headers of sys/ucontext.h, which we shouldn't test directly
+FILTERS+='|i386/ucontext.h|mach/i386/thread_status.h|ppc/ucontext.h'
 
 # Headers without .h are C++-only, and not legal in basic-C builds.
 CPPFILTER='[.]h$'
