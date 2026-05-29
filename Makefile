@@ -660,32 +660,41 @@ $(XTESTBINPREFIX)allheaders_full_ds.o: $(XTESTNAMEPREFIX)allheaders.c
 # The "attrlist_nonposix" test includes the attrlist test source
 $(TESTNAMEPREFIX)attrlist_nonposix.o: $(TESTNAMEPREFIX)attrlist.c
 
-# Provide a target for all "darwin_c" tests
+# Provide targets for all "darwin_c" tests
 $(XTESTRUNPREFIX)darwin_c_all: $(DARWINRUNS)
+$(XTESTRUNPREFIX)darwin_c_all_unv: $(addsuffix _unv,$(DARWINRUNS))
 
-# Provide a target for all "scandir" tests
+# Provide targets for all "scandir" tests
 $(XTESTRUNPREFIX)scandir_all: $(SCANDIRRUNS)
+$(XTESTRUNPREFIX)scandir_all_unv: $(addsuffix _unv,$(SCANDIRRUNS))
 
-# Provide a target for all "realpath" tests
+# Provide targets for all "realpath" tests
 $(TESTRUNPREFIX)realpath_all: $(REALPATHRUNS)
+$(TESTRUNPREFIX)realpath_all_unv: $(addsuffix _unv,$(REALPATHRUNS))
 
-# Provide a target for all "fdopendir" tests
+# Provide targets for all "fdopendir" tests
 $(TESTRUNPREFIX)fdopendir_all: $(FDOPENDIRRUNS)
+$(TESTRUNPREFIX)fdopendir_all_unv: $(addsuffix _unv,$(FDOPENDIRRUNS))
 
-# Provide a target for all "stat" tests
+# Provide targets for all "stat" tests
 $(TESTRUNPREFIX)stat_all: $(STATXXRUNS)
+$(TESTRUNPREFIX)stat_all_unv: $(addsuffix _unv,$(STATXXRUNS))
 
-# Provide a target for all "stpncpy_chk" tests
+# Provide targets for all "stpncpy_chk" tests
 $(MANRUNPREFIX)stpncpy_chk_all: $(STPNCHKRUNS)
+$(MANRUNPREFIX)stpncpy_chk_all_unv: $(addsuffix _unv,$(STPNCHKRUNS))
 
-# Provide a target for all non-manual "packet" tests
+# Provide targets for all non-manual "packet" tests
 $(TESTRUNPREFIX)packet_all: $(PACKETRUNS)
+$(TESTRUNPREFIX)packet_all_unv: $(addsuffix _unv,$(PACKETRUNS))
 
-# Provide a target for all "allheaders" tests
+# Provide targets for all "allheaders" tests
 $(XTESTRUNPREFIX)allheaders_all: $(ALLHDRRUNS)
+$(XTESTRUNPREFIX)allheaders_all_unv: $(addsuffix _unv,$(ALLHDRRUNS))
 
-# Provide a target for all "attrlist" tests
+# Provide targets for all "attrlist" tests
 $(TESTRUNPREFIX)attrlist_all: $(ATTRLISTRUNS)
+$(TESTRUNPREFIX)attrlist_all_unv: $(addsuffix _unv,$(ATTRLISTRUNS))
 
 install: install-headers install-lib
 
@@ -779,15 +788,15 @@ clean: test_clean tools_clean
 .PHONY: test_static test_syslib test_all
 .PHONY: $(TESTRUNS) $(XTESTRUNS) $(MANTESTRUNS)
 .PHONY: $(MANRUNPREFIX)clean test_clean xtest_clean
-.PHONY: $(XTESTRUNPREFIX)darwin_c_all
-.PHONY: $(XTESTRUNPREFIX)scandir_all
-.PHONY: $(TESTRUNPREFIX)realpath_all
-.PHONY: $(TESTRUNPREFIX)fdopendir_all
-.PHONY: $(TESTRUNPREFIX)stat_all
-.PHONY: $(MANRUNPREFIX)stpncpy_chk_all
-.PHONY: $(TESTRUNPREFIX)packet_all
-.PHONY: $(MANRUNPREFIX)packet_all
-.PHONY: $(XTESTRUNPREFIX)allheaders_all
+.PHONY: $(XTESTRUNPREFIX)darwin_c_all $(XTESTRUNPREFIX)darwin_c_all_unv
+.PHONY: $(XTESTRUNPREFIX)scandir_all $(XTESTRUNPREFIX)scandir_all_unv
+.PHONY: $(TESTRUNPREFIX)realpath_all $(TESTRUNPREFIX)realpath_all_unv
+.PHONY: $(TESTRUNPREFIX)fdopendir_all $(TESTRUNPREFIX)fdopendir_all_inv
+.PHONY: $(TESTRUNPREFIX)stat_all $(TESTRUNPREFIX)stat_all_unv
+.PHONY: $(MANRUNPREFIX)stpncpy_chk_all $(MANRUNPREFIX)stpncpy_chk_all_unv
+.PHONY: $(TESTRUNPREFIX)packet_all $(TESTRUNPREFIX)packet_all_unv
+.PHONY: $(MANRUNPREFIX)packet_all $(MANRUNPREFIX)packet_all_unv
+.PHONY: $(XTESTRUNPREFIX)allheaders_all $(XTESTRUNPREFIX)allheaders_all_unv
 .PHONY: install install-headers install-lib install-dlib install-slib
 .PHONY: tiger-bins install-tiger
 .PHONY: leopard-bins install-leopard
