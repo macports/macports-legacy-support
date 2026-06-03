@@ -1,6 +1,7 @@
 # GNU Makefile for MacportsLegacySupport
 # Copyright (c) 2018 Chris Jones <jonesc@macports.org>
 # Copyright (c) 2019 Michael Dickens <michaelld@macports.org>
+# Copyright (c) 2026 Frederick H. G. Wright II <fw@fwright.net>
 #
 # Permission to use, copy, modify, and distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -178,6 +179,9 @@ XTESTRUNS        := \
 DARWINSRCS_C    := $(wildcard $(XTESTNAMEPREFIX)darwin_c*.c)
 DARWINRUNS      := $(patsubst \
                      $(XTESTNAMEPREFIX)%.c,$(XTESTRUNPREFIX)%,$(DARWINSRCS_C))
+DARWINSSRCS_C   := $(wildcard $(XTESTNAMEPREFIX)darwin_source*.c)
+DARWINSRUNS     := $(patsubst \
+                     $(XTESTNAMEPREFIX)%.c,$(XTESTRUNPREFIX)%,$(DARWINSSRCS_C))
 SCANDIRSRCS_C   := $(wildcard $(XTESTNAMEPREFIX)scandir*.c)
 SCANDIRRUNS     := $(patsubst \
                      $(XTESTNAMEPREFIX)%.c,$(XTESTRUNPREFIX)%,$(SCANDIRSRCS_C))
@@ -619,6 +623,17 @@ $(XTESTBINPREFIX)darwin_c_199309.o: $(XTESTNAMEPREFIX)darwin_c.c
 $(XTESTBINPREFIX)darwin_c_200809.o: $(XTESTNAMEPREFIX)darwin_c.c
 $(XTESTBINPREFIX)darwin_c_full.o: $(XTESTNAMEPREFIX)darwin_c.c
 
+# The "darwin_source" tests include the basic "darwin_source" source
+$(XTESTBINPREFIX)darwin_source_a.o: $(XTESTNAMEPREFIX)darwin_source.c
+$(XTESTBINPREFIX)darwin_source_k.o: $(XTESTNAMEPREFIX)darwin_source.c
+$(XTESTBINPREFIX)darwin_source_p.o: $(XTESTNAMEPREFIX)darwin_source.c
+$(XTESTBINPREFIX)darwin_source_x.o: $(XTESTNAMEPREFIX)darwin_source.c
+$(XTESTBINPREFIX)darwin_source_d.o: $(XTESTNAMEPREFIX)darwin_source.c
+$(XTESTBINPREFIX)darwin_source_da.o: $(XTESTNAMEPREFIX)darwin_source.c
+$(XTESTBINPREFIX)darwin_source_dk.o: $(XTESTNAMEPREFIX)darwin_source.c
+$(XTESTBINPREFIX)darwin_source_dp.o: $(XTESTNAMEPREFIX)darwin_source.c
+$(XTESTBINPREFIX)darwin_source_dx.o: $(XTESTNAMEPREFIX)darwin_source.c
+
 # The "scandir_*" tests include the basic "scandir" source
 $(XTESTBINPREFIX)scandir_old.o: $(XTESTNAMEPREFIX)scandir.c
 $(XTESTBINPREFIX)scandir_ino32.o: $(XTESTNAMEPREFIX)scandir.c
@@ -663,6 +678,10 @@ $(TESTNAMEPREFIX)attrlist_nonposix.o: $(TESTNAMEPREFIX)attrlist.c
 # Provide targets for all "darwin_c" tests
 $(XTESTRUNPREFIX)darwin_c_all: $(DARWINRUNS)
 $(XTESTRUNPREFIX)darwin_c_all_unv: $(addsuffix _unv,$(DARWINRUNS))
+
+# Provide targets for all "darwin_source" tests
+$(XTESTRUNPREFIX)darwin_source_all: $(DARWINSRUNS)
+$(XTESTRUNPREFIX)darwin_source_all_unv: $(addsuffix _unv,$(DARWINSRUNS))
 
 # Provide targets for all "scandir" tests
 $(XTESTRUNPREFIX)scandir_all: $(SCANDIRRUNS)
@@ -789,6 +808,8 @@ clean: test_clean tools_clean
 .PHONY: $(TESTRUNS) $(XTESTRUNS) $(MANTESTRUNS)
 .PHONY: $(MANRUNPREFIX)clean test_clean xtest_clean
 .PHONY: $(XTESTRUNPREFIX)darwin_c_all $(XTESTRUNPREFIX)darwin_c_all_unv
+.PHONY: $(XTESTRUNPREFIX)darwin_source_all
+.PHONY: $(XTESTRUNPREFIX)darwin_source_all_unv
 .PHONY: $(XTESTRUNPREFIX)scandir_all $(XTESTRUNPREFIX)scandir_all_unv
 .PHONY: $(TESTRUNPREFIX)realpath_all $(TESTRUNPREFIX)realpath_all_unv
 .PHONY: $(TESTRUNPREFIX)fdopendir_all $(TESTRUNPREFIX)fdopendir_all_inv
