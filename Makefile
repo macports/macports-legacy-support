@@ -185,6 +185,9 @@ DARWINSRUNS     := $(patsubst \
 SCANDIRSRCS_C   := $(wildcard $(XTESTNAMEPREFIX)scandir*.c)
 SCANDIRRUNS     := $(patsubst \
                      $(XTESTNAMEPREFIX)%.c,$(XTESTRUNPREFIX)%,$(SCANDIRSRCS_C))
+CONTEXTSSRCS_C  := $(wildcard $(XTESTNAMEPREFIX)contexts*.c)
+CONTEXTSRUNS    := $(patsubst \
+                     $(XTESTNAMEPREFIX)%.c,$(XTESTRUNPREFIX)%,$(CONTEXTSSRCS_C))
 ALLHDRSRCS_C    := $(wildcard $(XTESTNAMEPREFIX)allheaders*.c)
 ALLHDRRUNS      := $(patsubst \
                      $(XTESTNAMEPREFIX)%.c,$(XTESTRUNPREFIX)%,$(ALLHDRSRCS_C)) \
@@ -639,6 +642,13 @@ $(XTESTBINPREFIX)scandir_old.o: $(XTESTNAMEPREFIX)scandir.c
 $(XTESTBINPREFIX)scandir_ino32.o: $(XTESTNAMEPREFIX)scandir.c
 $(XTESTBINPREFIX)scandir_ino64.o: $(XTESTNAMEPREFIX)scandir.c
 
+# The "contexts" tests include the basic "contexts" source
+$(XTESTBINPREFIX)contexts_p.o: $(XTESTNAMEPREFIX)contexts.c
+$(XTESTBINPREFIX)contexts_d.o: $(XTESTNAMEPREFIX)contexts.c
+$(XTESTBINPREFIX)contexts_dp.o: $(XTESTNAMEPREFIX)contexts.c
+$(XTESTBINPREFIX)contexts_dx.o: $(XTESTNAMEPREFIX)contexts.c
+$(XTESTBINPREFIX)contexts_x.o: $(XTESTNAMEPREFIX)contexts.c
+
 # The nonstandard realpath tests include the realpath source
 $(TESTBINPREFIX)realpath_nonext.o: $(TESTNAMEPREFIX)realpath.c
 $(TESTBINPREFIX)realpath_nonposix.o: $(TESTNAMEPREFIX)realpath.c
@@ -686,6 +696,10 @@ $(XTESTRUNPREFIX)darwin_source_all_unv: $(addsuffix _unv,$(DARWINSRUNS))
 # Provide targets for all "scandir" tests
 $(XTESTRUNPREFIX)scandir_all: $(SCANDIRRUNS)
 $(XTESTRUNPREFIX)scandir_all_unv: $(addsuffix _unv,$(SCANDIRRUNS))
+
+# Provide targets for all "contexts" tests
+$(XTESTRUNPREFIX)contexts_all: $(CONTEXTSRUNS)
+$(XTESTRUNPREFIX)contexts_all_unv: $(addsuffix _unv,$(CONTEXTSRUNS))
 
 # Provide targets for all "realpath" tests
 $(TESTRUNPREFIX)realpath_all: $(REALPATHRUNS)
@@ -811,6 +825,7 @@ clean: test_clean tools_clean
 .PHONY: $(XTESTRUNPREFIX)darwin_source_all
 .PHONY: $(XTESTRUNPREFIX)darwin_source_all_unv
 .PHONY: $(XTESTRUNPREFIX)scandir_all $(XTESTRUNPREFIX)scandir_all_unv
+.PHONY: $(XTESTRUNPREFIX)contexts_all $(XTESTRUNPREFIX)contexts_all_unv
 .PHONY: $(TESTRUNPREFIX)realpath_all $(TESTRUNPREFIX)realpath_all_unv
 .PHONY: $(TESTRUNPREFIX)fdopendir_all $(TESTRUNPREFIX)fdopendir_all_inv
 .PHONY: $(TESTRUNPREFIX)stat_all $(TESTRUNPREFIX)stat_all_unv
