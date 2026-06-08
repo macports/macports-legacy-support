@@ -157,4 +157,30 @@ __mpls_scandir(const char *dirnam, struct dirent ***namelist,
 /* Provide a testable condition for the scandir signature issue. */
 #define _MACPORTS_LEGACY_OLD_SCANDIR __MPLS_SDK_SUPPORT_NEW_SCANDIR__
 
+#if __MPLS_SDK_MAJOR < 1050 \
+    && (!defined(_MACPORTS_LEGACY_DISABLE_DIRENT_ALIASES) \
+        || !_MACPORTS_LEGACY_DISABLE_DIRENT_ALIASES)
+/*
+ * We also provide macros to make the old 10.4 DIR element names available
+ * under their 10.5+ names.  Since these are simple macros with short names,
+ * there's some risk of collisions, though the leading underscores should make
+ * that unlikely.  Just in case, we provide the flag
+ * _MACPORTS_LEGACY_DISABLE_DIRENT_ALIASES, which can be defined nonzero to
+ * inhibit these definitions.
+ */
+
+/* Aliases for the DIR elements */
+#define __dd_fd dd_fd
+#define __dd_loc dd_loc
+#define __dd_size dd_size
+#define __dd_buf dd_buf
+#define __dd_len dd_len
+#define __dd_seek dd_seek
+#define __dd_rewind dd_rewind
+#define __dd_flags dd_flags
+#define __dd_lock dd_lock
+#define __dd_td dd_td
+
+#endif  /* 10.4 && !_MACPORTS_LEGACY_DISABLE_DIRENT_ALIASES */
+
 #endif /* _MACPORTS_DIRENT_H_ */
