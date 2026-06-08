@@ -19,15 +19,11 @@
  * for may not have the desired result.
  */
 
-#if defined(__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__)
-#define TARGET_OS __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__
-#else
-#define TARGET_OS 1040
-#endif
+#include <_macports_extras/targetos.h>
 
-#if TARGET_OS >= 101500 && TARGET_OS < 120000
+#if __MPLS_TARGET_OSVER >= 101500 && __MPLS_TARGET_OSVER < 120000
 
-#if TARGET_OS < 110000
+#if __MPLS_TARGET_OSVER < 110000
 #define VERSION "10.15"
 #define SYMPTOM "brokenness"
 #else

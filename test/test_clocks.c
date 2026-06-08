@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Frederick H. G. Wright II <fw@fwright.net>
+ * Copyright (c) 2026 Frederick H. G. Wright II <fw@fwright.net>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -54,6 +54,8 @@
 #include <sys/param.h>
 #include <sys/sysctl.h>
 #include <sys/time.h>
+
+#include <_macports_extras/targetos.h>
 
 /*
  * To determine the number of samples we collect, we *very* generously
@@ -1703,9 +1705,7 @@ check_mach_scaling(int verbose)
  * Rosetta 2.
  */
 
-#if defined(__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__) \
-    && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ >= 110000 \
-    && defined(__x86_64__)
+#if __MPLS_TARGET_OSVER >= 110000 && defined(__x86_64__)
 
 #include <sys/sysctl.h>
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Frederick H. G. Wright II <fw@fwright.net>
+ * Copyright (c) 2026 Frederick H. G. Wright II <fw@fwright.net>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -22,6 +22,8 @@
 /* Do this before everything else. */
 #include <_macports_extras/sdkversion.h>
 
+#include <_macports_extras/targetos.h>
+
 /* So we can delay including stdio.h */
 int printf(const char *format, ...);
 
@@ -41,6 +43,7 @@ print_defs(void)
   #else
   PRINT_UNDEF(__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__);
   #endif
+  PRINT_VAR(__MPLS_TARGET_OSVER);
 
   printf("\n");
 

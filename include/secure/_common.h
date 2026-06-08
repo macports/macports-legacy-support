@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Frederick H. G. Wright II <fw@fwright.net>
+ * Copyright (c) 2026 Frederick H. G. Wright II <fw@fwright.net>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -23,8 +23,8 @@
  * SDK, which only *defaults* it off on 10.4.  But that results in build
  * failures when _FORTIFY_SOURCE is set nonzero explicitly.
  */
-#if !defined(__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__) \
-    || __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1050
+#include <_macports_extras/targetos.h>
+#if __MPLS_TARGET_OSVER < 1050
 #undef _FORTIFY_SOURCE
 #endif
 

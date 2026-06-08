@@ -7,8 +7,9 @@
  * Currently, 64-bit-inode directory operations don't work on 10.4.
  */
 
-#if !defined(__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__) \
-    || __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1050
+#include <_macports_extras/targetos.h>
+
+#if __MPLS_TARGET_OSVER < 1050
 
 #include <libgen.h>
 #include <stdio.h>
