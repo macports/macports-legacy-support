@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Frederick H. G. Wright II <fw@fwright.net>
+ * Copyright (c) 2026 Frederick H. G. Wright II <fw@fwright.net>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -25,8 +25,9 @@
  * to the new cwd are as expected.
  */
 
-#if !defined(__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__) \
-    || __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1050
+#include <_macports_extras/targetos.h>
+
+#if __MPLS_TARGET_OSVER < 1050
 
 #include <libgen.h>
 #include <stdio.h>

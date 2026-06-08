@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Frederick H. G. Wright II <fw@fwright.net>
+ * Copyright (c) 2026 Frederick H. G. Wright II <fw@fwright.net>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -30,9 +30,10 @@
 #include <sys/param.h>
 #include <sys/stat.h>
 
+#include <_macports_extras/targetos.h>
+
 /* Set up condition for testing the compatibility wrappers. */
-#if !defined(__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__) \
-    || __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1050
+#if __MPLS_TARGET_OSVER < 1050
 #define TEST_TIGER 1
 #else
 #define TEST_TIGER 0

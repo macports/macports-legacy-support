@@ -12,11 +12,11 @@
  * 26.x+ with a <12.x SDK.
  */
 
-#if defined(_MACPORTS_LEGACY_MIN_EARLY_SDK_ALLOWED) \
-    && defined(__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__)
+#ifdef _MACPORTS_LEGACY_MIN_EARLY_SDK_ALLOWED
 
-#if __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ >= 101500 \
-    && __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 110000
+#include <_macports_extras/targetos.h>
+
+#if __MPLS_TARGET_OSVER >= 101500 && __MPLS_TARGET_OSVER < 110000
 
 #include <_macports_extras/sdkversion.h>
 
@@ -29,7 +29,7 @@ typedef __darwin_uuid_t uuid_t;
 
 #endif  /* 10.15 target */
 
-#if __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ >= 260000
+#if __MPLS_TARGET_OSVER >= 260000
 
 #ifndef __kernel_ptr_semantics
 #define __kernel_ptr_semantics
@@ -37,7 +37,7 @@ typedef __darwin_uuid_t uuid_t;
 
 #endif  /* 26.x+ target */
 
-#endif  /* Older SDK allowed and known target */
+#endif  /* Older SDK allowed */
 
 #include <IOKit/usb/USB.h>
 #include <stdio.h>

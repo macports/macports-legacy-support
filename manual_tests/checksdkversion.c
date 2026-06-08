@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Frederick H. G. Wright II <fw@fwright.net>
+ * Copyright (c) 2026 Frederick H. G. Wright II <fw@fwright.net>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -26,11 +26,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#ifdef __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__
-#define TARGET_OS __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__
-#else
-#define TARGET_OS 1040
-#endif
+#include <_macports_extras/targetos.h>
 
 static int
 get_sdknum(const char *sdkver)
@@ -38,7 +34,7 @@ get_sdknum(const char *sdkver)
   long major, minor;
   char *endp;
 
-  if (!sdkver || !*sdkver) return TARGET_OS;
+  if (!sdkver || !*sdkver) return __MPLS_TARGET_OSVER;
 
   major = strtol(sdkver, &endp, 10);
   if (*endp == '.') {

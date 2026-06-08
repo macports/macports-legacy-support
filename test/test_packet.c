@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Frederick H. G. Wright II <fw@fwright.net>
+ * Copyright (c) 2026 Frederick H. G. Wright II <fw@fwright.net>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -38,14 +38,10 @@
 
 #include <mach/mach_time.h>
 
+#include <_macports_extras/targetos.h>
+
 #define SYSCTL_OSVER_CLASS CTL_KERN
 #define SYSCTL_OSVER_ITEM  KERN_OSRELEASE
-
-#ifdef __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__
-#define TARGET_OSVER __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__
-#else
-#define TARGET_OSVER 1040
-#endif
 
 /*
  * If we're disabling the packet timestamp fixes, arrange to let the expected
@@ -64,13 +60,13 @@ typedef enum {
 #if defined(_MACPORTS_LEGACY_DISABLE_CMSG_FIXES) \
     && _MACPORTS_LEGACY_DISABLE_CMSG_FIXES
 
-#if TARGET_OSVER < 1060 && (defined(__x86_64__) || defined(__ppc64__))
+#if __MPLS_TARGET_OSVER < 1060 && (defined(__x86_64__) || defined(__ppc64__))
 
 static int
 allow_error(ts_bad_t errtype)
 {
   /* Bad padding is 10.5 only */
-  if (TARGET_OSVER < 1050 && errtype == ts_bad_padding) return 0;
+  if (__MPLS_TARGET_OSVER < 1050 && errtype == ts_bad_padding) return 0;
 
   return 1;
 }
@@ -119,7 +115,7 @@ allow_error(ts_bad_t errtype)
 
 #endif /* !_MACPORTS_LEGACY_DISABLE_CMSG_FIXES */
 
-#if TARGET_OSVER < 1050
+#if __MPLS_TARGET_OSVER < 1050
 /*
  * If we're building for 10.4 with a later SDK, and testing an alternate
  * variant of recvmsg(), we may reference that variant of various other
@@ -139,7 +135,7 @@ ssize_t __send(int, const void *, size_t, int) __asm("_send");
 int __close(int) __asm("_close");
 #define close __close
 
-#endif /* TARGET_OSVER < 1050 */
+#endif /* __MPLS_TARGET_OSVER < 1050 */
 
 #define CMSG_DATALEN(cmsg) ((uint8_t *) (cmsg) + (cmsg)->cmsg_len \
                             - (uint8_t *) CMSG_DATA(cmsg))
@@ -250,7 +246,7 @@ mach2ns(uint64_t mach_time)
  * Rosetta 2.
  */
 
-#if TARGET_OSVER >= 110000 && defined(__x86_64__)
+#if __MPLS_TARGET_OSVER >= 110000 && defined(__x86_64__)
 
 #include <sys/sysctl.h>
 
