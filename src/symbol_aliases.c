@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024
+ * Copyright (c) 2026
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -16,9 +16,6 @@
 
 /* MP support header */
 #include "MacportsLegacySupport.h"
-
-/* Do our SDK-related setup */
-#include <_macports_extras/sdkversion.h>  /* For 10.4 hack */
 
 #if __MPLS_LIB_SUPPORT_SYMBOL____bzero__
 
@@ -38,13 +35,11 @@ void __bzero(void *s, size_t n) { bzero(s, n); }
 #include <stddef.h>
 /*
 The need for this function is highly limited.
-Prior to 10.8, `dirfd` was a macro`.
+Prior to 10.8, `dirfd` was a macro.
 The Rust compiler requires `dirfd` to be a library symbol.
 */
 #undef dirfd
-#if __MPLS_SDK_MAJOR < 1050
-#define __dd_fd dd_fd
-#endif /* __MPLS_SDK_MAJOR < 1050 */
+
 int dirfd(DIR *dirp)
 {
     if (dirp == NULL || dirp->__dd_fd < 0)
