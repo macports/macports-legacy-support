@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018 Chris Jones <jonesc@macports.org>
+ * Copyright (c) 2026 Frederick H. G. Wright II <fw@fwright.net>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -112,5 +113,24 @@ __MP__END_DECLS
 #endif /* __MPLS_SDK_SUPPORT_TIMESPEC_GET__ */
 
 #endif /* __DARWIN_C_LEVEL ... */
+
+/* If necessary, duplicate the 10.4 code mishandled with _DARWIN_C_SOURCE */
+#if __MPLS_DARWIN_C_SOURCE_TIGER_ANSI_POSIX
+
+/*
+ * We skip the thread-safe functions, which are already handled above, and
+ * which became unconditional in 10.5.
+ */
+
+time_t posix2time(time_t);
+#if !__DARWIN_UNIX03
+char *timezone(int, int);
+#endif /* !__DARWIN_UNIX03 */
+void tzsetwall(void);
+time_t time2posix(time_t);
+time_t timelocal(struct tm * const);
+time_t timegm(struct tm * const);
+
+#endif /* __MPLS_DARWIN_C_SOURCE_TIGER_ANSI_POSIX */
 
 #endif /* _MACPORTS_TIME_H_ */

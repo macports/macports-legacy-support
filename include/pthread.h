@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025
+ * Copyright (c) 2026
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -47,5 +47,12 @@ int pthread_fchdir_np(int fd);
 #endif /* __MPLS_SDK_ALLOW_PTHREAD_CHDIR__ && ... */
 
 __MP__END_DECLS
+
+/* If necessary, duplicate the 10.4 code mishandled with _DARWIN_C_SOURCE */
+#if __MPLS_DARWIN_C_SOURCE_TIGER_POSIX_XOPEN
+
+#include <_macports_extras/tiger_darwin_c_source/pthread.h>
+
+#endif /* __MPLS_DARWIN_C_SOURCE_TIGER_POSIX_XOPEN */
 
 #endif /* _MACPORTS_PTHREAD_H_ */
