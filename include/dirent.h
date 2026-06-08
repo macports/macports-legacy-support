@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019
+ * Copyright (c) 2026
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -26,6 +26,32 @@
 /* Include the primary system dirent.h */
 #include_next <dirent.h>
 
+/* If necessary, duplicate the 10.4 code mishandled with _DARWIN_C_SOURCE */
+#if __MPLS_DARWIN_C_SOURCE_TIGER_POSIX
+
+/* definitions for library routines operating on directories. */
+#define DIRBLKSIZ       1024
+
+#define dirfd(dirp)     ((dirp)->dd_fd)
+
+/* flags for opendir2 */
+#define DTF_HIDEW       0x0001  /* hide whiteout entries */
+#define DTF_NODUP       0x0002  /* don't return duplicate names */
+#define DTF_REWIND      0x0004  /* rewind after reading union stack */
+#define __DTF_READALL   0x0008  /* everything has been read */
+
+__MP__BEGIN_DECLS
+
+int alphasort(const void *, const void *);
+int getdirentries(int, char *, int, long *);
+DIR *__opendir2(const char *, int) __DARWIN_ALIAS(__opendir2);
+int scandir(const char *, struct dirent ***,
+            int (*)(struct dirent *), int (*)(const void *, const void *));
+
+__MP__END_DECLS
+
+#endif /* __MPLS_DARWIN_C_SOURCE_TIGER_POSIX */
+
 /* Additional functionality provided by:
  * POSIX.1-2008
  */
@@ -48,9 +74,9 @@ __MP__END_DECLS
 
 /* New signature for scandir and alphasort (optionally) */
 
-/* These functions are non-POSIX, so avoid broken refs. */
-#if !defined(_POSIX_C_SOURCE) \
-    || (defined(_DARWIN_C_SOURCE) && __MPLS_SDK_MAJOR >= 1050)
+/* These functions are non-POSIX and non-kernel, so avoid broken refs. */
+#if (!defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE)) \
+    && !defined(KERNEL)
 
 #if __MPLS_SDK_SUPPORT_NEW_SCANDIR__
 
@@ -150,7 +176,7 @@ __mpls_scandir(const char *dirnam, struct dirent ***namelist,
 
 #endif /* !__MPLS_SDK_SUPPORT_NEW_SCANDIR__  */
 
-#endif /* (!_POSIX_C_SOURCE || (_DARWIN_C_SOURCE && >10.4)) */
+#endif /* non-POSIX non-kernel */
 
 #endif /* __DARWIN_C_LEVEL >= 200809L */
 

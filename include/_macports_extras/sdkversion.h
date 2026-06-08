@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Frederick H. G. Wright II <fw@fwright.net>
+ * Copyright (c) 2026 Frederick H. G. Wright II <fw@fwright.net>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -290,5 +290,53 @@
 #endif
 
 #endif /* !__APPLE__ */
+
+/*
+ * Certain definitions/declarations are inhibited by _POSIX_C_SOURCE,
+ * _ANSI_C_SOURCE, KERNEL, or _XOPEN_SOURCE, except when _DARWIN_C_SOURCE is
+ * also defined.  However, the latter aspect is missing from the 10.4 headers,
+ * so we need to provide the missing parts in that case.  To help with this,
+ * we define flags for those conditions, to be used in the headers that need it.
+ *
+ * Note that _XOPEN_SOURCE implies _POSIX_C_SOURCE, so we set up these
+ * defs accordingly (while pretending that they're independent).
+ *
+ * In the typical usage, the code from the 10.4 Apple header blocked
+ * by its conditional is duplicated in the wrapper header under
+ * one of these conditionals.
+ */
+#if __MPLS_SDK_MAJOR < 1050 && defined(_DARWIN_C_SOURCE)
+#define __MPLS_DARWIN_C_SOURCE_TIGER 1
+#else
+#define __MPLS_DARWIN_C_SOURCE_TIGER 0
+#endif
+
+#if __MPLS_DARWIN_C_SOURCE_TIGER \
+    && (defined(_POSIX_C_SOURCE) || defined(_XOPEN_SOURCE))
+#define __MPLS_DARWIN_C_SOURCE_TIGER_POSIX 1
+#else
+#define __MPLS_DARWIN_C_SOURCE_TIGER_POSIX 0
+#endif
+
+#if __MPLS_DARWIN_C_SOURCE_TIGER && !defined(_ANSI_SOURCE) \
+    && (defined(_POSIX_C_SOURCE) || defined(_XOPEN_SOURCE))
+#define __MPLS_DARWIN_C_SOURCE_TIGER_ANSI_POSIX 1
+#else
+#define __MPLS_DARWIN_C_SOURCE_TIGER_ANSI_POSIX 0
+#endif
+
+#if __MPLS_DARWIN_C_SOURCE_TIGER && \
+    (defined(KERNEL) || defined(_POSIX_C_SOURCE) || defined(_XOPEN_SOURCE))
+#define __MPLS_DARWIN_C_SOURCE_TIGER_KERNEL_POSIX 1
+#else
+#define __MPLS_DARWIN_C_SOURCE_TIGER_KERNEL_POSIX 0
+#endif
+
+#if __MPLS_DARWIN_C_SOURCE_TIGER && \
+    (defined(_POSIX_C_SOURCE) || defined(_XOPEN_SOURCE))
+#define __MPLS_DARWIN_C_SOURCE_TIGER_POSIX_XOPEN 1
+#else
+#define __MPLS_DARWIN_C_SOURCE_TIGER_POSIX_XOPEN 0
+#endif
 
 #endif /* _MACPORTS_SDKVERSION_H_ */
