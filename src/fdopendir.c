@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2019
  * Copyright (C) 2023 raf <raf@raf.org>, Tavian Barnes <tavianator@tavianator.com>
+ * Copyright (c) 2026 Frederick H. G. Wright II <fw@fwright.net>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -17,9 +18,6 @@
 
 /* MP support header */
 #include "MacportsLegacySupport.h"
-
-/* Do our SDK-related setup */
-#include <_macports_extras/sdkversion.h>
 
 /*
  * Implementation behavior largely follows these man page descriptions:
@@ -59,11 +57,6 @@
 #include <sys/stat.h>
 
 #include "atcalls.h"
-
-#if __MPLS_SDK_MAJOR < 1050
-#define __dd_fd dd_fd
-#endif /* __MPLS_SDK_MAJOR < 1050
-*/
 
 /* Make sure we have "struct stat64" */
 #if !__MPLS_HAVE_STAT64
