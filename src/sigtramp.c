@@ -23,6 +23,37 @@
 /*
  * Copyright (c) 1995 NeXT Computer, Inc. All Rights Reserved
  */
+
+/*
+ * NOTICE: This file was modified in June 2026 to allow
+ * for use as a supporting file for MacPorts legacy support library.
+ * This notice is included in support of clause 2.2 (b) of the
+ * Apple Public License, Version 2.0.
+ *
+ * The original file is taken from the Apple public sources at:
+ * https://github.com/apple-oss-distributions/Libc/blob/33cf694a25b02c895c450328ba8294c8200ef077/sys/sigtramp.c
+ *
+ * Changes include:
+ *   Making the build conditional on the need for its use.
+ *   Setting __DYNAMIC__ explicitly.
+ *   Adding additional needed includes.
+ */
+
+/* MP support header */
+#include "MacportsLegacySupport.h"
+
+#if __MPLS_LIB_FIX_PPC64_SIGNALS__
+
+#define __DYNAMIC__ 1
+
+#include <strings.h>  /* For bcmp() */
+#include <unistd.h>   /* For syscall() */
+
+/*
+ * The remainder of this file (except for the final #endif) is taken verbatim
+ * from the original source.  The actual bugfix will be in another commit.
+ */
+
 #import	"sigcatch.h"
 #import	<sys/types.h>
 #import	<signal.h>
@@ -217,3 +248,4 @@ _sigtramp(
 	syscall (184, uctx, ctxstyle);
 }
 
+#endif  /* __MPLS_LIB_FIX_PPC64_SIGNALS__ */

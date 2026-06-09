@@ -26,6 +26,35 @@
  *	@(#)sigaction.c	1.0
  */
 
+/*
+ * NOTICE: This file was modified in June 2026 to allow
+ * for use as a supporting file for MacPorts legacy support library.
+ * This notice is included in support of clause 2.2 (b) of the
+ * Apple Public License, Version 2.0.
+ *
+ * The original file is taken from the Apple public sources at:
+ * https://github.com/apple-oss-distributions/Libc/blob/33cf694a25b02c895c450328ba8294c8200ef077/sys/sigaction.c
+ *
+ * Changes include:
+ *   Making the build conditional on the need for its use.
+ *   Setting __DYNAMIC__ explicitly.
+ */
+
+/* MP support header */
+#include "MacportsLegacySupport.h"
+
+#if __MPLS_LIB_FIX_PPC64_SIGNALS__
+
+#define __DYNAMIC__ 1
+
+/*
+ * The remainder of this file (except for the final #endif) is taken verbatim
+ * from the original source.  It needs to be duplicated as an overlay to
+ * use the corrected _sigtramp() implementation.  Since the bug in question
+ * does not appear to affect signal() or bsd_signal(), those functions
+ * don't require this treatment.
+ */
+
 #include <sys/syscall.h>
 #include <unistd.h>
 #include <signal.h>
@@ -76,3 +105,4 @@ _sigaction_nobind (sig, nsv, osv)
 }
 #endif
 
+#endif  /* __MPLS_LIB_FIX_PPC64_SIGNALS__ */
