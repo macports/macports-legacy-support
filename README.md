@@ -352,6 +352,11 @@ Wrapped headers and replaced functions are:
     <td>Fixes boottime bug in 64-bit <code>sysctl()</code> and <code>sysctlbyname()</code></td>
     <td>OSX10.5</td>
   </tr>
+  <tr>
+    <td><code>-</code></td>
+    <td>Fixes ppc64 signal handling in 10.4</td>
+    <td>OSX10.4</td>
+  </tr>
 </table>
 
 For information on building this library outside MacPorts, see BUILDING.txt.

@@ -37,6 +37,9 @@
  *   Making the build conditional on the need for its use.
  *   Setting __DYNAMIC__ explicitly.
  *   Adding additional needed includes.
+ *   Fixing the bugs in restore64_state().
+ *   Fixing the ctxstyle setup for ppc64.
+ *   Adding a global flag to indicate the presence of the fix.
  */
 
 /* MP support header */
@@ -49,9 +52,11 @@
 #include <strings.h>  /* For bcmp() */
 #include <unistd.h>   /* For syscall() */
 
+int __MPLS_HAVE_PPC64_SIGNAL_FIX;
+
 /*
- * The remainder of this file (except for the final #endif) is taken verbatim
- * from the original source.  The actual bugfix will be in another commit.
+ * The remainder of this file, except for the final #endif and the corrections
+ * to restore64_state(), is taken verbatim from the original source.
  */
 
 #import	"sigcatch.h"
@@ -104,47 +109,47 @@ restore64_state(mcontext_t mctx, mcontext64_t mctx64, int sigstyle)
 		return(0);	
 	if (mctx->ss.r0 != (unsigned int)mctx64->ss.r0)
 		return(0);	
-	if (mctx->ss.r1 != (unsigned int)mctx->ss.r1)
+	if (mctx->ss.r1 != (unsigned int)mctx64->ss.r1)
 		return(0);	
-	if (mctx->ss.r2 != (unsigned int)mctx->ss.r2)
+	if (mctx->ss.r2 != (unsigned int)mctx64->ss.r2)
 		return(0);	
-	if (mctx->ss.r3 != (unsigned int)mctx->ss.r3)
+	if (mctx->ss.r3 != (unsigned int)mctx64->ss.r3)
 		return(0);	
-	if (mctx->ss.r4 != (unsigned int)mctx->ss.r4)
+	if (mctx->ss.r4 != (unsigned int)mctx64->ss.r4)
 		return(0);	
-	if (mctx->ss.r5 != (unsigned int)mctx->ss.r5)
+	if (mctx->ss.r5 != (unsigned int)mctx64->ss.r5)
 		return(0);	
-	if (mctx->ss.r6 != (unsigned int)mctx->ss.r6)
+	if (mctx->ss.r6 != (unsigned int)mctx64->ss.r6)
 		return(0);	
-	if (mctx->ss.r7 != (unsigned int)mctx->ss.r7)
+	if (mctx->ss.r7 != (unsigned int)mctx64->ss.r7)
 		return(0);	
-	if (mctx->ss.r8 != (unsigned int)mctx->ss.r8)
+	if (mctx->ss.r8 != (unsigned int)mctx64->ss.r8)
 		return(0);	
-	if (mctx->ss.r9 != (unsigned int)mctx->ss.r9)
+	if (mctx->ss.r9 != (unsigned int)mctx64->ss.r9)
 		return(0);	
-	if (mctx->ss.r10 != (unsigned int)mctx->ss.r10)
+	if (mctx->ss.r10 != (unsigned int)mctx64->ss.r10)
 		return(0);	
-	if (mctx->ss.r11 != (unsigned int)mctx->ss.r11)
+	if (mctx->ss.r11 != (unsigned int)mctx64->ss.r11)
 		return(0);	
-	if (mctx->ss.r12 != (unsigned int)mctx->ss.r12)
+	if (mctx->ss.r12 != (unsigned int)mctx64->ss.r12)
 		return(0);	
-	if (mctx->ss.r13 != (unsigned int)mctx->ss.r13)
+	if (mctx->ss.r13 != (unsigned int)mctx64->ss.r13)
 		return(0);	
-	if (mctx->ss.r14 != (unsigned int)mctx->ss.r14)
+	if (mctx->ss.r14 != (unsigned int)mctx64->ss.r14)
 		return(0);	
-	if (mctx->ss.r15 != (unsigned int)mctx->ss.r15)
+	if (mctx->ss.r15 != (unsigned int)mctx64->ss.r15)
 		return(0);	
-	if (mctx->ss.r16 != (unsigned int)mctx->ss.r16)
+	if (mctx->ss.r16 != (unsigned int)mctx64->ss.r16)
 		return(0);	
-	if (mctx->ss.r17 != (unsigned int)mctx->ss.r17)
+	if (mctx->ss.r17 != (unsigned int)mctx64->ss.r17)
 		return(0);	
-	if (mctx->ss.r18 != (unsigned int)mctx->ss.r18)
+	if (mctx->ss.r18 != (unsigned int)mctx64->ss.r18)
 		return(0);	
-	if (mctx->ss.r19 != (unsigned int)mctx->ss.r19)
+	if (mctx->ss.r19 != (unsigned int)mctx64->ss.r19)
 		return(0);	
-	if (mctx->ss.r20 != (unsigned int)mctx->ss.r20)
+	if (mctx->ss.r20 != (unsigned int)mctx64->ss.r20)
 		return(0);	
-	if (mctx->ss.r21 != (unsigned int)mctx->ss.r21)
+	if (mctx->ss.r21 != (unsigned int)mctx64->ss.r21)
 		return(0);	
 	if (mctx->ss.r22 != (unsigned int)mctx64->ss.r22)
 		return(0);	
@@ -176,7 +181,7 @@ restore64_state(mcontext_t mctx, mcontext64_t mctx64, int sigstyle)
 	if (mctx->ss.ctr != (unsigned int)mctx64->ss.ctr)
 		return(0);	
 
-	if (bcmp(&mctx->fs, &mctx64->ss, (PPC_FLOAT_STATE_COUNT * sizeof(int))))
+	if (bcmp(&mctx->fs, &mctx64->fs, (PPC_FLOAT_STATE_COUNT * sizeof(int))))
 		return(0);
 	if ((sigstyle == UC_DUAL_VEC) && bcmp(&mctx->vs, &mctx64->vs, (PPC_VECTOR_STATE_COUNT * sizeof(int))))
 		return(0);
@@ -231,10 +236,21 @@ _sigtramp(
 				ctxstyle = UC_FLAVOR64_VEC;
 			}
 		} else {
+/* On ppc64, mctx may actually be the valid mctx64 - check length */
+/* It's undetermined whether this is unconditionally true. */
+#ifdef __ppc64__
+			if (sigstyle == UC_DUAL)
+				ctxstyle = uctx->uc_mcsize == UC_FLAVOR64_SIZE ?
+				           UC_FLAVOR64 : UC_FLAVOR;
+			 else
+				ctxstyle = uctx->uc_mcsize == UC_FLAVOR64_VEC_SIZE ?
+				           UC_FLAVOR64_VEC : UC_FLAVOR_VEC;
+#else  /* !__ppc64__ */
 			if (sigstyle == UC_DUAL) 
 				ctxstyle = UC_FLAVOR;
 			 else
 				ctxstyle = UC_FLAVOR_VEC;
+#endif  /* !__ppc64__ */
 		}
 	} else
 		ctxstyle = sigstyle;
