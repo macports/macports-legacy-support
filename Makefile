@@ -226,6 +226,12 @@ ATTRLISTRUNS    := $(patsubst \
 # All automatic test runners
 ALLTESTRUNS     := $(TESTRUNS) $(TESTSRUNS) $(TESTSYSRUNS) $(XTESTRUNS)
 
+# Special manual tests needing CoreFoundation framework
+MANTESTSRCS_CF   := $(MANTESTPREFIX)cfstring.c
+MANTESTPRGS_CF   := $(patsubst $(MANTESTPREFIX)%.c,%,$(MANTESTSRCS_CF))
+MANTESTBINS_CF    := $(patsubst %,$(TESTBINDIR)/%,$(MANTESTPRGS_CF))
+CFFLAGS          := -framework CoreFoundation
+
 # Tests that are only run manually
 MANTESTDIR        = manual_tests
 MANTESTPREFIX     = $(MANTESTDIR)/
@@ -246,6 +252,7 @@ MANTESTOBJS_CPP  := $(patsubst %,$(TESTBINDIR)/%.o,$(MANTESTPRGS_CPP))
 MANTESTOBJS      := $(MANTESTOBJS_C) $(MANLIBTESTOBJS_C) $(MANTESTOBJS_CPP)
 MANTESTBINS_C    := $(patsubst %,$(TESTBINDIR)/%,$(MANTESTPRGS_C))
 MANTESTBINS_CPP  := $(patsubst %,$(TESTBINDIR)/%,$(MANTESTPRGS_CPP))
+MANTESTBINS_NF   := $(filter-out $(MANTESTBINS_CF),$(MANTESTBINS_C))
 MANTESTPRGS      := $(MANTESTBINS_C) $(MANTESTBINS_CPP)
 MANTESTRUNS      := $(patsubst \
                      $(TESTBINDIR)/%,$(MANRUNPREFIX)%,$(MANTESTPRGS))
@@ -411,7 +418,7 @@ $(XTESTPRGS): %: %.o
 	$(CC) $(XTESTLDFLAGS) $< -o $@
 
 # Currently, the manual C tests don't require the library
-$(MANTESTBINS_C): %: %.o
+$(MANTESTBINS_NF): %: %.o
 	$(CC) $(MANTESTLDFLAGS) $< -o $@
 
 # Except for the ones that do
@@ -421,6 +428,10 @@ $(MANLIBTESTBINS): %: %.o $(BUILDDLIBPATH)
 # And the manual C++ tests *do* require the library
 $(MANTESTBINS_CPP): %: %.o $(BUILDDLIBPATH)
 	$(CXX) $(TESTLDFLAGS) $< $(TESTLIBS) -o $@
+
+# And certain cases require CoreFoundation
+$(MANTESTBINS_CF): %: %.o
+	$(CC) $(MANTESTLDFLAGS) $(CFFLAGS) $< -o $@
 
 alltestobjs: $(TESTOBJS_C) $(XTESTOBJS_C) $(MANTESTOBJS_C) $(MANLIBTESTOBJS_C)
 
