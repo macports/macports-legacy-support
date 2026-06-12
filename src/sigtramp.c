@@ -40,6 +40,7 @@
  *   Fixing the bugs in restore64_state().
  *   Fixing the ctxstyle setup for ppc64.
  *   Adding a global flag to indicate the presence of the fix.
+ *   Allowing building with the 10.5 SDK.
  */
 
 /* MP support header */
@@ -53,6 +54,10 @@
 #include <unistd.h>   /* For syscall() */
 
 int __MPLS_HAVE_PPC64_SIGNAL_FIX;
+
+/* Use the 10.4 names when building with a 10.5 SDK */
+#undef __DARWIN_UNIX03
+#define __DARWIN_UNIX03 0
 
 /*
  * The remainder of this file, except for the final #endif and the corrections
