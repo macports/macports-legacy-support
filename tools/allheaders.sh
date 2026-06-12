@@ -33,6 +33,8 @@ FILTERS+='|CoreFoundation/|IOKit/|OpenGL/'
 FILTERS+='|available.h'
 # sys/attr.h requires other headers that it doesn't include
 FILTERS+='|sys/attr.h'
+# Xplugin.h needs an additional flag to work, and has its own test, anyway
+FILTERS+='|Xplugin.h'
 
 # Headers without .h are C++-only, and not legal in basic-C builds.
 CPPFILTER='[.]h$'
