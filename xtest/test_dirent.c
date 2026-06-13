@@ -22,20 +22,67 @@
  * as of the 15.x SDK, and meanwhile, the fdopendir() implementation was
  * rewritten to use a different approach, making the old test moot.
  *
- * This test is now just a dummy to verify the include of dirent.h.
+ * This test was originally just a dummy to verify the include of dirent.h.
  * The original C++ test still exists, but now as:
  *   manual_tests/dirent_with_cplusplus.cpp
+ *
+ * This test has now been expanded to test the use of the double-underscore
+ * versions of the DIR element names, which normally don't exist in 10.4,
+ * but are now provided by our wrapper.  In 10.4, it verifies that both
+ * versions of each name match; otherwise it just verifies that the usual
+ * double-underscore names can be referenced.
  */
 
 #include <dirent.h>
+#include <libgen.h>
+#include <stddef.h>
 #include <stdio.h>
- 
+
+/* Do our SDK-related setup */
+#include <_macports_extras/sdkversion.h>
+
+static DIR test;
+
+#define DIRENTRIES \
+  DIRITEM(dd_fd) \
+  DIRITEM(dd_loc) \
+  DIRITEM(dd_size) \
+  DIRITEM(dd_buf) \
+  DIRITEM(dd_len) \
+  DIRITEM(dd_seek) \
+  /* DIRITEM(dd_rewind) */ \
+  DIRITEM(dd_flags) \
+  DIRITEM(dd_lock) \
+  DIRITEM(dd_td) \
+
+/* The __dd_rewind item disappeared as of 10.13 */
+#if __MPLS_SDK_MAJOR < 101300
+  #define XDIRENTRIES \
+    DIRITEM(dd_rewind)
+#else  /* 10.13+ */
+  #define XDIRENTRIES
+#endif  /* 10.13+ */
+
+#if __MPLS_SDK_MAJOR >= 1050
+  #define DIRITEM(name) (void) test.__ ## name;
+#else  /* 10.4 SDK */
+  #define DIRITEM(name) \
+    if (&test.name != &test.__ ## name) { \
+      printf("  *** DIR name '%s' mismatches\n", # name); \
+      err = 1; \
+    }
+#endif  /* 10.4 SDK */
+
 int
 main(int argc, char *argv[])
 {
+  int err = 0;
+
   (void) argc; (void) argv;
 
-  printf("dirent.h successfully included\n");
+  DIRENTRIES
+  XDIRENTRIES
 
-  return 0;
+  printf("%s %s.\n", basename(argv[0]), err ? "failed" : "passed");
+  return err;
 }
