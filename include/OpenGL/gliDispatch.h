@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021
+ * Copyright (c) 2026
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -14,19 +14,22 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-
-/* in SDKs > 10.6 this Apple header does not include glext.h.
+/*
+ * In SDKs > 10.6 this Apple header does not include glext.h.
  * Including it causes redefinition errors that are hard to
  * overcome in ports, eg mesa, so we block the loading of
- * glext.h here on older systems for consistent behaviour with newer systems
- * 
- * Note: this header has no specific blocker as it may be called
- * multiple times and should have the same effect each time
+ * glext.h here on older systems for consistent behaviour with newer systems.
+ *
+ * Note: this header has no guard macro as it may be called
+ * multiple times and should have the same effect each time.
  */
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED < 1070
+/* Do our SDK-related setup */
+#include <_macports_extras/sdkversion.h>
+
+#if __MPLS_SDK_MAJOR < 1070
 #  ifdef __glext_h_
-#    define MACPORTS_LEGACY_SAVED_GLEXT_SET
+#    define __MPLS_SAVED_GLEXT_SET
 #  else
 #    define __glext_h_
 #  endif
@@ -35,9 +38,9 @@
 /* Include the primary system OpenGL/gliDispatch.h */
 #include_next <OpenGL/gliDispatch.h>
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED < 1070
-#  ifdef MACPORTS_LEGACY_SAVED_GLEXT_SET
-#    undef MACPORTS_LEGACY_SAVED_GLEXT_SET
+#if __MPLS_SDK_MAJOR < 1070
+#  ifdef __MPLS_SAVED_GLEXT_SET
+#    undef __MPLS_SAVED_GLEXT_SET
 #  else
 #    undef __glext_h_
 #  endif
