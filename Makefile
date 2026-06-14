@@ -171,8 +171,12 @@ XTESTBINPREFIX    = $(TESTBINDIR)/test_
 XTESTRUNPREFIX    = run_
 XTESTLDFLAGS      = $(ALLLDFLAGS)
 XTESTSRCS_C      := $(wildcard $(XTESTNAMEPREFIX)*.c)
+XTESTSRCS_GL     := $(wildcard $(XTESTNAMEPREFIX)opengl_*.c)
 XTESTPRGS_C      := $(patsubst $(XTESTDIR)/%.c,%,$(XTESTSRCS_C))
+XTESTPRGS_GL     := $(patsubst $(XTESTDIR)/%.c,%,$(XTESTSRCS_GL))
 XTESTOBJS_C      := $(patsubst %,$(TESTBINDIR)/%.o,$(XTESTPRGS_C))
+XTESTOBJS_GL     := $(patsubst %,$(TESTBINDIR)/%.o,$(XTESTPRGS_GL))
+XTESTOBJS_NGL    := $(filter-out $(XTESTOBJS_GL),$(XTESTOBJS_C))
 XTESTPRGS         = $(patsubst %,$(TESTBINDIR)/%,$(XTESTPRGS_C))
 XTESTRUNS        := \
     $(patsubst $(XTESTBINPREFIX)%,$(XTESTRUNPREFIX)%,$(XTESTPRGS))
@@ -371,8 +375,14 @@ $(TESTOBJS_C): $(TESTBINDIR)/%.o: $(TESTDIR)/%.c $(ALLHEADERS) | $(TESTBINDIR)
 	$(CC) -c -std=$(TESTCSTD) -I$(SRCINCDIR) $(TESTCFLAGS) $< -o $@
 
 # The "darwin_c" tests need the -fno-builtin option with some compilers.
-$(XTESTOBJS_C): $(TESTBINDIR)/%.o: $(XTESTDIR)/%.c $(ALLHEADERS) | $(TESTBINDIR)
+$(XTESTOBJS_NGL): $(TESTBINDIR)/%.o: $(XTESTDIR)/%.c $(ALLHEADERS) \
+                  | $(TESTBINDIR)
 	$(CC) -c -std=$(TESTCSTD) -fno-builtin -I$(SRCINCDIR) $(TESTCFLAGS) $< -o $@
+
+# The OpenGL tests need -Wno-undef to be non-obnoxious.
+$(XTESTOBJS_GL): $(TESTBINDIR)/%.o: $(XTESTDIR)/%.c $(ALLHEADERS) \
+                  | $(TESTBINDIR)
+	$(CC) -c -std=$(TESTCSTD) -I$(SRCINCDIR) $(TESTCFLAGS) -Wno-undef $< -o $@
 
 $(MANTESTOBJS_C): \
     $(TESTBINDIR)/%.o: $(MANTESTDIR)/%.c $(ALLHEADERS) | $(TESTBINDIR)
@@ -684,6 +694,9 @@ $(XTESTBINPREFIX)allheaders_full_ds.o: $(XTESTNAMEPREFIX)allheaders.c
 
 # The "attrlist_nonposix" test includes the attrlist test source
 $(TESTNAMEPREFIX)attrlist_nonposix.o: $(TESTNAMEPREFIX)attrlist.c
+
+# The "opengl" tests include the basic "opengl" source
+$(XTESTBINPREFIX)opengl_ints_agl.o: $(XTESTNAMEPREFIX)opengl_ints.c
 
 # Provide targets for all "darwin_c" tests
 $(XTESTRUNPREFIX)darwin_c_all: $(DARWINRUNS)
