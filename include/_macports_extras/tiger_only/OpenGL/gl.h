@@ -34,19 +34,29 @@ extern "C" {
 ** version 1.2.1 Specification.
 */
 
+/*
+ * NOTICE: This file was modified in June 2026 to allow
+ * for use as a supporting file for MacPorts legacy support library.
+ *
+ * The original file was taken from Apple's MacOSX10.4 SDK.
+ *
+ * Changes include:
+ *   Changing five typedefs to match later versions of this header.
+ */
+
 // switches to providing function pointers
 //#define GL_GLEXT_FUNCTION_POINTERS 1
 
-typedef unsigned long GLenum;
+typedef unsigned int GLenum;
 typedef unsigned char GLboolean;
-typedef unsigned long GLbitfield;
+typedef unsigned int GLbitfield;
 typedef signed char GLbyte;
 typedef short GLshort;
-typedef long GLint;
-typedef long GLsizei;
+typedef int GLint;
+typedef int GLsizei;
 typedef unsigned char GLubyte;
 typedef unsigned short GLushort;
-typedef unsigned long GLuint;
+typedef unsigned int GLuint;
 typedef float GLfloat;
 typedef float GLclampf;
 typedef double GLdouble;
