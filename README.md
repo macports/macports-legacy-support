@@ -317,7 +317,7 @@ Wrapped headers and replaced functions are:
     <td>OSX10.4</td>
   </tr>
   <tr>
-    <td><code>OpenGL/gliDispatch.h</code></td>
+    <td><code>OpenGL/gliDispatch.h</code>, <code>AGL/gliDispatch.h</code></td>
     <td>Wraps <code>gliDispatch.h</code> to prevent including
         <code>glext.h</code> and thereby match behaviour of newer systems.</td>
     <td>OSX10.6</td>
