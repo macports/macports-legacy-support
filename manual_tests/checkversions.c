@@ -26,11 +26,13 @@
 
 #include <_macports_extras/targetos.h>
 
+#include <fcntl.h>
 #include <regex.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include <sys/param.h>
 #include <sys/sysctl.h>
@@ -40,6 +42,8 @@
 #define OS_VERSION_VAL "[[:blank:]]*<string>([0-9.]+)</string>"
 
 #define SYSCTL_VERSION_COMPAT_NAME "kern.system_version_compat"
+
+#define CAT_PROG "/bin/cat"
 
 #define SYSCTL_KERNVER_CLASS CTL_KERN
 #define SYSCTL_KERNVER_ITEM  KERN_OSRELEASE
@@ -68,7 +72,7 @@ static char osver[256];
 
 /* Kludgy single-purpose XML parser for SystemVersion (to avoid dependencies) */
 static int
-get_osver(void)
+parse_osver(int verfd)
 {
   int ret = 0, regerr = 0, found = 0, verlen;
   regex_t *regerr_pat;
@@ -89,7 +93,7 @@ get_osver(void)
       regerr_pat = &val_pat;
       break;
     }
-    if (!(verfile = fopen(OS_VERSION_FILE, "r"))) {
+    if (!(verfile = fdopen(verfd, "r"))) {
       perror("  *** unable to open SystemVersion file");
       ret = 1;
       break;
@@ -146,8 +150,80 @@ get_osver(void)
   return ret;
 }
 
+/*
+ * Kludge to get around Apple's 11.x+ version spoofing.
+ *
+ * When a program built with a <11.x SDK is run on an 11.x+ system, the OS
+ * enables an ugly kludge to substitute SystemVersionCompat for SystemVersion.
+ * This is done at the lowest levels, and can't be directly avoided.  It's
+ * possible to disable this behavior by setting SYSTEM_VERSION_COMPAT=0 in
+ * the environment, but that variable is checked during the libSystem
+ * initialization, and hence can't be usefully set within the program itself.
+ * In addition, the internal libSystem function that does this is "one-way",
+ * i.e., it can enable spoofing but not disable it.
+ *
+ * To fix this without needing the variable set in the shell, we need to
+ * launch a fresh process with spoofing disabled.  It's not sufficient to
+ * fork(), since that inherits the spoofing setting.  Hence, we need to
+ * actually do a fresh program launch.
+ *
+ * Although it might be convenient for the program to relaunch itself with
+ * the needed setting, there's no reliable way for a program to determine
+ * its own filename, since argv[0] is just a suggestion.  So instead, we
+ * just launch /bin/cat to copy the version file to a pipe.  Since /bin/cat
+ * (presumably) isn't built with an earlier SDK, it doesn't need the
+ * environment variable to avoid spoofing.  So a simple launch in a
+ * subprocess is sufficient.
+ */
+static int
+get_osver_sub(void)
+{
+  int ret = 0;
+  pid_t child;
+  int pipes[2];
+
+  if (pipe(pipes)) {
+    perror("  *** unable to create pipe");
+    return 1;
+  }
+  if ((child = fork()) < 0) {
+    perror("  *** unable to fork()");
+    return 1;
+  }
+  if (child == 0) {
+    (void) close(STDIN_FILENO);
+    (void) close(pipes[0]);
+    if (dup2(pipes[1], STDOUT_FILENO) < 0) _exit(1);
+    (void) close(pipes[1]);
+    execl(CAT_PROG, CAT_PROG, OS_VERSION_FILE, NULL);
+  } else {
+    (void) close(pipes[1]);
+    ret = parse_osver(pipes[0]);
+    (void) close(pipes[0]);
+  }
+  return ret;
+}
+
+/* Get OS version, optionally applying anti-spoofing hack */
+static int
+get_osver(int verhack)
+{
+  int verfd = -1, ret;
+
+  if (verhack) return get_osver_sub();
+
+  if ((verfd = open(OS_VERSION_FILE, O_RDONLY)) < 0) {
+    perror("  *** unable to open SystemVersion file");
+    return 1;
+  }
+  ret = parse_osver(verfd);
+  (void) close(verfd);
+  return ret;
+}
+
 static char kernver[256];
 
+/* Get kernel version string */
 static int
 get_kernver(void)
 {
@@ -162,6 +238,7 @@ get_kernver(void)
   return 0;
 }
 
+/* Get numeric version from a version string */
 static int
 get_vernum(const char *verstr)
 {
@@ -189,6 +266,7 @@ get_vernum(const char *verstr)
   return (int) (major * 10000 + minor * 100 + micro);
 }
 
+/* Get the Darwin version number from an OS version number */
 static int
 get_darwin(int vernum)
 {
@@ -235,7 +313,7 @@ main(int argc, char *argv[])
 
   verhack = get_version_hack_status();
 
-  err = get_osver();
+  err = get_osver(verhack);
   if (err) {
     printf("  Running OS is ???\n");
   } else {
@@ -247,8 +325,7 @@ main(int argc, char *argv[])
       printf("  Running OS is %s, numeric = %d, darwin = %d\n",
              osver, osvernum, osdarwin);
       if (verhack) {
-        printf("    *** Version may be a \"compatibility hack\"\n");
-        printf("    *** Set SYSTEM_VERSION_COMPAT=0 to fix\n");
+        printf("    (applied hack to avoid version spoofing)\n");
       }
     }
   }
