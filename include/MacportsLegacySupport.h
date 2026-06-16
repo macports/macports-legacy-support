@@ -368,6 +368,9 @@
 /* Missing CFString prototype */
 #define __MPLS_SDK_SUPPORT_CFSTRING_NOCOPY__  (__MPLS_SDK_MAJOR < 1050)
 
+/* Missing CommonDigest macros */
+#define __MPLS_SDK_SUPPORT_COMMONDIGEST_ADDS__     (__MPLS_SDK_MAJOR < 1050)
+
 /* copyfile and its associated functions have gained functionality over the years */
 #define __MPLS_SDK_SUPPORT_COPYFILE_TIGER__ (__MPLS_SDK_MAJOR < 1050)
 #define __MPLS_LIB_SUPPORT_COPYFILE_TIGER__ (__MPLS_TARGET_OSVER < 1050)

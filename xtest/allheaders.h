@@ -1,5 +1,6 @@
 #include <Availability.h>
 #include <AvailabilityMacros.h>
+#include <CommonCrypto/CommonDigest.h>
 #include <MacTypes.h>
 #include <TargetConditionals.h>
 #include <assert.h>

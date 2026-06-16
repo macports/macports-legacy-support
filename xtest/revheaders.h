@@ -41,5 +41,6 @@
 #include <assert.h>
 #include <TargetConditionals.h>
 #include <MacTypes.h>
+#include <CommonCrypto/CommonDigest.h>
 #include <AvailabilityMacros.h>
 #include <Availability.h>
