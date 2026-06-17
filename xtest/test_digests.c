@@ -18,7 +18,20 @@
  * This is a test of the CommonDigest header.  It verifies that the definitions
  * missing from 10.4 are present, just with dummy uses.  This includes calling
  * the functions, but not checking the results.
+ *
+ * As a test of the "argless" versions of the macros used in 10.6+ and
+ * backported here, we also verify that we can take pointers to all the
+ * functions.
+ *
+ * Note that SHA224 is only supported on 10.5+.  Since we don't currently
+ * fix that, we filter the tests accordingly.
  */
+
+/* Get target OS version */
+#include <_macports_extras/targetos.h>
+
+/* Do our SDK-related setup */
+#include <_macports_extras/sdkversion.h>
 
 #include <libgen.h>
 #include <stddef.h>
@@ -31,10 +44,31 @@
 
 static const char *test_data = "The Quick Brown Fox";
 
-#define DIGESTS \
+#define DIGESTS0 \
+  DIGEST(MD2,MD2,MD2) \
+  DIGEST(MD4,MD4,MD4) \
+  DIGEST(MD5,MD5,MD5) \
+  DIGEST(SHA1,SHA,SHA) \
   DIGEST(SHA256,SHA256,SHA256) \
   DIGEST(SHA384,SHA512,SHA384) \
   DIGEST(SHA512,SHA512,SHA512) \
+
+#if __MPLS_SDK_MAJOR >= 1050 && __MPLS_TARGET_OSVER >= 1050
+  #define DIGESTS \
+    DIGESTS0 \
+    DIGEST(SHA224,SHA256,SHA224)
+#else
+  #define DIGESTS \
+    DIGESTS0
+#endif
+
+#define DIGEST(type,ctype,ltype) \
+  static __typeof__(type ## _Init) *type ## _Init_p; \
+  static __typeof__(type ## _Update) *type ## _Update_p; \
+  static __typeof__(type ## _Final) *type ## _Final_p; \
+
+DIGESTS
+#undef DIGEST
 
 #define DIGEST(type,ctype,ltype) \
   static void \
@@ -55,6 +89,13 @@ int
 main(int argc, char *argv[])
 {
   (void) argc;
+
+  #define DIGEST(type,ctype,ltype) \
+    (void) type ## _Init_p; \
+    (void) type ## _Update_p; \
+    (void) type ## _Final_p;
+  DIGESTS
+  #undef DIGEST
 
   #define DIGEST(type,ctype,ltype) test_ ## type();
   DIGESTS
