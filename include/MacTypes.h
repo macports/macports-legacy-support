@@ -28,7 +28,7 @@
  * To avoid accidentally and possibly inappropriately applying this workaround
  * to a future SDK, we limit it with a both-ways SDK version check.  This
  * should be updated as needed when new SDKs are added, as has already
- * been done to accommodate the macOS 26 SDK.
+ * been done to accommodate the macOS 27 SDK.
  */
 
 /* Determine the true __has_include() status (if not already done) */
@@ -40,7 +40,7 @@
 /* See if __has_include() is missing or lying */
 #if __MPLS_HAS_INCLUDE_STATUS <= 0
 
-#if __MPLS_SDK_MAJOR >= 150000 && __MPLS_SDK_MAJOR < 270000
+#if __MPLS_SDK_MAJOR >= 150000 && __MPLS_SDK_MAJOR < 280000
   #undef __has_include
   #define __has_include(x) 1
   #define __MPLS_HAS_INCLUDE_CHANGED
