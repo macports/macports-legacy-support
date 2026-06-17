@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025
+ * Copyright (c) 2026
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -18,7 +18,7 @@
 #define __MPLS_TARGETCONDITIONALS__
 
 /*
- * There are instances in the Apple header of the forms:
+ * There are instances in some versions of the Apple header of the forms:
  *   #if !defined(__has_extension) || !__has_extension(define_target_os_macros)
  *   #if defined(__has_builtin) && __has_builtin(__is_target_arch)
  * This doesn't work when the first macro is undefined, since the second
@@ -29,6 +29,27 @@
  *
  * Since TargetConditionals.h doesn't include any other headers, this hack
  * only applies to its own processing.
+ *
+ *
+ * An additional problem as of SDK 27 is that there's a new check for
+ * KernelKit that's falsely true (for undetermined reasons) in this environment,
+ * and complains (fatally) in clang 6-15 about not having "target_os_macros".
+ *
+ * It appears that the __is_target_environment() builtin first appeared in
+ * clang 6, but didn't start behaving correctly until clang 16.  Until then,
+ * it (by default) reported that the target environment was simultaneously
+ * kernelkit, xros, exclavecore, and xclavekit, with clang 6-8 reporting macabi
+ * as well.  In clang 16 and later, all these settings default off.  No
+ * version of gcc implements __is_target_environment() at all.
+ *
+ * We detect the broken implementation by noting that all four environments
+ * listed above are all true, and then override __is_target_environment()
+ * with a dummy version that always returns 0 (hence behaving like clang 16+).
+ *
+ * Unfortunately, we can't make this a temporary override, since undefining
+ * the dummy doesn't reinstate the builtin version, sometimes leading to
+ * errors later.  Then again, this override is only happening in the presence
+ * of obvious brokenness.
  */
 
 #ifndef __has_extension
@@ -39,6 +60,15 @@
 #ifndef __has_builtin
 #define __MPLS_HAS_BUILTIN_UNDEF
 #define __has_builtin(x) 0
+#endif
+
+#if defined(__is_target_environment)
+  #if __is_target_environment(kernelkit) \
+      && __is_target_environment(xros) \
+      && __is_target_environment(exclavecore) \
+      && __is_target_environment(exclavekit)
+    #define __is_target_environment(x) 0
+  #endif
 #endif
 
 #include_next <TargetConditionals.h>
