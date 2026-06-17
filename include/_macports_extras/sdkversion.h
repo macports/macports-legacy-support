@@ -175,6 +175,8 @@
 #define __MPLS_SDK_MAJOR 160000
 #elif MAC_OS_X_VERSION_MAX_ALLOWED < 270000
 #define __MPLS_SDK_MAJOR 260000
+#elif MAC_OS_X_VERSION_MAX_ALLOWED < 280000
+#define __MPLS_SDK_MAJOR 270000
 #else
 #error Unknown SDK version
 #endif
@@ -191,7 +193,10 @@
  */
 
 #if __MPLS_SDK_MAJOR == 140000
-  #if defined(MAC_OS_VERSION_26_0)
+  #if defined(MAC_OS_VERSION_27_0)
+    #undef __MPLS_SDK_MAJOR
+    #define __MPLS_SDK_MAJOR 270000
+  #elif defined(MAC_OS_VERSION_26_0)
     #undef __MPLS_SDK_MAJOR
     #define __MPLS_SDK_MAJOR 260000
   #elif defined(MAC_OS_VERSION_16_0)
@@ -275,6 +280,8 @@
 #undef MAC_OS_VERSION_26_3
 #undef MAC_OS_VERSION_26_4
 #undef MAC_OS_VERSION_26_5
+#undef MAC_OS_VERSION_26_6
+#undef MAC_OS_VERSION_27_0
 
 #endif /* __MPLS_SDK_MAJOR >= 110000 */
 
