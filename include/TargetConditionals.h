@@ -27,6 +27,9 @@
  * by temporarily defining the first macro as a dummy during the include_next
  * in this situation.
  *
+ * A similar issue applies to __has_include(), where sometimes it's just
+ * used "blindly".  The same workaround method applies.
+ *
  * Since TargetConditionals.h doesn't include any other headers, this hack
  * only applies to its own processing.
  *
@@ -78,6 +81,11 @@
 #define __has_builtin(x) 0
 #endif
 
+#ifndef __has_include
+#define __MPLS_HAS_INCLUDE_UNDEF
+#define __has_include(x) 0
+#endif
+
 #if (!defined(__AVAILABILITYMACROS__) || defined(__MAC_27_0)) \
     && defined(__is_target_environment)
   #if __is_target_environment(kernelkit) \
@@ -98,6 +106,11 @@
 #ifdef __MPLS_HAS_BUILTIN_UNDEF
 #undef __MPLS_HAS_BUILTIN_UNDEF
 #undef __has_builtin
+#endif
+
+#ifdef __MPLS_HAS_INCLUDE_UNDEF
+#undef __MPLS_HAS_INCLUDE_UNDEF
+#undef __has_include
 #endif
 
 /*
