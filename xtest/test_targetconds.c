@@ -16,12 +16,16 @@
 
 /*
  * This is a test to check that various target-conditional macros are defined.
+ *
+ * It also (indirectly) tests the behavior of the workaround for broken
+ * __is_target_environment() implementations, which otherwise cause trouble
+ * with SDK 27+.
+ *
+ * It also reports the "raw" state of __is_target_environment() in verbose
+ * mode.
  */
 
-#include <libgen.h>
-#include <stdio.h>
-#include <string.h>
-#include <TargetConditionals.h>
+int printf(const char *, ...);  /* Needed before includes */
 
 #define PRINT_VAR(x) if (verbose) printf("%s = %d\n", #x, x);
 #define PRINT_UNDEF(x) printf(#x " is undefined\n"); ret = 1;
@@ -30,12 +34,74 @@
   if (!(x)) {printf("%s = %d (bad)\n", #x, x); ret = 1;} \
   else if (verbose) printf("%s = %d\n", #x, x);
 
+#define ENV_FALSE(env) if (verbose) printf("  target %s is false\n", #env);
+#define ENV_TRUE(env) { \
+  ++numenvs;  \
+  if (verbose) printf("  target %s is true\n", #env); \
+}
+
+/* Capture __is_target_environment() behavior before any includes. */
+static int
+get_target_environment(int verbose)
+{
+  int numenvs = 0;
+
+#ifndef __is_target_environment
+  if (verbose) printf("  __is_target_environment is undefined\n");
+  (void) numenvs;
+  return 0;
+#else
+  #if __is_target_environment(kernelkit)
+    ENV_TRUE(kernelkit)
+  #else
+    ENV_FALSE(kernelkit)
+  #endif
+  #if __is_target_environment(macabi)
+    ENV_TRUE(macabi)
+  #else
+    ENV_FALSE(macabi)
+  #endif
+  #if __is_target_environment(simulator)
+    ENV_TRUE(simulator)
+  #else
+    ENV_FALSE(simulator)
+  #endif
+  #if __is_target_environment(xros)
+    ENV_TRUE(xros)
+  #else
+    ENV_FALSE(xros)
+  #endif
+  #if __is_target_environment(exclavecore)
+    ENV_TRUE(exclavecore)
+  #else
+    ENV_FALSE(exclavecore)
+  #endif
+  #if __is_target_environment(exclavekit)
+    ENV_TRUE(exclavekit)
+  #else
+    ENV_FALSE(exclavekit)
+  #endif
+  return numenvs > 1;
+#endif
+}
+
+/* Do this first, to test "bare include" case. */
+#include <TargetConditionals.h>
+
+#include <libgen.h>
+#include <stdio.h>
+#include <string.h>
+
 int
 main(int argc, char *argv[])
 {
   int ret = 0, verbose = 0;
 
   if (argc > 1 && !strcmp(argv[1], "-v")) verbose = 1;
+
+  if (get_target_environment(verbose)) {
+    printf("  *** Multiple target environments enabled\n");
+  }
 
   #ifdef TARGET_OS_MAC
   PRINT_VAR_NEEDNZ(TARGET_OS_MAC);
