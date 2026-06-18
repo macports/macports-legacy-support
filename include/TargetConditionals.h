@@ -170,10 +170,16 @@
     #define TARGET_OS_WINDOWS   0
 #endif
 
-
-
 #ifndef TARGET_OS_LINUX
     #define TARGET_OS_LINUX     0
+#endif
+
+#ifndef TARGET_OS_UNIX
+    #define TARGET_OS_UNIX     0
+#endif
+
+#ifndef DYNAMIC_TARGETS_ENABLED
+    #define DYNAMIC_TARGETS_ENABLED     0
 #endif
 
 #ifndef TARGET_CPU_PPC
