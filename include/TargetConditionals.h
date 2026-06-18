@@ -50,6 +50,22 @@
  * the dummy doesn't reinstate the builtin version, sometimes leading to
  * errors later.  Then again, this override is only happening in the presence
  * of obvious brokenness.
+ *
+ * Although this fix is limited to broken cases anyway, we try to limit it
+ * to SDK 27+, just to avoid some unnecessary redefinition warnings.
+ * Unfortunately, we can't use sdkversion.h for this since it recursively
+ * includes this header before setting up the SDK version, so we use __MAC_27_0
+ * from AvailabilityVersions.h instead.  But we can't explicitly include the
+ * latter, since it doesn't exist in SDKs <10.15 and we don't know the
+ * SDK version.  It's included by AvailabilityMacros.h, which exists in all
+ * SDKs, but including that here would complicate things too much.  In many
+ * cases, it's already been included separately, anyway, so we leverage that
+ * to help with the detection.  If it hasn't already been included, then we
+ * don't avoid the workaround, since we don't know if it's necessary.
+ *
+ * Fortunately, this whole issue only applies to some "mismatched SDK" or
+ * "older compiler" cases, since the default compiler for macOS 27 implements
+ * __is_target_environment() correctly.
  */
 
 #ifndef __has_extension
@@ -62,7 +78,8 @@
 #define __has_builtin(x) 0
 #endif
 
-#if defined(__is_target_environment)
+#if (!defined(__AVAILABILITYMACROS__) || defined(__MAC_27_0)) \
+    && defined(__is_target_environment)
   #if __is_target_environment(kernelkit) \
       && __is_target_environment(xros) \
       && __is_target_environment(exclavecore) \
