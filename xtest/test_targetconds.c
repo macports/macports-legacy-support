@@ -133,6 +133,18 @@ main(int argc, char *argv[])
   PRINT_UNDEF(TARGET_OS_LINUX);
   #endif
 
+  #ifdef TARGET_OS_UNIX
+  PRINT_VAR(TARGET_OS_UNIX);
+  #else
+  PRINT_UNDEF(TARGET_OS_UNIX);
+  #endif
+
+  #ifdef DYNAMIC_TARGETS_ENABLED
+  PRINT_VAR(DYNAMIC_TARGETS_ENABLED);
+  #else
+  PRINT_UNDEF(DYNAMIC_TARGETS_ENABLED);
+  #endif
+
   #ifdef TARGET_CPU_PPC
   PRINT_VAR(TARGET_CPU_PPC);
   #else
