@@ -34,6 +34,15 @@
 # that, in the x86_64h case, we include a use of the MOVBE instruction, which
 # is one of the instructions added by Haswell.  Running this on a pre-Haswell
 # CPU fails with an illegal instruction trap.
+#
+# Similarly, for the architecture 'ppc7400', we include a test AltiVec
+# instruction to verify that the machine is genuinely a G4.  The instruction
+# is just a fetch to v0 from the top of the stack.
+#
+# NOTE: Since AltiVec is required on 10.5+, and since Xcode maps ppc->ppc7400
+# on 10.5+, this tool will consider 'ppc' unrunnable under 10.5+ Rosetta when
+# AltiVec is disabled by 'novmx=1' in the boot-args.  This is unrelated
+# to the explicit AltiVec test.
 
 if [ "$1" != "-a" ]; then
   TESTARCHS="${@:-ppc ppc64 i386 x86_64 arm64}"
@@ -50,8 +59,10 @@ RUNARCHS=""
 for a in $TESTARCHS; do
   if [ "$a" == "ppc7400" ]; then
     archflag="ppc"
+    avtest="1"
   else
     archflag="$a"
+    avtest="0"
   fi
   cat >$TESTSRC <<EOD
   int
@@ -61,6 +72,9 @@ for a in $TESTARCHS; do
     #ifdef __${archflag}__
       #ifdef __x86_64h__
       __asm__ __volatile__ ("\tmovbe %%eax, %0\n" :: "m" (argc) : "eax");
+      #endif
+      #if ${avtest}
+      __asm__ __volatile__ ("\tlvx v0, 0, r1\n" ::);
       #endif
       return 0;
     #else
