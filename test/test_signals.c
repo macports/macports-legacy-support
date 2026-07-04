@@ -24,10 +24,34 @@
 #include <string.h>
 #include <unistd.h>
 
-#include <sys/mman.h>
+#include <sys/sysctl.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#include <sys/ucontext.h>
 
-/* Use SIGALRM so gdb doesn't intercept it by default */
-#define TEST_SIG SIGALRM
+#define SYSCTL_ALTIVEC "hw.optional.altivec"
+
+#ifndef __ppc64__
+#define OUR_UCONTEXT _STRUCT_UCONTEXT
+#else
+#define OUR_UCONTEXT _STRUCT_UCONTEXT64
+#endif
+
+#if defined(__ppc__) || defined(__ppc64__)
+#define IS_PPCX 1
+#else
+#define IS_PPCX 0
+#endif
+
+/* Delay parameters (ms) */
+#define DELAY_SETUP 20   /* Delay before setting up for signal */
+#define DELAY_SIGNAL 20  /* Delay for signal in delay cases */
+
+/* Use SIGVTALRM for setitimer(); also gdb doesn't intercept it by default */
+#define TEST_SIG SIGVTALRM
+
+/* Sample struct for typeof; global to avoid unused warning */
+OUR_UCONTEXT uc_sample;
 
 typedef struct sigerr_s {
   const char *text;
@@ -35,17 +59,19 @@ typedef struct sigerr_s {
 } sigerr_t;
 
 typedef struct sigdata_s {
-  int done;
+  volatile int done;
   int test_ret;
   pid_t child;
   sigerr_t sigerr;
+  __typeof__(uc_sample.uc_mcsize) mcsize;
   stack_t sigstk;
   uint8_t stack[SIGSTKSZ];
 } sigdata_t;
 
-static sigdata_t *sigdatap;
+static sigdata_t sigdata;
 
-int nofork = 0;
+/* Reference the struct indirectly (allows for fork-based version) */
+static sigdata_t *sigdatap = &sigdata;
 
 static void
 simple_handler(int sig)
@@ -57,77 +83,186 @@ simple_handler(int sig)
 static void
 siginfo_handler(int sig, siginfo_t *info, void *uap)
 {
-  (void) sig; (void) info; (void) uap;
+  (void) sig; (void) info;
+
+  sigdatap->mcsize = ((OUR_UCONTEXT *) uap)->uc_mcsize;
   sigdatap->done = 1;
 }
 
+/*
+ * Since our fix for the 10.4 ppc64 bug has separate cases for whether
+ * or not vector context is included, we need to test both cases for
+ * full test coverage.  Here we provide functions to activate and deactivate
+ * the vector context switching (on ppcx machines).
+ *
+ * Merely setting vrsave nonzero isn't sufficient to enable vector context,
+ * since setting vrsave isn't considered a "protected" AltiVec instrauction,
+ * and hence doesn't trigger the exception needed to cause the kernel to
+ * start tracking the vector context.  We need to execute at least one "true"
+ * AltiVec instruction to do this, so we load v0 with a scratch value.
+ *
+ * For deactivation, we simply clear vrsave.  This doesn't seem to disable
+ * AltiVec reliably (at least not immediately), so we put the vector cases
+ * last.
+ *
+ * We follow changes to vrsave with an eieio, copying what the kernel does
+ * in similar circumstances.  This may be unnecessary, but it doesn't hurt.
+ *
+ * We hand-assemble the AltiVec instructions to allow compiling without
+ * AltiVec enabled in the compiler.
+ */
+
+#if IS_PPCX
+
+static int
+altivec_onoff(int want, int have)
+{
+  if (have) {
+    if (want) {
+      /* Enable saving, then fetch from the top of the stack to v0 */
+      __asm__ __volatile__ (
+          "\tlis r0, 65535\n"
+          "\tori r0, r0, 65535\n"
+          /* mtvrsave r0 */
+          "\t.long 0x7c0043a6\n"
+          "\teieio\n"
+          /* lvx v0, 0, r1 */
+          "\t.long 0x7c0008ce\n"
+          ::
+          );
+    } else {
+      /* Clear the vector save mask */
+      __asm__ __volatile__ (
+          "\tli r0, 0\n"
+          /* mtvrsave r0 */
+          "\t.long 0x7c0043a6\n"
+          "\teieio\n"
+          ::
+          );
+    }
+    return 0;
+  }
+  return want;
+}
+
+#else
+
+static int
+altivec_onoff(int want, int have)
+{
+  (void) have;
+  return want;
+}
+
+#endif
+
+/* Test cases, for TEST_CASE(name,handler,flags,vec,delay,text) */
+#define TEST_CASES \
+  TEST_CASE(signal,simple,0,0,0,"signal()") \
+  TEST_CASE(bsd,simple,0,0,0,"bsd_signal()") \
+  TEST_CASE(sigaction,simple,0,0,0, \
+       "sigaction() without SA_SIGINFO or SA_ONSTACK") \
+  TEST_CASE(sigaction_alt,simple,SA_ONSTACK,0,0, \
+       "sigaction() without SA_SIGINFO, with SA_ONSTACK") \
+  TEST_CASE(siginfo,siginfo,SA_SIGINFO,0,0, \
+       "sigaction() with SA_SIGINFO, no SA_ONSTACK") \
+  TEST_CASE(siginfo_alt,siginfo,SA_SIGINFO|SA_ONSTACK,0,0, \
+       "sigaction() with SA_SIGINFO and SA_ONSTACK") \
+  TEST_CASE(siginfo_dly,siginfo,SA_SIGINFO,0,1, \
+       "sigaction() with delayed SA_SIGINFO, no SA_ONSTACK") \
+  TEST_CASE(siginfo_dly_alt,siginfo,SA_SIGINFO|SA_ONSTACK,0,1, \
+       "sigaction() with delayed SA_SIGINFO and SA_ONSTACK") \
+  TEST_CASE(siginfo_vec,siginfo,SA_SIGINFO,1,0, \
+       "sigaction() with SA_SIGINFO and vec, no SA_ONSTACK") \
+  TEST_CASE(siginfo_vec_alt,siginfo,SA_SIGINFO|SA_ONSTACK,1,0, \
+       "sigaction() with SA_SIGINFO and vec and SA_ONSTACK") \
+  TEST_CASE(siginfo_dly_vec,siginfo,SA_SIGINFO,1,1, \
+       "sigaction() with delayed SA_SIGINFO and vec, no SA_ONSTACK") \
+  TEST_CASE(siginfo_dly_vec_alt,siginfo,SA_SIGINFO|SA_ONSTACK,1,1, \
+       "sigaction() with delayed SA_SIGINFO and vec and SA_ONSTACK") \
+
+/* Test case enum */
+#define TEST_CASE(name,handler,flags,vec,delay,text) sigtype_ ## name,
 typedef enum sigtype_n {
-  sigtype_signal,
-  sigtype_bsd,
-  sigtype_sigaction,
-  sigtype_sigaction_alt,
-  sigtype_siginfo,
-  sigtype_siginfo_alt,
+  TEST_CASES
   sigtype_max,
 } sigtype_t;
+#undef TEST_CASE
+
+/* Test case text */
+#define TEST_CASE(name,handler,flags,vec,delay,text) text,
+static const char * const test_text[] = {
+  TEST_CASES
+};
+#undef TEST_CASE
+
+/* Test case handlers */
+#define TEST_CASE(name,handler,flags,vec,delay,text) &handler ## _handler,
+static const void *test_handlers[] = {
+  TEST_CASES
+};
+#undef TEST_CASE
+
+/* Test case flags */
+#define TEST_CASE(name,handler,flags,vec,delay,text) flags,
+static const int test_flags[] = {
+  TEST_CASES
+};
+#undef TEST_CASE
+
+/* Test case vector wants */
+#define TEST_CASE(name,handler,flags,vec,delay,text) vec,
+static const int test_vecs[] = {
+  TEST_CASES
+};
+#undef TEST_CASE
+
+/* Test case delay wants */
+#define TEST_CASE(name,handler,flags,vec,delay,text) delay,
+static const int test_delays[] = {
+  TEST_CASES
+};
+#undef TEST_CASE
 
 /* Test the specified type of signal handling */
 static int
-test_signal(sigtype_t sigtype, int verbose)
+test_signal(sigtype_t sigtype, int altivec, int verbose)
 {
   int err = 0;
   pid_t pid = getpid();
   struct sigaction act, oact;
   sigerr_t *sigerr = &sigdatap->sigerr;
+  struct itimerval itv;
+  static struct timeval tv_zero = {0, 0};
+  static struct timeval tv_delay = {0, DELAY_SIGNAL * 1000};
 
-  act.sa_mask = 0;
+  sigerr->text = test_text[sigtype];
   sigdatap->done = 0;
+
   /* Clear sigstack so we know what was used (if we used it) */
   memset(sigdatap->stack, 0, sizeof(sigdatap->stack));
+
+  act.sa_mask = 0;
+  act.sa_handler = test_handlers[sigtype];
+  act.sa_flags = test_flags[sigtype];
+
+  /* Set up AltiVec or skip test */
+  if (altivec_onoff(test_vecs[sigtype], altivec)) return 0;
 
   switch (sigtype) {
 
   case sigtype_signal:
-    sigerr->text = "signal()";
     err = signal(TEST_SIG, simple_handler) == SIG_ERR;
     break;
 
   case sigtype_bsd:
-    sigerr->text = "bsd_signal()";
     err = bsd_signal(TEST_SIG, simple_handler) == SIG_ERR;
     break;
 
-  case sigtype_sigaction:
-    act.sa_handler = simple_handler;
-    act.sa_flags = 0;
-    sigerr->text = "sigaction() without SA_SIGINFO or SA_ONSTACK";
+  default:
     err = sigaction(TEST_SIG, &act, &oact);
-    break;
-
-  case sigtype_sigaction_alt:
-    act.sa_handler = simple_handler;
-    act.sa_flags = SA_ONSTACK;
-    sigerr->text = "sigaction() without SA_SIGINFO, with SA_ONSTACK";
-    err = sigaction(TEST_SIG, &act, &oact);
-    break;
-
-  case sigtype_siginfo:
-    act.sa_sigaction = siginfo_handler;
-    act.sa_flags = SA_SIGINFO;
-    sigerr->text = "sigaction() with SA_SIGINFO, no SA_ONSTACK";
-    err = sigaction(TEST_SIG, &act, &oact);
-    break;
-
-  case sigtype_siginfo_alt:
-    act.sa_sigaction = siginfo_handler;
-    act.sa_flags = SA_SIGINFO | SA_ONSTACK;
-    sigerr->text = "sigaction() with SA_SIGINFO and SA_ONSTACK";
-    err = sigaction(TEST_SIG, &act, &oact);
-    break;
-
-  case sigtype_max:
-    return 0;  /* Avoid possible unused case warning */
   }
+
   if (err) {
     sigerr->error = errno;
     return -1;
@@ -138,14 +273,25 @@ test_signal(sigtype_t sigtype, int verbose)
     fflush(stdout);
   }
 
-  err = kill(pid, TEST_SIG);
+  /* Get a fresh quantum so we don't prematurely reschedule */
+  (void) usleep(DELAY_SETUP * 1000);
+
+  if (!test_delays[sigtype]) {
+    err = kill(pid, TEST_SIG);
+    if (err) sigerr->text = "kill() for signal";
+  } else {
+    itv.it_interval = tv_zero;
+    itv.it_value = tv_delay;
+    err = setitimer(ITIMER_VIRTUAL, &itv, NULL);
+    if (err) sigerr->text = "setitimer() for signal";
+  }
   if (err) {
-    sigerr->text = "kill() for signal";
     sigerr->error = errno;
     (void) signal(TEST_SIG, SIG_DFL);
     return -1;
   }
 
+  /* Wait for signal (if delayed); NOP if not delayed */
   while (!sigdatap->done) ;
 
   if (signal(TEST_SIG, SIG_DFL) == SIG_ERR) {
@@ -154,70 +300,48 @@ test_signal(sigtype_t sigtype, int verbose)
     return -1;
   }
 
+  if (verbose && act.sa_flags & SA_SIGINFO) {
+    printf("    uc_mcsize = %zd = 0x%0*zX\n",
+           sigdatap->mcsize,
+           (int) sizeof(sigdatap->mcsize) * 2, sigdatap->mcsize);
+  }
+
   return 0;
 }
 
-/*
- * Since some failing cases may crash, by default we run the entire test
- * in a subprocess, so that crashes don't crash the entire program.  But
- * we provide an option to disable that, for less confusion when using
- * a debugger.
- */
+/* Check for AltiVec availability */
+
+#if IS_PPCX
+
+/* In the ppc* case, query the sysctl for AltiVec support */
+
 static int
-do_test_signal(sigtype_t sigtype, int verbose)
+have_altivec(void)
 {
-  pid_t child, done;
-  int status;
-  sigerr_t *sigerr;
+  int val = 0;
+  size_t vsiz = sizeof(val);
 
-  if (nofork) return test_signal(sigtype, verbose);
+  if (sysctlbyname(SYSCTL_ALTIVEC, &val, &vsiz, NULL, 0) < 0) return 0;
 
-  sigerr = &sigdatap->sigerr;
-  child = fork();
-  if (child < 0) {
-    sigerr->text = "fork()";
-    sigerr->error = errno;
-    return -1;
-  }
-  if (child == 0) {
-    /* A debugger may introduce an intermediate process - note the real one */
-    sigdatap->child = getpid();
-    sigdatap->test_ret = test_signal(sigtype, verbose);
-    exit(0);
-  }
-  do {
-    /*
-     * In the known failing case, we don't get the correct status, though
-     * we do get nonzero status.
-     */
-    done = wait(&status);
-    if (done != sigdatap->child) {
-      /* There's some weird problem with debugging that this doesn't fix */
-      if (done == -1) {
-        if (errno == EINTR) continue;
-        perror("    wait() failed");
-      } else {
-        /* With a debugger, done may != child */
-        if (verbose) {
-          fprintf(stderr, "    Unexpected wait() pid, %d != %d\n",
-                  done, child);
-        }
-        continue;
-      }
-      exit(110);
-    }
-  } while (0);
-  if (status) {
-    sigerr->error = status;
-    return -1;
-  }
-  return sigdatap->test_ret;
+  return val;
 }
+
+#else
+
+/* In the non-ppc* case, AltiVec is obviously impossible. */
+
+static int
+have_altivec(void)
+{
+  return -1;
+}
+
+#endif
 
 int
 main(int argc, char *argv[])
 {
-  int verbose = 0, err = 0;
+  int verbose = 0, err = 0, altivec;
   char *progname = basename(argv[0]);
   sigtype_t sigtype;
   sigerr_t *sigerr;
@@ -227,16 +351,8 @@ main(int argc, char *argv[])
 
   if (verbose) printf("Starting %s\n", progname);
 
-  /* Put all relevant data in pages shared with subprocesses. */
-  /* PROT_EXEC is unnecessary and may cause trouble in macOS 14+. */
-  sigdatap = mmap(NULL, sizeof(sigdata_t),
-                  PROT_READ | PROT_WRITE,
-                  MAP_ANON | MAP_SHARED, -1, 0);
-  if (sigdatap == MAP_FAILED) {
-    perror("mmap() for data area failed");
-    printf("%s failed.\n", progname);
-    return 10;
-  }
+  altivec = have_altivec();
+
   sigerr = &sigdatap->sigerr;
   sigstk = &sigdatap->sigstk;
   sigstk->ss_sp = &sigdatap->stack;
@@ -250,14 +366,16 @@ main(int argc, char *argv[])
   }
 
   for (sigtype = 0; sigtype < sigtype_max; ++sigtype) {
-    err = do_test_signal(sigtype, verbose);
+    err = test_signal(sigtype, altivec, verbose);
     if (err) {
       printf("    %s failed: %s\n", sigerr->text, strerror(sigerr->error));
       break;
     }
   }
 
-  (void) munmap(sigdatap, sizeof(sigdata_t));
+  if (verbose && altivec == 0) {
+    printf("  AltiVec is unavailable - vector cases skipped\n");
+  }
 
   printf("%s %s.\n", progname, err ? "failed" : "succeeded");
   return err != 0;
