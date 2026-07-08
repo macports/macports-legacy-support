@@ -33,6 +33,20 @@
 /* Get target OS version */
 #include <_macports_extras/targetos.h>
 
+#include <sys/cdefs.h>
+/*
+ * The $UNIX2003 versions of various calls are unavailable in 10.4, and
+ * are supposed to be avoided when targeting 10.4.  Unfortunately, the
+ * latter aspect doesn't work with some config-flag settings (which this
+ * test needs), leading to link errors on 10.4 32-bit.  To avoid that, we
+ * forcibly disable the suffix on 10.4, to avoid referencing things like
+ * usleep$UNIX2003.
+ */
+#if __MPLS_TARGET_OSVER < 1050 && defined(__DARWIN_SUF_UNIX03)
+#undef __DARWIN_SUF_UNIX03
+#define __DARWIN_SUF_UNIX03
+#endif
+
 #include <dlfcn.h>
 #include <libgen.h>
 #include <stddef.h>
@@ -40,18 +54,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#include <sys/cdefs.h>
-/*
- * The $UNIX2003 versions of various calls are unavailable in 10.4, and
- * are supposed to be avoided when targeting 10.4.  Unfortunately, the
- * latter aspect doesn't work with some config-flag settings (which this
- * test needs), leading to link errors on 10.4 32-bit.  To avoid that, we
- * forcibly disable the suffix on 10.4, to avoid referencing kill$UNIX2003.
- */
-#if __MPLS_TARGET_OSVER < 1050 && defined(__DARWIN_SUF_UNIX03)
-#undef __DARWIN_SUF_UNIX03
-#define __DARWIN_SUF_UNIX03
-#endif
+#include <sys/time.h>
 
 #include <sys/param.h>  /* For MIN */
 
@@ -77,6 +80,13 @@
 #define	RTLD_NEXT		((void *) -1)	/* Search subsequent objects. */
 #endif
 
+/* Delay parameters (ms) */
+#define DELAY_SETUP 20   /* Delay before setting up for signal */
+#define DELAY_SIGNAL 20  /* Delay for signal in delay cases */
+
+/* Use SIGVTALRM for setitimer(); also gdb doesn't intercept it by default */
+#define TEST_SIG SIGVTALRM
+
 #if defined(__ppc__)
 #define CPU_TYPE ppc
 #define CPU_PPCX
@@ -95,16 +105,19 @@
 #define TESTED_CPU 1
 #elif defined(__arm__)
 #define CPU_TYPE arm
-#define TESTED_CPU 0
+#define CPU_ARMX
+#define TESTED_CPU 1
 #elif defined(__arm64__)
 #define CPU_TYPE arm64
-#define TESTED_CPU 0
+#define CPU_ARMX
+#define TESTED_CPU 1
 #else
 #define CPU_TYPE <unknown>
 #define TESTED_CPU 0
 #endif
 
 #define EXPAND(x) #x
+#define EXPAND2(x) EXPAND(x)
 #define PRINT_VAL(x) printf("  " #x " = %lld\n", (long long) x)
 #define PRINT_TEXT(x) printf("  " #x " = \"%s\"\n", EXPAND(x))
 #define PRINT_SIZE(x) printf("    sizeof(" #x ") = %zd\n", sizeof(x));
@@ -220,6 +233,61 @@ typedef unsigned long long register64_t;
   CPU_REG(register64_t,fs,fs) \
   CPU_REG(register64_t,gs,gs) \
 
+#define ARM_REGISTERS \
+  CPU_REG(register32_t,r0,r[0]) \
+  CPU_REG(register32_t,r1,r[1]) \
+  CPU_REG(register32_t,r2,r[2]) \
+  CPU_REG(register32_t,r3,r[3]) \
+  CPU_REG(register32_t,r4,r[4]) \
+  CPU_REG(register32_t,r5,r[5]) \
+  CPU_REG(register32_t,r6,r[6]) \
+  CPU_REG(register32_t,r7,r[7]) \
+  CPU_REG(register32_t,r8,r[8]) \
+  CPU_REG(register32_t,r9,r[9]) \
+  CPU_REG(register32_t,r10,r[10]) \
+  CPU_REG(register32_t,r11,r[11]) \
+  CPU_REG(register32_t,r12,r[12]) \
+  CPU_REG(register32_t,sp,sp) \
+  CPU_REG(register32_t,lr,lr) \
+  CPU_REG(register32_t,pc,pc) \
+  CPU_REG(register32_t,cpsr,cpsr) \
+
+#define ARM64_REGISTERS \
+  CPU_REG(register64_t,x0,x[0]) \
+  CPU_REG(register64_t,x1,x[1]) \
+  CPU_REG(register64_t,x2,x[2]) \
+  CPU_REG(register64_t,x3,x[3]) \
+  CPU_REG(register64_t,x4,x[4]) \
+  CPU_REG(register64_t,x5,x[5]) \
+  CPU_REG(register64_t,x6,x[6]) \
+  CPU_REG(register64_t,x7,x[7]) \
+  CPU_REG(register64_t,x8,x[8]) \
+  CPU_REG(register64_t,x9,x[9]) \
+  CPU_REG(register64_t,x10,x[10]) \
+  CPU_REG(register64_t,x11,x[11]) \
+  CPU_REG(register64_t,x12,x[12]) \
+  CPU_REG(register64_t,x13,x[13]) \
+  CPU_REG(register64_t,x14,x[14]) \
+  CPU_REG(register64_t,x15,x[15]) \
+  CPU_REG(register64_t,x16,x[16]) \
+  CPU_REG(register64_t,x17,x[17]) \
+  CPU_REG(register64_t,x18,x[18]) \
+  CPU_REG(register64_t,x19,x[19]) \
+  CPU_REG(register64_t,x20,x[20]) \
+  CPU_REG(register64_t,x21,x[21]) \
+  CPU_REG(register64_t,x22,x[22]) \
+  CPU_REG(register64_t,x23,x[23]) \
+  CPU_REG(register64_t,x24,x[24]) \
+  CPU_REG(register64_t,x25,x[25]) \
+  CPU_REG(register64_t,x26,x[26]) \
+  CPU_REG(register64_t,x27,x[27]) \
+  CPU_REG(register64_t,x28,x[28]) \
+  CPU_REG(register64_t,fp,fp) \
+  CPU_REG(register64_t,lr,lr) \
+  CPU_REG(register64_t,sp,sp) \
+  CPU_REG(register64_t,pc,pc) \
+  CPU_REG(register32_t,cpsr,cpsr) \
+
 #if defined(CPU_PPCX)
 
 #define CPU_REGISTERS32 PPC_REGISTERS
@@ -242,7 +310,18 @@ typedef unsigned long long register64_t;
 #define CPU_REGISTERS X86_64_REGISTERS
 #endif
 
+#elif defined(CPU_ARMX)
+
+#define CPU_REGISTERS32 ARM_REGISTERS
+#define CPU_REGISTERS64 ARM64_REGISTERS
+
+#if defined(__arm__)
+#define CPU_REGISTERS ARM_REGISTERS
+#elif defined(__arm64__)
+#define CPU_REGISTERS ARM64_REGISTERS
 #endif
+
+#endif  /* All CPUs */
 
 /* Instances of all the relevant structures */
 
@@ -252,6 +331,7 @@ _STRUCT_PPC_EXCEPTION_STATE xxx_exception32;
 _STRUCT_PPC_THREAD_STATE xxx_thread32;
 _STRUCT_PPC_FLOAT_STATE xxx_float32;
 _STRUCT_PPC_VECTOR_STATE xxx_vector32;
+#define HAVE_FLOAT32
 #define HAVE_VECTOR32
 
 #if !defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE)
@@ -281,6 +361,7 @@ _STRUCT_MCONTEXT64 xxx_mcontext64;
 _STRUCT_X86_EXCEPTION_STATE32 xxx_exception32;
 _STRUCT_X86_THREAD_STATE32 xxx_thread32;
 _STRUCT_X86_FLOAT_STATE32 xxx_float32;
+#define HAVE_FLOAT32
 
 _STRUCT_X86_EXCEPTION_STATE64 xxx_exception64;
 _STRUCT_X86_THREAD_STATE64 xxx_thread64;
@@ -313,6 +394,40 @@ _STRUCT_MCONTEXT64 xxx_mcontext64;
 
 #endif  /* CPU_X86 */
 
+#if defined(CPU_ARMX)
+
+_STRUCT_ARM_EXCEPTION_STATE xxx_exception32;
+_STRUCT_ARM_THREAD_STATE xxx_thread32;
+
+_STRUCT_ARM_EXCEPTION_STATE64 xxx_exception64;
+_STRUCT_ARM_THREAD_STATE64 xxx_thread64;
+#define HAVE_THREAD64
+
+#ifdef __LP64__
+_STRUCT_ARM_EXCEPTION_STATE64 xxx_exception;
+_STRUCT_ARM_THREAD_STATE64 xxx_thread;
+#else  /* !__LP64__ */
+_STRUCT_ARM_EXCEPTION_STATE xxx_exception;
+_STRUCT_ARM_THREAD_STATE xxx_thread;
+#endif  /* !__LP64__ */
+
+#ifdef _STRUCT_MCONTEXT
+size_t xxx_mcontext_size;
+_STRUCT_MCONTEXT xxx_mcontext;
+#endif  /* _STRUCT_MCONTEXT */
+
+#ifdef _STRUCT_MCONTEXT32
+size_t xxx_mcontext32_size;
+_STRUCT_MCONTEXT32 xxx_mcontext32;
+#endif  /* _STRUCT_MCONTEXT32 */
+
+#ifdef _STRUCT_MCONTEXT64
+size_t xxx_mcontext64_size;
+_STRUCT_MCONTEXT64 xxx_mcontext64;
+#endif  /* _STRUCT_MCONTEXT64 */
+
+#endif  /* CPU_ARMX */
+
 #ifdef _STRUCT_UCONTEXT
 _STRUCT_UCONTEXT *xxx_ucontextp, xxx_ucontext;
 #endif  /* _STRUCT_UCONTEXT */
@@ -344,7 +459,9 @@ copy_contexts(void)
   #ifdef _STRUCT_MCONTEXT32
   xxx_mcontext32.__(es) = xxx_exception32;
   xxx_mcontext32.__(ss) = xxx_thread32;
+  #ifdef HAVE_FLOAT32
   xxx_mcontext32.__(fs) = xxx_float32;
+  #endif
   #ifdef HAVE_VECTOR32
   xxx_mcontext32.__(vs) = xxx_vector32;
   #endif
@@ -390,7 +507,7 @@ copy_regs(void)
 
 /* Structure for result flags */
 typedef struct sigcheck_s {
-  int done;
+  volatile int done;
   int have_ucontext;
   int have_ucontext64;
   int have_mcontext;
@@ -442,16 +559,15 @@ sig_handler(int sig, siginfo_t *info, void *uap)
   sig_check.done = 1;
 }
 
-/* Use SIGALRM so gdb doesn't intercept it by default */
-#define TEST_SIG SIGALRM
-
 /* Get context via signal */
 static int
 get_sigcontext()
 {
   int err;
-  pid_t pid = getpid();
   struct sigaction act, oact;
+  struct itimerval itv;
+  static struct timeval tv_zero = {0, 0};
+  static struct timeval tv_delay = {0, DELAY_SIGNAL * 1000};
 
   act.sa_sigaction = sig_handler;
   act.sa_mask = 0;
@@ -463,11 +579,19 @@ get_sigcontext()
     perror("sigaction() failed");
     return -1;
   }
+
+  /* Get a fresh quantum so we don't prematurely reschedule */
+  (void) usleep(DELAY_SETUP * 1000);
+
   do {
-    if ((err = kill(pid, TEST_SIG))) {
-      perror("kill() for signal failed");
+    itv.it_interval = tv_zero;
+    itv.it_value = tv_delay;
+    err = setitimer(ITIMER_VIRTUAL, &itv, NULL);
+    if (err) {
+      perror("setitimer() for signal failed");
       break;
     }
+    /* Wait for signal to happen */
     while (!sig_check.done) ;
   } while (0);
   if (signal(TEST_SIG, SIG_DFL) == SIG_ERR) {
@@ -672,6 +796,34 @@ print_macros(void)
   PRINT_UNDEF(_STRUCT_X86_FLOAT_STATE64);
   #endif
   printf("\n");
+
+  #ifdef _STRUCT_ARM_EXCEPTION_STATE
+  PRINT_TEXT(_STRUCT_ARM_EXCEPTION_STATE);
+  PRINT_SIZE(_STRUCT_ARM_EXCEPTION_STATE);
+  #else
+  PRINT_UNDEF(_STRUCT_ARM_EXCEPTION_STATE);
+  #endif
+  #ifdef _STRUCT_ARM_THREAD_STATE
+  PRINT_TEXT(_STRUCT_ARM_THREAD_STATE);
+  PRINT_SIZE(_STRUCT_ARM_THREAD_STATE);
+  #else
+  PRINT_UNDEF(_STRUCT_ARM_THREAD_STATE);
+  #endif
+  printf("\n");
+
+  #ifdef _STRUCT_ARM_EXCEPTION_STATE64
+  PRINT_TEXT(_STRUCT_ARM_EXCEPTION_STATE64);
+  PRINT_SIZE(_STRUCT_ARM_EXCEPTION_STATE64);
+  #else
+  PRINT_UNDEF(_STRUCT_ARM_EXCEPTION_STATE64);
+  #endif
+  #ifdef _STRUCT_ARM_THREAD_STATE64
+  PRINT_TEXT(_STRUCT_ARM_THREAD_STATE64);
+  PRINT_SIZE(_STRUCT_ARM_THREAD_STATE64);
+  #else
+  PRINT_UNDEF(_STRUCT_ARM_THREAD_STATE64);
+  #endif
+  printf("\n");
 }
 
 #if TESTED_CPU
@@ -688,13 +840,7 @@ print_macros(void)
   printf("    " STR__(exception) " = 0x" PTR_FMT "\n", \
          (pointer_int_t) estr.__(es).__(exception)); \
 
-#define PRINT_EXCEPTION64(estr) \
-  printf("    " STR__(dar) " = 0x" PTR_FMT "\n", \
-         (pointer_int_t) estr.__(es).__(dar)); \
-  printf("    " STR__(dsisr) " = 0x" PTR_FMT "\n", \
-         (pointer_int_t) estr.__(es).__(dsisr)); \
-  printf("    " STR__(exception) " = 0x" PTR_FMT "\n", \
-         (pointer_int_t) estr.__(es).__(exception)); \
+#define PRINT_EXCEPTION64(estr) PRINT_EXCEPTION(estr)
 
 #elif defined(CPU_X86)
 
@@ -708,7 +854,39 @@ print_macros(void)
 
 #define PRINT_EXCEPTION64(estr) PRINT_EXCEPTION(estr)
 
+#elif defined(CPU_ARMX)
+
+#define PRINT_EXCEPTION32(estr) \
+  printf("    " STR__(exception) " = 0x%X\n", \
+         estr.__(es).__(exception)); \
+  printf("    " STR__(fsr) " = 0x" PTR_FMT "\n", \
+         (pointer_int_t) estr.__(es).__(fsr)); \
+  printf("    " STR__(far) " = 0x" PTR_FMT "\n", \
+         (pointer_int_t) estr.__(es).__(far)); \
+
+#define PRINT_EXCEPTION64_V1(estr) \
+  printf("    " STR__(far) " = 0x" PTR_FMT "\n", \
+         (pointer_int_t) estr.__(es).__(far)); \
+  printf("    " STR__(esr) " = 0x%X\n", \
+         estr.__(es).__(esr)); \
+  printf("    " STR__(exception) " = 0x%X\n", \
+         estr.__(es).__(exception)); \
+
+#define PRINT_EXCEPTION64_V2(estr) \
+  printf("    " STR__(far) " = 0x" PTR_FMT "\n", \
+         (pointer_int_t) estr.__(es).__(far)); \
+  printf("    " STR__(esr) " = 0x" PTR_FMT "\n", \
+         (pointer_int_t) estr.__(es).__(esr)); \
+
+#define PRINT_EXCEPTION64(estr) PRINT_EXCEPTION64_V2(estr)
+
+#ifdef __LP64__
+#define PRINT_EXCEPTION(estr) PRINT_EXCEPTION64(estr)
+#else
+#define PRINT_EXCEPTION(estr) PRINT_EXCEPTION32(estr)
 #endif
+
+#endif  /* All CPUs */
 
 static void
 print_contexts(void)
@@ -745,7 +923,10 @@ print_contexts(void)
       CPU_REGISTERS
       #undef CPU_REG
     }
-    printf("  [...]\n");
+    if (xxx_mcontext_size >
+        sizeof(xxx_mcontext.__(es)) + sizeof(xxx_mcontext.__(ss))) {
+      printf("  [...]\n");
+    }
     printf("\n");
   }
 #endif
@@ -782,7 +963,10 @@ print_contexts(void)
       CPU_REGISTERS64
       #undef CPU_REG
     }
-    printf("  [...]\n");
+    if (xxx_mcontext64_size >
+        sizeof(xxx_mcontext64.__(es)) + sizeof(xxx_mcontext64.__(ss))) {
+      printf("  [...]\n");
+    }
     printf("\n");
   }
 #endif
@@ -827,6 +1011,7 @@ main(int argc, char *argv[])
     printf("  *** Skipping signal test in broken OS case.\n");
   }
 
-  printf("%s %s.\n", progname, err ? "failed" : "succeeded");
+  printf("%s %s on arch " EXPAND2(CPU_TYPE) ".\n",
+         progname, err ? "failed" : "succeeded");
   return 0;
 }
