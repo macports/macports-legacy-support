@@ -109,6 +109,29 @@ int   fgetattrlist(int,void*,void*,size_t,unsigned long);
 
 #endif  /* __MPLS_SDK_SUPPORT_FXETATTRLIST__ */
 
+/* Enhancement to support syscall() with 64-bit return values */
+
+#if !defined(_MACPORTS_LEGACY_DISABLE_SYSCALL64) \
+    || !_MACPORTS_LEGACY_DISABLE_SYSCALL64
+
+#if defined (__i386__)
+uint64_t syscall64(int number, ...) __asm("___mpls_syscall64");
+#else  /* !__i386__ */
+uint64_t syscall64(int number, ...) __asm("_syscall");
+#endif  /* !__i386__ */
+
+#endif  /* SYSCALL64 allowed */
+
 #endif /* __DARWIN_C_LEVEL >= __DARWIN_C_FULL */
+
+/* Allow __mpls_syscallXX() regardless of __DARWIN_C_LEVEL */
+
+int __mpls_syscall32(int number, ...) __asm("_syscall");
+
+#if defined (__i386__)
+uint64_t __mpls_syscall64(int number, ...);
+#else  /* !__i386__ */
+uint64_t __mpls_syscall64(int number, ...) __asm("_syscall");
+#endif  /* !__i386__ */
 
 #endif /* _MACPORTS_UNISTD_H_ */

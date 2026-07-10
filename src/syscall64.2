@@ -1,0 +1,54 @@
+.\" Copyright (c) 2026 Frederick H. G. Wright II <fw@fwright.net>
+.\"
+.\" Permission to use, copy, modify, and distribute this software for any
+.\" purpose with or without fee is hereby granted, provided that the above
+.\" copyright notice and this permission notice appear in all copies.
+.\"
+.\" THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+.\" WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+.\" MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+.\" ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+.\" WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+.\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+.\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+.\"
+.Dd July 13, 2026
+.Dt SYSCALL64 2
+.Os macOS
+.Sh NAME
+.Nm syscall64 ,
+.Nd 64-bit indirect system call
+.Sh SYNOPSIS
+.Fd #include <sys/syscall.h>
+.Fd #include <unistd.h>
+.Ft uint64_t
+.Fn syscall64 "int number" "..."
+.Sh DESCRIPTION
+.Fn Syscall64
+performs the system call whose assembly language
+interface has the specified
+.Fa number
+with the specified arguments.
+Symbolic constants for system calls can be found in the header file
+.Ao Pa sys/syscall.h Ac .
+
+This is a variant of
+.Fn syscall
+suitable for functions that return
+64-bit values, since the
+.Fn syscall
+function is only valid for 32-bit
+results.  This call is only valid for functions that return 64-bit
+results; using it for a 32-bit syscall will perform the call correctly
+but is likely to return a garbled result, especially on 32-bit platforms.
+.Sh RETURN VALUES
+The return values are defined by the system call being invoked.
+In cases where this function is useful, the return value is the 64-bit
+result.  An error will typically return ~0ULL, and store an error code in
+.Va errno .
+.Sh SEE ALSO
+.Xr syscall 2 ,
+.Sh HISTORY
+The
+.Fn syscall64
+function call appeared in MacPorts LegacySupport 1.6.0.
