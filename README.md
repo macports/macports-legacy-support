@@ -135,7 +135,7 @@ Wrapped headers and replaced functions are:
     <td>OSX10.4</td>
   </tr>
   <tr>
-    <td rowspan="2"><code>unistd.h</code></td>
+    <td rowspan="3"><code>unistd.h</code></td>
     <td>Adds <code>fgetattrlist</code> and <code>fsetattrlist</code>
         functions</td>
     <td>OSX10.5</td>
@@ -143,6 +143,10 @@ Wrapped headers and replaced functions are:
   <tr>
     <td>Fixes bug in <code>setattrlist</code> function</td>
     <td>OSX10.7</td>
+  </tr>
+  <tr>
+    <td>Adds non-Apple <code>syscall64</code> function</td>
+    <td>all</td>
   </tr>
   <tr>
     <td><code>wchar.h</code></td>

@@ -23,6 +23,7 @@ LIBDIR           = $(PREFIX)/lib
 BINDIR           = $(PREFIX)/bin
 MANDIR           = $(PREFIX)/share/man
 MAN1DIR          = $(MANDIR)/man1
+MAN2DIR          = $(MANDIR)/man2
 MAN3DIR          = $(MANDIR)/man3
 AREXT            = .a
 SOEXT            = .dylib
@@ -66,11 +67,15 @@ ARCHS           ?=
 ARCHFLAGS       ?= $(patsubst %,-arch %,$(ARCHS))
 DEBUG           ?=
 OPT             ?= -Os
-XCFLAGS         ?= $(DEBUG) $(OPT) -Wall -Wno-deprecated-declarations -Wundef
+XCFLAGS_CONLY   ?= $(OPT) -Wall -Wno-deprecated-declarations -Wundef
+XCFLAGS         ?= $(DEBUG) $(XCFLAGS_CONLY)
 ALLCFLAGS       := $(ARCHFLAGS) $(XCFLAGS) $(CFLAGS)
+ALLCFLAGS_S     := $(ARCHFLAGS) $(DEBUG) $(CFLAGS)
 TOOLCFLAGS      ?= $(ARCHFLAGS) $(DEBUG) $(OPT) $(CFLAGS)
 DLIBCFLAGS      ?= -fPIC
+DLIBCFLAGS_S     = $(DLIBCFLAGS)
 SLIBCFLAGS      ?=
+SLIBCFLAGS_S     = $(SLIBCFLAGS) -static
 XCXXFLAGS       ?= $(DEBUG) $(OPT) -Wall
 ALLCXXFLAGS     := $(ARCHFLAGS) $(XCXXFLAGS) $(CXXFLAGS)
 XLDFLAGS        ?= $(DEBUG)
@@ -125,14 +130,19 @@ FIND_LIBHEADERS := find $(SRCINCDIR) -type f \( -name '*.h' -o \
 LIBHEADERS      := $(shell $(FIND_LIBHEADERS))
 ALLHEADERS      := $(LIBHEADERS) $(wildcard $(SRCDIR)/*.h)
 
-ALLLIBSRCS      := $(patsubst $(SRCDIR)/%.c,%,$(wildcard $(SRCDIR)/*.c))
+ALLLIBSRCS_C    := $(patsubst $(SRCDIR)/%.c,%,$(wildcard $(SRCDIR)/*.c))
+LIBSRCS_S       := $(patsubst $(SRCDIR)/%.S,%,$(wildcard $(SRCDIR)/*.S))
 ADDSRCS         := add_symbols
-LIBSRCS         := $(filter-out $(ADDSRCS),$(ALLLIBSRCS))
+LIBSRCS_C       := $(filter-out $(ADDSRCS),$(ALLLIBSRCS_C))
 
 DLIBOBJEXT       = .dl.o
 SLIBOBJEXT       = .o
-DLIBOBJS        := $(patsubst %,$(BUILDDIR)/%$(DLIBOBJEXT),$(LIBSRCS))
-SLIBOBJS        := $(patsubst %,$(BUILDDIR)/%$(SLIBOBJEXT),$(LIBSRCS))
+DLIBOBJS_C      := $(patsubst %,$(BUILDDIR)/%$(DLIBOBJEXT),$(LIBSRCS_C))
+DLIBOBJS_S      := $(patsubst %,$(BUILDDIR)/%$(DLIBOBJEXT),$(LIBSRCS_S))
+DLIBOBJS        := $(DLIBOBJS_C) $(DLIBOBJS_S)
+SLIBOBJS_C      := $(patsubst %,$(BUILDDIR)/%$(SLIBOBJEXT),$(LIBSRCS_C))
+SLIBOBJS_S      := $(patsubst %,$(BUILDDIR)/%$(SLIBOBJEXT),$(LIBSRCS_S))
+SLIBOBJS        := $(SLIBOBJS_C) $(SLIBOBJS_S)
 ADDOBJS         := $(patsubst %,$(BUILDDIR)/%$(SLIBOBJEXT),$(ADDSRCS))
 SYSLIBOBJS      := $(DLIBOBJS)
 ifndef NOADDSYMS
@@ -140,6 +150,7 @@ ifndef NOADDSYMS
 endif
 
 # Man pages
+SRCMAN2S        := $(wildcard $(SRCDIR)/*.2)
 SRCMAN3S        := $(wildcard $(SRCDIR)/*.3)
 
 # Defs for filtering out empty object files
@@ -153,16 +164,23 @@ SRCMAN3S        := $(wildcard $(SRCDIR)/*.3)
 # This not only reduces the size of the static library a bit, but also
 # avoids the "no symbols" warnings when creating it.
 #
-# A complication is that a completely empty static library is illegal,
+# Now that we have an assembler source, this is complicated by the fact
+# that empty object files are slightly different for assembler and C.
+#
+# Another complication is that a completely empty static library is illegal,
 # so we provide a dummy object to be used when the library is logically
 # empty.
 #
 # This treatment is only applicable to the static library.
-EMPTY            = empty_source_content
-EMPTYSOBJ        = $(BUILDDIR)/$(EMPTY)$(SLIBOBJEXT)
-SOBJLIST         = $(BUILDDIR)/slibobjs.tmp
-DUMMYSRC         = $(SRCDIR)/dummylib.xxc
-DUMMYOBJ         = $(BUILDDIR)/dummylib.o
+EMPTY_C           = empty_source_content_c
+EMPTYSOBJ_C       = $(BUILDDIR)/$(EMPTY_C)$(SLIBOBJEXT)
+SOBJLIST_C        = $(BUILDDIR)/slibobjs_c.tmp
+EMPTY_S           = empty_source_content_s
+EMPTYSOBJ_S       = $(BUILDDIR)/$(EMPTY_S)$(SLIBOBJEXT)
+SOBJLIST_S        = $(BUILDDIR)/slibobjs_s.tmp
+DUMMYSRC          = $(SRCDIR)/dummylib.xxc
+DUMMYOBJ          = $(BUILDDIR)/dummylib.o
+SOBJLIST          = $(BUILDDIR)/slibobjs.tmp
 
 # Automatic tests that don't use the library, and are OK with -fno-builtin
 XTESTDIR          = xtest
@@ -308,13 +326,21 @@ slib: $(BUILDSLIBPATH)
 syslib: $(BUILDSYSLIBPATH)
 
 # Generously marking all header files as potential dependencies
-$(DLIBOBJS): $(BUILDDIR)/%$(DLIBOBJEXT): $(SRCDIR)/%.c $(ALLHEADERS) \
+$(DLIBOBJS_C): $(BUILDDIR)/%$(DLIBOBJEXT): $(SRCDIR)/%.c $(ALLHEADERS) \
     | $(BUILDDIR)
 	$(CC) -c -I$(SRCINCDIR) $(ALLCFLAGS) $(DLIBCFLAGS) $< -o $@
 
-$(SLIBOBJS): $(BUILDDIR)/%$(SLIBOBJEXT): $(SRCDIR)/%.c $(ALLHEADERS) \
+$(DLIBOBJS_S): $(BUILDDIR)/%$(DLIBOBJEXT): $(SRCDIR)/%.S $(ALLHEADERS) \
+    | $(BUILDDIR)
+	$(CC) -c -I$(SRCINCDIR) $(ALLCFLAGS_S) $(DLIBCFLAGS_S) $< -o $@
+
+$(SLIBOBJS_C): $(BUILDDIR)/%$(SLIBOBJEXT): $(SRCDIR)/%.c $(ALLHEADERS) \
     | $(BUILDDIR)
 	$(CC) -c -I$(SRCINCDIR) $(ALLCFLAGS) $(SLIBCFLAGS) $< -o $@
+
+$(SLIBOBJS_S): $(BUILDDIR)/%$(SLIBOBJEXT): $(SRCDIR)/%.S $(ALLHEADERS) \
+    | $(BUILDDIR)
+	$(CC) -c -I$(SRCINCDIR) $(ALLCFLAGS_S) $(SLIBCFLAGS_S) $< -o $@
 
 $(ADDOBJS): $(BUILDDIR)/%$(SLIBOBJEXT): $(SRCDIR)/%.c $(ALLHEADERS) \
     | $(BUILDDIR)
@@ -336,16 +362,24 @@ $(patsubst %$(SLIBOBJEXT),%.S,$(SLIBOBJS)): \
 # Create a list of nonempty static object files.
 # Since completely empty archives are illegal, we use our dummy if there
 # would otherwise be no objects.
-$(SOBJLIST): $(SLIBOBJS)
-	$(CC) -c $(ALLCFLAGS) $(SLIBCFLAGS) -xc /dev/null -o $(EMPTYSOBJ)
+$(SOBJLIST_C): $(SLIBOBJS_C)
+	$(CC) -c $(ALLCFLAGS) $(SLIBCFLAGS) -xc /dev/null -o $(EMPTYSOBJ_C)
+	for f in $^; do cmp -s $(EMPTYSOBJ_C) $$f || echo $$f; done > $@
+
+$(SOBJLIST_S): $(SLIBOBJS_S)
+	$(CC) -c $(ALLCFLAGS_S) $(SLIBCFLAGS_S) -xassembler /dev/null \
+	    -o $(EMPTYSOBJ_S)
+	for f in $^; do cmp -s $(EMPTYSOBJ_S) $$f || echo $$f; done > $@
+
+$(SOBJLIST): $(SOBJLIST_C) $(SOBJLIST_S)
+	cat $^ > $@
 	$(CC) -c $(ALLCFLAGS) $(SLIBCFLAGS) -xc $(DUMMYSRC) -o $(DUMMYOBJ)
-	for f in $^; do cmp -s $(EMPTYSOBJ) $$f || echo $$f; done > $@
 	if [ ! -s $@ ]; then echo $(DUMMYOBJ) > $@; fi
 
 # Make the directories separate targets to avoid collisions in parallel builds.
 $(BUILDDIR) $(TIGERBINDIR) $(BUILDLIBDIR) $(TESTBINDIR) $(XLIBDIR) \
     $(DESTDIR)$(LIBDIR) $(DESTDIR)$(BINDIR) \
-    $(DESTDIR)$(MAN1DIR) $(DESTDIR)$(MAN3DIR) \
+    $(DESTDIR)$(MAN1DIR) $(DESTDIR)$(MAN2DIR) $(DESTDIR)$(MAN3DIR) \
     $(TEST_TEMP) $(TOOLBINDIR):
 	$(MKINSTALLDIRS) $@
 
@@ -742,7 +776,7 @@ $(XTESTRUNPREFIX)allheaders_all_unv: $(addsuffix _unv,$(ALLHDRRUNS))
 $(TESTRUNPREFIX)attrlist_all: $(ATTRLISTRUNS)
 $(TESTRUNPREFIX)attrlist_all_unv: $(addsuffix _unv,$(ATTRLISTRUNS))
 
-install: install-headers install-lib
+install: install-headers install-lib install-manpages
 
 install-headers:
 	$(MKINSTALLDIRS) $(patsubst $(SRCINCDIR)/%,$(DESTDIR)$(PKGINCDIR)/%,\
@@ -763,6 +797,9 @@ install-syslib: $(BUILDSYSLIBPATH) | $(DESTDIR)$(LIBDIR)
 
 install-slib: $(BUILDSLIBPATH) | $(DESTDIR)$(LIBDIR)
 	$(INSTALL_DATA) $(BUILDSLIBPATH) $(DESTDIR)$(LIBDIR)
+
+install-manpages: | $(DESTDIR)$(MAN2DIR)
+	$(INSTALL_MAN) $(SRCMAN2S) $(DESTDIR)$(MAN2DIR)
 
 # We need a better way to handle OS-dependent manpage installs.
 # Currently, the only cases are the Tiger-specific which.1,
