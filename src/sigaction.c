@@ -37,15 +37,12 @@
  *
  * Changes include:
  *   Making the build conditional on the need for its use.
- *   Setting __DYNAMIC__ explicitly.
  */
 
 /* MP support header */
 #include "MacportsLegacySupport.h"
 
 #if __MPLS_LIB_FIX_PPC64_SIGNALS__
-
-#define __DYNAMIC__ 1
 
 /*
  * The remainder of this file (except for the final #endif) is taken verbatim
