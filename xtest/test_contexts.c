@@ -58,6 +58,10 @@
 
 #include <sys/param.h>  /* For MIN */
 
+/* In case decls blocked by config flags */
+int usleep(useconds_t);
+useconds_t ualarm(useconds_t, useconds_t);
+
 /* Get the SDK version */
 #include <_macports_extras/sdkversion.h>
 
@@ -84,8 +88,8 @@
 #define DELAY_SETUP 20   /* Delay before setting up for signal */
 #define DELAY_SIGNAL 20  /* Delay for signal in delay cases */
 
-/* Use SIGVTALRM for setitimer(); also gdb doesn't intercept it by default */
-#define TEST_SIG SIGVTALRM
+/* Use SIGALRM for ualarm(); also gdb doesn't intercept it by default */
+#define TEST_SIG SIGALRM
 
 #if defined(__ppc__)
 #define CPU_TYPE ppc
@@ -134,7 +138,7 @@
 
 #ifdef __LP64__
 typedef unsigned long long pointer_int_t;
-#define PTR_FMT "%016llx"
+#define PTR_FMT "%016llX"
 #else
 typedef unsigned int pointer_int_t;
 #define PTR_FMT "%08X"
@@ -563,11 +567,7 @@ sig_handler(int sig, siginfo_t *info, void *uap)
 static int
 get_sigcontext()
 {
-  int err;
   struct sigaction act, oact;
-  struct itimerval itv;
-  static struct timeval tv_zero = {0, 0};
-  static struct timeval tv_delay = {0, DELAY_SIGNAL * 1000};
 
   act.sa_sigaction = sig_handler;
   act.sa_mask = 0;
@@ -584,21 +584,16 @@ get_sigcontext()
   (void) usleep(DELAY_SETUP * 1000);
 
   do {
-    itv.it_interval = tv_zero;
-    itv.it_value = tv_delay;
-    err = setitimer(ITIMER_VIRTUAL, &itv, NULL);
-    if (err) {
-      perror("setitimer() for signal failed");
-      break;
-    }
-    /* Wait for signal to happen */
+    /* Arm a delayed signal */
+    (void) ualarm(DELAY_SIGNAL * 1000, 0);
+
+    /* Wait for it to happen */
     while (!sig_check.done) ;
   } while (0);
   if (signal(TEST_SIG, SIG_DFL) == SIG_ERR) {
     perror("signal() to remove handler failed");
     return -1;
   }
-  if (err) return -1;
 
   return 0;
 }

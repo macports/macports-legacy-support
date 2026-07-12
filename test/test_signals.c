@@ -29,6 +29,10 @@
 #include <sys/types.h>
 #include <sys/ucontext.h>
 
+/* In case decls blocked by config flags */
+int usleep(useconds_t);
+useconds_t ualarm(useconds_t, useconds_t);
+
 #define SYSCTL_ALTIVEC "hw.optional.altivec"
 
 #ifndef __ppc64__
@@ -47,8 +51,8 @@
 #define DELAY_SETUP 20   /* Delay before setting up for signal */
 #define DELAY_SIGNAL 20  /* Delay for signal in delay cases */
 
-/* Use SIGVTALRM for setitimer(); also gdb doesn't intercept it by default */
-#define TEST_SIG SIGVTALRM
+/* Use SIGALRM for ualarm(); also gdb doesn't intercept it by default */
+#define TEST_SIG SIGALRM
 
 /* Sample struct for typeof; global to avoid unused warning */
 OUR_UCONTEXT uc_sample;
@@ -232,9 +236,6 @@ test_signal(sigtype_t sigtype, int altivec, int verbose)
   pid_t pid = getpid();
   struct sigaction act, oact;
   sigerr_t *sigerr = &sigdatap->sigerr;
-  struct itimerval itv;
-  static struct timeval tv_zero = {0, 0};
-  static struct timeval tv_delay = {0, DELAY_SIGNAL * 1000};
 
   sigerr->text = test_text[sigtype];
   sigdatap->done = 0;
@@ -280,10 +281,8 @@ test_signal(sigtype_t sigtype, int altivec, int verbose)
     err = kill(pid, TEST_SIG);
     if (err) sigerr->text = "kill() for signal";
   } else {
-    itv.it_interval = tv_zero;
-    itv.it_value = tv_delay;
-    err = setitimer(ITIMER_VIRTUAL, &itv, NULL);
-    if (err) sigerr->text = "setitimer() for signal";
+    /* Arm a delayed signal */
+    (void) ualarm(DELAY_SIGNAL * 1000, 0);
   }
   if (err) {
     sigerr->error = errno;

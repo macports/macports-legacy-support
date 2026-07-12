@@ -35,7 +35,6 @@
  *
  * Changes include:
  *   Making the build conditional on the need for its use.
- *   Setting __DYNAMIC__ explicitly.
  *   Adding additional needed includes.
  *   Fixing the bugs in restore64_state().
  *   Fixing the ctxstyle setup for ppc64.
@@ -47,8 +46,6 @@
 #include "MacportsLegacySupport.h"
 
 #if __MPLS_LIB_FIX_PPC64_SIGNALS__
-
-#define __DYNAMIC__ 1
 
 #include <strings.h>  /* For bcmp() */
 #include <unistd.h>   /* For syscall() */
