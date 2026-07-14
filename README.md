@@ -307,6 +307,11 @@ Wrapped headers and replaced functions are:
     <td>OSX10.6</td>
   </tr>
   <tr>
+    <td><code>CommonCrypto/CommonRandom.h</code></td>
+    <td>Adds <code>CCRandomGenerateBytes</code> function</td>
+    <td>OSX10.12</td>
+  </tr>
+  <tr>
     <td><code>CoreFoundation/CoreFoundation.h</code></td>
     <td>Adds <code>CFPropertyListCreateWithStream</code> function</td>
     <td>OSX10.5</td>
