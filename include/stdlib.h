@@ -86,6 +86,8 @@ __MP__BEGIN_DECLS
 extern void arc4random_buf( void* buf, size_t n );
 __MP__END_DECLS
 
+void *aligned_alloc(size_t requested_alignment, size_t size);
+
 #endif /*  __MPLS_SDK_SUPPORT_ARC4RANDOM__ */
 
 #endif /* _MACPORTS_STDLIB_H_ */
