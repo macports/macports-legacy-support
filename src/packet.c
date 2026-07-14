@@ -460,4 +460,9 @@ ssize_t recvmsg##sfx(int socket, struct msghdr *message, int flags) \
 MOST_VARIANTS
 #undef VARIANT_ENT
 
-#endif /* 10.4 with no fixes */
+#elif __MPLS_EMP_CMSG_FIX__ && defined(__MPLS_UNIVERSAL__)
+
+/* Avoid "no symbols" warning from ranlib */
+void __mpls_empty_packet(void) {};
+
+#endif  /* !empty universal slice */

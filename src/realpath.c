@@ -182,3 +182,10 @@ macports_legacy_realpath(const char * __restrict file_name,
 #endif /* __MPLS_LIB_SUPPORT_REALPATH_ALLOC__ */
 
 #endif /*__MPLS_LIB_SUPPORT_REALPATH_WRAP__*/
+
+#if __MPLS_EMP_SUPPORT_REALPATH_NONEX_FIX__ && defined(__MPLS_UNIVERSAL__)
+
+/* Avoid "no symbols" warning from ranlib */
+void __mpls_empty_realpath(void) {};
+
+#endif  /* !empty universal slice */

@@ -14,6 +14,10 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+/* If i386 isn't even allowed in this OS, we don't need the dummy symbol */
+#include <_macports_extras/targetos.h>
+#define I386_ALLOWED (__MPLS_TARGET_OSVER < 101500)
+
 #if defined(__i386__)
 
 #include <errno.h>
@@ -28,4 +32,9 @@ __mpls_set_errno(int err)
   return ~0ULL;
 }
 
-#endif  /*  __i386__ */
+#elif I386_ALLOWED && defined(__MPLS_UNIVERSAL__)  /* non-i386 slice */
+
+/* Avoid "no symbols" warning from ranlib */
+void __mpls_empty_assembly_support(void) {};
+
+#endif  /* non-i386 slice */
