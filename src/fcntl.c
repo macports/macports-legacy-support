@@ -144,3 +144,10 @@ fcntl(int fildes, int cmd, ...)
 }
 
 #endif /* __MPLS_LIB_FIX_TIGER_PPC64__ */
+
+#if __MPLS_EMP_FIX_TIGER_PPC64__ && defined(__MPLS_UNIVERSAL__)
+
+/* Avoid "no symbols" warning from ranlib */
+void __mpls_empty_fcntl(void) {};
+
+#endif  /* !empty universal slice */

@@ -99,6 +99,20 @@
  * The second flag is typically defined as a comparison on __MPLS_TARGET_OSVER,
  * though in some cases the condition may be more complicated.
  *
+ * In a few cases, a third flag is provided:
+ *    __MPLS_EMP_<feature>
+ *
+ * This only occurs when the provision of some feature is architecture-
+ * dependent.
+ *
+ * When the static library is built universally, and a module is empty for
+ * some architectures but not others, the mechanism for filtering out
+ * empty modules fails to avoid empty slices in non-empty modules, and
+ * ranlib reports "no symbols" warnings.  In such cases (only in universal
+ * builds), we add a dummy symbol to the otherwise empty slice.  The "EMP"
+ * config flag is defined with the same OS condition as the "LIB" flag, but
+ * with the complementary architecture condition.
+ *
  * NOTE: At present, no attempt is made to correct the availability attributes
  * of definitions obtained from the SDK.  When using an SDK matched to the
  * target OS version, this is a non-issue, since any feature provided by
@@ -150,10 +164,14 @@
 /* Fix bugs in sysctl() and sysctlbyname() for boottime */
 #define __MPLS_LIB_FIX_64BIT_BOOTTIME__       (__MPLS_TARGET_OSVER < 1060 \
                                                && __MPLS_64BIT)
+#define __MPLS_EMP_FIX_64BIT_BOOTTIME__       (__MPLS_TARGET_OSVER < 1060 \
+                                               && !__MPLS_64BIT)
 
 /* Fix bugs in certain 10.4 ppc64 calls */
 #define __MPLS_LIB_FIX_TIGER_PPC64__          (__MPLS_TARGET_OSVER < 1050 \
                                                && __MPLS_APPLE_PPC64__)
+#define __MPLS_EMP_FIX_TIGER_PPC64__          (__MPLS_TARGET_OSVER < 1050 \
+                                               && !__MPLS_APPLE_PPC64__)
 
 /* "at" calls, including fdopendir */
 #define __MPLS_SDK_SUPPORT_ATCALLS__          (__MPLS_SDK_MAJOR < 101000)
@@ -178,6 +196,10 @@
 /* Format confusion in CMSG timestamps, due to kernel bitness mismatch */
 #define __MPLS_LIB_CMSG_FORMAT_FIX__          (__MPLS_TARGET_OSVER < 1060 \
                                                && __MPLS_64BIT)
+
+/* "Empty" version is limited to OSes supporting PPC */
+#define __MPLS_EMP_CMSG_FIX__                 (__MPLS_TARGET_OSVER < 1070 \
+                                               && !__MPLS_APPLE_PPC__)
 
 /* stpncpy */
 #define __MPLS_SDK_SUPPORT_STPNCPY__          (__MPLS_SDK_MAJOR < 1070)
@@ -245,6 +267,9 @@
 #define __MPLS_LIB_SUPPORT_REALPATH_NONEX_FIX__ (__MPLS_TARGET_OSVER >= 1060 \
                                                  && __MPLS_TARGET_OSVER < 1070 \
                                                  && !__MPLS_64BIT)
+#define __MPLS_EMP_SUPPORT_REALPATH_NONEX_FIX__ (__MPLS_TARGET_OSVER >= 1060 \
+                                                 && __MPLS_TARGET_OSVER < 1070 \
+                                                 && __MPLS_64BIT)
 
 /* fgetattrlist, fsetattrlist */
 #define __MPLS_SDK_SUPPORT_FXETATTRLIST__     (__MPLS_SDK_MAJOR < 1060)
@@ -275,9 +300,12 @@
 #define __MPLS_SDK_SUPPORT_SYSCONF_PHYS_PAGES__   (__MPLS_SDK_MAJOR < 101100)
 #define __MPLS_LIB_SUPPORT_SYSCONF_PHYS_PAGES__   (__MPLS_TARGET_OSVER < 101100 \
                                                    || !__MPLS_64BIT)
+#define __MPLS_EMP_SUPPORT_SYSCONF_PHYS_PAGES__   (__MPLS_TARGET_OSVER >= 101100 \
+                                                   && __MPLS_64BIT)
 
 #define __MPLS_LIB_SUPPORT_SYSCONF_WRAP__ (__MPLS_LIB_SUPPORT_SYSCONF_NPROCESSORS__ \
                                            || __MPLS_LIB_SUPPORT_SYSCONF_PHYS_PAGES__)
+#define __MPLS_EMP_SUPPORT_SYSCONF_WRAP__ __MPLS_EMP_SUPPORT_SYSCONF_PHYS_PAGES__
 
 /* PTHREAD_RWLOCK_INITIALIZER is not defined until 10.5 */
 /* The addition uses an #ifndef, so no feature flag is necessary */
@@ -404,7 +432,9 @@
 #define __MPLS_LIB_SUPPORT_CLONEFILE__       (__MPLS_TARGET_OSVER < 101200)
 
 /* fix bug in 10.4 ppc64 signal handling */
-#define __MPLS_LIB_FIX_PPC64_SIGNALS__       (__MPLS_TARGET_OSVER < 1050 && \
-                                              __MPLS_APPLE_PPC64__)
+#define __MPLS_LIB_FIX_PPC64_SIGNALS__       (__MPLS_TARGET_OSVER < 1050 \
+                                              && __MPLS_APPLE_PPC64__)
+#define __MPLS_EMP_FIX_PPC64_SIGNALS__       (__MPLS_TARGET_OSVER < 1050 \
+                                              && !__MPLS_APPLE_PPC64__)
 
 #endif /* _MACPORTS_LEGACYSUPPORTDEFS_H_ */

@@ -105,3 +105,10 @@ long sysconf(int name) {
 long macports_legacy_sysconf(int name) { return sysconf(name); }
 
 #endif /*__MPLS_LIB_SUPPORT_SYSCONF_WRAP__*/
+
+#if __MPLS_EMP_SUPPORT_SYSCONF_WRAP__ && defined(__MPLS_UNIVERSAL__)
+
+/* Avoid "no symbols" warning from ranlib */
+void __mpls_empty_sysconf(void) {};
+
+#endif  /* !empty universal slice */

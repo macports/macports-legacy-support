@@ -65,6 +65,12 @@ POSTINSTALL     ?= /usr/bin/install_name_tool
 # Note: Overriding CC or CXX with ?= doesn't work, since they're "defined".
 ARCHS           ?=
 ARCHFLAGS       ?= $(patsubst %,-arch %,$(ARCHS))
+ifneq ($(strip $(ARCHS)),)
+  ifneq ($(words $(ARCHS)), 1)
+    UNIVERSAL          = -D__MPLS_UNIVERSAL__
+  endif
+endif
+UNIVERSAL       ?=
 DEBUG           ?=
 OPT             ?= -Os
 XCFLAGS_CONLY   ?= $(OPT) -Wall -Wno-deprecated-declarations -Wundef
@@ -74,8 +80,9 @@ ALLCFLAGS_S     := $(ARCHFLAGS) $(DEBUG) $(CFLAGS)
 TOOLCFLAGS      ?= $(ARCHFLAGS) $(DEBUG) $(OPT) $(CFLAGS)
 DLIBCFLAGS      ?= -fPIC
 DLIBCFLAGS_S     = $(DLIBCFLAGS)
-SLIBCFLAGS      ?=
+SLIBCFLAGS      ?= $(UNIVERSAL)
 SLIBCFLAGS_S     = $(SLIBCFLAGS) -static
+SLIBCFLAGS_ES    = $(filter-out $(UNIVERSAL),$(SLIBCFLAGS_S))
 XCXXFLAGS       ?= $(DEBUG) $(OPT) -Wall
 ALLCXXFLAGS     := $(ARCHFLAGS) $(XCXXFLAGS) $(CXXFLAGS)
 XLDFLAGS        ?= $(DEBUG)
@@ -171,7 +178,13 @@ SRCMAN3S        := $(wildcard $(SRCDIR)/*.3)
 # so we provide a dummy object to be used when the library is logically
 # empty.
 #
-# This treatment is only applicable to the static library.
+# An additional complication is that modules whose emptiness is arch-dependent
+# defeat this mechanism.  To avoid that, we pass __MPLS_UNIVERSAL__ to universal
+# builds, so that the sources can provide a dummy definition in the empty
+# slice(s).  This does *not* get rid of the "fat archive" warning, but it
+# does get rid of the "no symbols" warnings.
+#
+# This entire treatment is only applicable to the static library.
 EMPTY_C           = empty_source_content_c
 EMPTYSOBJ_C       = $(BUILDDIR)/$(EMPTY_C)$(SLIBOBJEXT)
 SOBJLIST_C        = $(BUILDDIR)/slibobjs_c.tmp
@@ -367,7 +380,7 @@ $(SOBJLIST_C): $(SLIBOBJS_C)
 	for f in $^; do cmp -s $(EMPTYSOBJ_C) $$f || echo $$f; done > $@
 
 $(SOBJLIST_S): $(SLIBOBJS_S)
-	$(CC) -c $(ALLCFLAGS_S) $(SLIBCFLAGS_S) -xassembler /dev/null \
+	$(CC) -c $(ALLCFLAGS_S) $(SLIBCFLAGS_ES) -xassembler /dev/null \
 	    -o $(EMPTYSOBJ_S)
 	for f in $^; do cmp -s $(EMPTYSOBJ_S) $$f || echo $$f; done > $@
 

@@ -103,3 +103,10 @@ _sigaction_nobind (sig, nsv, osv)
 #endif
 
 #endif  /* __MPLS_LIB_FIX_PPC64_SIGNALS__ */
+
+#if __MPLS_EMP_FIX_PPC64_SIGNALS__ && defined(__MPLS_UNIVERSAL__)
+
+/* Avoid "no symbols" warning from ranlib */
+void __mpls_empty_sigaction(void) {};
+
+#endif  /* !empty universal slice */

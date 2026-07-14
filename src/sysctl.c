@@ -115,3 +115,10 @@ sysctlbyname(const char *name, void *oldp, size_t *oldlenp,
 }
 
 #endif /* __MPLS_LIB_FIX_64BIT_BOOTTIME__ */
+
+#if __MPLS_EMP_FIX_64BIT_BOOTTIME__ && defined(__MPLS_UNIVERSAL__)
+
+/* Avoid "no symbols" warning from ranlib */
+void __mpls_empty_sysctl(void) {};
+
+#endif  /* !empty universal slice */
