@@ -176,7 +176,7 @@ do_tests(int mode, const char *path, int apfs,
                   || (test >= before && test <= after))) {
             if (!quiet && (!*filter || verbose)) {
               printf("      *** "
-                     "tolerating known bug setting atime without mtime.\n");
+                     "tolerating known bug setting atime and not mtime.\n");
             }
             ++*filter;
           } else {
