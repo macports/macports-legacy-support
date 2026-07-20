@@ -369,9 +369,12 @@
 #define __MPLS_SDK_SUPPORT_STAT64__      (__MPLS_SDK_MAJOR < 1050)
 #define __MPLS_LIB_SUPPORT_STAT64__      (__MPLS_TARGET_OSVER < 1050)
 
-/* fstatx_np() malfunctions on 10.4 Rosetta */
+/* fstatx_np() and fchmodx_np() need byte-swap on 10.4 Rosetta */
 #define __MPLS_LIB_FIX_TIGER_ROSETTA__   (__MPLS_TARGET_OSVER < 1050 \
                                           && __MPLS_APPLE_PPC__)
+
+/* [f]chmodx_np() malfunction on 10.4 */
+#define __MPLS_LIB_FIX_TIGER_CHMODX__    (__MPLS_TARGET_OSVER < 1050)
 
 /*
  * pthread_[f]chdir_np(), avail as syscalls but not functions in 10.5-10.11
