@@ -1,4 +1,4 @@
-/* Layout of filesec_t struct, solely for debugging. */
+/* Layout of filesec_t struct (Apple private). */
 
 #include <sys/types.h>
 #include <uuid/uuid.h>

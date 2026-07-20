@@ -155,6 +155,8 @@ fstatx_np(int fildes, struct stat *buf, filesec_t fsec)
 #include "rosetta.h"
 
 #define NEED_FSTATX_SWAP   (__mpls_rosetta1_bugs & _ROSETTA1_BUG_FSTATX_FD)
+#define NEED_FCHMODX_SWAP  (__mpls_rosetta1_bugs & _ROSETTA1_BUG_FCHMODX_FD)
+#define SWAP_FD(x)         OSSwapInt32(x)
 
 /* Wrapper for fstatx_np() with optional byte swap of fd */
 int
@@ -167,10 +169,166 @@ fstatx_np(int fildes, struct stat *buf, filesec_t fsec)
     return (*os_fstatx_np)(fildes, buf, fsec);
   }
   /* Else call the function with the byte-swapped fd */
-  return (*os_fstatx_np)(OSSwapInt32(fildes), buf, fsec);
+  return (*os_fstatx_np)(SWAP_FD(fildes), buf, fsec);
 }
 
-#endif /* __MPLS_LIB_FIX_TIGER_ROSETTA__ */
+#else  /* !__MPLS_LIB_FIX_TIGER_ROSETTA__ */
+
+#define NEED_FCHMODX_SWAP 0
+#define SWAP_FD(x)        (x)
+
+#endif  /* !__MPLS_LIB_FIX_TIGER_ROSETTA__ */
+
+#if __MPLS_LIB_FIX_TIGER_CHMODX__
+/*
+ * The [f]chmodx_np() functions have issues on 10.4, though the exact nature
+ * isn't fully understood.  What is known is:
+ *   1) fchmodx_np() on 10.4 Rosetta has the same fd byte-swapping issue
+ *  as fstatx_np(), but unconditionally.
+ *   2) fchmodx_np() fails the simple chmodx test in all 10.4 cases, though
+ *  chmodx_np() passes in non-Rosetta cases.
+ *   3) chmodx_np() on 10.4 Rosetta also fails the simple test.
+ *
+ * It's unknown at this point whether the problems can be completely
+ * corrected without a kernel fix.  The approach taken here is to try to
+ * use the traditional [f]chmod()/[f]chown() functions whenever extended
+ * properties don't need to be changed.  This is accomplished by reading
+ * the current properties with [f]statx_np() and comparing them to the
+ * desired new values.
+ *
+ * While this approach is inadequate for the general case, it means that
+ * programs which use [f]chmod_np() just because they *may* need to change
+ * extended properties can function correctly when that isn't the case.
+ */
+
+#include <unistd.h>
+
+#include <sys/fcntl.h>
+#include <sys/stat.h>
+
+#include "filesec_internal.h"
+
+#define NEED_CHMODX 1
+#define NEED_CHMOD  2
+#define NEED_CHOWN  4
+
+/* Determine whether [f]chmodx is actually needed */
+static int
+need_chmodx(struct _filesec *old, struct _filesec *new, struct stat *sb)
+{
+  int need = 0;
+
+  /* See if uuid change wanted */
+  if (new->fs_valid & FS_VALID_UUID) {
+    if (!(old->fs_valid & FS_VALID_UUID)) return NEED_CHMODX;
+    if (bcmp(&new->fs_uuid, &old->fs_uuid, sizeof(old->fs_uuid))) {
+      return NEED_CHMODX;
+    }
+  }
+  /* See if grpuuid change wanted */
+  if (new->fs_valid & FS_VALID_GRPUUID) {
+    if (!(old->fs_valid & FS_VALID_GRPUUID)) return NEED_CHMODX;
+    if (bcmp(&new->fs_grpuuid, &old->fs_grpuuid, sizeof(old->fs_grpuuid))) {
+      return NEED_CHMODX;
+    }
+  }
+  /* See if ACL change wanted */
+  if (new->fs_valid & FS_VALID_ACL) {
+    if (!(old->fs_valid & FS_VALID_ACL)) return NEED_CHMODX;
+    if (new->fs_aclsize != old->fs_aclsize) return NEED_CHMODX;
+    /* Note that different ACL order will count as a mismatch */
+    if (bcmp(new->fs_aclbuf, old->fs_aclbuf, old->fs_aclsize)) {
+      return NEED_CHMODX;
+    }
+  }
+  /* No extended changes - just update the traditional stat as needed */
+  if (new->fs_valid & FS_VALID_UID && sb->st_uid != new->fs_uid) {
+    sb->st_uid = new->fs_uid;
+    need |= NEED_CHOWN;
+  } else {
+    sb->st_uid = -1;
+  }
+  if (new->fs_valid & FS_VALID_GID && sb->st_gid != new->fs_gid) {
+    sb->st_gid = new->fs_gid;
+    need |= NEED_CHOWN;
+  } else {
+    sb->st_gid = -1;
+  }
+  if (new->fs_valid & FS_VALID_MODE && sb->st_mode != new->fs_mode) {
+    sb->st_mode = new->fs_mode;
+    need |= NEED_CHMOD;
+  }
+  return need;
+}
+
+/* Wrapper for chmodx_np() with fixes */
+int
+chmodx_np(const char *path, filesec_t fsec)
+{
+  int need, err = 0;
+  struct stat sb;
+  struct _filesec *fsec_cur;
+  GET_OS_FUNC(chmodx_np)
+
+  /* If fsec is NULL, just call the OS function (probably illegal) */
+  if (!fsec) return (*os_chmodx_np)(path, fsec);
+
+  /* Get another filesec_t for reading */
+  fsec_cur = filesec_init();
+  if (!fsec_cur) return -1;
+
+  /* Get the current status of the file */
+  if (statx_np(path, &sb, fsec_cur)) return -1;
+
+  /* See what changes are needed */
+  need = need_chmodx(fsec_cur, fsec, &sb);
+  filesec_free(fsec_cur);
+
+  if (need & NEED_CHMODX) return (*os_chmodx_np)(path, fsec);
+
+  if (need & NEED_CHMOD) err = chmod(path, sb.st_mode);
+  if (err) return -1;
+
+  if (need & NEED_CHOWN) err = chown(path, sb.st_uid, sb.st_gid);
+
+  return err;
+}
+
+/* Wrapper for fchmodx_np() with fixes */
+int
+fchmodx_np(int fildes, filesec_t fsec)
+{
+  int fd_adj = NEED_FCHMODX_SWAP ? SWAP_FD(fildes) : fildes;
+  int need, err = 0;
+  struct stat sb;
+  struct _filesec *fsec_cur;
+  GET_OS_FUNC(fchmodx_np)
+
+  /* If fsec is NULL, just call the OS function (probably illegal) */
+  if (!fsec) return (*os_fchmodx_np)(fd_adj, fsec);
+
+  /* Get another filesec_t for reading */
+  fsec_cur = filesec_init();
+  if (!fsec_cur) return -1;
+
+  /* Get the current status of the file */
+  if (fstatx_np(fildes, &sb, fsec_cur)) return -1;
+
+  /* See what changes are needed */
+  need = need_chmodx(fsec_cur, fsec, &sb);
+  filesec_free(fsec_cur);
+
+  if (need & NEED_CHMODX) return (*os_fchmodx_np)(fd_adj, fsec);
+
+  if (need & NEED_CHMOD) err = fchmod(fildes, sb.st_mode);
+  if (err) return -1;
+
+  if (need & NEED_CHOWN) err = fchown(fildes, sb.st_uid, sb.st_gid);
+
+  return err;
+}
+
+#endif  /* __MPLS_LIB_FIX_TIGER_CHMODX__ */
 
 #if __MPLS_LIB_SUPPORT_STAT64__
 
