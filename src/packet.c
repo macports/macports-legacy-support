@@ -93,16 +93,14 @@
 
 #include <dlfcn.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include <sys/socket.h>
-#include <sys/sysctl.h>
 #include <sys/time.h>
-#include <sys/types.h>
 
 #include "compiler.h"
-#include "endian.h"
 
 #define CMSG_DATALEN(cmsg) ((uint8_t *) (cmsg) + (cmsg)->cmsg_len \
                       - (uint8_t *) CMSG_DATA(cmsg))
@@ -335,23 +333,11 @@ fix_cmsg_formats(struct msghdr *msghdr, socklen_t new_controllen)
 
 #if ROSETTA_FIX
 
-/* sysctl to check whether we're running natively (non-ppc only) */
-#define SYSCTL_NATIVE "sysctl.proc_native"
+#include "endian.h"
+#include "rosetta.h"
 
-/* Test whether it's Rosetta */
-/* -1 no, 1 yes */
-static int
-check_rosetta(void)
-{
-  int native;
-  size_t native_sz = sizeof(native);
-
-  if (sysctlbyname(SYSCTL_NATIVE, &native, &native_sz, NULL, 0) < 0) {
-    /* If sysctl failed, must be real ppc. */
-    return -1;
-  }
-  return native ? -1 : 1;
-}
+#define NEED_ENDIAN_FIX (__mpls_rosetta1_bugs \
+                         & _ROSETTA1_BUG_PACKET_TIMESTAMP)
 
 /* Fix endianness of CMSG payloads */
 static void
@@ -381,7 +367,8 @@ fix_cmsg_endianness(struct msghdr *msghdr)
 
 #else /* !ROSETTA_FIX */
 
-static int check_rosetta(void) { return -1; }
+#define NEED_ENDIAN_FIX 0
+
 static void fix_cmsg_endianness(struct msghdr *msghdr) { (void) msghdr; }
 
 #endif /* !ROSETTA_FIX */
@@ -391,15 +378,11 @@ static ssize_t
 recvmsg_internal(int socket, struct msghdr *message, int flags,
                  fv_type_t fvtype)
 {
-  static int is_rosetta = 0;
   socklen_t init_controllen, new_controllen;
   ssize_t ret;
 
-  /* Determine Rosettaness, if not already known */
-  if (MPLS_SLOWPATH(!is_rosetta)) is_rosetta = check_rosetta();
-
-  /* Just pass through if Rosetta-only and not Rosetta */
-  if (!FORMAT_FIX && is_rosetta < 0) {
+  /* Just pass through if no fix needed */
+  if (!FORMAT_FIX && !NEED_ENDIAN_FIX) {
     return (*sys_recvmsg(fvtype))(socket, message, flags);
   }
 
@@ -420,8 +403,8 @@ recvmsg_internal(int socket, struct msghdr *message, int flags,
     }
   }
 
-  /* Now, if Rosetta, do any needed byte-swapping */
-  if (is_rosetta > 0) fix_cmsg_endianness(message);
+  /* Do any needed byte-swapping */
+  if (NEED_ENDIAN_FIX) fix_cmsg_endianness(message);
 
   return ret;
 }
