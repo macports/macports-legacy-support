@@ -137,46 +137,12 @@ fstatx_np(int fildes, struct stat *buf, filesec_t fsec)
  *   3) This being the 10.4 Rosetta.
  *   4) The Rosetta bug's not having been fixed.
  *
- * Conditions 1 and 2 are easily established (#2 via an undocumented sysctl).
- * Condition 3 is tricky.  We can't just rely on the build-target OS
- * version, since it's legal to run code built for one OS version on a
- * later one.  Although we don't yet handle that issue in general, the
- * consequences of ignoring it would be bad, as noted, so we need to
- * actually check.
- * To make matters worse, not only is there no straightforward
- * way to obtain the Rosetta version, but even the libSystem version isn't
- * made available straightforwardly.  And condition 4 is a complete
- * wildcard, though it's highly unlikely that someone would have applied
- * a patch for such an esoteric bug on such an old system.
- *
- * The method we use here is:
- *   1) The check for the non-NULL fsec arg is trivial.
- *   2) We use a sysctl() to determine whether we're running under Rosetta.
- *   3) We use the presence of copyfile_init() to determine whether it's
- *  a 10.4 libSystem.  That function was part of the preliminary (unadvertised)
- *  copyfile implementation in 10.4, and was removed in 10.5.  It's highly
- *  unlikely that someone would have patched a later libSystem to add this
- *  obsolete function, so this is probably accurate.  In fact, we do provide
- *  this function in 10.5 as a compatibility aid, but that won't match
- *  dlsym(RTLD_NEXT,...), so it has no effect.
- *   4) We assume that the libSsystem version is a valid proxy for the
- *  Rosetta version.  That should be the case in any normal install, but
- *  if someone played mix-'n-match with system components, it might not be.
- *   5) We assume that the Rosetta bug has not been fixed.
- *
- * In principle, there's a more elaborate way to make the determination,
- * based on testing the actual behavior of the function, but for simplicity
- * we avoid that at the present, and use the conditions above.  If any of
- * the above assumptions were to become incorrect, we'd need to implement
- * the more elaborate scheme.  Of course, this entire section of code
- * is only present when building for 10.4 ppc.
+ * We now make use of the centralized Rosetta tracking mechanism in util.c
+ * to determine conditions 2-4.  Condition 1 obviously needs to be
+ * determined here.
  *
  * Note that we only need to provide the basic variant, since the wrappers
  * providing the additional variants will call this version.
- *
- * Also note that chmodx_np() is also broken in 10.4 Rosetta, but the nature of
- * the bug is unknown, and hence there's no fix provided.  It's known *not*
- * to be a simple byte-swapping issue.
  */
 
 #include <stddef.h>
@@ -186,47 +152,22 @@ fstatx_np(int fildes, struct stat *buf, filesec_t fsec)
 
 #include <libkern/OSByteOrder.h>
 
-/* sysctl to check whether we're running natively (non-ppc only) */
-#define SYSCTL_NATIVE "sysctl.proc_native"
+#include "rosetta.h"
 
-/* Function present in 10.4 and not later */
-#define TIGER_TEST_FUNC "copyfile_init"
+#define NEED_FSTATX_SWAP   (__mpls_rosetta1_bugs & _ROSETTA1_BUG_FSTATX_FD)
 
-/* Test whether it's 10.4 Rosetta */
-/* -1 no, 1 yes */
-static int
-is_tiger_rosetta(void)
-{
-  int native;
-  size_t native_sz = sizeof(native);
-
-  if (sysctlbyname(SYSCTL_NATIVE, &native, &native_sz, NULL, 0) < 0) {
-    /* If sysctl failed, must be real ppc. */
-    return -1;
-  }
-  if (native) return -1;
-  /* Definitely Rosetta - see if it's 10.4. */
-  return dlsym(RTLD_NEXT, TIGER_TEST_FUNC) ? 1 : -1;
-}
-
-/* Wrapper with optional byte swap of fd */
+/* Wrapper for fstatx_np() with optional byte swap of fd */
 int
 fstatx_np(int fildes, struct stat *buf, filesec_t fsec)
 {
-  static int tiger_rosetta = 0;
   GET_OS_FUNC(fstatx_np)
 
-  /* If known not 10.4 Rosetta or NULL fsec, just call the function normally */
-  if (MPLS_FASTPATH(tiger_rosetta < 0 || fsec == NULL)) {
+  /* If known not the bug case or NULL fsec, just call the function normally */
+  if (MPLS_FASTPATH(!NEED_FSTATX_SWAP || fsec == NULL)) {
     return (*os_fstatx_np)(fildes, buf, fsec);
   }
-
-  /* If we don't yet know the Rosetta status, get it */
-  if (!tiger_rosetta) tiger_rosetta = is_tiger_rosetta();
-
-  /* Iff it's 10.4 Rosetta, byte-swap the fd */
-  return (*os_fstatx_np)(tiger_rosetta >= 0 ? OSSwapInt32(fildes) : fildes,
-                   buf, fsec);
+  /* Else call the function with the byte-swapped fd */
+  return (*os_fstatx_np)(OSSwapInt32(fildes), buf, fsec);
 }
 
 #endif /* __MPLS_LIB_FIX_TIGER_ROSETTA__ */

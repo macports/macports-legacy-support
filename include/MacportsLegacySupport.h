@@ -73,8 +73,8 @@
  *
  * In the general case, each feature flag should really be two feature
  * flags, one referring to the SDK version and one referring to the target
- * OS version.  These will both refer to the same OS version, but applied
- * in different ways.
+ * OS version.  These will typically both refer to the same OS version, but
+ * applied in different ways.
  *
  * If a given feature is implemented entirely in the headers, then only
  * the SDK-based flag needs to exist.  In a few cases, a feature is
@@ -110,8 +110,8 @@
  * empty modules fails to avoid empty slices in non-empty modules, and
  * ranlib reports "no symbols" warnings.  In such cases (only in universal
  * builds), we add a dummy symbol to the otherwise empty slice.  The "EMP"
- * config flag is defined with the same OS condition as the "LIB" flag, but
- * with the complementary architecture condition.
+ * config flag is typically defined with the same OS condition as the "LIB"
+ * flag, but with the complementary architecture condition.
  *
  * NOTE: At present, no attempt is made to correct the availability attributes
  * of definitions obtained from the SDK.  When using an SDK matched to the
@@ -132,6 +132,10 @@
  * the relevant header(s) if applicable, and add appropriate test cases
  * to manual_tests/darwin_c.c if so.
  */
+
+/* Tracking Rosetta usage and bugs */
+#define __MPLS_LIB_ROSETTA1_HANDLING__       __MPLS_APPLE_PPC__
+#define __MPLS_LIB_ROSETTA2_HANDLING__       0  /* Not yet active */
 
 /* fsgetpath */
 #define __MPLS_SDK_SUPPORT_FSGETPATH__        (__MPLS_SDK_MAJOR < 101300)
@@ -190,8 +194,8 @@
 #define __MPLS_SDK_CMSG_NXTHDR_FIX__          (__MPLS_SDK_MAJOR < 1050 \
                                                && __MPLS_64BIT)
 
-/* Byte-swapping failure in CMSG data with Rosetta (any OS with PPC) */
-#define __MPLS_LIB_CMSG_ROSETTA_FIX__         __MPLS_APPLE_PPC__
+/* Byte-swapping failure in CMSG data with Rosetta */
+#define __MPLS_LIB_CMSG_ROSETTA_FIX__         __MPLS_LIB_ROSETTA1_HANDLING__
 
 /* Format confusion in CMSG timestamps, due to kernel bitness mismatch */
 #define __MPLS_LIB_CMSG_FORMAT_FIX__          (__MPLS_TARGET_OSVER < 1060 \

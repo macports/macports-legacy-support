@@ -16,6 +16,7 @@
 
 /* This (conditionally) contains miscellaneous global utility features. */
 
+#include "rosetta.h"
 #include "util.h"
 
 #if __MPLS_NEED_CHECK_ACCESS__
@@ -101,3 +102,94 @@ __mpls_check_access(void *adr, mach_vm_size_t size, vm_prot_t access,
 }
 
 #endif /* __MPLS_NEED_CHECK_ACCESS__ */
+
+#if __MPLS_LIB_ROSETTA1_HANDLING__
+
+#include <dlfcn.h>
+
+#include <sys/sysctl.h>
+#include <sys/types.h>
+
+uint64_t __mpls_rosetta1_bugs = 0;
+
+/* Determine whether we're running under Rosetta 1, and which bugs apply */
+static void
+setup_rosetta1(void)
+{
+  int native;
+  size_t native_sz = sizeof(native);
+
+  if (sysctlbyname("sysctl.proc_native", &native, &native_sz, NULL, 0) < 0) {
+    /* If sysctl failed, must be real ppc. */
+    __mpls_is_rosetta = 0;
+  } else {
+    __mpls_is_rosetta = native ? 0 : 1;
+  }
+  if (!__mpls_is_rosetta) return;
+
+  __mpls_rosetta1_bugs = _ROSETTA1_BUGS_ALL;
+
+  /* Use existence of pthread_from_mach_thread_np() as proxy for 10.5+ */
+  if (dlsym(RTLD_NEXT, "pthread_from_mach_thread_np")) {
+    __mpls_rosetta1_bugs &= ~((uint64_t) _ROSETTA1_BUGS_TIGER);
+  }
+}
+
+#else  /* !__MPLS_LIB_ROSETTA1_HANDLING__ */
+
+#define setup_rosetta1(x)
+
+#endif  /* !__MPLS_LIB_ROSETTA1_HANDLING__ */
+
+#if __MPLS_LIB_ROSETTA2_HANDLING__
+
+#include <sys/sysctl.h>
+#include <sys/types.h>
+
+/* Determine whether we're running under Rosetta 2, and which bugs apply */
+static void
+setup_rosetta2(void)
+{
+  int translated;
+  size_t translated_sz = sizeof(translated);
+
+  if (sysctlbyname("sysctl.proc_translated", &translated, &translated_sz,
+                   NULL, 0) < 0) {
+    /* If sysctl failed, must be really native. */
+    __mpls_is_rosetta = 0;
+  } else {
+    __mpls_is_rosetta = translated ? 2 : 0;
+  }
+  if (!__mpls_is_rosetta) return;
+
+  __mpls_rosetta2_bugs = _ROSETTA2_BUGS_ALL;
+}
+
+#else  /* !__MPLS_LIB_ROSETTA2_HANDLING__ */
+
+#define setup_rosetta2(x)
+
+#endif  /* !__MPLS_LIB_ROSETTA2_HANDLING__ */
+
+#if __MPLS_LIB_ROSETTA1_HANDLING__ || __MPLS_LIB_ROSETTA2_HANDLING__
+
+/* -1 = uninit, 0 = native, 1 = Rosetta 1, 2 = Rosetta 2 */
+int __mpls_is_rosetta = -1;
+
+/* Do Rosetta setup as requested */
+void
+__mpls_setup_rosetta(void)
+{
+  if (__mpls_is_rosetta >= 0) return;
+  setup_rosetta1();
+  setup_rosetta2();
+}
+
+/* Do Rosetta setup at program launch */
+static void __attribute__((constructor))
+init_rosetta(void)
+{
+  __mpls_setup_rosetta();
+}
+
+#endif  /* __MPLS_LIB_ROSETTA1_HANDLING__ || __MPLS_LIB_ROSETTA2_HANDLING__ */
