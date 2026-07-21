@@ -37,14 +37,10 @@ __MP__BEGIN_DECLS
 int pthread_setname_np(const char *);
 #endif /* __MPLS_SDK_SUPPORT_PTHREAD_SETNAME_NP__ */
 
-#if __MPLS_SDK_ALLOW_PTHREAD_CHDIR__ \
-    && defined(_MACPORTS_LEGACY_PTHREAD_CHDIR) \
-    && _MACPORTS_LEGACY_PTHREAD_CHDIR
-
+#if __MPLS_SDK_SUPPORT_PTHREAD_CHDIR__
 int pthread_chdir_np(const char* path);
 int pthread_fchdir_np(int fd);
-
-#endif /* __MPLS_SDK_ALLOW_PTHREAD_CHDIR__ && ... */
+#endif /* __MPLS_SDK_SUPPORT_PTHREAD_CHDIR__ */
 
 __MP__END_DECLS
 
