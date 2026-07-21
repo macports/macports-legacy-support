@@ -9,7 +9,7 @@ build all three versions of the library for the default architecture.
 On 10.5 with Xcode 3.1, GCC 4.2 is provided, but the default is usually GCC 4.0,
 so overriding the default may be needed.  Successful builds have been observed
 with Xcode 3.1 GCC 4.0, but these have not been significantly tested.  There is
-very little reson not to use the provided GCC 4.2.
+very little reason not to use the provided GCC 4.2.
 
 On 10.4 with Xcode 2.5, only GCC 4.0 is provided, and its accompanying linker is
 known to have issues with legacy-support's dynamic linking, so it's necessary to
