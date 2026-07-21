@@ -59,12 +59,17 @@ typedef __darwin_gid_t		gid_t;
 
 __MP__BEGIN_DECLS
 
-extern ssize_t readlinkat(int dirfd, const char *pathname, char *buf, size_t bufsiz);
-extern int faccessat(int dirfd, const char *pathname, int mode, int flags);
-extern int fchownat(int dirfd, const char *pathname, uid_t owner, gid_t group, int flags);
+/*
+ * Note: Avoids 'dirfd' as a parameter name due to 'shadowing' complaints from
+ * some compilers.
+ */
+
+extern ssize_t readlinkat(int __dirfd, const char *pathname, char *buf, size_t bufsiz);
+extern int faccessat(int __dirfd, const char *pathname, int mode, int flags);
+extern int fchownat(int __dirfd, const char *pathname, uid_t owner, gid_t group, int flags);
 extern int linkat(int olddirfd, const char *oldpath, int newdirfd, const char *newpath, int flags);
 extern int symlinkat(const char *oldpath, int newdirfd, const char *newpath);
-extern int unlinkat(int dirfd, const char *pathname, int flags);
+extern int unlinkat(int __dirfd, const char *pathname, int flags);
 
 /*
  * getattrlistat() was first introduced in 10.10, and at the time was lumped
@@ -91,7 +96,7 @@ __MP__END_DECLS
 /* Since the earlier DARWIN_C conditional is looser, we already have size_t */
 
 __MP__BEGIN_DECLS
-extern int getattrlistat(int dirfd, const char *pathname, void *a,
+extern int getattrlistat(int __dirfd, const char *pathname, void *a,
 			 void *buf, size_t size, unsigned long flags);
 __MP__END_DECLS
 
@@ -111,7 +116,7 @@ typedef __darwin_size_t		size_t;
 
 __MP__BEGIN_DECLS
 
-extern int setattrlistat(int dirfd, const char *pathname, void *a,
+extern int setattrlistat(int __dirfd, const char *pathname, void *a,
 			 void *buf, size_t size, uint32_t flags);
 
 __MP__END_DECLS

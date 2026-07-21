@@ -49,7 +49,12 @@
 
 __MP__BEGIN_DECLS
 
-extern int openat(int dirfd, const char *pathname, int flags, ...);
+/*
+ * Note: Avoids 'dirfd' as a parameter name due to 'shadowing' complaints from
+ * some compilers.
+ */
+
+extern int openat(int __dirfd, const char *pathname, int flags, ...);
 
 __MP__END_DECLS
 
