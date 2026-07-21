@@ -25,7 +25,6 @@
  * function wrappers where needed.
  */
 
-#define _MACPORTS_LEGACY_PTHREAD_CHDIR 1
 #include <pthread.h>
 #include <unistd.h>
 
@@ -48,9 +47,7 @@ pthread_fchdir_np(int fd)
 #if __MPLS_LIB_DUMMY_PTHREAD_CHDIR__
 /*
  * Dummy versions of the functions, in case the client builds with a 10.5+ SDK
- * but runs on 10.4.  There's no truly appropriate choice for errno, so we
- * pick ENXIO as one that's somewhat mnemonic and not likely to occur with
- * the real functions.
+ * but runs on 10.4.  We simply return ENOTSUP - "Operation not supported".
  */
 
 #include <errno.h>
@@ -59,7 +56,7 @@ int
 pthread_chdir_np(const char* path)
 {
   (void) path;
-  errno = ENXIO;
+  errno = ENOTSUP;
   return -1;
 }
 
@@ -67,7 +64,7 @@ int
 pthread_fchdir_np(int fd)
 {
   (void) fd;
-  errno = ENXIO;
+  errno = ENOTSUP;
   return -1;
 }
 
@@ -81,7 +78,6 @@ pthread_fchdir_np(int fd)
 
 #if !__MPLS_LIB_DUMMY_PTHREAD_CHDIR__
 
-#define _MACPORTS_LEGACY_PTHREAD_CHDIR 1
 #include <pthread.h>
 
 int

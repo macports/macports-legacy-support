@@ -385,7 +385,7 @@
  * No SDK provides prototypes for these functions, so the SDK flag here
  * just indicates that it's plausible.
  */
-#define __MPLS_SDK_ALLOW_PTHREAD_CHDIR__   (__MPLS_SDK_MAJOR >= 1050)
+#define __MPLS_SDK_SUPPORT_PTHREAD_CHDIR__ (__MPLS_SDK_MAJOR >= 1050)
 #define __MPLS_LIB_SUPPORT_PTHREAD_CHDIR__ (__MPLS_TARGET_OSVER < 101200 \
                                             && __MPLS_TARGET_OSVER >= 1050)
 /* Also provide dummy (failing) versions for 10.4 and 10.5+ SDK */

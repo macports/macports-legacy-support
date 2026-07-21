@@ -43,9 +43,6 @@ main(int argc, char *argv[])
 
 #else /* Not 10.4 */
 
-/* Enable the prototypes */
-#define _MACPORTS_LEGACY_PTHREAD_CHDIR 1
-
 #include <errno.h>
 #include <fcntl.h>
 #include <libgen.h>
