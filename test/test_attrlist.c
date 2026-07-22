@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Frederick H. G. Wright II <fw@fwright.net>
+ * Copyright (c) 2026 Frederick H. G. Wright II <fw@fwright.net>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -24,6 +24,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <libgen.h>
+#include <limits.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -31,7 +32,6 @@
 
 #include <sys/attr.h>
 #include <sys/mount.h>
-#include <sys/param.h>
 #include <sys/vnode.h>
 
 #ifdef __LP64__
@@ -305,6 +305,42 @@ do_tstests(int mode, const char *path, int fd, int apfs,
 }
 
 static int
+check_cwd(int init)
+{
+  int cret;
+  static char lastdir[PATH_MAX];
+  char curdir[PATH_MAX];
+
+  if (init) {
+    if (!getcwd(lastdir, PATH_MAX)) {
+      perror("    *** getcwd() failed");
+      return -1;
+    }
+    return 0;
+  }
+  if (!getcwd(curdir, PATH_MAX)) {
+    perror("    *** getcwd() failed");
+    return -1;
+  }
+  cret = strncmp(curdir, lastdir, PATH_MAX);
+  if (cret) {
+    printf("    *** cwd changed: %s -> %s\n", lastdir, curdir);
+  }
+
+  (void) strncpy(lastdir, curdir, PATH_MAX);
+  return cret != 0;
+}
+
+/* For debugging */
+char *
+get_cwd(void)
+{
+  static char dir[PATH_MAX];
+
+  return getcwd(dir, PATH_MAX);
+}
+
+static int
 do_tests(int mode, const char *path, const char *rpath, int apfs,
          int verbose, int testmode)
 {
@@ -315,6 +351,8 @@ do_tests(int mode, const char *path, const char *rpath, int apfs,
 
   const char *get = getname[mode];
   const char *set = setname[mode];
+
+  ret = check_cwd(1);
 
   do {
     if (verbose) printf("  opening '" TEST_TEMP "'\n");
@@ -356,6 +394,7 @@ do_tests(int mode, const char *path, const char *rpath, int apfs,
         printf("      *** '%s' is not a regular file.\n", path);
         ret = 1;
       }
+      ret |= check_cwd(0);
 
       if (verbose) printf("    testing '%s'\n", set);
       al.commonattr = ATTR_CMN_FNDRINFO;
@@ -368,6 +407,7 @@ do_tests(int mode, const char *path, const char *rpath, int apfs,
                set, xpath, strerror(errno));
         ret = 1;
       } 
+      ret |= check_cwd(0);
 
       if (verbose) printf("    testing nobuf '%s'\n", set);
       al.commonattr = ATTR_CMN_FNDRINFO;
@@ -389,6 +429,7 @@ do_tests(int mode, const char *path, const char *rpath, int apfs,
         printf("      *** nobuf %s() unexpectedly succeeded\n", set);
         ret = 1;
       }
+      ret |= check_cwd(0);
     }
 
     if (verbose) printf("    testing null '%s'\n", get);
@@ -421,6 +462,7 @@ do_tests(int mode, const char *path, const char *rpath, int apfs,
         ret = 1;
       }
     }
+    ret |= check_cwd(0);
 
     if (verbose) printf("    testing null/nobuf '%s'\n", get);
     al.commonattr = 0;
@@ -435,6 +477,7 @@ do_tests(int mode, const char *path, const char *rpath, int apfs,
         ret = 1;
       }
     }
+    ret |= check_cwd(0);
 
     if (verbose) printf("    testing null '%s'\n", set);
     al.commonattr = 0;
@@ -443,6 +486,7 @@ do_tests(int mode, const char *path, const char *rpath, int apfs,
              set, xpath, strerror(errno));
       ret = 1;
     }
+    ret |= check_cwd(0);
 
     if (verbose) printf("    testing null/nobuf '%s'\n", set);
     al.commonattr = 0;
@@ -451,8 +495,10 @@ do_tests(int mode, const char *path, const char *rpath, int apfs,
              set, xpath, strerror(errno));
       ret = 1;
     }
+    ret |= check_cwd(0);
 
     if (testmode) ret |= do_tstests(mode, xpath, xfd, apfs, verbose, testmode);
+    ret |= check_cwd(0);
   } while (0);
 
   if (fd >= 0) (void) close(fd);
@@ -461,6 +507,7 @@ do_tests(int mode, const char *path, const char *rpath, int apfs,
   if (unlink(path)) {
     printf("    *** error deleting '%s': %s (%d)\n",
            path, strerror(errno), errno);
+    ret = 1;
   }
 
   if (dirfd >=0) {
@@ -479,7 +526,7 @@ main(int argc, char *argv[])
   pid_t pid = getpid();
   const char *cp;
   char chr;
-  char tpath[MAXPATHLEN], rpath[MAXPATHLEN];
+  char tpath[PATH_MAX], rpath[PATH_MAX];
   struct statfs sfs = {0};
 
   while (argn < argc && argv[argn][0] == '-') {
