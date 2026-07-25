@@ -748,6 +748,9 @@ $(TESTNAMEPREFIX)attrlist_nonposix.o: $(TESTNAMEPREFIX)attrlist.c
 # The "opengl" tests include the basic "opengl" source
 $(XTESTBINPREFIX)opengl_ints_agl.o: $(XTESTNAMEPREFIX)opengl_ints.c
 
+# The copyfile test includes the copyfile source
+$(MANTESTBINPREFIX)copyfile.o: $(SRCDIR)/copyfile.c
+
 # Provide targets for all "darwin_c" tests
 $(XTESTRUNPREFIX)darwin_c_all: $(DARWINRUNS)
 $(XTESTRUNPREFIX)darwin_c_all_unv: $(addsuffix _unv,$(DARWINRUNS))
