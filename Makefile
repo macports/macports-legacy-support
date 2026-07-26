@@ -25,6 +25,8 @@ MANDIR           = $(PREFIX)/share/man
 MAN1DIR          = $(MANDIR)/man1
 MAN2DIR          = $(MANDIR)/man2
 MAN3DIR          = $(MANDIR)/man3
+BINSUFFIX       ?=
+BINSFXADD       := $(subst /,_,$(BINSUFFIX))
 AREXT            = .a
 SOEXT            = .dylib
 LIBNAME          = MacportsLegacySupport
@@ -35,7 +37,7 @@ SYSLIBFILE       = lib$(SYSLIBNAME)$(SOEXT)
 DLIBPATH         = $(LIBDIR)/$(DLIBFILE)
 SLIBPATH         = $(LIBDIR)/$(SLIBFILE)
 SYSLIBPATH       = $(LIBDIR)/$(SYSLIBFILE)
-BUILDLIBDIR      = lib
+BUILDLIBDIR     := lib$(BINSFXADD)
 BUILDDLIBPATH    = $(BUILDLIBDIR)/$(DLIBFILE)
 BUILDSLIBPATH    = $(BUILDLIBDIR)/$(SLIBFILE)
 BUILDSYSLIBPATH  = $(BUILDLIBDIR)/$(SYSLIBFILE)
@@ -52,7 +54,7 @@ BUILDSYSLIBFLAGS = -dynamiclib -headerpad_max_install_names \
 OSLIBDIR         = /usr/lib
 OSLIBNAME        = System.B
 OSLIBLINK        = System
-XLIBDIR          = xlib
+XLIBDIR         := xlib$(BINSFXADD)
 XLIBPATH         = $(XLIBDIR)/lib$(OSLIBLINK)$(SOEXT)
 SYSREEXPORTFLAG  = -Wl,-reexport_library,$(OSLIBDIR)/lib$(OSLIBNAME)$(SOEXT)
 BUILDSLIBFLAGS   = -qs
@@ -117,7 +119,8 @@ GREP            ?= /usr/bin/grep
 CP              ?= /bin/cp
 
 # Directory for temporary test files
-TEST_TEMP       ?= tst_data
+TEST_DEF        := tst_data$(BINSFXADD)
+TEST_TEMP       ?= $(TEST_DEF)
 TESTCFLAGS       = -Wshadow $(ALLCFLAGS) '-DTEST_TEMP="$(TEST_TEMP)"'
 
 MKINSTALLDIRS    = install -d -m 755
@@ -129,8 +132,8 @@ RMDIR            = rm -rf
 
 SRCDIR           = src
 SRCINCDIR        = include
-BUILDDIR         = bin
-TESTBINDIR       = tbin
+BUILDDIR        := bin$(BINSFXADD)
+TESTBINDIR      := tbin$(BINSFXADD)
 # Use VAR := $(shell CMD) instead of VAR != CMD to support old make versions
 FIND_LIBHEADERS := find $(SRCINCDIR) -type f \( -name '*.h' -o \
                                              \( -name 'c*' ! -name '*.*' \) \)
