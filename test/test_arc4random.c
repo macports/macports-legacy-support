@@ -14,6 +14,10 @@
 #include <string.h>
 #include <unistd.h>
 
+#define _MACPORTS_LEGACY_ALLOW_INSECURE_CCRANDOM 1
+#include <CommonCrypto/CommonCryptor.h>
+#include <CommonCrypto/CommonRandom.h>
+
 /*
  * Performance counter access.
  *
@@ -89,6 +93,15 @@ bench(int fd, size_t siz, size_t niter, int verbose)
     free(buf);
 }
 
+static void
+check_ccrandom(int verbose)
+{
+  uint8_t buf[256];
+
+  (void) CCRandomGenerateBytes(buf, sizeof(buf));
+  if (verbose) printf("  CCRandomGenerateBytes() successfully called\n");
+}
+
 #define NITER       8192
 
 int
@@ -115,6 +128,8 @@ main(int argc, char *argv[])
   }
 
   close(fd);
+
+  check_ccrandom(verbose);
 
   printf("%s completed.\n", progname);
   return 0;
