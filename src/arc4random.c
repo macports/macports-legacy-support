@@ -4,6 +4,7 @@
  * Copyright (c) 2013, Markus Friedl <markus@openbsd.org>
  * Copyright (c) 2014, Theo de Raadt <deraadt@openbsd.org>
  * Copyright (c) 2015, Sudhi Herle   <sudhi@herle.net>
+ * Copyright (c) 2026 Frederick H. G. Wright II <fw@fwright.net>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -536,3 +537,18 @@ arc4random_uniform(uint32_t upper_bound)
 
 
 #endif /* __MPLS_LIB_SUPPORT_ARC4RANDOM__ */
+
+#if __MPLS_LIB_SUPPORT_CCRANDOM__
+
+#include <stdlib.h>
+
+#include <CommonCrypto/CommonCryptor.h>
+#include <CommonCrypto/CommonRandom.h>
+
+CCRNGStatus
+__mpls_insecure_CCRandomGenerateBytes(void *buf, size_t nbytes) {
+  arc4random_buf(buf, nbytes);
+  return 0;
+}
+
+#endif  /* __MPLS_LIB_SUPPORT_CCRANDOM__ */

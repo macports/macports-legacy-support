@@ -410,6 +410,10 @@
 /* CommonDigest macros in "argless" 10.6+ style */
 #define __MPLS_SDK_SUPPORT_COMMONDIGEST_ARGLESS__  (__MPLS_SDK_MAJOR < 1060)
 
+/* CCRandomGenerateBytes */
+#define __MPLS_SDK_SUPPORT_CCRANDOM__       (__MPLS_SDK_MAJOR < 101000)
+#define __MPLS_LIB_SUPPORT_CCRANDOM__       (__MPLS_TARGET_OSVER < 101000)
+
 /* copyfile and its associated functions have gained functionality over the years */
 #define __MPLS_SDK_SUPPORT_COPYFILE_TIGER__ (__MPLS_SDK_MAJOR < 1050)
 #define __MPLS_LIB_SUPPORT_COPYFILE_TIGER__ (__MPLS_TARGET_OSVER < 1050)
