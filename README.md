@@ -86,7 +86,15 @@ Wrapped headers and replaced functions are:
     <td>OSX10.9</td>
   </tr>
   <tr>
-    <td rowspan="4"><code>stdlib.h</code></td>
+    <td rowspan="5"><code>stdlib.h</code></td>
+    <td>Adds <code>aligned_alloc</code> function (optional)</td>
+    <td>OSX10.14</td>
+  </tr>
+  <tr>
+    <td>Adds <code>arc4random_uniform</code> and <code>arc4random_buf</code> functions</td>
+    <td>OSX10.6</td>
+  </tr>
+  <tr>
     <td>Adds <code>posix_memalign</code> functional replacement</td>
     <td>OSX10.5</td>
   </tr>
@@ -96,10 +104,6 @@ Wrapped headers and replaced functions are:
   </tr>
   <tr>
     <td>Fixes non-POSIX <code>realpath</code> in 10.6</td>
-    <td>OSX10.6</td>
-  </tr>
-  <tr>
-    <td>Adds <code>arc4random_uniform</code> and <code>arc4random_buf</code> functions</td>
     <td>OSX10.6</td>
   </tr>
   <tr>

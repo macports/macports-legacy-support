@@ -260,6 +260,10 @@
 #define __MPLS_SDK_SUPPORT_POSIX_MEMALIGN__   (__MPLS_SDK_MAJOR < 1060)
 #define __MPLS_LIB_SUPPORT_POSIX_MEMALIGN__   (__MPLS_TARGET_OSVER < 1060)
 
+/* aligned_alloc does not exist on < 10.15 */
+#define __MPLS_SDK_SUPPORT_ALIGNED_ALLOC__    (__MPLS_SDK_MAJOR < 101500)
+#define __MPLS_LIB_SUPPORT_ALIGNED_ALLOC__    (__MPLS_TARGET_OSVER < 101500)
+
 /* AI_NUMERICSERV does not exist on < 10.6 */
 /* The addition uses an #ifndef, so no feature flag is necessary */
 

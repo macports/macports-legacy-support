@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018 Chris Jones <jonesc@macports.org>
+ * Copyright (c) 2026 Frederick H. G. Wright II <fw@fwright.net>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -58,6 +59,41 @@ extern int posix_memalign(void **memptr, size_t alignment, size_t size);
 __MP__END_DECLS
 
 #endif /*  __MPLS_SDK_SUPPORT_POSIX_MEMALIGN__ */
+
+/* aligned_alloc */
+
+/* Apple makes aligned_alloc conditional on the language version */
+#if (defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L) \
+    || (defined(__cplusplus) && __cplusplus >= 201703L)
+#define __MPLS_LANGUAGE_HAS_ALIGNED_ALLOC__ 1
+#else
+#define __MPLS_LANGUAGE_HAS_ALIGNED_ALLOC__ 0
+#endif
+
+/* Allow an override */
+#if defined(_MACPORTS_LEGACY_ALLOW_ALIGNED_ALLOC) \
+    && _MACPORTS_LEGACY_ALLOW_ALIGNED_ALLOC
+#define __MPLS_FORCE_ALIGNED_ALLOC 1
+#else
+#define __MPLS_FORCE_ALIGNED_ALLOC 0
+#endif
+
+/* Supply the prototype if it's desired and missing, but not otherwise */
+#if (__MPLS_SDK_SUPPORT_ALIGNED_ALLOC__ \
+     && (__MPLS_LANGUAGE_HAS_ALIGNED_ALLOC__ || __MPLS_FORCE_ALIGNED_ALLOC)) \
+    || (!__MPLS_LANGUAGE_HAS_ALIGNED_ALLOC__ && __MPLS_FORCE_ALIGNED_ALLOC)
+
+#if !defined(_ANSI_SOURCE) && (!defined(_POSIX_C_SOURCE) \
+    || defined(_DARWIN_C_SOURCE))
+__MP__BEGIN_DECLS
+void *aligned_alloc(size_t __alignment, size_t __size);
+__MP__END_DECLS
+#endif
+
+#endif  /* __MPLS_SDK_SUPPORT_ALIGNED_ALLOC__ ... */
+
+#undef __MPLS_LANGUAGE_HAS_ALIGNED_ALLOC__
+#undef __MPLS_FORCE_ALIGNED_ALLOC
 
 /* arc4random */
 #if __MPLS_SDK_SUPPORT_ARC4RANDOM__
