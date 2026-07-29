@@ -1,0 +1,20 @@
+The 'boneyard' branch holds content which is obsolete and has been removed
+from the master branch, but which may be of sufficient interest to be more
+easily discoverable than by rummaging through git history.  Currently it
+consists entirely of obsolete tests.  At the time of this writing, all these
+tests build and pass, but that is not guaranteed in the future.
+
+Since this branch consists entirely of added files, it should merge without
+conflicts in the future.
+
+The three C++ tests here were replaced by versions rewritten in C to avoid
+issues caused by Apple's poor support for some mismatched SDKs with C++.
+
+The 'time' test (after being rewritten in C) was replaced by the more
+comprehensive and automatic 'clocks' test.
+
+The 'strncpy_chk*' tests were used for comparative debugging of the
+'stpncpy_chk*' tests, and not for testing any actual legacy-support code.  The
+Makefile items for these tests has not been restored, to avoid possible merge
+conflicts in the future, but those only existed to provide the combined 'all'
+targets.  The individual tests don't require them.
