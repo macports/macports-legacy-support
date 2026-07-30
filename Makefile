@@ -57,7 +57,7 @@ OSLIBLINK        = System
 XLIBDIR         := xlib$(BINSFXADD)
 XLIBPATH         = $(XLIBDIR)/lib$(OSLIBLINK)$(SOEXT)
 SYSREEXPORTFLAG  = -Wl,-reexport_library,$(OSLIBDIR)/lib$(OSLIBNAME)$(SOEXT)
-BUILDSLIBFLAGS   = -qs
+BUILDSLIBFLAGS   = -qcs
 POSTINSTALL     ?= /usr/bin/install_name_tool
 
 # The defaults for C[XX]FLAGS are defined as XC[XX]FLAGS, so that supplied
