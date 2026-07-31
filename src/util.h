@@ -51,6 +51,15 @@
 /* Obtain the address of an OS function, without an optional suffix */
 #define GET_OS_FUNC(name) GET_OS_ALT_FUNC(name,)
 
+/* Version which makes the suffix runtime-optional */
+#define GET_OS_OPT_ALT_FUNC(name, suffix) \
+  static __typeof__(name) *os_##name = NULL; \
+  \
+  if (MPLS_SLOWPATH(!os_##name)) { \
+    if (!(os_##name = dlsym(RTLD_NEXT, #name #suffix)) \
+        && !(os_##name = dlsym(RTLD_NEXT, #name))) abort(); \
+  }
+
 #if __MPLS_NEED_CHECK_ACCESS__
 
 #include <mach/mach_vm.h>

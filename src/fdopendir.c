@@ -52,11 +52,14 @@
 #endif
 
 #include <dirent.h>
+#include <errno.h>
+#include <fcntl.h>
 #include <stddef.h>
+#include <unistd.h>
 
 #include <sys/stat.h>
 
-#include "atcalls.h"
+#include "atfuncs.h"
 
 /* Make sure we have "struct stat64" */
 #if !__MPLS_HAVE_STAT64
@@ -90,6 +93,7 @@ fdopendir_internal(int fd, const funcs_t *funcs) {
   int err;
   mode_t mode;
   union stat_u stbuf;
+  ATFUNC_VAR(fd, ".");
 
   /* Do the appropriate fstat() on the supplied fd */
   if (funcs->do_fstat64) {
@@ -116,7 +120,9 @@ fdopendir_internal(int fd, const funcs_t *funcs) {
 
   /* Open given directory fd safely for iteration via readdir */
 
-  dir = _ATCALL(fd, ".", NULL, (*funcs->do_open)("."));
+  ATFUNC_START(NULL);
+  dir = (*funcs->do_open)(ATFUNC_PATH);
+  ATFUNC_FINISH;
   if (!dir) {
     return NULL;
   }
