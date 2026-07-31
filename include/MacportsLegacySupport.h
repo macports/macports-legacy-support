@@ -392,9 +392,6 @@
 #define __MPLS_LIB_DUMMY_PTHREAD_CHDIR__   (__MPLS_TARGET_OSVER < 1050)
 
 /* Compound macros, bundling functionality needed by multiple single features. */
-#define __MPLS_LIB_NEED_BEST_FCHDIR__    (__MPLS_LIB_SUPPORT_ATCALLS__ \
-                                          || __MPLS_LIB_SUPPORT_SETATTRLISTAT__)
-
 #define __MPLS_LIB_SUPPORT_REALPATH_WRAP__ (__MPLS_LIB_SUPPORT_REALPATH_ALLOC__ \
                                             || __MPLS_LIB_SUPPORT_REALPATH_NONEX_FIX__)
 

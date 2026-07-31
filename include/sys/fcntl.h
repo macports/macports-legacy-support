@@ -38,7 +38,7 @@
 
 #if __DARWIN_C_LEVEL >= 200809L
 
-/* atcalls */
+/* "at" functions */
 #if __MPLS_SDK_SUPPORT_ATCALLS__
 
 #define AT_FDCWD		-2  /*Descriptor value for the current working directory */

@@ -69,38 +69,3 @@ pthread_fchdir_np(int fd)
 }
 
 #endif /* __MPLS_LIB_DUMMY_PTHREAD_CHDIR__ */
-
-#if __MPLS_LIB_NEED_BEST_FCHDIR__
-/*
- * Provide a per-thread fchdir() for the ATCALL code if possible, but
- * fall back to the (thread-unsafe) process-level version if not (10.4).
- */
-
-#if !__MPLS_LIB_DUMMY_PTHREAD_CHDIR__
-
-#include <pthread.h>
-
-int
-__mpls_best_fchdir(int dirfd)
-{
-  return pthread_fchdir_np(dirfd);
-}
-
-#else /* __MPLS_LIB_DUMMY_PTHREAD_CHDIR__ */
-
-#include <unistd.h>
-
-int
-__mpls_best_fchdir(int dirfd)
-{
-/*
- * Accept dirfd == -1 (return to process cwd in __pthread_fchdir),
- * but do nothing with it.
- */
-  if (dirfd == -1) return 0;
-  return fchdir(dirfd);
-}
-
-#endif /* __MPLS_LIB_DUMMY_PTHREAD_CHDIR__ */
-
-#endif /* __MPLS_LIB_NEED_BEST_FCHDIR__ */

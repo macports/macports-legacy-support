@@ -520,30 +520,48 @@ fstatx64_np(int fildes, struct stat64 *buf, filesec_t fsec)
  * provide them natively.
  */
 
+#include <errno.h>
+
+#include <sys/fcntl.h>
+
 int stat$INODE64(const char *__restrict path, struct stat64 *buf);
 int lstat$INODE64(const char *__restrict path, struct stat64 *buf);
 
-#include "atcalls.h"
+#include "atfuncs.h"
 
-int fstatat(int fd, const char *__restrict path, struct stat *buf, int flag)
+int
+fstatat(int fd, const char *__restrict path, struct stat *buf, int flag)
 {
-    ERR_ON(EINVAL, flag & ~AT_SYMLINK_NOFOLLOW);
-    if (flag & AT_SYMLINK_NOFOLLOW) {
-        return ATCALL(fd, path, lstat(path, buf));
-    } else {
-        return ATCALL(fd, path, stat(path, buf));
-    }
+  int ret;
+  ATFUNC_VAR(fd, path);
+
+  EINVAL_IF(flag & ~AT_SYMLINK_NOFOLLOW);
+  ATFUNC_START(-1);
+  if (flag & AT_SYMLINK_NOFOLLOW) {
+    ret = lstat(ATFUNC_PATH, buf);
+  } else {
+    ret = stat(ATFUNC_PATH, buf);
+  }
+  ATFUNC_FINISH;
+  return ret;
 }
 
-int fstatat$INODE64(int fd, const char *__restrict path, struct stat64 *buf,
-                    int flag)
+int
+fstatat$INODE64(int fd, const char *__restrict path,
+                struct stat64 *buf, int flag)
 {
-    ERR_ON(EINVAL, flag & ~AT_SYMLINK_NOFOLLOW);
-    if (flag & AT_SYMLINK_NOFOLLOW) {
-        return ATCALL(fd, path, lstat$INODE64(path, buf));
-    } else {
-        return ATCALL(fd, path, stat$INODE64(path, buf));
-    }
+  int ret;
+  ATFUNC_VAR(fd, path);
+
+  EINVAL_IF(flag & ~AT_SYMLINK_NOFOLLOW);
+  ATFUNC_START(-1);
+  if (flag & AT_SYMLINK_NOFOLLOW) {
+    ret = lstat$INODE64(ATFUNC_PATH, buf);
+  } else {
+    ret = stat$INODE64(ATFUNC_PATH, buf);
+  }
+  ATFUNC_FINISH;
+  return ret;
 }
 
 #if __MPLS_HAVE_STAT64
@@ -557,14 +575,21 @@ int fstatat$INODE64(int fd, const char *__restrict path, struct stat64 *buf,
 extern int fstatat64(int fd, const char *__restrict path,
                      struct stat64 *buf, int flag);
 
-int fstatat64(int fd, const char *path, struct stat64 *buf, int flag)
+int
+fstatat64(int fd, const char *path, struct stat64 *buf, int flag)
 {
-    ERR_ON(EINVAL, flag & ~AT_SYMLINK_NOFOLLOW);
-    if (flag & AT_SYMLINK_NOFOLLOW) {
-        return ATCALL(fd, path, lstat64(path, buf));
-    } else {
-        return ATCALL(fd, path, stat64(path, buf));
-    }
+  int ret;
+  ATFUNC_VAR(fd, path);
+
+  EINVAL_IF(flag & ~AT_SYMLINK_NOFOLLOW);
+  ATFUNC_START(-1);
+  if (flag & AT_SYMLINK_NOFOLLOW) {
+    ret = lstat64(ATFUNC_PATH, buf);
+  } else {
+    ret = stat64(ATFUNC_PATH, buf);
+  }
+  ATFUNC_FINISH;
+  return ret;
 }
 
 #endif /* __MPLS_HAVE_STAT64 */

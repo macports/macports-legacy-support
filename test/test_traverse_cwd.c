@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2023 raf <raf@raf.org>
- * Copyright (c) 2025 Frederick H. G. Wright II <fw@fwright.net>
+ * Copyright (c) 2026 Frederick H. G. Wright II <fw@fwright.net>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -50,21 +50,21 @@ exhibited different errors.
 #include <errno.h>
 #include <fcntl.h>
 #include <libgen.h>
+#include <limits.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 
-#include <sys/param.h>
 #include <sys/stat.h>
 
 #ifndef TEST_TEMP
 #define TEST_TEMP "/dev/null"
 #endif
 
-static char topdir[MAXPATHLEN];
-static char subdir[MAXPATHLEN];
-static char testfile[MAXPATHLEN];
+static char topdir[PATH_MAX];
+static char subdir[PATH_MAX];
+static char testfile[PATH_MAX];
 
 static int
 traverse(int parent_fd, const char *name, int verbose)
@@ -198,9 +198,9 @@ main(int argc, char *argv[])
   int rc, verbose = 0;
   pid_t pid = getpid();
   char *progname = basename(argv[0]);
-  char cwdbuf0[MAXPATHLEN];
-  char cwdbuf1[MAXPATHLEN];
-  char cwdbuf2[MAXPATHLEN];
+  char cwdbuf0[PATH_MAX];
+  char cwdbuf1[PATH_MAX];
+  char cwdbuf2[PATH_MAX];
 
   if (argc > 1 && !strcmp(argv[1], "-v")) verbose = 1;
 
@@ -234,8 +234,6 @@ main(int argc, char *argv[])
 
     if (!strcmp(cwdbuf1, cwdbuf2)) {
       fprintf(stderr, "Post-traversal chdir(..) silently failed to change directory!\n");
-      fprintf(stderr, "Replacing __mpls_best_fchdir() in fdopendir() with fchdir() fixes this badly.\n");
-      fprintf(stderr, "Using _ATCALL for opendir fixes this properly.\n");
       rc = EXIT_FAILURE;
     }
 
