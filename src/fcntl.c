@@ -20,7 +20,7 @@
 #if __MPLS_LIB_FIX_TIGER_PPC64__
 
 /*
- * In 10.4 ppc64, there is a bug in fcntl() which doesn't handle 64-bit
+ * In 10.4 ppc64, there is a bug in fcntl() which doesn't handle some
  * addresses correctly for F_GETPATH.  To work around this, we need to
  * use a buffer in the low 4GiB of memory for the temporary path.  Since
  * 64-bit builds on 10.4 don't bother to steer clear of the low 4GiB,
@@ -39,6 +39,7 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <limits.h>
 #include <pthread.h>
 #include <stdarg.h>
 #include <stddef.h>
@@ -46,12 +47,10 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include <sys/param.h>
-
 #include "util.h"
 
 static pthread_mutex_t path_lock = PTHREAD_MUTEX_INITIALIZER;
-static char pathbuf[MAXPATHLEN];
+static char pathbuf[PATH_MAX];
 
 int
 fcntl(int fildes, int cmd, ...)
@@ -124,11 +123,16 @@ fcntl(int fildes, int cmd, ...)
 
   /* Here when F_GETPATH gets EFAULT */
 
-  /* If not a 64-bit issue, just punt (probably genuine bad adr). */
-  if ((uint64_t) arg.ptr < (1ULL << 32)) return -1;
+  /*
+   * It was originally assumed that the bad access check was only due to
+   * addresses exceeding 32 bits, which was true of the originally observed
+   * failure, and we immediately reported failure here for addreses that
+   * fit in 32 bits.  However, a later failure involved 32-bit addreses, so
+   * now we always redo the access check on the buffer address.
+   */
 
-  /* Now do a correct access check on the result buffer, and fail if bad */
-  if (__mpls_check_access(arg.ptr, MAXPATHLEN, VM_PROT_WRITE, NULL)) {
+  /* Do a correct access check on the result buffer, and fail if bad */
+  if (__mpls_check_access(arg.ptr, PATH_MAX, VM_PROT_WRITE, NULL)) {
     errno = EFAULT;
     return -1;
   }
@@ -139,7 +143,7 @@ fcntl(int fildes, int cmd, ...)
     (void) pthread_mutex_unlock(&path_lock);
     return ret;
   }
-  memcpy(arg.ptr, pathbuf, MAXPATHLEN);
+  memcpy(arg.ptr, pathbuf, PATH_MAX);
   return (errno = pthread_mutex_unlock(&path_lock)) ? -1 : 0;
 }
 
