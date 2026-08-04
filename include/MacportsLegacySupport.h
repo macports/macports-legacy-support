@@ -141,6 +141,10 @@
 #define __MPLS_SDK_SUPPORT_FSGETPATH__        (__MPLS_SDK_MAJOR < 101300)
 #define __MPLS_LIB_SUPPORT_FSGETPATH__        (__MPLS_TARGET_OSVER < 101300)
 
+/* "at" calls, including fdopendir */
+#define __MPLS_SDK_SUPPORT_ATCALLS__          (__MPLS_SDK_MAJOR < 101000)
+#define __MPLS_LIB_SUPPORT_ATCALLS__          (__MPLS_TARGET_OSVER < 101000)
+
 /* setattrlistat */
 #define __MPLS_SDK_SUPPORT_SETATTRLISTAT__    (__MPLS_SDK_MAJOR < 101300)
 #define __MPLS_LIB_SUPPORT_SETATTRLISTAT__    (__MPLS_TARGET_OSVER < 101300)
@@ -148,6 +152,10 @@
 /* ** utimensat, futimens, UTIME_NOW, UTIME_OMIT */
 #define __MPLS_SDK_SUPPORT_UTIMENSAT__        (__MPLS_SDK_MAJOR < 101300)
 #define __MPLS_LIB_SUPPORT_UTIMENSAT__        (__MPLS_TARGET_OSVER < 101300)
+
+/* mkfifoat, mknodat */
+#define __MPLS_SDK_SUPPORT_MKFIFONODAT__      (__MPLS_SDK_MAJOR < 130000)
+#define __MPLS_LIB_SUPPORT_MKFIFONODAT__      (__MPLS_TARGET_OSVER < 130000)
 
 /* mach_approximate_time */
 #define __MPLS_SDK_SUPPORT_APPROX_TIME__      (__MPLS_SDK_MAJOR < 101000)
@@ -176,10 +184,6 @@
                                                && __MPLS_APPLE_PPC64__)
 #define __MPLS_EMP_FIX_TIGER_PPC64__          (__MPLS_TARGET_OSVER < 1050 \
                                                && !__MPLS_APPLE_PPC64__)
-
-/* "at" calls, including fdopendir */
-#define __MPLS_SDK_SUPPORT_ATCALLS__          (__MPLS_SDK_MAJOR < 101000)
-#define __MPLS_LIB_SUPPORT_ATCALLS__          (__MPLS_TARGET_OSVER < 101000)
 
 /* new signature for scandir and alphasort */
 #define __MPLS_SDK_SUPPORT_NEW_SCANDIR__      (__MPLS_SDK_MAJOR < 1080)

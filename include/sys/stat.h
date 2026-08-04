@@ -130,6 +130,17 @@ __MP__END_DECLS
 
 #endif /* __MPLS_SDK_SUPPORT_UTIMENSAT__ */
 
+#if __MPLS_SDK_SUPPORT_MKFIFONODAT__
+
+__MP__BEGIN_DECLS
+
+extern int mkfifoat(int fd, const char *path, mode_t mode);
+extern int mknodat(int fd, const char *path, mode_t mode, dev_t dev);
+
+__MP__END_DECLS
+
+#endif /* __MPLS_SDK_SUPPORT_MKFIFONODAT__ */
+
 #if __MPLS_SDK_SUPPORT_ATCALLS__
 
 __MP__BEGIN_DECLS
