@@ -253,14 +253,10 @@ Wrapped headers and replaced functions are:
     <td>OSX10.5</td>
   </tr>
   <tr>
-    <td rowspan="7"><code>sys/stat.h</code></td>
+    <td rowspan="8"><code>sys/stat.h</code></td>
     <td>Adds <code>fchmodat</code>, <code>fstatat</code>,
         and <code>mkdirat</code> functions</td>
     <td>OSX10.9</td>
-  <tr>
-    <td>Adds <code>setattrlistat</code> and <code>utimensat</code> functions</td>
-    <td>OSX10.12</td>
-  </tr>
   <tr>
     <td>Adds <code>lchmod</code> function</td>
     <td>OSX10.4</td>
@@ -280,6 +276,14 @@ Wrapped headers and replaced functions are:
   <tr>
     <td>Partially fixes <code>[f]chmodx_np</code> bugs on 10.4</td>
     <td>OSX10.4</td>
+  </tr>
+  <tr>
+    <td>Adds <code>setattrlistat</code> and <code>utimensat</code> functions</td>
+    <td>OSX10.12</td>
+  </tr>
+  <tr>
+    <td>Adds <code>mkfifoat</code> and <code>mknodat</code> functions</td>
+    <td>macOS 12</td>
   </tr>
   <tr>
     <td><code>sys/stdio.h</code></td>

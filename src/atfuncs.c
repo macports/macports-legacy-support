@@ -19,7 +19,9 @@
 
 #define __MPLS_LIB_SUPPORT_ALL_ATCALLS__ \
     (__MPLS_LIB_SUPPORT_ATCALLS__ \
-     || __MPLS_LIB_SUPPORT_SETATTRLISTAT__)
+     || __MPLS_LIB_SUPPORT_SETATTRLISTAT__ \
+     || __MPLS_LIB_SUPPORT_UTIMENSAT__ \
+     || __MPLS_LIB_SUPPORT_MKFIFONODAT__)
 
 #if __MPLS_LIB_SUPPORT_ALL_ATCALLS__
 
@@ -512,7 +514,12 @@ setattrlistat(int dirfd, const char *pathname, void *a, void *buf,
 
 #endif  /* __MPLS_LIB_SUPPORT_SETATTRLISTAT__ */
 
-#if 0  /* Available as of macOS 13 */
+#if __MPLS_LIB_SUPPORT_MKFIFONODAT__
+
+#include <sys/stat.h>
+
+#include "atfuncs.h"
+
 int
 mkfifoat(int dirfd, const char *pathname, mode_t mode)
 {
@@ -536,7 +543,8 @@ mknodat(int dirfd, const char *pathname, mode_t mode, dev_t dev)
   ATFUNC_FINISH;
   return ret;
 }
-#endif
+
+#endif  /* __MPLS_LIB_SUPPORT_MKFIFONODAT__ */
 
 #if 0  /* Available as of macOS 27 */
 int
