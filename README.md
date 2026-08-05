@@ -388,6 +388,11 @@ Wrapped headers and replaced functions are:
     <td>Fixes ppc64 signal handling in 10.4</td>
     <td>OSX10.4</td>
   </tr>
+  <tr>
+    <td><code>-</code></td>
+    <td>Adds <code>__chkstk_darwin</code></td>
+    <td>OSX10.13</td>
+  </tr>
 </table>
 
 For information on building this library outside MacPorts, see BUILDING.txt.

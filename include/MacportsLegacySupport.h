@@ -38,10 +38,17 @@
 /* foundational defs, used later */
 
 /* True for Apple-only i386 build */
-#if defined(__i386) && __APPLE__
+#if defined(__i386__) && __APPLE__
 #define __MPLS_APPLE_I386__            1
 #else
 #define __MPLS_APPLE_I386__            0
+#endif
+
+/* True for Apple-only x86 build */
+#if (defined(__i386__) || defined(__x86_64__)) && __APPLE__
+#define __MPLS_APPLE_X86__            1
+#else
+#define __MPLS_APPLE_X86__            0
 #endif
 
 /* True for 64-bit build */
@@ -452,5 +459,9 @@
                                               && __MPLS_APPLE_PPC64__)
 #define __MPLS_EMP_FIX_PPC64_SIGNALS__       (__MPLS_TARGET_OSVER < 1050 \
                                               && !__MPLS_APPLE_PPC64__)
+
+/* __chkstk_darwin() compiler helper */
+#define __MPLS_LIB_SUPPORT_CHKSTK__          (__MPLS_TARGET_OSVER < 101400 \
+                                              && __MPLS_APPLE_X86__)
 
 #endif /* _MACPORTS_LEGACYSUPPORTDEFS_H_ */

@@ -30,8 +30,10 @@
  * has already generated SIGSYS.
  */
 
+/* MP support header */
+#include "MacportsLegacySupport.h"
+
 /* If i386 isn't even allowed in this OS, we don't need the dummy symbol */
-#include <_macports_extras/targetos.h>
 #define I386_ALLOWED (__MPLS_TARGET_OSVER < 101500)
 
 #ifdef __i386__
@@ -97,3 +99,35 @@ __mpls_empty_assembly:
   .long 0
 
 #endif  /* non-i386 slice */
+
+#if __MPLS_LIB_SUPPORT_CHKSTK__
+
+/*
+ * This provides a definition for ____chkstk_darwin() to satisfy builds
+ * that expect it.  This is intended to be a check on stack bounds, but
+ * since it's unclear whether the real code and/or parameters are valid
+ * for earlier OSes, we simply provide a dummy version that always returns.
+ *
+ * This is only provided for x86, since it's not expected to be used for ppc*,
+ * and all OSes that support arm64 already have their own.
+ */
+
+#if defined(__x86_64__)
+
+	.align 2, 0x90
+	.globl ____chkstk_darwin
+____chkstk_darwin:
+  retq
+
+#elif defined(__i386__)
+
+	.align 2, 0x90
+	.globl ____chkstk_darwin
+____chkstk_darwin:
+  retl
+
+#else
+#error Unsupported architecture
+#endif
+
+#endif  /* __MPLS_LIB_SUPPORT_CHKSTK__ */
