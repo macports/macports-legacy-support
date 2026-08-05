@@ -384,6 +384,42 @@ main(int argc, char *argv[])
     ret |= check_cwd(0);
     ret |= check_nonex(paths[1].top, 1);
 
+    if (verbose) printf("  checking mkfifoat()\n");
+    if (mkfifoat(dirfd, paths[1].rel, S_IRWXU)) {
+      printf("  *** mkfifoat() for '%s' failed: %s\n",
+             paths[1].top, strerror(errno));
+      ret = 1;
+      break;
+    }
+    ret |= check_cwd(0);
+    if (verbose) printf("  checking unlinkat() for fifo\n");
+    if (unlinkat(dirfd, paths[1].rel, 0)) {
+      printf("  *** unlinkat() for '%s' failed: %s\n",
+             paths[1].top, strerror(errno));
+      ret = 1;
+      break;
+    }
+    ret |= check_cwd(0);
+    ret |= check_nonex(paths[1].top, 1);
+
+    if (verbose) printf("  checking mknodat() for fifo\n");
+    if (mknodat(dirfd, paths[1].rel, S_IFIFO | S_IRWXU, 0)) {
+      printf("  *** mknodat() for fifo '%s' failed: %s\n",
+             paths[1].top, strerror(errno));
+      ret = 1;
+      break;
+    }
+    ret |= check_cwd(0);
+    if (verbose) printf("  checking unlinkat() for fifo node\n");
+    if (unlinkat(dirfd, paths[1].rel, 0)) {
+      printf("  *** unlinkat() for '%s' failed: %s\n",
+             paths[1].top, strerror(errno));
+      ret = 1;
+      break;
+    }
+    ret |= check_cwd(0);
+    ret |= check_nonex(paths[1].top, 1);
+
     if (verbose) printf("  checking mkdirat() '%s'\n", paths[2].rel);
     if (mkdirat(dirfd, paths[2].rel, S_IRWXU)) {
       printf("  *** mkdirat() for '%s' failed: %s\n",
