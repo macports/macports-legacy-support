@@ -37,13 +37,12 @@ typedef struct { strfunc_t realpath; } rpf_t;
 
 #include <assert.h>
 #include <libgen.h>
+#include <limits.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-
-#include <sys/param.h>
 
 /*
  * Beginning in the 15.x SDK, including malloc.h doesn't work when
@@ -75,7 +74,7 @@ main(int argc, char *argv[])
   rpf_t rpf = { realpath };
   rpv_t rpv;
 #endif /* !TEST_MACPORTS_LEGACY_REALPATH */
-  char buf[PATH_MAX], cwd[MAXPATHLEN];
+  char buf[PATH_MAX], cwd[PATH_MAX];
 
   if (argc > 1 && !strcmp(argv[1], "-v")) verbose = 1;
 

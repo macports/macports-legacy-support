@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Frederick H. G. Wright II <fw@fwright.net>
+ * Copyright (c) 2026 Frederick H. G. Wright II <fw@fwright.net>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -33,13 +33,12 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <libgen.h>
+#include <limits.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-
-#include <sys/param.h>
 
 #ifndef TEST_TEMP
 #define TEST_TEMP "/dev/null"
@@ -51,8 +50,8 @@ main(int argc, char *argv[])
   int verbose = 0, ret = 0, fd = -1, val;
   char *progname = basename(argv[0]);
   pid_t pid = getpid();
-  char tpath[MAXPATHLEN];
-  char rpath[MAXPATHLEN], xpath[MAXPATHLEN];
+  char tpath[PATH_MAX];
+  char rpath[PATH_MAX], xpath[PATH_MAX];
 
   if (argc > 1 && !strcmp(argv[1], "-v")) verbose = 1;
 
@@ -99,7 +98,7 @@ main(int argc, char *argv[])
              strerror(errno));
       ret = 1;
     } else {
-      xpath[MAXPATHLEN-1] = '\0';
+      xpath[PATH_MAX-1] = '\0';
       if (strcmp(xpath, rpath)) {
         printf("  *** F_GETPATH returned %s, should be %s\n",
                xpath, rpath);

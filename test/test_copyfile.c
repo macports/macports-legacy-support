@@ -22,12 +22,12 @@
 
 #include <copyfile.h>
 #include <libgen.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
-#include <sys/param.h>
 #include <sys/stat.h>
 
 #include <_macports_extras/targetos.h>
@@ -71,7 +71,7 @@ main(int argc, char *argv[])
   char *name = basename(argv[0]);
   off_t copied;
   struct stat ourstat;
-  char dest[MAXPATHLEN];
+  char dest[PATH_MAX];
 
   if (argc > 1 && !strcmp(argv[1], "-v")) verbose = 1;
   if (argc > 1 && !strcmp(argv[1], "-d")) {

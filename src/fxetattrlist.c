@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Frederick H. G. Wright II <fw@fwright.net>
+ * Copyright (c) 2026 Frederick H. G. Wright II <fw@fwright.net>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -47,12 +47,12 @@
  */
 
 #include <fcntl.h>
+#include <limits.h>
 #include <string.h>
 #include <unistd.h>
 
 #include <sys/attr.h>
 #include <sys/fcntl.h>
-#include <sys/param.h>
 #include <sys/errno.h>
 
 #ifdef __LP64__
@@ -66,7 +66,7 @@ fgetattrlist(int fd, void *attrList, void *attrBuf,
          size_t attrBufSize, attrlist_opts_t options)
 {
   int ret;
-  char fpath[MAXPATHLEN];
+  char fpath[PATH_MAX];
 
   if ((ret = fcntl(fd, F_GETPATH, fpath))) return ret;
 
@@ -78,7 +78,7 @@ fsetattrlist(int fd, void *attrList, void *attrBuf,
          size_t attrBufSize, attrlist_opts_t options)
 {
   int ret;
-  char fpath[MAXPATHLEN];
+  char fpath[PATH_MAX];
 
   if ((ret = fcntl(fd, F_GETPATH, fpath))) return ret;
 
