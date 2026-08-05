@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Frederick H. G. Wright II <fw@fwright.net>
+ * Copyright (c) 2026 Frederick H. G. Wright II <fw@fwright.net>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -18,6 +18,7 @@
 
 #include <assert.h>
 #include <libgen.h>
+#include <limits.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdint.h>
@@ -25,7 +26,6 @@
 #include <unistd.h>
 
 #include <sys/fcntl.h>
-#include <sys/param.h>
 #include <sys/stat.h>
 
 /* Make sure we always have a "struct stat64" */
@@ -56,7 +56,7 @@ static const uint64_t pad_val = 0xDEADBEEFDEADBEEFULL;
 
 static const char *source = __FILE__;
 static const char *source_link = __FILE__ "_link";
-static char dir[MAXPATHLEN], rel_base[MAXPATHLEN], rel_link[MAXPATHLEN];
+static char dir[PATH_MAX], rel_base[PATH_MAX], rel_link[PATH_MAX];
 
 static void
 stat_init(int ino64)
@@ -197,7 +197,7 @@ static void
 setup_names(void)
 {
   char *cp;
-  char temp[MAXPATHLEN];
+  char temp[PATH_MAX];
 
   /* Don't assume non-clobbering dirname() */
   (void) strncpy(temp, source, sizeof(temp));

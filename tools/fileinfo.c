@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Frederick H. G. Wright II <fw@fwright.net>
+ * Copyright (c) 2026 Frederick H. G. Wright II <fw@fwright.net>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -28,13 +28,13 @@
 #include <dlfcn.h>
 #include <errno.h>
 #include <libgen.h>
+#include <limits.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
-#include <sys/param.h>
 #include <sys/stat.h>
 #include <sys/sysctl.h>
 #include <sys/time.h>
@@ -240,7 +240,7 @@ report_stat(const char *name, lstat_fn_t *os_lstat, int verbose)
     struct stat s;
     struct s64 __DARWIN_STRUCT_STAT64 s64;
   } sb;
-  char rpath[MAXPATHLEN];
+  char rpath[PATH_MAX];
 
   printf("lstat() for '%s':\n", name);
   if (verbose) {

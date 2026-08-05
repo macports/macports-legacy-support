@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Frederick H. G. Wright II <fw@fwright.net>
+ * Copyright (c) 2026 Frederick H. G. Wright II <fw@fwright.net>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -23,6 +23,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <libgen.h>
+#include <limits.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -31,7 +32,6 @@
 #include <sys/clonefile.h>
 #include <sys/fcntl.h>
 #include <sys/mount.h>
-#include <sys/param.h>
 
 #ifndef TEST_TEMP
 #define TEST_TEMP "/dev/null"
@@ -110,7 +110,7 @@ main(int argc, char *argv[])
   int verbose = 0, ret = 0, cloneable, fd;
   char *progname = basename(argv[0]);
   pid_t pid = getpid();
-  char dest[MAXPATHLEN];
+  char dest[PATH_MAX];
 
   if (argc > 1 && !strcmp(argv[1], "-v")) verbose = 1;
 

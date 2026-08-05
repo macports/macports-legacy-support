@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Frederick H. G. Wright II <fw@fwright.net>
+ * Copyright (c) 2026 Frederick H. G. Wright II <fw@fwright.net>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -21,13 +21,13 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <libgen.h>
+#include <limits.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 
 #include <sys/mount.h>
-#include <sys/param.h>
 #include <sys/stat.h>
 
 #ifndef TEST_TEMP
@@ -286,7 +286,7 @@ main(int argc, char *argv[])
   const char *cp;
   char chr;
   struct statfs sfs = { 0 };
-  char tpath[MAXPATHLEN];
+  char tpath[PATH_MAX];
 
   while (argn < argc && argv[argn][0] == '-') {
     cp = argv[argn];

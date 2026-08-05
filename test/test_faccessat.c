@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2023 raf <raf@raf.org>
- * Copyright (c) 2025 Frederick H. G. Wright II <fw@fwright.net>
+ * Copyright (c) 2026 Frederick H. G. Wright II <fw@fwright.net>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -19,13 +19,13 @@
 #include <fcntl.h>
 #include <grp.h>
 #include <libgen.h>
+#include <limits.h>
 #include <pwd.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 
-#include <sys/param.h>
 #include <sys/stat.h>
 
 #ifndef TEST_TEMP
@@ -42,13 +42,13 @@ int main(int argc, char *argv[])
 
   pid_t pid = getpid();
   char *progname = basename(argv[0]);
-  char tmpdir[MAXPATHLEN];
+  char tmpdir[PATH_MAX];
 
-  char readable_path[MAXPATHLEN];
-  char writable_path[MAXPATHLEN];
-  char executable_path[MAXPATHLEN];
-  char inaccessible_path[MAXPATHLEN];
-  char nonexistent_path[MAXPATHLEN];
+  char readable_path[PATH_MAX];
+  char writable_path[PATH_MAX];
+  char executable_path[PATH_MAX];
+  char inaccessible_path[PATH_MAX];
+  char nonexistent_path[PATH_MAX];
 
   // When supplied with arguments, compare faccessat() against access().
   // We can't test AT_EACCESS here because access() can't do that.
