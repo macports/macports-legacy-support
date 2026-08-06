@@ -37,7 +37,7 @@
 
 #include "atfuncs.h"
 
-#if __MPLS_LIB_SUPPORT_ATCALLS__ || __MPLS_LIB_DUMMY_PTHREAD_CHDIR__
+#if __MPLS_LIB_SUPPORT_ATCALLS__ || __MPLS_LIB_FAKE_PTHREAD_CHDIR__
 /*
  * Get absolute path from dir fd and relative path into a supplied buffer
  * of size PATH_MAX.
@@ -63,9 +63,9 @@ get_abspath(int dirfd, const char *relative, char *buf)
   return 0;
 }
 
-#endif  /* __MPLS_LIB_SUPPORT_ATCALLS__ || __MPLS_LIB_DUMMY_PTHREAD_CHDIR__ */
+#endif  /* __MPLS_LIB_SUPPORT_ATCALLS__ || __MPLS_LIB_FAKE_PTHREAD_CHDIR__ */
 
-#if !__MPLS_LIB_DUMMY_PTHREAD_CHDIR__
+#if !__MPLS_LIB_FAKE_PTHREAD_CHDIR__
 
 /*
  * ATFUNC wrapper functions (with pthread_fchdir)
@@ -141,7 +141,7 @@ __mpls_atfunc_finish(atfunc_t *at)
   errno = save_errno;
 }
 
-#else  /* __MPLS_LIB_DUMMY_PTHREAD_CHDIR__ */
+#else  /* __MPLS_LIB_FAKE_PTHREAD_CHDIR__ */
 
 /*
  * ATFUNC wrapper functions (without pthread_fchdir)
@@ -188,7 +188,7 @@ __mpls_atfunc_finish(atfunc_t *at)
 {
 }
 
-#endif  /* __MPLS_LIB_DUMMY_PTHREAD_CHDIR__ */
+#endif  /* __MPLS_LIB_FAKE_PTHREAD_CHDIR__ */
 
 #endif  /* __MPLS_LIB_SUPPORT_ALL_ATCALLS__ */
 
