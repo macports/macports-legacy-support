@@ -44,7 +44,7 @@ pthread_fchdir_np(int fd)
 
 #endif /* __MPLS_LIB_SUPPORT_PTHREAD_CHDIR__ */
 
-#if __MPLS_LIB_DUMMY_PTHREAD_CHDIR__
+#if __MPLS_LIB_FAKE_PTHREAD_CHDIR__
 /*
  * Dummy versions of the functions, in case the client builds with a 10.5+ SDK
  * but runs on 10.4.  We simply return ENOTSUP - "Operation not supported".
@@ -68,4 +68,4 @@ pthread_fchdir_np(int fd)
   return -1;
 }
 
-#endif /* __MPLS_LIB_DUMMY_PTHREAD_CHDIR__ */
+#endif /* __MPLS_LIB_FAKE_PTHREAD_CHDIR__ */

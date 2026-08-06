@@ -39,7 +39,7 @@
  * since the cwd can't be switched to two different values simultaneously.
  */
 
-#if !__MPLS_LIB_DUMMY_PTHREAD_CHDIR__
+#if !__MPLS_LIB_FAKE_PTHREAD_CHDIR__
 
 #include <signal.h>
 
@@ -59,7 +59,7 @@ typedef struct atfunc_s {
 /* Macro to check if both dirs are the same (linkat/renameat) */
 #define ATFUNC_SAMEDIR(fd1, fd2) ((fd1) == (fd2))
 
-#else  /* __MPLS_LIB_DUMMY_PTHREAD_CHDIR__ */
+#else  /* __MPLS_LIB_FAKE_PTHREAD_CHDIR__ */
 
 #include <sys/syslimits.h>
 
@@ -78,7 +78,7 @@ typedef struct atfunc_s {
 /* Macro to check if both dirs are the same and AT_FDCWD */
 #define ATFUNC_SAMEDIR(fd1, fd2) ((fd1) == AT_FDCWD && (fd2) == AT_FDCWD)
 
-#endif  /* __MPLS_LIB_DUMMY_PTHREAD_CHDIR__ */
+#endif  /* __MPLS_LIB_FAKE_PTHREAD_CHDIR__ */
 
 /* Macro for initial ATFUNC setup, with ret value for error) */
 #define ATFUNC_START(errval) if (__mpls_atfunc_start(&atv)) return errval;

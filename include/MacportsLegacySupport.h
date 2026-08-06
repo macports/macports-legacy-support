@@ -399,8 +399,8 @@
 #define __MPLS_SDK_SUPPORT_PTHREAD_CHDIR__ (__MPLS_SDK_MAJOR >= 1050)
 #define __MPLS_LIB_SUPPORT_PTHREAD_CHDIR__ (__MPLS_TARGET_OSVER < 101200 \
                                             && __MPLS_TARGET_OSVER >= 1050)
-/* Also provide dummy (failing) versions for 10.4 and 10.5+ SDK */
-#define __MPLS_LIB_DUMMY_PTHREAD_CHDIR__   (__MPLS_TARGET_OSVER < 1050)
+/* Also provide fake (failing) versions for 10.4 with 10.5+ SDK */
+#define __MPLS_LIB_FAKE_PTHREAD_CHDIR__    (__MPLS_TARGET_OSVER < 1050)
 
 /* Compound macros, bundling functionality needed by multiple single features. */
 #define __MPLS_LIB_SUPPORT_REALPATH_WRAP__ (__MPLS_LIB_SUPPORT_REALPATH_ALLOC__ \
