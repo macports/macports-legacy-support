@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018 Chris Jones <jonesc@macports.org>
+ * Copyright (c) 2026 Frederick H. G. Wright II <fw@fwright.net>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -26,14 +27,9 @@
 /* Include the primary system sys/fcntl.h */
 #include_next <sys/fcntl.h>
 
-/* replace missing (<10.7) O_CLOEXEC definition with 0, which works
- * but does not replace the full function of that flag
- * this is the commonly done fix in MacPorts (see gtk3, for example)
- * FIXME - this could use a proper fix, if possible
- */
-
+/* Provide missing O_CLOEXEC definition for <10.7. */
 #ifndef O_CLOEXEC
-#define O_CLOEXEC 0
+#define O_CLOEXEC 0x1000000
 #endif
 
 #if __DARWIN_C_LEVEL >= 200809L
