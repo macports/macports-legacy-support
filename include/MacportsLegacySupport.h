@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018 Chris Jones <jonesc@macports.org>
  * Copyright (c) 2019 Michael Dickens <michaelld@macports.org>
+ * Copyright (c) 2026 Frederick H. G. Wright II <fw@fwright.net>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -163,6 +164,9 @@
 /* mkfifoat, mknodat */
 #define __MPLS_SDK_SUPPORT_MKFIFONODAT__      (__MPLS_SDK_MAJOR < 130000)
 #define __MPLS_LIB_SUPPORT_MKFIFONODAT__      (__MPLS_TARGET_OSVER < 130000)
+
+/* O_CLOEXEC option in open() - no SDK flag needed */
+#define __MPLS_LIB_SUPPORT_OPEN_CLOEXEC__     (__MPLS_TARGET_OSVER < 1070)
 
 /* mach_approximate_time */
 #define __MPLS_SDK_SUPPORT_APPROX_TIME__      (__MPLS_SDK_MAJOR < 101000)
