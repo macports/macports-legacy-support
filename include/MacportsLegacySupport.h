@@ -458,6 +458,10 @@
 #define __MPLS_SDK_SUPPORT_CLONEFILE__       (__MPLS_SDK_MAJOR < 101200)
 #define __MPLS_LIB_SUPPORT_CLONEFILE__       (__MPLS_TARGET_OSVER < 101200)
 
+/* mkostemp[s] */
+#define __MPLS_SDK_SUPPORT_MKOSTEMP__        (__MPLS_SDK_MAJOR < 101200)
+#define __MPLS_LIB_SUPPORT_MKOSTEMP__        (__MPLS_TARGET_OSVER < 101200)
+
 /* fix bug in 10.4 ppc64 signal handling */
 #define __MPLS_LIB_FIX_PPC64_SIGNALS__       (__MPLS_TARGET_OSVER < 1050 \
                                               && __MPLS_APPLE_PPC64__)
