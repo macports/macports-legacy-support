@@ -97,6 +97,9 @@
 #define _SC_PHYS_PAGES 200
 #endif
 
+/* Here on is all decls */
+__MP__BEGIN_DECLS
+
 #if __MPLS_SDK_SUPPORT_FXETATTRLIST__
 
 #ifdef __LP64__
@@ -108,6 +111,13 @@ int   fgetattrlist(int,void*,void*,size_t,unsigned long);
 #endif /* defined (__LP64__) */
 
 #endif  /* __MPLS_SDK_SUPPORT_FXETATTRLIST__ */
+
+#if __MPLS_SDK_SUPPORT_MKOSTEMP__
+
+int	 mkostemp(char *path, int oflags);
+int	 mkostemps(char *path, int slen, int oflags);
+
+#endif  /* __MPLS_SDK_SUPPORT_MKOSTEMP__ */
 
 /* Enhancement to support syscall() with 64-bit return values */
 
@@ -133,5 +143,7 @@ uint64_t __mpls_syscall64(int number, ...);
 #else  /* !__i386__ */
 uint64_t __mpls_syscall64(int number, ...) __asm("_syscall");
 #endif  /* !__i386__ */
+
+__MP__END_DECLS
 
 #endif /* _MACPORTS_UNISTD_H_ */

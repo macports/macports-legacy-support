@@ -218,6 +218,8 @@ int timespec_get = 0;
 #endif
 int fgetattrlist = 0;
 int fsetattrlist = 0;
+int mkostemp = 0;
+int mkostemps = 0;
 #endif /* __DARWIN_C_LEVEL < __DARWIN_C_FULL */
 
 /* wchar.h */
