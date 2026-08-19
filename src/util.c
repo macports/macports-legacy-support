@@ -171,6 +171,13 @@ setup_rosetta2(void)
 
 #endif  /* !__MPLS_LIB_ROSETTA2_HANDLING__ */
 
+#if __MPLS_EMP_ROSETTA1_HANDLING__ && defined(__MPLS_UNIVERSAL__)
+
+/* Avoid "no symbols" warning from ranlib */
+void __mpls_empty_util(void) {};
+
+#endif  /* !empty universal slice */
+
 #if __MPLS_LIB_ROSETTA1_HANDLING__ || __MPLS_LIB_ROSETTA2_HANDLING__
 
 /* -1 = uninit, 0 = native, 1 = Rosetta 1, 2 = Rosetta 2 */
