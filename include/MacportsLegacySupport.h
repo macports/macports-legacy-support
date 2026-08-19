@@ -142,7 +142,10 @@
  */
 
 /* Tracking Rosetta usage and bugs */
-#define __MPLS_LIB_ROSETTA1_HANDLING__       __MPLS_APPLE_PPC__
+#define __MPLS_LIB_ROSETTA1_HANDLING__       (__MPLS_TARGET_OSVER < 1070 \
+                                              && __MPLS_APPLE_PPC__)
+#define __MPLS_EMP_ROSETTA1_HANDLING__       (__MPLS_TARGET_OSVER < 1070 \
+                                              && !__MPLS_APPLE_PPC__)
 #define __MPLS_LIB_ROSETTA2_HANDLING__       0  /* Not yet active */
 
 /* fsgetpath */
