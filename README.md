@@ -50,9 +50,13 @@ Wrapped headers and replaced functions are:
     <td>OSX10.4 ppc64</td>
   </tr>
   <tr>
-    <td><code>math.h</code></td>
-    <td>Adds declaration of various <code>long long</code> methods (OSX10.6) and <code>__sincos</code> (macOS10.8)</td>
-    <td>OSX10.6(8), GCC 8</td>
+    <td rowspan="2"><code>math.h</code></td>
+    <td>Adds declaration of various <code>long long</code> methods.</td>
+    <td>OSX10.6, GCC 8</td>
+  </tr>
+  <tr>
+    <td>Adds <code>__exp10[f]</code> and <code>__sincos[f]</code></td>
+    <td>OSX10.8</td>
   </tr>
   <tr>
     <td><code>netdb.h</code></td>

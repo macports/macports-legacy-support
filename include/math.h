@@ -214,6 +214,15 @@ __MP__END_DECLS
 
 #endif /* __MPLS_SDK_SUPPORT_SINCOS__ */
 
+#if __MPLS_SDK_SUPPORT_EXP10__
+
+__MP__BEGIN_DECLS
+extern float __exp10f(float);
+extern double __exp10(double);
+__MP__END_DECLS
+
+#endif  /* __MPLS_SDK_SUPPORT_EXP10__ */
+
 #if __MPLS_SDK_SUPPORT_LLROUND__
 
 #ifdef L_GLIBCXX_MATH_H
