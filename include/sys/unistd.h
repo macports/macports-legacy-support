@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018 Chris Jones <jonesc@macports.org>
+ * Copyright (c) 2026 Frederick H. G. Wright II <fw@fwright.net>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -23,8 +24,21 @@
 /* Do our SDK-related setup */
 #include <_macports_extras/sdkversion.h>
 
+/* For certain added calls, fake out the availability stuff */
+/* This is only applicable with a mismatched SDK (LIB & !SDK) */
+
+#if __MPLS_LIB_SUPPORT_SETATTRLISTAT__ && !__MPLS_SDK_SUPPORT_SETATTRLISTAT__
+#define setattrlistat __mpls_dummy_setattrlistat__
+#endif /* __MPLS_LIB_SUPPORT_SETATTRLISTAT__ ... */
+
 /* Include the primary system sys/unistd.h */
 #include_next <sys/unistd.h>
+
+/* Undo kludge macros */
+
+#if __MPLS_LIB_SUPPORT_SETATTRLISTAT__ && !__MPLS_SDK_SUPPORT_SETATTRLISTAT__
+#undef setattrlistat
+#endif /* __MPLS_LIB_SUPPORT_SETATTRLISTAT__ ... */
 
 /* For types such as uint32_t. */
 #include <stdint.h>
@@ -113,6 +127,10 @@ __MP__END_DECLS
 typedef __darwin_size_t		size_t;
 #endif
 
+#endif /* __MPLS_SDK_SUPPORT_SETATTRLISTAT__ */
+
+/* Note LIB rather than SDK for consistency with macro kludge above */
+#if __MPLS_LIB_SUPPORT_SETATTRLISTAT__
 
 __MP__BEGIN_DECLS
 
@@ -121,7 +139,7 @@ extern int setattrlistat(int __dirfd, const char *pathname, void *a,
 
 __MP__END_DECLS
 
-#endif /* __MPLS_SDK_SUPPORT_SETATTRLISTAT__ */
+#endif /* __MPLS_LIB_SUPPORT_SETATTRLISTAT__ */
 
 #endif /* __DARWIN_C_LEVEL >= __DARWIN_C_FULL */
 

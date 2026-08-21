@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018 Chris Jones <jonesc@macports.org>
+ * Copyright (c) 2026 Frederick H. G. Wright II <fw@fwright.net>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -23,8 +24,33 @@
 /* Do our SDK-related setup */
 #include <_macports_extras/sdkversion.h>
 
+/* For certain added calls, fake out the availability stuff */
+/* This is only applicable with a mismatched SDK (LIB & !SDK) */
+
+#if __MPLS_LIB_SUPPORT_UTIMENSAT__ && !__MPLS_SDK_SUPPORT_UTIMENSAT__
+#define futimens __mpls_dummy_futimens__
+#define utimensat __mpls_dummy_utimensat__
+#endif /* __MPLS_LIB_SUPPORT_UTIMENSAT__ ... */
+
+#if __MPLS_LIB_SUPPORT_MKFIFONODAT__  && !__MPLS_SDK_SUPPORT_MKFIFONODAT__
+#define mkfifoat __mpls_dummy_mkfifoat__
+#define mknodat __mpls_dummy_mknodat__
+#endif /* __MPLS_LIB_SUPPORT_MKFIFONODAT__  ... */
+
 /* Include the primary system sys/stat.h */
 #include_next <sys/stat.h>
+
+/* Undo kludge macros */
+
+#if __MPLS_LIB_SUPPORT_UTIMENSAT__ && !__MPLS_SDK_SUPPORT_UTIMENSAT__
+#undef futimens
+#undef utimensat
+#endif /* __MPLS_LIB_SUPPORT_UTIMENSAT__ ... */
+
+#if __MPLS_LIB_SUPPORT_MKFIFONODAT__  && !__MPLS_SDK_SUPPORT_MKFIFONODAT__
+#undef mkfifoat
+#undef mknodat
+#endif /* __MPLS_LIB_SUPPORT_MKFIFONODAT__  ... */
 
 #if __MPLS_SDK_SUPPORT_STAT64__
 
@@ -120,6 +146,11 @@ int	stat64(const char *, struct stat64 *);
 #define UTIME_NOW -1
 #define UTIME_OMIT -2
 
+#endif /* __MPLS_SDK_SUPPORT_UTIMENSAT__ */
+
+/* Note LIB rather than SDK for consistency with macro kludge above */
+#if __MPLS_LIB_SUPPORT_UTIMENSAT__
+
 __MP__BEGIN_DECLS
 
 extern int futimens(int fd, const struct timespec _times_in[2]);
@@ -128,9 +159,10 @@ extern int utimensat(int fd, const char *path,
 
 __MP__END_DECLS
 
-#endif /* __MPLS_SDK_SUPPORT_UTIMENSAT__ */
+#endif /* __MPLS_LIB_SUPPORT_UTIMENSAT__ */
 
-#if __MPLS_SDK_SUPPORT_MKFIFONODAT__
+/* Note LIB rather than SDK for consistency with macro kludge above */
+#if __MPLS_LIB_SUPPORT_MKFIFONODAT__
 
 __MP__BEGIN_DECLS
 
@@ -139,7 +171,7 @@ extern int mknodat(int fd, const char *path, mode_t mode, dev_t dev);
 
 __MP__END_DECLS
 
-#endif /* __MPLS_SDK_SUPPORT_MKFIFONODAT__ */
+#endif /* __MPLS_LIB_SUPPORT_MKFIFONODAT__ */
 
 #if __MPLS_SDK_SUPPORT_ATCALLS__
 

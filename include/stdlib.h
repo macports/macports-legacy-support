@@ -34,8 +34,21 @@
   #endif
 #endif
 
+/* For certain added calls, fake out the availability stuff */
+/* This is only applicable with a mismatched SDK (LIB & !SDK) */
+
+#if __MPLS_LIB_SUPPORT_ALIGNED_ALLOC__ && !__MPLS_SDK_SUPPORT_ALIGNED_ALLOC__
+#define aligned_alloc __mpls_dummy_aligned_alloc__
+#endif /* __MPLS_LIB_SUPPORT_OPEN_MEMSTREAM__ ... */
+
 /* Include the primary system stdlib.h */
 #include_next <stdlib.h>
+
+/* Undo kludge macros */
+
+#if __MPLS_LIB_SUPPORT_ALIGNED_ALLOC__ && !__MPLS_SDK_SUPPORT_ALIGNED_ALLOC__
+#undef aligned_alloc
+#endif /* __MPLS_LIB_SUPPORT_ALIGNED_ALLOC__ ... */
 
 /* posix_memalign */
 #if __MPLS_SDK_SUPPORT_POSIX_MEMALIGN__
@@ -79,7 +92,8 @@ __MP__END_DECLS
 #endif
 
 /* Supply the prototype if it's desired and missing, but not otherwise */
-#if (__MPLS_SDK_SUPPORT_ALIGNED_ALLOC__ \
+/* Note LIB rather than SDK for consistency with macro kludge above */
+#if (__MPLS_LIB_SUPPORT_ALIGNED_ALLOC__ \
      && (__MPLS_LANGUAGE_HAS_ALIGNED_ALLOC__ || __MPLS_FORCE_ALIGNED_ALLOC)) \
     || (!__MPLS_LANGUAGE_HAS_ALIGNED_ALLOC__ && __MPLS_FORCE_ALIGNED_ALLOC)
 
@@ -90,7 +104,7 @@ void *aligned_alloc(size_t __alignment, size_t __size);
 __MP__END_DECLS
 #endif
 
-#endif  /* __MPLS_SDK_SUPPORT_ALIGNED_ALLOC__ ... */
+#endif  /* __MPLS_LIB_SUPPORT_ALIGNED_ALLOC__ ... */
 
 #undef __MPLS_LANGUAGE_HAS_ALIGNED_ALLOC__
 #undef __MPLS_FORCE_ALIGNED_ALLOC

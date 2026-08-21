@@ -136,6 +136,9 @@
  * both enabling availability warnings and treating warnings as errors
  * should be avoided.
  *
+ * ADDENDUM:  The availability issue is now corrected in a limited subset
+ * of cases.  See the comment in the Availability.h wrapper header.
+ *
  * NOTE: When adding new features, be sure to respect __DARWIN_C_LEVEL in
  * the relevant header(s) if applicable, and add appropriate test cases
  * to manual_tests/darwin_c.c if so.

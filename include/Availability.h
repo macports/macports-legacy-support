@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Frederick H. G. Wright II <fw@fwright.net>
+ * Copyright (c) 2026 Frederick H. G. Wright II <fw@fwright.net>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -46,6 +46,30 @@
  * __MPLS_SDK_MAJOR.  Since we know that a 10.4 AvailabilityMacros.h would
  * never include its nonexistent Availability.h, it's safe to apply the
  * non-10.4 treatment in that case.
+ */
+
+/*
+ * NOTE regarding AVAILABILITY attributes:
+ *
+ * Many calls use the "availability" mechanism to generate warnings when
+ * calls are used on OS versions that don't support them, but the latter
+ * assumption may violated when legacy-support provides them.  Since the
+ * prototype for a given function isn't introduced until the OS provides
+ * that function, this ordinarily isn't issue when building with the
+ * default SDK for the build OS, but occasionally the default SDK in
+ * the latest Xcode for the platform is for a later OS, potentially
+ * causing this issue.  Additionally, if the SDK selection and/or target
+ * OS differs from the build OS, then they may also not match.
+ *
+ * Unfortunately, compilers don't allow changing availabilities with new
+ * prototypes, so the only option is to defeat the original availabilities
+ * in the Apple headers.  The general approach is to define the relevant
+ * calls as macros pointing to dummy names during the include_next, in
+ * order to defeat the availability-encumbered prototype, then remove the
+ * macros and provide the correct prototypes with no availability
+ * attributes in the wrapper.  This is only needed when the *LIB* condition
+ * is met but the *SDK* condition is not (i.e., where the function is being
+ * provided by legacy-support but the prototype is ordinarily not).
  */
 
 /* Do our SDK-related setup */
