@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018 Chris Jones <jonesc@macports.org>
- * Copyright (c) 2018
+ * Copyright (c) 2026 Frederick H. G. Wright II <fw@fwright.net>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -34,8 +34,29 @@
   #endif
 #endif
 
+/* For certain added calls, fake out the availability stuff */
+/* This is only applicable with a mismatched SDK (LIB & !SDK) */
+
+#if __MPLS_LIB_SUPPORT_OPEN_MEMSTREAM__ && !__MPLS_SDK_SUPPORT_OPEN_MEMSTREAM__
+#define open_memstream __mpls_dummy_open_memstream__
+#endif /* __MPLS_LIB_SUPPORT_OPEN_MEMSTREAM__ ... */
+
+#if __MPLS_LIB_SUPPORT_FMEMOPEN__ && !__MPLS_SDK_SUPPORT_FMEMOPEN__
+#define fmemopen __mpls_dummy_fmemopen__
+#endif /* __MPLS_LIB_SUPPORT_FMEMOPEN__ ... */
+
 /* Include the primary system stdio.h */
 #include_next <stdio.h>
+
+/* Undo kludge macros */
+
+#if __MPLS_LIB_SUPPORT_OPEN_MEMSTREAM__ && !__MPLS_SDK_SUPPORT_OPEN_MEMSTREAM__
+#undef open_memstream
+#endif /* __MPLS_LIB_SUPPORT_OPEN_MEMSTREAM__ ... */
+
+#if __MPLS_LIB_SUPPORT_FMEMOPEN__ && !__MPLS_SDK_SUPPORT_FMEMOPEN__
+#undef fmemopen
+#endif /* __MPLS_LIB_SUPPORT_FMEMOPEN__ ... */
 
 /* Extend Apple's 10.10+ include of sys/stdio.h to earlier versions. */
 #if __MPLS_SDK_MAJOR < 101000
@@ -82,22 +103,24 @@ __MP__END_DECLS
 #endif /*  __MPLS_SDK_SUPPORT_GETLINE__ */
 
 /* open_memstream */
-#if __MPLS_SDK_SUPPORT_OPEN_MEMSTREAM__
+/* Note LIB rather than SDK for consistency with macro kludge above */
+#if __MPLS_LIB_SUPPORT_OPEN_MEMSTREAM__
 
 __MP__BEGIN_DECLS
 FILE *open_memstream(char **ptr, size_t *sizeloc);
 __MP__END_DECLS
 
-#endif /* __MPLS_SDK_SUPPORT_OPEN_MEMSTREAM__ */
+#endif /* __MPLS_LIB_SUPPORT_OPEN_MEMSTREAM__ */
 
 /* fmemopen */
-#if __MPLS_SDK_SUPPORT_FMEMOPEN__
+/* Note LIB rather than SDK for consistency with macro kludge above */
+#if __MPLS_LIB_SUPPORT_FMEMOPEN__
 
 __MP__BEGIN_DECLS
 FILE *fmemopen(void *buf, size_t size, const char *mode);
 __MP__END_DECLS
 
-#endif /* __MPLS_SDK_SUPPORT_FMEMOPEN__ */
+#endif /* __MPLS_LIB_SUPPORT_FMEMOPEN__ */
 
 #endif /* __DARWIN_C_LEVEL >= 200809L */
 
