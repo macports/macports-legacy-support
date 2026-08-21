@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Frederick H. G. Wright II <fw@fwright.net>
+ * Copyright (c) 2026 Frederick H. G. Wright II <fw@fwright.net>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -241,7 +241,9 @@ int wcsncasecmp_l = 0;
 
 /* Quasi-dummy runtime test, just reports values */
 
+#include <libgen.h>
 #include <stdio.h>
+#include <string.h>
 
 /* Get status of representative 11.x+ version macro. */
 /* Not reentrant or thread-safe. */
@@ -262,9 +264,15 @@ get_vermac(void)
 int
 main(int argc, char *argv[])
 {
-  (void) argc; (void) argv;
+  int verbose = 0;
 
-  printf("__DARWIN_C_LEVEL = %ld, __MPLS_SDK_MAJOR = %d%s\n",
-         __DARWIN_C_LEVEL, __MPLS_SDK_MAJOR, get_vermac());
+  if (argc > 1 && !strcmp(argv[1], "-v")) verbose = 1;
+
+  if (verbose) {
+    printf("__DARWIN_C_LEVEL = %ld, __MPLS_SDK_MAJOR = %d%s\n",
+           __DARWIN_C_LEVEL, __MPLS_SDK_MAJOR, get_vermac());
+  }
+
+  printf("%s ran.\n", basename(argv[0]));
   return 0;
 }
