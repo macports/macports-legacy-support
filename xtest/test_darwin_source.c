@@ -216,45 +216,50 @@ CHECK_FUNC(pthread_yield_np)
 
 #include <libgen.h>
 #include <stdio.h>
+#include <string.h>
 
 int
 main(int argc, char *argv[])
 {
-  (void) argc;
+  int verbose = 0;
 
-#ifndef _ANSI_SOURCE
-  printf("_ANSI_SOURCE is undef, ");
-#else
-  printf("_ANSI_SOURCE = %d, ", _ANSI_SOURCE);
-#endif
-#ifndef KERNEL
-  printf("KERNEL is undef, ");
-#else
-  printf("KERNEL = %d, ", KERNEL);
-#endif
-#ifndef _POSIX_C_SOURCE
-  printf("_POSIX_C_SOURCE is undef, ");
-#else
-  printf("_POSIX_C_SOURCE = %ld, ", _POSIX_C_SOURCE);
-#endif
-#ifndef _XOPEN_SOURCE
-  printf("_XOPEN_SOURCE is undef\n");
-#else
-  printf("_XOPEN_SOURCE = %d\n", _XOPEN_SOURCE);
-#endif
-#ifndef _DARWIN_C_SOURCE
-  printf("  _DARWIN_C_SOURCE is undef, ");
-#else
-  printf("  _DARWIN_C_SOURCE = %d, ", _DARWIN_C_SOURCE);
-#endif
-#ifndef __DARWIN_C_LEVEL
-  printf("  __DARWIN_C_LEVEL is undef, ");
-#else
-  printf("  __DARWIN_C_LEVEL = %ld, ", __DARWIN_C_LEVEL);
-#endif
-  printf("__MPLS_TARGET_OSVER = %d, ", __MPLS_TARGET_OSVER);
-  printf("__MPLS_SDK_MAJOR = %d\n", __MPLS_SDK_MAJOR);
+  if (argc > 1 && !strcmp(argv[1], "-v")) verbose = 1;
 
-  printf("%s succeeded.\n", basename(argv[0]));
+if (verbose) {
+  #ifndef _ANSI_SOURCE
+    printf("  _ANSI_SOURCE is undef, ");
+  #else
+    printf("  _ANSI_SOURCE = %d, ", _ANSI_SOURCE);
+  #endif
+  #ifndef KERNEL
+    printf("KERNEL is undef, ");
+  #else
+    printf("KERNEL = %d, ", KERNEL);
+  #endif
+  #ifndef _POSIX_C_SOURCE
+    printf("_POSIX_C_SOURCE is undef, ");
+  #else
+    printf("_POSIX_C_SOURCE = %ld, ", _POSIX_C_SOURCE);
+  #endif
+  #ifndef _XOPEN_SOURCE
+    printf("_XOPEN_SOURCE is undef\n");
+  #else
+    printf("_XOPEN_SOURCE = %d\n", _XOPEN_SOURCE);
+  #endif
+  #ifndef _DARWIN_C_SOURCE
+    printf("  _DARWIN_C_SOURCE is undef, ");
+  #else
+    printf("  _DARWIN_C_SOURCE = %d, ", _DARWIN_C_SOURCE);
+  #endif
+  #ifndef __DARWIN_C_LEVEL
+    printf("  __DARWIN_C_LEVEL is undef, ");
+  #else
+    printf("  __DARWIN_C_LEVEL = %ld, ", __DARWIN_C_LEVEL);
+  #endif
+    printf("__MPLS_TARGET_OSVER = %d, ", __MPLS_TARGET_OSVER);
+    printf("__MPLS_SDK_MAJOR = %d\n", __MPLS_SDK_MAJOR);
+}
+
+  printf("%s ran.\n", basename(argv[0]));
   return 0;
 }
