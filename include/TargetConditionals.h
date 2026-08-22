@@ -92,7 +92,14 @@
       && __is_target_environment(xros) \
       && __is_target_environment(exclavecore) \
       && __is_target_environment(exclavekit)
-    #define __is_target_environment(x) 0
+    #if defined (__clang__)
+      #pragma clang diagnostic push
+      #pragma clang diagnostic ignored "-Wbuiltin-macro-redefined"
+      #define __is_target_environment(x) 0
+      #pragma clang diagnostic pop
+    #else
+      #define __is_target_environment(x) 0
+    #endif
   #endif
 #endif
 
