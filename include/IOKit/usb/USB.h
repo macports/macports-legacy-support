@@ -52,5 +52,40 @@
 #endif  /* SDK >= 10.8 */
 #endif  /* SDK < 10.15 and bad GCC */
 
+/*
+ * This header and some of its children mistakenly use #if KERNEL,
+ * #if __cplusplus, and #if __OPEN_SOURCE__ when they should be using #ifdef.
+ * This results in some "undefined" warnings.  So we try to disable that
+ * warning around the include_next, but "diagnostic push/pop" is unavailable
+ * in early GCCs, where we're stuck with it.
+ *
+ * In addition, the 26+ SDKs use "#pragma clang deprecated", which is not
+ * supported by some earlier clangs, leading to a warning, so we disable
+ * that warning as well with those SDKs.
+ *
+ * In addition, all versions define kUSBLowLatencyIsochTransferKey as a
+ * multi-character literal, which provokes a warning from GCC 4.9+, so
+ * we disable that for GCC as well.
+ */
+
+#if defined(__clang__)
+  #pragma clang diagnostic push
+  #pragma clang diagnostic ignored "-Wundef"
+  #if __MPLS_SDK_MAJOR >= 260000
+    #pragma clang diagnostic ignored "-Wunknown-pragmas"
+  #endif
+#elif defined(__GNUC__) \
+      && (__GNUC__ >= 5 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 9))
+  #pragma GCC diagnostic push
+  #pragma GCC diagnostic ignored "-Wundef"
+  #pragma GCC diagnostic ignored "-Wmultichar"
+#endif
+
 /* Include the primary system IOKit/usb/USB.h */
 #include_next <IOKit/usb/USB.h>
+
+#if defined(__clang__)
+  #pragma clang diagnostic pop
+#elif defined(__GNUC__) && __GNUC__ >= 5
+  #pragma GCC diagnostic pop
+#endif
