@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019
+ * Copyright (c) 2026
  * from an example posted in Apple Developer Support
  * https://forums.developer.apple.com/thread/103162
  *
@@ -20,59 +20,57 @@
 #include "MacportsLegacySupport.h"
 #if __MPLS_LIB_SUPPORT_FSGETPATH__
 
-#if 1
-/* SYS_fsgetpath is only available on 10.6 and up */
-#if __APPLE__ && __MPLS_TARGET_OSVER >= 1060
-/* implement using a syscall available macOS 10.6 to 10.12 */
-/* this should be thoroughly vetted as a syscall, but is private API */
+/*
+ * This provides an implementation of fsgetpath() that's valid for
+ * >= 10.6, by using the existing syscall (present without the function
+ * wrapper since 10.6).
+ *
+ * In the aforementioned thread, Apple discouraged this approach, but that's
+ * because Apple always discourages the direct use of syscalls, since they
+ * don't want to guarantee compatibility at that level.  However, this is only
+ * used for OS versions <10.13, where it's known to work and is essentially
+ * frozen for all time, making Apple's objection irrelevant in practice.
+ *
+ * In the < 10.6 case, we simply return ENOTSUP, since no real implementation
+ * has been devised.
+ */
+
 #include <unistd.h>
+
+#include <sys/fsgetpath.h>
 #include <sys/syscall.h>
 #include <sys/types.h>
-#include <sys/mount.h>
-ssize_t fsgetpath(char * buf, size_t buflen, fsid_t * fsid, uint64_t obj_id) {
-    return (ssize_t)syscall(SYS_fsgetpath, buf, (size_t)buflen, fsid, (uint64_t)obj_id);
-}
-#endif
-#endif
 
-#if 0
-/* implement with a compatability function that presently compiles on 10.6 and over */
-/* this may be better (see linked post above) but it's hard to thoroughly test it. */
-/* this may also be able to be expanded to cover 10.4 and 10.5 if we can workaround ATTR_CMN_FULLPATH */
-#include <stdio.h>
+#if __MPLS_TARGET_OSVER >= 1060
+
+ssize_t
+fsgetpath(char *buf, size_t buflen, fsid_t *fsid, uint64_t obj_id)
+{
+  return syscall(SYS_fsgetpath, buf, buflen, fsid, obj_id);
+}
+
+#else  /* __MPLS_TARGET_OSVER < 1060 */
+
 #include <errno.h>
-#include <string.h>
-#include <getopt.h>
-#include <sys/attr.h>
-#include <sys/mount.h>
 
-ssize_t fsgetpath(char * buf, size_t buflen, fsid_t * fsid, uint64_t obj_id) {
-    char volfsPath[64];  // 8 for `/.vol//\0`, 10 for `fsid->val[0]`, 20 for `obj_id`, rounded up for paranoia
+ssize_t
+fsgetpath(char *buf, size_t buflen, fsid_t *fsid, uint64_t obj_id)
+{
+  (void) buf; (void) buflen; (void) fsid; (void) obj_id;
 
-    snprintf(volfsPath, sizeof(volfsPath), "/.vol/%ld/%llu", (long) fsid->val[0], (unsigned long long) obj_id);
-
-    struct {
-        uint32_t            length;
-        attrreference_t     pathRef;
-        char                buffer[MAXPATHLEN];
-    } __attribute__((aligned(4), packed)) attrBuf;
-
-    struct attrlist attrList;
-    memset(&attrList, 0, sizeof(attrList));
-    attrList.bitmapcount = ATTR_BIT_MAP_COUNT;
-    attrList.commonattr = ATTR_CMN_FULLPATH;
-
-    int success = getattrlist(volfsPath, &attrList, &attrBuf, sizeof(attrBuf), 0) == 0;
-    if ( ! success ) {
-        return -1;
-    }
-    if (attrBuf.pathRef.attr_length > buflen) {
-        errno = ENOSPC;
-        return -1;
-    }
-    strlcpy(buf, ((const char *) &attrBuf.pathRef) + attrBuf.pathRef.attr_dataoffset, buflen);
-    return attrBuf.pathRef.attr_length;
+  errno = ENOTSUP;
+  return -1;
 }
-#endif
+
+#endif /* __MPLS_TARGET_OSVER < 1060 */
+
+/*
+ * This file had previously included a (disabled) alternate implementation
+ * as recommended by Apple in the aforementioned thread.  But it relies
+ * on the ATTR_CMN_FULLPATH attribute, which doesn't exist prior to 10.6,
+ * and thus provides no actual benefit.
+ *
+ * Interested parties can find it in the git history.
+ */
 
 #endif /* __MPLS_LIB_SUPPORT_FSGETPATH__ */
