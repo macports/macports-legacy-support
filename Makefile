@@ -121,7 +121,9 @@ CP              ?= /bin/cp
 # Directory for temporary test files
 TEST_DEF        := tst_data$(BINSFXADD)
 TEST_TEMP       ?= $(TEST_DEF)
-TESTCFLAGS       = -Wshadow $(ALLCFLAGS) '-DTEST_TEMP="$(TEST_TEMP)"'
+TESTXCFLAGS     ?=
+TESTCFLAGS       = -Wshadow $(ALLCFLAGS) $(TESTXCFLAGS) \
+                   '-DTEST_TEMP="$(TEST_TEMP)"'
 
 MKINSTALLDIRS    = install -d -m 755
 INSTALL_PROGRAM  = install -c -m 755
