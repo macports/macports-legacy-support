@@ -230,7 +230,7 @@ Wrapped headers and replaced functions are:
   </tr>
   <tr>
     <td><code>sys/fsgetpath.h</code></td>
-    <td>Adds <code>fsgetpath</code> function</td>
+    <td>Adds <code>fsgetpath</code> function for >= 10.6</td>
     <td>OSX10.12</td>
   </tr>
   <tr>
