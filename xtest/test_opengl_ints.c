@@ -39,6 +39,8 @@
 
 #if !_MPLS_USE_AGL || __MPLS_SDK_MAJOR < 1070
 
+#define GL_SILENCE_DEPRECATION 1
+
 #if !_MPLS_USE_AGL
   #include <OpenGL/gl.h>
   #define LIB_NAME "OpenGL"
