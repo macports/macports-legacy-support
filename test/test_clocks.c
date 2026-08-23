@@ -57,6 +57,8 @@
 
 #include <_macports_extras/targetos.h>
 
+#include "disable_warnings.h"
+
 /*
  * To determine the number of samples we collect, we *very* generously
  * assume that we could collect one sample per CPU clock, and that the
