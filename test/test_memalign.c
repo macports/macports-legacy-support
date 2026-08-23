@@ -16,9 +16,6 @@
 
 /* This is a simple test of the aligned allocation functions. */
 
-/* Override language-version condition */
-#define _MACPORTS_LEGACY_ALLOW_ALIGNED_ALLOC 1
-
 #include <libgen.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -35,6 +32,29 @@ typedef unsigned long long ptrint_t;
 #else
 typedef unsigned int ptrint_t;
 #define PTR_FMT "%08X"
+#endif
+
+/* Apple makes aligned_alloc conditional on the language version */
+#if (defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L) \
+    || (defined(__cplusplus) && __cplusplus >= 201703L)
+#define __MPLS_LANGUAGE_HAS_ALIGNED_ALLOC__ 1
+#else
+#define __MPLS_LANGUAGE_HAS_ALIGNED_ALLOC__ 0
+#endif
+
+/* Allow an override */
+#if defined(_MACPORTS_LEGACY_ALLOW_ALIGNED_ALLOC) \
+    && _MACPORTS_LEGACY_ALLOW_ALIGNED_ALLOC
+#define __MPLS_FORCE_ALIGNED_ALLOC 1
+#else
+#define __MPLS_FORCE_ALIGNED_ALLOC 0
+#endif
+
+#define HAVE_ALIGNED_ALLOC \
+    (__MPLS_LANGUAGE_HAS_ALIGNED_ALLOC__ || __MPLS_FORCE_ALIGNED_ALLOC)
+
+#if !HAVE_ALIGNED_ALLOC
+void *aligned_alloc(size_t __alignment, size_t __size);
 #endif
 
 static void *
@@ -100,7 +120,11 @@ main(int argc, char *argv[])
 
   ret |= do_test(SMALL_SIZE, 1, verbose);
   ret |= do_test(LARGE_SIZE, 1, verbose);
-  ret |= do_test(LARGE_SIZE, 0, verbose);
+  if (HAVE_ALIGNED_ALLOC) {
+    ret |= do_test(LARGE_SIZE, 0, verbose);
+  } else if (verbose) {
+    printf("  ... skipping unsupported aligned_alloc()\n");
+  }
 
   printf("%s %s.\n", progname, ret ? "failed" : "succeeded");
   return ret;

@@ -733,6 +733,9 @@ $(TESTBINPREFIX)packet_nofix.o: $(TESTNAMEPREFIX)packet.c
 $(TESTBINPREFIX)packet_nofix_nocancel.o: $(TESTNAMEPREFIX)packet.c
 $(TESTBINPREFIX)packet_nofix_nonposix.o: $(TESTNAMEPREFIX)packet.c
 
+# The "forced" memalign test includes the memalign source
+$(TESTBINPREFIX)memalign_forced.o: $(TESTNAMEPREFIX)memalign.c
+
 # The manual packet test includes the packet source
 $(MANTESTBINPREFIX)packet_cont.o: $(TESTNAMEPREFIX)packet.c
 
