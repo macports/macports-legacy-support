@@ -25,14 +25,14 @@
 
 #if __MPLS_SDK_SUPPORT_CCRANDOM__
 
-/* Get CCCryptorStatus typedef */
+/* Get CCCryptorStatus typedef and kCCParamError def */
 #include <CommonCrypto/CommonCryptor.h>
 
 typedef CCCryptorStatus CCRNGStatus;
 
 #else /* !__MPLS_SDK_SUPPORT_CCRANDOM__ */
 
-/* Get CCCryptorStatus typedef (what CommonRandom.h should have done) */
+/* Get CCCryptorStatus typedef and kCCParamError def */
 #include <CommonCrypto/CommonCryptoError.h>
 
 /* Include the primary system CommonCrypto/CommonRandom.h */
