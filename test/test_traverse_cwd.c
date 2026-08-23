@@ -58,6 +58,8 @@ exhibited different errors.
 
 #include <sys/stat.h>
 
+#include "disable_warnings.h"
+
 #ifndef TEST_TEMP
 #define TEST_TEMP "/dev/null"
 #endif
