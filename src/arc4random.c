@@ -32,6 +32,7 @@
 #include <fcntl.h>
 #include <limits.h>
 #include <signal.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -542,11 +543,11 @@ arc4random_uniform(uint32_t upper_bound)
 
 #include <stdlib.h>
 
-#include <CommonCrypto/CommonCryptor.h>
 #include <CommonCrypto/CommonRandom.h>
 
 CCRNGStatus
 __mpls_insecure_CCRandomGenerateBytes(void *buf, size_t nbytes) {
+  if (buf == NULL || nbytes == 0) return kCCParamError;
   arc4random_buf(buf, nbytes);
   return 0;
 }
