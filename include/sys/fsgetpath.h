@@ -23,12 +23,26 @@
 /* Do our SDK-related setup */
 #include <_macports_extras/sdkversion.h>
 
+/* For certain added calls, fake out the availability stuff */
+/* This is only applicable with a mismatched SDK (LIB & !SDK) */
+
+#if __MPLS_LIB_SUPPORT_FSGETPATH__ && !__MPLS_SDK_SUPPORT_FSGETPATH__
+#define fsgetpath __mpls_dummy_fsgetpath__
+#endif /* __MPLS_LIB_SUPPORT_FSGETPATH__ ... */
+
 /* Include the primary system sys/fsgetpath.h (10.13+ only) */
 #if __MPLS_SDK_MAJOR >= 101300
 #include_next <sys/fsgetpath.h>
 #endif
 
-#if __MPLS_SDK_SUPPORT_FSGETPATH__
+/* Undo kludge macros */
+
+#if __MPLS_LIB_SUPPORT_FSGETPATH__ && !__MPLS_SDK_SUPPORT_FSGETPATH__
+#undef fsgetpath
+#endif /* __MPLS_LIB_SUPPORT_FSGETPATH__ ... */
+
+/* Note LIB rather than SDK for consistency with macro kludge above */
+#if __MPLS_LIB_SUPPORT_FSGETPATH__
 
 __MP__BEGIN_DECLS
 typedef struct fsid fsid_t;
@@ -36,6 +50,6 @@ extern ssize_t fsgetpath(char * __restrict buf, size_t bufsize,
                          fsid_t *fsid, uint64_t objid);
 __MP__END_DECLS
 
-#endif /* __MPLS_SDK_SUPPORT_FSGETPATH__ */
+#endif /* __MPLS_LIB_SUPPORT_FSGETPATH__ */
 
 #endif /* _MACPORTS_SYS_FSGETPATH_H_ */
