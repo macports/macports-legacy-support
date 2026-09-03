@@ -1,0 +1,16 @@
+prefix=@@PREFIX@@
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: @@LIBNAME@@
+Description: Wrapper headers and library to support older macOS versions
+URL: https://github.com/macports/macports-legacy-support
+Version: @@VERSION@@
+Libs: -L${libdir} -l@@LIBNAME@@
+Cflags: -I${includedir}
+
+# NOTE: -isystem is typically preferred to -I to suppress warnings from the
+# wrapped OS headers, but that doesn't play nicely with --cflags-only-I.
+# The @@INCSUBDIR@@ headers try fairly hard to avoid warnings of their own,
+# and even fix Apple's warnings in some cases, but not all.
