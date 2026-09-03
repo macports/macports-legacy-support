@@ -41,6 +41,10 @@ BUILDLIBDIR     := lib$(BINSFXADD)
 BUILDDLIBPATH    = $(BUILDLIBDIR)/$(DLIBFILE)
 BUILDSLIBPATH    = $(BUILDLIBDIR)/$(SLIBFILE)
 BUILDSYSLIBPATH  = $(BUILDLIBDIR)/$(SYSLIBFILE)
+PKGCONFIG        = pkgconfig
+BUILDPCDIR       = $(BUILDLIBDIR)/$(PKGCONFIG)
+PKGCONFIGPC      = $(LIBNAME).pc
+BUILDPC          = $(BUILDPCDIR)/$(PKGCONFIGPC)
 SOCURVERSION    ?= 1.0
 SOCOMPATVERSION ?= 1.0
 BUILDDLIBFLAGS   = -dynamiclib -headerpad_max_install_names \
@@ -339,7 +343,7 @@ TOOL_ARGS       ?=
 ARCHTOOL         = $(TOOLDIR)/binarchs.sh
 
 all: dlib slib syslib
-dlib: $(BUILDDLIBPATH)
+dlib: $(BUILDDLIBPATH) $(BUILDPC)
 slib: $(BUILDSLIBPATH)
 syslib: $(BUILDSYSLIBPATH)
 
@@ -395,7 +399,8 @@ $(SOBJLIST): $(SOBJLIST_C) $(SOBJLIST_S)
 	if [ ! -s $@ ]; then echo $(DUMMYOBJ) > $@; fi
 
 # Make the directories separate targets to avoid collisions in parallel builds.
-$(BUILDDIR) $(TIGERBINDIR) $(BUILDLIBDIR) $(TESTBINDIR) $(XLIBDIR) \
+$(BUILDDIR) $(TIGERBINDIR) $(BUILDLIBDIR) $(BUILDPCDIR) \
+    $(TESTBINDIR) $(XLIBDIR) \
     $(DESTDIR)$(LIBDIR) $(DESTDIR)$(BINDIR) \
     $(DESTDIR)$(MAN1DIR) $(DESTDIR)$(MAN2DIR) $(DESTDIR)$(MAN3DIR) \
     $(TEST_TEMP) $(TOOLBINDIR):
@@ -411,6 +416,14 @@ $(BUILDSYSLIBPATH): $(SYSLIBOBJS) | $(BUILDLIBDIR)
 $(BUILDSLIBPATH): $(SOBJLIST) | $(BUILDLIBDIR)
 	$(RM) $@
 	$(ARX) $(BUILDSLIBFLAGS) $@ $$(cat $<)
+
+$(BUILDPC): $(SRCDIR)/$(PKGCONFIGPC).in | $(BUILDPCDIR)
+	$(SED) "\
+    s|@@PREFIX@@|$(PREFIX)|g; \
+    s|@@LIBNAME@@|$(LIBNAME)|g; \
+    s|@@INCSUBDIR@@|$(INCSUBDIR)|g; \
+    s|@@VERSION@@|$(SOCURVERSION)|" \
+    $< >$@
 
 # To run tests with our syslib, we want to suppress linking with the OS syslib,
 # just to be certain that our replacement is an adequate substitute.
@@ -811,8 +824,9 @@ install-headers:
 
 install-lib: install-dlib install-slib install-syslib
 
-install-dlib: $(BUILDDLIBPATH) | $(DESTDIR)$(LIBDIR)
+install-dlib: $(BUILDDLIBPATH) $(BUILDPC) | $(DESTDIR)$(LIBDIR)
 	$(INSTALL_PROGRAM) $(BUILDDLIBPATH) $(DESTDIR)$(LIBDIR)
+	$(INSTALL_DATA) $(BUILDPCDIR)/$(PKGCONFIGPC) $(DESTDIR)$(LIBDIR)
 	$(POSTINSTALL) -id $(DLIBPATH) $(DESTDIR)$(DLIBPATH)
 
 install-syslib: $(BUILDSYSLIBPATH) | $(DESTDIR)$(LIBDIR)
