@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Frederick H. G. Wright II <fw@fwright.net>
+ * Copyright (c) 2026 Frederick H. G. Wright II <fw@fwright.net>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -101,6 +101,9 @@
 #include <sys/time.h>
 
 #include "compiler.h"
+#include "util.h"
+
+DEFINE_MPLS_ABORTMSG
 
 #define CMSG_DATALEN(cmsg) ((uint8_t *) (cmsg) + (cmsg)->cmsg_len \
                       - (uint8_t *) CMSG_DATA(cmsg))
@@ -150,7 +153,7 @@ sys_recvmsg(fv_type_t fvtype)
   }
 
   /* Something's badly wrong if we can't find the function at all */
-  abort();
+  MPLS_ABORT("lookup failed for all _recvmsg variants");
 }
 
 #if FORMAT_FIX

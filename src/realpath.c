@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Frederick H. G. Wright II <fw@fwright.net>
+ * Copyright (c) 2026 Frederick H. G. Wright II <fw@fwright.net>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -34,6 +34,9 @@
 #undef realpath
 
 #include "compiler.h"
+#include "util.h"
+
+DEFINE_MPLS_ABORTMSG
 
 /*
  * This provides a wrapper for realpath() in order to make the 10.6+
@@ -125,7 +128,7 @@ realpath_internal(const char * __restrict file_name,
     if (!os_realpath && version != rp_basic) {
       os_realpath = rp_adr[version] = dlsym(RTLD_NEXT, rp_name[rp_basic]);
     }
-    if (!os_realpath) abort();
+    if (!os_realpath) MPLS_ABORT("lookup failed for all _realpath variants");
   }
 
   /* Just pass through the call if a buffer was supplied */

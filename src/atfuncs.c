@@ -211,6 +211,8 @@ __mpls_atfunc_finish(atfunc_t *at)
 
 #include "util.h"
 
+DEFINE_MPLS_ABORTMSG
+
 int
 faccessat(int dirfd, const char *pathname, int mode, int flags)
 {

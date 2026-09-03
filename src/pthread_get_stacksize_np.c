@@ -9,6 +9,8 @@
 
 #include "util.h"
 
+DEFINE_MPLS_ABORTMSG
+
 #if __MPLS_TARGET_OSVER >= 1090
 /* private system call available on OS X Mavericks (version 10.9) and later */
 /* see https://github.com/apple-oss-distributions/libpthread/blob/ba8e1488a0e6848b710c5daad2e226f66cfed656/private/pthread/private.h#L34 */

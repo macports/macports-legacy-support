@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Frederick H. G. Wright II <fw@fwright.net>
+ * Copyright (c) 2026 Frederick H. G. Wright II <fw@fwright.net>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -41,6 +41,8 @@
 #undef setattrlist
 
 #include "util.h"
+
+DEFINE_MPLS_ABORTMSG
 
 #ifdef __LP64__
 typedef unsigned int attrlist_opts_t;
