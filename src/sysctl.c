@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Frederick H. G. Wright II <fw@fwright.net>
+ * Copyright (c) 2026 Frederick H. G. Wright II <fw@fwright.net>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -27,6 +27,8 @@
 #include <sys/time.h>
 
 #include "util.h"
+
+DEFINE_MPLS_ABORTMSG
 
 /*
  * Under OS <10.6, the returned struct timeval for boottime is always based on
@@ -78,7 +80,7 @@ sysctl(int *name, u_int namelen, void *oldp, size_t *oldlenp,
   if (ret) return ret;
 
   /* If we just obtained boottime, possibly correct it */
-  if (namelen >=2 && name[0] == CTL_KERN && name[1] == KERN_BOOTTIME) {
+  if (namelen >= 2 && name[0] == CTL_KERN && name[1] == KERN_BOOTTIME) {
     fix_boottime(oldp, oldlenp, origlen);
   }
 

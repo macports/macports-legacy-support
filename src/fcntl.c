@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Frederick H. G. Wright II <fw@fwright.net>
+ * Copyright (c) 2026 Frederick H. G. Wright II <fw@fwright.net>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -48,6 +48,8 @@
 #include <unistd.h>
 
 #include "util.h"
+
+DEFINE_MPLS_ABORTMSG
 
 static pthread_mutex_t path_lock = PTHREAD_MUTEX_INITIALIZER;
 static char pathbuf[PATH_MAX];

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025
+ * Copyright (c) 2026
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -28,6 +28,8 @@
 #include <stddef.h>
 
 #include "util.h"
+
+DEFINE_MPLS_ABORTMSG
 
 /*
  * Emulate several commonly used but missing (or broken) selectors from

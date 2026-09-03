@@ -37,6 +37,8 @@
 
 #include "util.h"
 
+DEFINE_MPLS_ABORTMSG
+
 typedef int (open_fn_t)(const char *, int, ...);
 
 static int
