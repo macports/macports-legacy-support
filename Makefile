@@ -399,11 +399,13 @@ $(SOBJLIST): $(SOBJLIST_C) $(SOBJLIST_S)
 	if [ ! -s $@ ]; then echo $(DUMMYOBJ) > $@; fi
 
 # Make the directories separate targets to avoid collisions in parallel builds.
-$(BUILDDIR) $(TIGERBINDIR) $(BUILDLIBDIR) $(BUILDPCDIR) \
-    $(TESTBINDIR) $(XLIBDIR) \
+$(BUILDDIR) $(TIGERBINDIR) $(BUILDLIBDIR) $(TESTBINDIR) $(XLIBDIR) \
     $(DESTDIR)$(LIBDIR) $(DESTDIR)$(BINDIR) \
     $(DESTDIR)$(MAN1DIR) $(DESTDIR)$(MAN2DIR) $(DESTDIR)$(MAN3DIR) \
     $(TEST_TEMP) $(TOOLBINDIR):
+	$(MKINSTALLDIRS) $@
+
+$(BUILDPCDIR): | $(BUILDLIBDIR)
 	$(MKINSTALLDIRS) $@
 
 $(BUILDDLIBPATH): $(DLIBOBJS) | $(BUILDLIBDIR)
