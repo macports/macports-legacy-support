@@ -5,7 +5,7 @@
 
 REFPROG="${1:-/usr/bin/true}"
 
-ARCHS="$(file $REFPROG | grep ' executable ' | sed 's|.* executable ||')"
+ARCHS="$(lipo -archs $REFPROG)"
 ARCHFLAGS="$(for a in $ARCHS; do echo -n ' -arch' $a; done)"
 
 echo $ARCHFLAGS
