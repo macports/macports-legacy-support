@@ -326,9 +326,21 @@ TESTCSTD         := c99
 TIGERROOT        = tiger_only
 TIGERSRCDIR      = $(TIGERROOT)/src
 TIGERBINDIR      = $(TIGERROOT)/bin
+TIGERLUTLDIR     = $(TIGERROOT)/libutil
 TIGERSRCS       := \
     $(patsubst $(TIGERSRCDIR)/%.c,%,$(wildcard $(TIGERSRCDIR)/*.c))
+TIGERLUTLS      := \
+    $(patsubst $(TIGERLUTLDIR)/%.c,%,$(wildcard $(TIGERLUTLDIR)/*.c))
 TIGERPRGS       := $(patsubst %,$(TIGERBINDIR)/%,$(TIGERSRCS))
+TIGERLUOBJS     := $(patsubst %,$(TIGERBINDIR)/%$(DLIBOBJEXT),$(TIGERLUTLS))
+TIGERULIB       := libutil$(SOEXT)
+TIGERULIBPATH   := $(LIBDIR)/$(TIGERULIB)
+TIGERBLDULIBPTH := $(BUILDLIBDIR)/$(TIGERULIB)
+TIGERULIBVER    := 1.0.0
+TIGERULIBFLAGS   = -dynamiclib -headerpad_max_install_names \
+                   -install_name @executable_path/../$(TIGERBLDULIBPTH) \
+                   -current_version $(TIGERULIBVER) \
+                   -compatibility_version $(TIGERULIBVER)
 TIGERMAN1S      := $(wildcard $(TIGERSRCDIR)/*.1)
 
 # Miscellaneous tools
@@ -522,7 +534,16 @@ alltestobjs: $(TESTOBJS_C) $(XTESTOBJS_C) $(MANTESTOBJS_C) $(MANLIBTESTOBJS_C)
 $(TIGERPRGS): $(TIGERBINDIR)/%: $(TIGERSRCDIR)/%.c | $(TIGERBINDIR)
 	$(CC) $$($(ARCHTOOL)) $< -o $@
 
-tiger-bins: $(TIGERPRGS)
+$(TIGERLUOBJS): $(TIGERBINDIR)/%$(DLIBOBJEXT): $(TIGERLUTLDIR)/%.c \
+    | $(TIGERBINDIR)
+	$(CC) -c -I$(TIGERLUTLDIR) $(ALLCFLAGS) $(DLIBCFLAGS) $< -o $@
+
+$(TIGERBLDULIBPTH): $(TIGERLUOBJS) | $(BUILDLIBDIR)
+	$(CC) $(TIGERULIBFLAGS) $(ALLLDFLAGS) $(TIGERLUOBJS) -o $@
+
+tiger-libs: $(TIGERBLDULIBPTH)
+
+tiger-bins: tiger-libs $(TIGERPRGS)
 
 # Dummy Leopard build target, so the Portfile can reference it in case
 # we need it later.
@@ -846,9 +867,12 @@ install-manpages: | $(DESTDIR)$(MAN2DIR)
 # and copyfile.3 for Tiger and Leopard, so we add the Tiger
 # case to the existing Tiger install, and add a new Leopard install.
 
-install-tiger: $(TIGERPRGS) | $(DESTDIR)$(BINDIR) \
+install-tiger: $(TIGERPRGS) $(TIGERBLDULIBPTH) \
+  | $(DESTDIR)$(BINDIR) $(DESTDIR)$(LIBDIR) \
     $(DESTDIR)$(MAN1DIR) $(DESTDIR)$(MAN3DIR)
 	$(INSTALL_PROGRAM) $(TIGERPRGS) $(DESTDIR)$(BINDIR)
+	$(INSTALL_PROGRAM) $(TIGERBLDULIBPTH) $(DESTDIR)$(LIBDIR)
+	$(POSTINSTALL) -id $(TIGERULIBPATH) $(DESTDIR)$(TIGERULIBPATH)
 	$(INSTALL_MAN) $(TIGERMAN1S) $(DESTDIR)$(MAN1DIR)
 	$(INSTALL_MAN) $(SRCMAN3S) $(DESTDIR)$(MAN3DIR)
 
@@ -924,7 +948,7 @@ clean: test_clean tools_clean
 .PHONY: $(MANRUNPREFIX)packet_all $(MANRUNPREFIX)packet_all_unv
 .PHONY: $(XTESTRUNPREFIX)allheaders_all $(XTESTRUNPREFIX)allheaders_all_unv
 .PHONY: install install-headers install-lib install-dlib install-slib
-.PHONY: tiger-bins install-tiger
+.PHONY: tiger-libs tiger-bins install-tiger
 .PHONY: leopard-bins install-leopard
 .PHONY: allobjs dlibobjs slibobjs syslibobjs alltestobjs
 .PHONY: build_tests build_tests_static build_tests_syslib build_tests_all dummy
