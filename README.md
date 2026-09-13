@@ -402,6 +402,11 @@ Wrapped headers and replaced functions are:
     <td>Adds <code>__chkstk_darwin</code></td>
     <td>OSX10.13</td>
   </tr>
+  <tr>
+    <td><code>-</code></td>
+    <td>Backports 10.5 <code>libutil</code> to 10.4</code></td>
+    <td>OSX10.4</td>
+  </tr>
 </table>
 
 For information on building this library outside MacPorts, see BUILDING.txt.
