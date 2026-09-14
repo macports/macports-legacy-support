@@ -48,3 +48,27 @@
 #define __MPLS_TARGET_OSVER 999999
 #endif /* !__APPLE__ */
 #endif /* __MPLS_TARGET_OSVER undef */
+
+/*
+ * Major versions of libSystem (obtainable via NSVersionOfRunTimeLibrary)
+ * corresponding to OS versions.  Note that the earliest OS where this is
+ * available is 10.5; prior versions return -1.
+ */
+#define __MPLS_SYSLIB_NAME     "System"
+#define __MPLS_LIBMAJOR_SHIFT  16
+#define __MPLS_SYSLIB_1050      (111 << __MPLS_LIBMAJOR_SHIFT)
+#define __MPLS_SYSLIB_1060      (123 << __MPLS_LIBMAJOR_SHIFT)
+#define __MPLS_SYSLIB_1070      (159 << __MPLS_LIBMAJOR_SHIFT)
+#define __MPLS_SYSLIB_1080      (169 << __MPLS_LIBMAJOR_SHIFT)
+#define __MPLS_SYSLIB_1090     (1197 << __MPLS_LIBMAJOR_SHIFT)
+#define __MPLS_SYSLIB_101000   (1213 << __MPLS_LIBMAJOR_SHIFT)
+#define __MPLS_SYSLIB_101100   (1225 << __MPLS_LIBMAJOR_SHIFT)
+#define __MPLS_SYSLIB_101200   (1238 << __MPLS_LIBMAJOR_SHIFT)
+#define __MPLS_SYSLIB_101300   (1252 << __MPLS_LIBMAJOR_SHIFT)
+#define __MPLS_SYSLIB_101400   (1252 << __MPLS_LIBMAJOR_SHIFT)
+#define __MPLS_SYSLIB_101500   (1281 << __MPLS_LIBMAJOR_SHIFT)
+#define __MPLS_SYSLIB_110000   (1292 << __MPLS_LIBMAJOR_SHIFT)
+#define __MPLS_SYSLIB_120000   (1311 << __MPLS_LIBMAJOR_SHIFT)
+#define __MPLS_SYSLIB_130000   (1319 << __MPLS_LIBMAJOR_SHIFT)
+#define __MPLS_SYSLIB_140000   (1336 << __MPLS_LIBMAJOR_SHIFT)
+#define __MPLS_SYSLIB_150000   (1351 << __MPLS_LIBMAJOR_SHIFT)
