@@ -525,8 +525,9 @@ $(MANTESTBINS_NF): %: %.o
 	$(CC) $(MANTESTLDFLAGS) $< -o $@
 
 # Except for the ones that do
+# Also include -lutil for the one test that needs it
 $(MANLIBTESTBINS): %: %.o $(BUILDDLIBPATH)
-	$(CC) $(TESTLDFLAGS) $< $(TESTLIBS) -o $@
+	$(CC) $(TESTLDFLAGS) $< $(TESTLIBS) -lutil -o $@
 
 # And the manual C++ tests *do* require the library
 $(MANTESTBINS_CPP): %: %.o $(BUILDDLIBPATH)
