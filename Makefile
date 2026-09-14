@@ -323,6 +323,7 @@ ALLMANTESTRUNS   := $(MANTESTRUNS) $(MANLIBTESTRUNS)
 # C standard for tests
 TESTCSTD         := c99
 
+# Defs for Tiger-specific builds and installs
 TIGERROOT        = tiger_only
 TIGERSRCDIR      = $(TIGERROOT)/src
 TIGERBINDIR      = $(TIGERROOT)/bin
@@ -342,6 +343,12 @@ TIGERULIBFLAGS   = -dynamiclib -headerpad_max_install_names \
                    -current_version $(TIGERULIBVER) \
                    -compatibility_version $(TIGERULIBVER)
 TIGERMAN1S      := $(wildcard $(TIGERSRCDIR)/*.1)
+# For some reason, the library created on ppc64 by the apple-gcc42 linker
+# causes install_name_tool to choke on a symbol ordering issue.  This does
+# not happen if we use the Xcode 2.5 linker, but that causes trouble for i386,
+# so we merely allow the normal choice to be overridden, expecting that this
+# is limited to ppc[64].
+TIGERLDCC       ?= $(CC)
 
 # Miscellaneous tools
 TOOLPREFIX       = tool_
@@ -539,7 +546,7 @@ $(TIGERLUOBJS): $(TIGERBINDIR)/%$(DLIBOBJEXT): $(TIGERLUTLDIR)/%.c \
 	$(CC) -c -I$(TIGERLUTLDIR) $(ALLCFLAGS) $(DLIBCFLAGS) $< -o $@
 
 $(TIGERBLDULIBPTH): $(TIGERLUOBJS) | $(BUILDLIBDIR)
-	$(CC) $(TIGERULIBFLAGS) $(ALLLDFLAGS) $(TIGERLUOBJS) -o $@
+	$(TIGERLDCC) $(TIGERULIBFLAGS) $(ALLLDFLAGS) $(TIGERLUOBJS) -o $@
 
 tiger-libs: $(TIGERBLDULIBPTH)
 
