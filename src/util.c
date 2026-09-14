@@ -105,7 +105,9 @@ __mpls_check_access(void *adr, mach_vm_size_t size, vm_prot_t access,
 
 #if __MPLS_LIB_ROSETTA1_HANDLING__
 
-#include <dlfcn.h>
+#include <stdint.h>
+
+#include <mach-o/dyld.h>
 
 #include <sys/sysctl.h>
 #include <sys/types.h>
@@ -118,6 +120,7 @@ setup_rosetta1(void)
 {
   int native;
   size_t native_sz = sizeof(native);
+  int32_t syslibver;
 
   if (sysctlbyname("sysctl.proc_native", &native, &native_sz, NULL, 0) < 0) {
     /* If sysctl failed, must be real ppc. */
@@ -129,8 +132,9 @@ setup_rosetta1(void)
 
   __mpls_rosetta1_bugs = _ROSETTA1_BUGS_ALL;
 
-  /* Use existence of pthread_from_mach_thread_np() as proxy for 10.5+ */
-  if (dlsym(RTLD_NEXT, "pthread_from_mach_thread_np")) {
+  /* Check whether this is 10.5+ to see if we have 10.4 Rosetta bugs */
+  syslibver = NSVersionOfRunTimeLibrary(__MPLS_SYSLIB_NAME);
+  if (syslibver >= __MPLS_SYSLIB_1050) {
     __mpls_rosetta1_bugs &= ~((uint64_t) _ROSETTA1_BUGS_TIGER);
   }
 }
@@ -145,6 +149,8 @@ setup_rosetta1(void)
 
 #include <sys/sysctl.h>
 #include <sys/types.h>
+
+uint64_t __mpls_rosetta2_bugs = 0;
 
 /* Determine whether we're running under Rosetta 2, and which bugs apply */
 static void
