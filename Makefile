@@ -262,6 +262,7 @@ TESTBINPREFIX    = $(TESTBINDIR)/test_
 TESTRUNPREFIX    = run_
 TESTLDFLAGS      = -L$(BUILDLIBDIR) $(ALLLDFLAGS)
 TESTLIBS         = -l$(LIBNAME)
+TESTSYMLIBS      = -l$(SYMLIBNAME)
 TESTSYSLDFLAGS   = -L$(XLIBDIR) $(ALLLDFLAGS)
 TESTSRCS_C      := $(wildcard $(TESTNAMEPREFIX)*.c)
 TESTPRGS_C      := $(patsubst $(TESTDIR)/%.c,%,$(TESTSRCS_C))
@@ -269,6 +270,7 @@ TESTOBJS_C      := $(patsubst %,$(TESTBINDIR)/%.o,$(TESTPRGS_C))
 TESTPRGS        := $(patsubst %,$(TESTBINDIR)/%,$(TESTPRGS_C))
 TESTSPRGS       := $(patsubst %,%_static,$(TESTPRGS))
 TESTSYSPRGS     := $(patsubst %,%_syslib,$(TESTPRGS))
+TESTSYMPRGS     := $(patsubst %,%_symlib,$(TESTPRGS))
 ALLTESTPRGS     := $(TESTPRGS) $(TESTSPRGS) $(TESTSYSPRGS)
 TESTRUNS        := $(patsubst \
                      $(TESTBINPREFIX)%,$(TESTRUNPREFIX)%,$(TESTPRGS))
@@ -276,6 +278,8 @@ TESTSRUNS       := $(patsubst \
                      $(TESTBINPREFIX)%,$(TESTRUNPREFIX)%,$(TESTSPRGS))
 TESTSYSRUNS     := $(patsubst \
                      $(TESTBINPREFIX)%,$(TESTRUNPREFIX)%,$(TESTSYSPRGS))
+TESTSYMRUNS     := $(patsubst \
+                     $(TESTBINPREFIX)%,$(TESTRUNPREFIX)%,$(TESTSYMPRGS))
 REALPATHSRCS_C  := $(wildcard $(TESTNAMEPREFIX)realpath*.c)
 REALPATHRUNS    := $(patsubst \
                      $(TESTNAMEPREFIX)%.c,$(TESTRUNPREFIX)%,$(REALPATHSRCS_C))
@@ -293,7 +297,8 @@ ATTRLISTRUNS    := $(patsubst \
                      $(TESTNAMEPREFIX)%.c,$(TESTRUNPREFIX)%,$(ATTRLISTSRCS_C))
 
 # All automatic test runners
-ALLTESTRUNS     := $(TESTRUNS) $(TESTSRUNS) $(TESTSYSRUNS) $(XTESTRUNS)
+ALLTESTRUNS     := $(TESTRUNS) $(TESTSRUNS) $(TESTSYSRUNS) $(TESTSYMRUNS) \
+                   $(XTESTRUNS)
 
 # Special manual tests needing CoreFoundation framework
 MANTESTSRCS_CF   := $(MANTESTPREFIX)cfstring.c
@@ -557,6 +562,9 @@ $(TESTSYSPRGS): %_syslib: %.o $(XLIBPATH)
 $(TESTSPRGS): %_static: %.o $(BUILDSLIBPATH)
 	$(CC) $(ALLLDFLAGS) $< $(BUILDSLIBPATH) -o $@
 
+$(TESTSYMPRGS): %_symlib: %.o $(BUILDSYMLIBPATH)
+	$(CC) $(TESTLDFLAGS) $< $(TESTSYMLIBS) -o $@
+
 # The xtests don't require the library
 $(XTESTPRGS): %: %.o
 	$(CC) $(XTESTLDFLAGS) $< -o $@
@@ -649,6 +657,7 @@ $(ALLMANTESTRUNS): $(MANRUNPREFIX)%: $(MANTESTBINPREFIX)% | $(TEST_TEMP)
 TESTUNVS        := $(addsuffix _unv,$(TESTRUNS))
 TESTSUNVS       := $(addsuffix _unv,$(TESTSRUNS))
 TESTSYSUNVS     := $(addsuffix _unv,$(TESTSYSRUNS))
+TESTSYMUNVS     := $(addsuffix _unv,$(TESTSYMRUNS))
 XTESTUNVS       := $(addsuffix _unv,$(XTESTRUNS))
 ALLTESTUNVS     := $(addsuffix _unv,$(ALLTESTRUNS))
 ALLMANTESTUNVS  := $(addsuffix _unv,$(ALLMANTESTRUNS))
@@ -939,6 +948,9 @@ test_static: $(TESTSRUNS)
 
 test_syslib: $(TESTSYSRUNS)
 
+$(TESTSYMRUNS): | $(SYMLIBTMPDIR)
+test_symlib: $(TESTSYMRUNS)
+
 test_all: test test_static test_syslib
 
 xtest: $(XTESTRUNS)
@@ -950,6 +962,8 @@ test_unv check_unv: $(TESTUNVS) $(XTESTUNVS) test_cmath
 test_static_unv: $(TESTSUNVS)
 
 test_syslib_unv: $(TESTSYSUNVS)
+
+test_symlib_unv: $(TESTSYMUNVS)
 
 test_all_unv: test_unv test_static_unv test_syslib_unv
 
