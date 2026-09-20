@@ -27,20 +27,32 @@ MAN2DIR          = $(MANDIR)/man2
 MAN3DIR          = $(MANDIR)/man3
 BINSUFFIX       ?=
 BINSFXADD       := $(subst /,_,$(BINSUFFIX))
+BUILDDIR        := bin$(BINSFXADD)
+DLIBOBJEXT       = .dl.o
+SLIBOBJEXT       = .o
 AREXT            = .a
 SOEXT            = .dylib
 LIBNAME          = MacportsLegacySupport
 SYSLIBNAME       = MacportsLegacySystem.B
+SYMLIBNAME       = MacportsLegacySymbols
 DLIBFILE         = lib$(LIBNAME)$(SOEXT)
 SLIBFILE         = lib$(LIBNAME)$(AREXT)
 SYSLIBFILE       = lib$(SYSLIBNAME)$(SOEXT)
+SYMLIBFILE       = lib$(SYMLIBNAME)$(SOEXT)
 DLIBPATH         = $(LIBDIR)/$(DLIBFILE)
 SLIBPATH         = $(LIBDIR)/$(SLIBFILE)
 SYSLIBPATH       = $(LIBDIR)/$(SYSLIBFILE)
+SYMLIBPATH       = $(LIBDIR)/$(SYMLIBFILE)
 BUILDLIBDIR     := lib$(BINSFXADD)
 BUILDDLIBPATH    = $(BUILDLIBDIR)/$(DLIBFILE)
 BUILDSLIBPATH    = $(BUILDLIBDIR)/$(SLIBFILE)
 BUILDSYSLIBPATH  = $(BUILDLIBDIR)/$(SYSLIBFILE)
+BUILDSYMLIBPATH  = $(BUILDLIBDIR)/$(SYMLIBFILE)
+SYMLIBROOT       = $(SYMLIBNAME)
+SYMLIBTMPROOT    = $(BUILDDIR)/$(SYMLIBROOT)
+SYMLIBTMPALL     = $(SYMLIBTMPROOT)-all-only.tmp
+SYMLIBCSRC      := $(BUILDLIBDIR)/$(SYMLIBROOT).c
+SYMLIBOBJ       := $(BUILDDIR)/$(SYMLIBROOT)$(DLIBOBJEXT)
 PKGCONFIG        = pkgconfig
 BUILDPCDIR       = $(BUILDLIBDIR)/$(PKGCONFIG)
 PKGCONFIGPC      = $(LIBNAME).pc
@@ -55,6 +67,7 @@ BUILDSYSLIBFLAGS = -dynamiclib -headerpad_max_install_names \
                    -install_name @executable_path/../$(BUILDSYSLIBPATH) \
                    -current_version $(SOCURVERSION) \
                    -compatibility_version $(SOCOMPATVERSION)
+SYMLIBNOSTDLIB  ?=
 OSLIBDIR         = /usr/lib
 OSLIBNAME        = System.B
 OSLIBLINK        = System
@@ -95,6 +108,13 @@ XLDFLAGS        ?= $(DEBUG)
 ALLLDFLAGS      := $(ARCHFLAGS) $(XLDFLAGS) $(LDFLAGS)
 TEST_ARGS       ?=
 NOADDSYMS       ?=
+
+# Make sure we have arch spec for symbol library
+ifneq ($(strip $(ARCHS)),)
+  LIBARCHS      := $(ARCHS)
+else
+  LIBARCHS      := $$(lipo -archs $(BUILDDLIBPATH))
+endif
 
 # Setup for possible multiarch test running
 ifneq ($(strip $(ARCHS)),)
@@ -138,8 +158,8 @@ RMDIR            = rm -rf
 
 SRCDIR           = src
 SRCINCDIR        = include
-BUILDDIR        := bin$(BINSFXADD)
 TESTBINDIR      := tbin$(BINSFXADD)
+SYMLIBTMPDIR    := symlibtmp
 # Use VAR := $(shell CMD) instead of VAR != CMD to support old make versions
 FIND_LIBHEADERS := find $(SRCINCDIR) -type f \( -name '*.h' -o \
                                              \( -name 'c*' ! -name '*.*' \) \)
@@ -151,8 +171,6 @@ LIBSRCS_S       := $(patsubst $(SRCDIR)/%.S,%,$(wildcard $(SRCDIR)/*.S))
 ADDSRCS         := add_symbols
 LIBSRCS_C       := $(filter-out $(ADDSRCS),$(ALLLIBSRCS_C))
 
-DLIBOBJEXT       = .dl.o
-SLIBOBJEXT       = .o
 DLIBOBJS_C      := $(patsubst %,$(BUILDDIR)/%$(DLIBOBJEXT),$(LIBSRCS_C))
 DLIBOBJS_S      := $(patsubst %,$(BUILDDIR)/%$(DLIBOBJEXT),$(LIBSRCS_S))
 DLIBOBJS        := $(DLIBOBJS_C) $(DLIBOBJS_S)
@@ -360,11 +378,14 @@ TOOLTARGS       := $(patsubst $(TOOLBINDIR)/%, $(TOOLPREFIX)%, $(TOOLBINS))
 TOOL_ARGS       ?=
 
 ARCHTOOL         = $(TOOLDIR)/binarchs.sh
+SYMLIBTOOL       = TMPROOT=$(SYMLIBTMPDIR) $(TOOLDIR)/getlibsyms.sh
+SYM2CTOOL        = TMPROOT=$(SYMLIBTMPDIR) $(TOOLDIR)/syms2c.sh
 
 all: dlib slib syslib
 dlib: $(BUILDDLIBPATH) $(BUILDPC)
 slib: $(BUILDSLIBPATH)
 syslib: $(BUILDSYSLIBPATH)
+symlib: $(BUILDSYMLIBPATH)
 
 # Generously marking all header files as potential dependencies
 $(DLIBOBJS_C): $(BUILDDIR)/%$(DLIBOBJEXT): $(SRCDIR)/%.c $(ALLHEADERS) \
@@ -421,7 +442,7 @@ $(SOBJLIST): $(SOBJLIST_C) $(SOBJLIST_S)
 $(BUILDDIR) $(TIGERBINDIR) $(BUILDLIBDIR) $(TESTBINDIR) $(XLIBDIR) \
     $(DESTDIR)$(LIBDIR) $(DESTDIR)$(BINDIR) \
     $(DESTDIR)$(MAN1DIR) $(DESTDIR)$(MAN2DIR) $(DESTDIR)$(MAN3DIR) \
-    $(TEST_TEMP) $(TOOLBINDIR):
+    $(TEST_TEMP) $(TOOLBINDIR) $(SYMLIBTMPDIR):
 	$(MKINSTALLDIRS) $@
 
 $(BUILDPCDIR): | $(BUILDLIBDIR)
@@ -438,6 +459,26 @@ $(BUILDSLIBPATH): $(SOBJLIST) | $(BUILDLIBDIR)
 	$(RM) $@
 	$(ARX) $(BUILDSLIBFLAGS) $@ $$(cat $<)
 
+# Rules for symbol-only library
+#
+# Due to the complications related to getting the proper arch list,
+# we can't easily use the entire list of intermediate symbol-list files
+# as the dependency reference.  So we just use the "all" version, knowing
+# that it's created by the same script that creates the others.
+
+$(SYMLIBTMPALL): $(BUILDDLIBPATH) | $(SYMLIBTMPDIR)
+	$(SYMLIBTOOL) $^ $(SYMLIBTMPROOT) $(LIBARCHS)
+
+$(SYMLIBCSRC): $(SYMLIBTMPALL)
+	$(SYM2CTOOL) $(SYMLIBTMPROOT) $(SYMLIBCSRC) $(LIBARCHS)
+
+$(SYMLIBOBJ): $(SYMLIBCSRC)
+	$(CC) -fno-builtin -c $(ALLCFLAGS) $(DLIBCFLAGS) $^ -o $@
+
+$(BUILDSYMLIBPATH): $(SYMLIBOBJ)
+	$(CC) $(SYMLIBNOSTDLIB) $(BUILDDLIBFLAGS) $(ALLLDFLAGS) $^ -o $@
+
+# Rule for pkgconfig file
 $(BUILDPC): $(SRCDIR)/$(PKGCONFIGPC).in | $(BUILDPCDIR)
 	$(SED) "\
     s|@@PREFIX@@|$(PREFIX)|g; \
@@ -867,6 +908,11 @@ install-syslib: $(BUILDSYSLIBPATH) | $(DESTDIR)$(LIBDIR)
 install-slib: $(BUILDSLIBPATH) | $(DESTDIR)$(LIBDIR)
 	$(INSTALL_DATA) $(BUILDSLIBPATH) $(DESTDIR)$(LIBDIR)
 
+install-symlib: $(BUILDSYMLIBPATH) | $(DESTDIR)$(LIBDIR)
+	$(INSTALL_DATA) $(SYMLIBCSRC) $(DESTDIR)$(LIBDIR)
+	$(INSTALL_PROGRAM) $(BUILDSYMLIBPATH) $(DESTDIR)$(LIBDIR)
+	$(POSTINSTALL) -id $(DLIBPATH) $(DESTDIR)$(SYMLIBPATH)
+
 install-manpages: | $(DESTDIR)$(MAN2DIR)
 	$(INSTALL_MAN) $(SRCMAN2S) $(DESTDIR)$(MAN2DIR)
 
@@ -937,9 +983,9 @@ tools_clean:
 	$(RMDIR) $(TOOLBINDIR)
 
 clean: test_clean tools_clean
-	$(RMDIR) $(BUILDDIR) $(BUILDLIBDIR) $(TIGERBINDIR)
+	$(RMDIR) $(BUILDDIR) $(BUILDLIBDIR) $(TIGERBINDIR) $(SYMLIBTMPDIR)
 
-.PHONY: all dlib syslib slib clean check test test_cmath xtest
+.PHONY: all dlib syslib slib symlib clean check test test_cmath xtest
 .PHONY: test_static test_syslib test_all
 .PHONY: $(TESTRUNS) $(XTESTRUNS) $(MANTESTRUNS)
 .PHONY: $(MANRUNPREFIX)clean test_clean xtest_clean
@@ -956,6 +1002,7 @@ clean: test_clean tools_clean
 .PHONY: $(MANRUNPREFIX)packet_all $(MANRUNPREFIX)packet_all_unv
 .PHONY: $(XTESTRUNPREFIX)allheaders_all $(XTESTRUNPREFIX)allheaders_all_unv
 .PHONY: install install-headers install-lib install-dlib install-slib
+.PHONY: install-syslib install-symlib
 .PHONY: tiger-libs tiger-bins install-tiger
 .PHONY: leopard-bins install-leopard
 .PHONY: allobjs dlibobjs slibobjs syslibobjs alltestobjs
