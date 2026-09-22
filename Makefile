@@ -343,6 +343,13 @@ MANPACKETRUNS    := $(patsubst \
 # All manual test runners
 ALLMANTESTRUNS   := $(MANTESTRUNS) $(MANLIBTESTRUNS)
 
+# Helper rule for symlib test (not in "all")
+SYMTEST          := cmpsyms
+SYMTESTSH        := $(MANTESTPREFIX)$(SYMTEST).sh
+$(MANRUNPREFIX)$(SYMTEST): $(SYMTESTSH) $(BUILDDLIBPATH) $(BUILDSYMLIBPATH)
+	TMPROOT=$(SYMLIBTMPDIR) $(SYMTESTSH) \
+	    $(BUILDDLIBPATH) $(BUILDSYMLIBPATH) $(SYMLIBCSRC) $(LIBARCHS)
+
 # C standard for tests
 TESTCSTD         := c99
 
@@ -1001,7 +1008,7 @@ clean: test_clean tools_clean
 
 .PHONY: all dlib syslib slib symlib clean check test test_cmath xtest
 .PHONY: test_static test_syslib test_all
-.PHONY: $(TESTRUNS) $(XTESTRUNS) $(MANTESTRUNS)
+.PHONY: $(TESTRUNS) $(XTESTRUNS) $(MANTESTRUNS) $(MANRUNPREFIX)$(SYMTEST)
 .PHONY: $(MANRUNPREFIX)clean test_clean xtest_clean
 .PHONY: $(XTESTRUNPREFIX)darwin_c_all $(XTESTRUNPREFIX)darwin_c_all_unv
 .PHONY: $(XTESTRUNPREFIX)darwin_source_all
