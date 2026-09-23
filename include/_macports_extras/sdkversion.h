@@ -193,6 +193,11 @@
  */
 
 #if __MPLS_SDK_MAJOR == 140000
+  /*
+   * NOTE: Apple added 27_0 in the 26.6 SDK, with no further change in the
+   * 27.0 SDK, causing this method not to work for identifying the 27.0 SDK.
+   * Fortunately, we don't currently care about that threshold.
+   */
   #if defined(MAC_OS_VERSION_27_0)
     #undef __MPLS_SDK_MAJOR
     #define __MPLS_SDK_MAJOR 270000
