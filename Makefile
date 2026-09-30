@@ -364,7 +364,8 @@ TIGERLUTLS      := \
     $(patsubst $(TIGERLUTLDIR)/%.c,%,$(wildcard $(TIGERLUTLDIR)/*.c))
 TIGERPRGS       := $(patsubst %,$(TIGERBINDIR)/%,$(TIGERSRCS))
 TIGERLUOBJS     := $(patsubst %,$(TIGERBINDIR)/%$(DLIBOBJEXT),$(TIGERLUTLS))
-TIGERULIB       := libutil$(SOEXT)
+TIGERULIB       := libutility$(SOEXT)
+TIGERUSYM       := libutil$(SOEXT)
 TIGERULIBPATH   := $(LIBDIR)/$(TIGERULIB)
 TIGERBLDULIBPTH := $(BUILDLIBDIR)/$(TIGERULIB)
 TIGERULIBVER    := 1.0.0
@@ -372,6 +373,17 @@ TIGERULIBFLAGS   = -dynamiclib -headerpad_max_install_names \
                    -install_name @executable_path/../$(TIGERBLDULIBPTH) \
                    -current_version $(TIGERULIBVER) \
                    -compatibility_version $(TIGERULIBVER)
+
+TSYMLIBNAME      = util
+TSYMLIBROOT      = libutil
+TSYMLIBTMPROOT   = $(BUILDDIR)/$(TSYMLIBROOT)
+TSYMLIBTMPALL    = $(TSYMLIBTMPROOT)-all-only.tmp
+TSYMLIBCSRC     := $(BUILDLIBDIR)/$(TSYMLIBROOT).c
+TSYMLIBOBJ      := $(BUILDDIR)/$(TSYMLIBROOT)$(DLIBOBJEXT)
+TSYMLIBFILE      = lib$(TSYMLIBNAME)$(SOEXT)
+TSYMLIBPATH      = $(LIBDIR)/$(TSYMLIBFILE)
+TBUILDSYMLIBPATH = $(BUILDLIBDIR)/$(TSYMLIBFILE)
+
 TIGERMAN1S      := $(wildcard $(TIGERSRCDIR)/*.1)
 # For some reason, the library created on ppc64 by the apple-gcc42 linker
 # causes install_name_tool to choke on a symbol ordering issue.  This does
@@ -605,9 +617,23 @@ $(TIGERLUOBJS): $(TIGERBINDIR)/%$(DLIBOBJEXT): $(TIGERLUTLDIR)/%.c \
 $(TIGERBLDULIBPTH): $(TIGERLUOBJS) | $(BUILDLIBDIR)
 	$(TIGERLDCC) $(TIGERULIBFLAGS) $(ALLLDFLAGS) $(TIGERLUOBJS) -o $@
 
-tiger-libs: $(TIGERBLDULIBPTH)
+$(TSYMLIBTMPALL): $(TIGERBLDULIBPTH) $(BUILDDLIBPATH)
+	$(SYMLIBTOOL) $< $(TSYMLIBTMPROOT) $(LIBARCHS)
 
-tiger-bins: tiger-libs $(TIGERPRGS)
+$(TSYMLIBCSRC): $(TSYMLIBTMPALL)
+	$(SYM2CTOOL) $(TSYMLIBTMPROOT) $(TSYMLIBCSRC) $(LIBARCHS)
+
+$(TSYMLIBOBJ): $(TSYMLIBCSRC)
+	$(CC) -fno-builtin -c $(ALLCFLAGS) $(DLIBCFLAGS) $^ -o $@
+
+$(TBUILDSYMLIBPATH): $(TSYMLIBOBJ)
+	$(CC) $(SYMLIBNOSTDLIB) $(TIGERULIBFLAGS) $(ALLLDFLAGS) $^ -o $@
+
+tiger-libs: $(TIGERBLDULIBPTH) $(TBUILDSYMLIBPATH)
+
+tiger-progs: $(TIGERPRGS)
+
+tiger-bins: tiger-libs tiger-progs
 
 # Dummy Leopard build target, so the Portfile can reference it in case
 # we need it later.
@@ -935,16 +961,25 @@ install-manpages: | $(DESTDIR)$(MAN2DIR)
 # We need a better way to handle OS-dependent manpage installs.
 # Currently, the only cases are the Tiger-specific which.1,
 # and copyfile.3 for Tiger and Leopard, so we add the Tiger
-# case to the existing Tiger install, and add a new Leopard install.
+# cases to the existing Tiger installs, and add a new Leopard install.
 
-install-tiger: $(TIGERPRGS) $(TIGERBLDULIBPTH) \
-  | $(DESTDIR)$(BINDIR) $(DESTDIR)$(LIBDIR) \
-    $(DESTDIR)$(MAN1DIR) $(DESTDIR)$(MAN3DIR)
-	$(INSTALL_PROGRAM) $(TIGERPRGS) $(DESTDIR)$(BINDIR)
+install-tiger-libs: $(TIGERBLDULIBPTH) \
+    | $(DESTDIR)$(LIBDIR) $(DESTDIR)$(MAN3DIR)
 	$(INSTALL_PROGRAM) $(TIGERBLDULIBPTH) $(DESTDIR)$(LIBDIR)
 	$(POSTINSTALL) -id $(TIGERULIBPATH) $(DESTDIR)$(TIGERULIBPATH)
-	$(INSTALL_MAN) $(TIGERMAN1S) $(DESTDIR)$(MAN1DIR)
 	$(INSTALL_MAN) $(SRCMAN3S) $(DESTDIR)$(MAN3DIR)
+
+install-tiger-symlib: $(TBUILDSYMLIBPATH) \
+    | $(DESTDIR)$(LIBDIR) $(DESTDIR)$(MAN3DIR)
+	$(INSTALL_DATA) $(TSYMLIBCSRC) $(DESTDIR)$(LIBDIR)
+	$(INSTALL_PROGRAM) $(TBUILDSYMLIBPATH) $(DESTDIR)$(LIBDIR)
+	$(POSTINSTALL) -id $(TIGERULIBPATH) $(DESTDIR)$(TSYMLIBPATH)
+
+install-tiger-progs: $(TIGERPRGS) | $(DESTDIR)$(BINDIR) $(DESTDIR)$(MAN1DIR)
+	$(INSTALL_PROGRAM) $(TIGERPRGS) $(DESTDIR)$(BINDIR)
+	$(INSTALL_MAN) $(TIGERMAN1S) $(DESTDIR)$(MAN1DIR)
+
+install-tiger: install-tiger-libs install-tiger-progs
 
 install-leopard: | $(DESTDIR)$(MAN3DIR)
 	$(INSTALL_MAN) $(SRCMAN3S) $(DESTDIR)$(MAN3DIR)
@@ -1024,7 +1059,9 @@ clean: test_clean tools_clean
 .PHONY: $(XTESTRUNPREFIX)allheaders_all $(XTESTRUNPREFIX)allheaders_all_unv
 .PHONY: install install-headers install-lib install-dlib install-slib
 .PHONY: install-syslib install-symlib
-.PHONY: tiger-libs tiger-bins install-tiger
+.PHONY: tiger-libs tiger-symlib tiger-progs tiger-bins
+.PHONY: install-tiger-libs install-tiger-symlib install-tiger-progs
+.PHONY: install-tiger
 .PHONY: leopard-bins install-leopard
 .PHONY: allobjs dlibobjs slibobjs syslibobjs alltestobjs
 .PHONY: build_tests build_tests_static build_tests_syslib build_tests_all dummy
