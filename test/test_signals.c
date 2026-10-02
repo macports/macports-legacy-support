@@ -57,6 +57,11 @@ useconds_t ualarm(useconds_t, useconds_t);
 /* Sample struct for typeof; global to avoid unused warning */
 OUR_UCONTEXT uc_sample;
 
+/* Check that types used by SIG_XXX macros are as expected */
+/* Some compilers will complain if they're not; others won't */
+typedef void (sighandler_fn_t)(int sig);
+sighandler_fn_t *sig_specials[] = { SIG_DFL, SIG_IGN, SIG_HOLD, SIG_ERR };
+
 typedef struct sigerr_s {
   const char *text;
   int error;
