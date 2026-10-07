@@ -10,6 +10,7 @@
 #include <sys/stat.h>
 #include <sys/spawn.h>
 #include <sys/socket.h>
+#include <sys/signal.h>
 #include <sys/random.h>
 #include <sys/queue.h>
 #include <sys/mman.h>

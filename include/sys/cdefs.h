@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Frederick H. G. Wright II <fw@fwright.net>
+ * Copyright (c) 2026 Frederick H. G. Wright II <fw@fwright.net>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -28,6 +28,15 @@
 #endif
 #if !defined(_DARWIN_C_SOURCE) && defined(_APPLE_C_SOURCE)
 #define _DARWIN_C_SOURCE _APPLE_C_SOURCE
+#endif
+
+/* Capture initial state of __DARWIN_UNIX03, before applying defaults */
+#ifdef __DARWIN_UNIX03
+#if __DARWIN_UNIX03
+#define __MPLS_DARWIN_UNIX03_ORIG 1
+#else
+#define __MPLS_DARWIN_UNIX03_ORIG 0
+#endif
 #endif
 
 /*
