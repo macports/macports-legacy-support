@@ -405,8 +405,8 @@ ARCHTOOL         = $(TOOLDIR)/binarchs.sh
 SYMLIBTOOL       = TMPROOT=$(SYMLIBTMPDIR) $(TOOLDIR)/getlibsyms.sh
 SYM2CTOOL        = TMPROOT=$(SYMLIBTMPDIR) $(TOOLDIR)/syms2c.sh
 
-all: dlib slib syslib
-dlib: $(BUILDDLIBPATH) $(BUILDPC)
+all: dlib slib syslib $(BUILDPC)
+dlib: $(BUILDDLIBPATH)
 slib: $(BUILDSLIBPATH)
 syslib: $(BUILDSYSLIBPATH)
 symlib: $(BUILDSYMLIBPATH)
