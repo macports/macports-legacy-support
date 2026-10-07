@@ -40,9 +40,17 @@ typedef __darwin_uuid_t uuid_t;
 #endif  /* Older SDK allowed */
 
 #include <IOKit/usb/USB.h>
+
+#if __MPLS_SDK_MAJOR >= 101500
+#include <IOKit/usb/IOUSBHostFamilyDefinitions.h>
+#define EXTRA " and <IOKit/usb/IOUSBHostFamilyDefinitions.h>"
+#else
+#define EXTRA ""
+#endif
+
 #include <stdio.h>
 
 int main() {
-    printf("Including <IOKit/usb/USB.h> succeeded\n");
+    printf("Including <IOKit/usb/USB.h>" EXTRA " succeeded\n");
     return 0;
 }
