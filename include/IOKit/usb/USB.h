@@ -86,6 +86,7 @@
 
 #if defined(__clang__)
   #pragma clang diagnostic pop
-#elif defined(__GNUC__) && __GNUC__ >= 5
+#elif defined(__GNUC__) \
+      && (__GNUC__ >= 5 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 9))
   #pragma GCC diagnostic pop
 #endif
