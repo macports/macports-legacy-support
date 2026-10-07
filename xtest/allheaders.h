@@ -34,6 +34,7 @@
 #include <sys/mman.h>
 #include <sys/queue.h>
 #include <sys/random.h>
+#include <sys/signal.h>
 #include <sys/socket.h>
 #include <sys/spawn.h>
 #include <sys/stat.h>
